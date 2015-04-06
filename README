@@ -1,0 +1,47 @@
+zimwriterfs is a console tool to create ZIM (http://www.openzim.org)
+files from a localy stored directory containing a "self-sufficient"
+HTML content (with pictures, javascript, stylesheets). The result will
+contain all the files of the local directory compressed and merged in
+the ZIM file. Nothing more, nothing less. The generated file can be
+open with a ZIM reader, Kiwix (http://www.kiwix.org) for example, but
+you have other one (http://openzim.org/wiki/ZIM_Readers).
+
+zimwriterfs works for now only on POSIX compatible systems, you simply
+need to compile it and run it. The software does not need a lot of
+resources, but if you create a pretty big ZIM files, then it could
+take a wile to complete.
+
+GNU/Linux compilation
+---------------------
+
+To compile zimwriterfs, you need the GNU compiler with the GNU
+autotools suite. You also need to have a few dependencies installed on
+the system:
+
+* liblzma (http://tukaani.org/xz/, most of the time packaged),
+  resp. for the LZMA comp.
+* libzim (http://openzim.org/download/, probably not packaged),
+  resp. for the ZIM compilation
+* libmagic (http://www.darwinsys.com/file/, most of the time
+  packaged), resp, for the mimeType detection
+
+./autogen.sh
+./configure
+make
+
+OSX compilation
+----------------
+
+Until the autotool is configured properly to support flexible options,
+you can still compile and use zimwriterfs with some manual work.
+
+1. Have a working Kiwix dev environnment (up to make inside src/dependencies)
+2. Install libmagic: brew install libmagic
+3. zimwriterfs compilation
+./autogen.sh
+LDFLAGS="-L$KIWIX_ROOT/src/dependencies/zimlib-1.1/build/lib/ -L/usr/local/Cellar/libmagic/5.14/lib/ -L$KIWIX_ROOT/src/dependencies/xz/build/lib/" CXXFLAGS="-I $KIWIX_ROOT/src/kiwix/src/dependencies/zimlib-1.1/include/ -I/usr/local/Cellar/libmagic/5.14/include/ -I$KIWIX_ROOT/src/kiwix/src/dependencies/xz/src/liblzma/lzma/ -I$KIWIX_ROOT/src/kiwix/src/dependencies/xz/src/liblzma/" ./configure && make
+4. Copy libs if not in LIBRARY_PATH
+ln -s $KIWIX_ROOT/src/dependencies/zimlib-1.1/build/lib/libzim.dylib .
+ln -s $KIWIX_ROOT/src/dependencies/xz/build/lib/liblzma.dylib .
+5. Use it
+./zimwriterfs
