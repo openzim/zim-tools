@@ -19,7 +19,6 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <assert.h>
 #include <getopt.h>
 #include <ctime>
 #include <stdio.h>
@@ -621,62 +620,63 @@ Article::Article(const std::string& path) {
     GumboNode* root = output->root;
 
     /* Search the content of the <title> tag in the HTML */
-    assert(root->type == GUMBO_NODE_ELEMENT);
-    assert(root->v.element.children.length >= 2);
-
-    const GumboVector* root_children = &root->v.element.children;
-    GumboNode* head = NULL;
-    for (int i = 0; i < root_children->length; ++i) {
-      GumboNode* child = (GumboNode*)(root_children->data[i]);
-      if (child->type == GUMBO_NODE_ELEMENT &&
-	  child->v.element.tag == GUMBO_TAG_HEAD) {
-	head = child;
-	break;
-      }
-    }
-    assert(head != NULL);
-
-    GumboVector* head_children = &head->v.element.children;
-    for (int i = 0; i < head_children->length; ++i) {
-      GumboNode* child = (GumboNode*)(head_children->data[i]);
-      if (child->type == GUMBO_NODE_ELEMENT &&
-	  child->v.element.tag == GUMBO_TAG_TITLE) {
-	if (child->v.element.children.length == 1) {
-	  GumboNode* title_text = (GumboNode*)(child->v.element.children.data[0]);
-	  assert(title_text->type == GUMBO_NODE_TEXT);
-	  title = title_text->v.text.text;
+    if (root->type == GUMBO_NODE_ELEMENT && root->v.element.children.length >= 2) {
+      const GumboVector* root_children = &root->v.element.children;
+      GumboNode* head = NULL;
+      for (int i = 0; i < root_children->length; ++i) {
+	GumboNode* child = (GumboNode*)(root_children->data[i]);
+	if (child->type == GUMBO_NODE_ELEMENT &&
+	    child->v.element.tag == GUMBO_TAG_HEAD) {
+	  head = child;
+	  break;
 	}
       }
-    }
 
-    /* If no title, then compute one from the filename */
-    if (title.empty()) {
-      found = path.rfind("/");
-      if (found!=std::string::npos) {
-	title = path.substr(found+1);
-	found = title.rfind(".");
+      if (head != NULL) {
+	GumboVector* head_children = &head->v.element.children;
+	for (int i = 0; i < head_children->length; ++i) {
+	  GumboNode* child = (GumboNode*)(head_children->data[i]);
+	  if (child->type == GUMBO_NODE_ELEMENT &&
+	      child->v.element.tag == GUMBO_TAG_TITLE) {
+	    if (child->v.element.children.length == 1) {
+	      GumboNode* title_text = (GumboNode*)(child->v.element.children.data[0]);
+	      if (title_text->type == GUMBO_NODE_TEXT) {
+		title = title_text->v.text.text;
+	      }
+	    }
+	  }
+	}
+
+	/* Detect if this is a redirection */
+	std::string targetUrl;
+	try {
+	  targetUrl = extractRedirectUrlFromHtml(head_children);
+	} catch (std::string &error) {
+	  std::cerr << error << std::endl;
+	}
+
+	if (!targetUrl.empty()) {
+	  redirectAid = computeAbsolutePath(aid, decodeUrl(targetUrl));
+	  if (!fileExists(directoryPath + "/" + redirectAid)) {
+	    redirectAid.clear();
+	    invalid = true;
+	  }
+	}
+      }
+
+      /* If no title, then compute one from the filename */
+      if (title.empty()) {
+	found = path.rfind("/");
 	if (found!=std::string::npos) {
-	  title = title.substr(0, found);
+	  title = path.substr(found+1);
+	  found = title.rfind(".");
+	  if (found!=std::string::npos) {
+	    title = title.substr(0, found);
+	  }
+	} else {
+	  title = path;
 	}
-      } else {
-	title = path;
-      }
-      std::replace(title.begin(), title.end(), '_',  ' ');
-    }
-
-    /* Detect if this is a redirection */
-    std::string targetUrl;
-    try {
-      targetUrl = extractRedirectUrlFromHtml(head_children);
-    } catch (std::string &error) {
-      std::cerr << error << std::endl;
-    }
-
-    if (!targetUrl.empty()) {
-      redirectAid = computeAbsolutePath(aid, decodeUrl(targetUrl));
-      if (!fileExists(directoryPath + "/" + redirectAid)) {
-	redirectAid.clear();
-	invalid = true;
+	std::replace(title.begin(), title.end(), '_',  ' ');
       }
     }
 
