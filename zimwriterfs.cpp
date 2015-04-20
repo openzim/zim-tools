@@ -74,6 +74,7 @@ pthread_mutex_t directoryVisitorRunningMutex;
 bool verboseFlag = false;
 pthread_mutex_t verboseMutex;
 bool inflateHtmlFlag = false;
+bool uniqueNamespace = false;
 
 magic_t magic;
 std::map<std::string, unsigned int> counters;
@@ -558,8 +559,8 @@ static std::string getMimeTypeForFile(const std::string& filename) {
 }
 
 inline std::string getNamespaceForMimeType(const std::string& mimeType) {
-  if (mimeType.find("text") == 0 || mimeType.empty()) {
-    if (mimeType.find("text/html") == 0 || mimeType.find("text/vtt") == 0 || mimeType.empty()) {
+  if (uniqueNamespace || mimeType.find("text") == 0 || mimeType.empty()) {
+    if (uniqueNamespace || mimeType.find("text/html") == 0 || mimeType.find("text/vtt") == 0 || mimeType.empty()) {
       return "A";
     } else {
       return "-";
@@ -951,6 +952,7 @@ void usage() {
   std::cout << "\t-h, --help\t\tprint this help" << std::endl;
   std::cout << "\t-m, --minChunkSize\tnumber of bytes per ZIM cluster (defaul: 2048)" << std::endl;
   std::cout << "\t-x, --inflateHtml\ttry to inflate HTML files before packing (*.html, *.htm, ...)" << std::endl;
+  std::cout << "\t-u, --uniqueNamespace\tput everything in the same namespace 'A'. Might be necessary to avoid problems with dynamic/javascript data loading." << std::endl;
   std::cout << std::endl;
  
    std::cout << "Example:" << std::endl;
@@ -1101,6 +1103,7 @@ int main(int argc, char** argv) {
     {"welcome", required_argument, 0, 'w'},
     {"minchunksize", required_argument, 0, 'm'},
     {"inflateHtml", no_argument, 0, 'x'},
+    {"uniqueNamespace", no_argument, 0, 'u'},
     {"favicon", required_argument, 0, 'f'},
     {"language", required_argument, 0, 'l'},
     {"title", required_argument, 0, 't'},
@@ -1147,6 +1150,9 @@ int main(int argc, char** argv) {
 	break;
       case 't':
 	title = optarg;
+	break;
+      case 'u':
+	uniqueNamespace = true;
 	break;
       case 'w':
 	welcome = optarg;
