@@ -8,7 +8,7 @@ AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
 
 # find CC compiler
-AC_PROC_CC
+AC_PROG_CC
 
 # find C++ compiler
 AC_PROG_CXX
@@ -17,6 +17,9 @@ if test [ ! "$HAVE_CXX" ]
 then
     AC_MSG_ERROR([[cannot find any C++ compiler]])
 fi
+
+# Set current language to C++
+AC_LANG(C++)
 
 # Determine libtool
 AC_PROG_LIBTOOL
@@ -29,6 +32,22 @@ if test [ ! "$HAVE_PKG_CONFIG" ]
 then
   AC_MSG_ERROR([[cannot find pkg-config]])
 fi
+
+# Check if the liblzma is available
+AC_CHECK_HEADER([lzma.h],, [AC_MSG_ERROR([[cannot find lzma header]])])
+AC_CHECK_LIB([lzma], [lzma_version_string],, [AC_MSG_ERROR([[cannot find lzma]])])
+
+# Check if the libzim is available
+AC_CHECK_HEADER([zim/zim.h],, [AC_MSG_ERROR([[cannot find libzim header]])])
+AC_CHECK_LIB([zim], [zim_MD5Init],, [AC_MSG_ERROR([[cannot find libzim]])])
+
+# Check if the libmagic is available
+AC_CHECK_HEADER([magic.h],, [AC_MSG_ERROR([[cannot find libmagic header]])])
+AC_CHECK_LIB([magic], [magic_file],, [AC_MSG_ERROR([[cannot find libmagic]])])
+
+# Check if the libpthread is available
+AC_CHECK_HEADER([pthread.h],, [AC_MSG_ERROR([[cannot find libpthread header]])])
+AC_CHECK_LIB([pthread], [pthread_exit],, [AC_MSG_ERROR([[cannot find libpthread]])])
 
 # Set current language to C++
 AC_LANG(C++)
@@ -52,6 +71,14 @@ LIBZIM_LDFLAGS=" -lzim"
 LIBZ_CFLAGS=""
 LIBZ_LDFLAGS=" -lz"
 
+# libmagic
+LIBMAGIC_CFLAGS=""
+LIBMAGIC_LDFLAGS=" -lmagic"
+
+# libpthread
+LIBPTHREAD_CFLAGS=""
+LIBPTHREAD_LDFLAGS=" -lpthread"
+
 AC_DEFINE_UNQUOTED(CLUSTER_CACHE_SIZE, 16, [set zim cluster cache size to number of cached chunks])
 AC_DEFINE_UNQUOTED(DIRENT_CACHE_SIZE, 512, [set zim dirent cache size to number of cached chunks])
 AC_DEFINE_UNQUOTED(LZMA_MEMORY_SIZE, 128, [set lzma uncompress memory size to number of MB])
@@ -66,6 +93,10 @@ AC_SUBST(LIBZIM_CFLAGS)
 AC_SUBST(LIBZIM_LDFLAGS)
 AC_SUBST(LIBZ_CFLAGS)
 AC_SUBST(LIBZ_LDFLAGS)
+AC_SUBST(LIBMAGIC_CFLAGS)
+AC_SUBST(LIBMAGIC_LDFLAGS)
+AC_SUBST(LIBPTHREAD_CFLAGS)
+AC_SUBST(LIBPTHREAD_LDFLAGS)
 
 # Configure the output files
 AC_CONFIG_FILES([
