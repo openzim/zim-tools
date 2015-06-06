@@ -32,16 +32,10 @@ make
 OSX compilation
 ----------------
 
-Until the autotool is configured properly to support flexible options,
-you can still compile and use zimwriterfs with some manual work.
+On MaxOSX, a script helps you build zimwriterfs both statically and dynamically.
+You must have a working and set up Kiwix repository (with dependencies ready).
 
-1. Have a working Kiwix dev environnment (up to make inside src/dependencies)
-2. Install libmagic: brew install libmagic
-3. zimwriterfs compilation
-./autogen.sh
-LDFLAGS="-L$KIWIX_ROOT/src/dependencies/zimlib-1.1/build/lib/ -L/usr/local/Cellar/libmagic/5.14/lib/ -L$KIWIX_ROOT/src/dependencies/xz/build/lib/" CXXFLAGS="-I $KIWIX_ROOT/src/kiwix/src/dependencies/zimlib-1.1/include/ -I/usr/local/Cellar/libmagic/5.14/include/ -I$KIWIX_ROOT/src/kiwix/src/dependencies/xz/src/liblzma/lzma/ -I$KIWIX_ROOT/src/kiwix/src/dependencies/xz/src/liblzma/" ./configure && make
-4. Copy libs if not in LIBRARY_PATH
-ln -s $KIWIX_ROOT/src/dependencies/zimlib-1.1/build/lib/libzim.dylib .
-ln -s $KIWIX_ROOT/src/dependencies/xz/build/lib/liblzma.dylib .
-5. Use it
-./zimwriterfs
+1. Install libmagic with brew (it's important)
+	- ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+	- brew install libmagic
+2. KIWIX_ROOT=/Users/xxx/src/kiwix ./macosx-build.sh
