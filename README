@@ -15,15 +15,16 @@ GNU/Linux compilation
 ---------------------
 
 To compile zimwriterfs, you need the GNU compiler with the GNU
-autotools suite. You also need to have a few dependencies installed on
-the system:
+autotools suite. You also need to have a few dependencies (dev
+version) installed on the system:
 
 * liblzma (http://tukaani.org/xz/, most of the time packaged),
   resp. for the LZMA comp.
 * libzim (http://openzim.org/download/, probably not packaged),
   resp. for the ZIM compilation
 * libmagic (http://www.darwinsys.com/file/, most of the time
-  packaged), resp, for the mimeType detection
+  packaged), resp. for the mimeType detection
+* libz (http://www.zlib.net/), resp. for unpack compressed HTML files
 
 ./autogen.sh
 ./configure
