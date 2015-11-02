@@ -560,7 +560,7 @@ static std::string getMimeTypeForFile(const std::string& filename) {
 
 inline std::string getNamespaceForMimeType(const std::string& mimeType) {
   if (uniqueNamespace || mimeType.find("text") == 0 || mimeType.empty()) {
-    if (uniqueNamespace || mimeType.find("text/html") == 0 || mimeType.find("text/vtt") == 0 || mimeType.empty()) {
+    if (uniqueNamespace || mimeType.find("text/html") == 0 || mimeType.empty()) {
       return "A";
     } else {
       return "-";
