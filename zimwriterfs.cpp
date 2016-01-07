@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 Emmanuel Engelhart <kelson@kiwix.org>
+ * Copyright 2013-2016 Emmanuel Engelhart <kelson@kiwix.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU  General Public License as published by
@@ -62,12 +62,14 @@ std::string description;
 std::string welcome;
 std::string favicon; 
 std::string directoryPath;
+std::string redirectsPath;
 std::string zimPath;
 zim::writer::ZimCreator zimCreator;
 pthread_t directoryVisitor;
 pthread_mutex_t filenameQueueMutex;
 std::queue<std::string> filenameQueue;
 std::queue<std::string> metadataQueue;
+std::queue<std::string> redirectsQueue;
 
 bool isDirectoryVisitorRunningFlag = false;
 pthread_mutex_t directoryVisitorRunningMutex;
@@ -224,7 +226,6 @@ std::string base64_encode(unsigned char const* bytes_to_encode, unsigned int in_
   return ret;
 
 }
-
 
 inline std::string decodeUrl(const std::string &encodedUrl) {
   std::string decodedUrl = encodedUrl;
@@ -416,8 +417,7 @@ class Article : public zim::writer::Article {
     Article() {
       invalid = false;
     }
-    explicit Article(const std::string& id);
-  
+    explicit Article(const std::string& id, const bool detectRedirects);
     virtual std::string getAid() const;
     virtual char getNamespace() const;
     virtual std::string getUrl() const;
@@ -444,6 +444,23 @@ class MetadataArticle : public Article {
       ns = 'M';
       url = id;
     }
+  }
+};
+
+class RedirectArticle : public Article {
+  public:
+  RedirectArticle(const std::string &line) {
+    size_t start;
+    size_t end;
+    ns = line[0];
+    end = line.find_first_of("\t", 2);
+    url = line.substr(2, end);
+    start = end + 1;
+    end = line.find_first_of("\t", start);
+    title = line.substr(start, end - start);
+    redirectAid = line.substr(end + 1);
+    aid = "/" + line.substr(0, 1) + "/" + url;
+    mimeType = "text/plain";
   }
 };
 
@@ -598,7 +615,7 @@ inline std::string computeNewUrl(const std::string &aid, const std::string &url)
   return computeRelativePath(baseUrl, newUrl);
 }
 
-Article::Article(const std::string& path) {
+Article::Article(const std::string& path, const bool detectRedirects = true) {
   invalid = false;
 
   /* aid */
@@ -648,14 +665,13 @@ Article::Article(const std::string& path) {
 	  }
 	}
 
-	/* Detect if this is a redirection */
+	/* Detect if this is a redirection (if no redirects CSV specified) */
 	std::string targetUrl;
 	try {
-	  targetUrl = extractRedirectUrlFromHtml(head_children);
+	  targetUrl = detectRedirects ? extractRedirectUrlFromHtml(head_children) : "";
 	} catch (std::string &error) {
 	  std::cerr << error << std::endl;
 	}
-
 	if (!targetUrl.empty()) {
 	  redirectAid = computeAbsolutePath(aid, decodeUrl(targetUrl));
 	  if (!fileExists(directoryPath + "/" + redirectAid)) {
@@ -668,7 +684,7 @@ Article::Article(const std::string& path) {
       /* If no title, then compute one from the filename */
       if (title.empty()) {
 	found = path.rfind("/");
-	if (found!=std::string::npos) {
+	if (found != std::string::npos) {
 	  title = path.substr(found+1);
 	  found = title.rfind(".");
 	  if (found!=std::string::npos) {
@@ -759,6 +775,10 @@ const zim::writer::Article* ArticleSource::getNextArticle() {
     path = metadataQueue.front();
     metadataQueue.pop();
     article = new MetadataArticle(path);
+  } else if (!redirectsQueue.empty()) {
+    std::string line = redirectsQueue.front();
+    redirectsQueue.pop();
+    article = new RedirectArticle(line);
   } else if (popFromFilenameQueue(path)) {
     do {
       article = new Article(path);
@@ -953,6 +973,7 @@ void usage() {
   std::cout << "\t-m, --minChunkSize\tnumber of bytes per ZIM cluster (defaul: 2048)" << std::endl;
   std::cout << "\t-x, --inflateHtml\ttry to inflate HTML files before packing (*.html, *.htm, ...)" << std::endl;
   std::cout << "\t-u, --uniqueNamespace\tput everything in the same namespace 'A'. Might be necessary to avoid problems with dynamic/javascript data loading." << std::endl;
+  std::cout << "\t-r, --redirects\t\tpath to the CSV file with the list of redirects (url, title, target_url tab separated)." << std::endl;
   std::cout << std::endl;
  
    std::cout << "Example:" << std::endl;
@@ -1102,6 +1123,7 @@ int main(int argc, char** argv) {
     {"verbose", no_argument, 0, 'v'},
     {"welcome", required_argument, 0, 'w'},
     {"minchunksize", required_argument, 0, 'm'},
+    {"redirects", required_argument, 0, 'r'},
     {"inflateHtml", no_argument, 0, 'x'},
     {"uniqueNamespace", no_argument, 0, 'u'},
     {"favicon", required_argument, 0, 'f'},
@@ -1116,7 +1138,7 @@ int main(int argc, char** argv) {
   int c;
 
   do { 
-    c = getopt_long(argc, argv, "hvxuw:m:f:t:d:c:l:p:", long_options, &option_index);
+    c = getopt_long(argc, argv, "hvxuw:m:f:t:d:c:l:p:r:", long_options, &option_index);
     
     if (c != -1) {
       switch (c) {
@@ -1147,6 +1169,9 @@ int main(int argc, char** argv) {
 	break;
       case 'p':
 	publisher = optarg;
+	break;
+      case 'r':
+	redirectsPath = optarg;
 	break;
       case 't':
 	title = optarg;
@@ -1195,13 +1220,31 @@ int main(int argc, char** argv) {
 
   /* Check metadata */
   if (!fileExists(directoryPath + "/" + welcome)) {
-    std::cerr << "zimwriterfs: unable to find welcome page at '" << directoryPath << "/" << welcome << ". --welcome path/value must be relative to HTML_DIRECTORY." << std::endl;
+    std::cerr << "zimwriterfs: unable to find welcome page at '" << directoryPath << "/" << welcome << "'. --welcome path/value must be relative to HTML_DIRECTORY." << std::endl;
     exit(1);
   }
 
   if (!fileExists(directoryPath + "/" + favicon)) {
-    std::cerr << "zimwriterfs: unable to find favicon at " << directoryPath << "/" << favicon << ". --favicon path/value must be relative to HTML_DIRECTORY." << std::endl;
+    std::cerr << "zimwriterfs: unable to find favicon at " << directoryPath << "/" << favicon << "'. --favicon path/value must be relative to HTML_DIRECTORY." << std::endl;
     exit(1);
+  }
+
+  /* Check redirects file and read it if necessary*/
+  if (!redirectsPath.empty() && !fileExists(redirectsPath)) {
+    std::cerr << "zimwriterfs: unable to find redirects CSV file at '" << redirectsPath << "'. Verify --redirects path/value." << std::endl;
+    exit(1);
+  } else {
+    if (isVerbose())
+      std::cout << "Reading redirects CSV file " << redirectsPath << "..." << std::endl;
+
+    std::ifstream in_stream;
+    std::string line;
+
+    in_stream.open(redirectsPath.c_str());
+    while (std::getline(in_stream, line)) {
+      redirectsQueue.push(line);
+    }
+    in_stream.close();
   }
 
   /* Init */
