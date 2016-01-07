@@ -597,18 +597,28 @@ inline std::string getNamespaceForMimeType(const std::string& mimeType) {
   }
 }
 
-inline std::string removeLocalTag(const std::string &url) {
-  std::size_t found = url.find("#");
-  
+inline std::string removeLocalTagAndParameters(const std::string &url) {
+  std::string retVal = url;
+  std::size_t found;
+
+  /* Remove URL arguments */
+  found = retVal.find("?");
   if (found != std::string::npos) {
-    return url.substr(0, found-1);
+    retVal = retVal.substr(0, found-1);
   }
-  return url;
+
+  /* Remove local tag */
+  found = retVal.find("#");
+  if (found != std::string::npos) {
+    retVal = retVal.substr(0, found-1);
+  }
+
+  return retVal;
 }
 
 inline std::string computeNewUrl(const std::string &aid, const std::string &url) {
   std::string filename = computeAbsolutePath(aid, url);
-  std::string targetMimeType = getMimeTypeForFile(removeLocalTag(decodeUrl(filename)));
+  std::string targetMimeType = getMimeTypeForFile(removeLocalTagAndParameters(decodeUrl(filename)));
   std::string originMimeType = getMimeTypeForFile(aid);
   std::string newUrl = "/" + getNamespaceForMimeType(targetMimeType) + "/" + filename;
   std::string baseUrl = "/" + getNamespaceForMimeType(originMimeType) + "/" + aid;
@@ -864,7 +874,7 @@ zim::Blob ArticleSource::getData(const std::string& aid) {
       /* If a link appearch to be duplicated in the HTML, it will
 	 occurs only one time in the links variable */
       for(it = links.begin(); it != links.end(); it++) {
-	if (!it->first.empty() && it->first[0] != '#') {
+	if (!it->first.empty() && it->first[0] != '#' && it->first[0] != '?') {
 	  replaceStringInPlace(html, "\"" + it->first + "\"", "\"" + computeNewUrl(aid, it->first) + "\"");
 	}
       }
