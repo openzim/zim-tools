@@ -454,7 +454,7 @@ class RedirectArticle : public Article {
     size_t end;
     ns = line[0];
     end = line.find_first_of("\t", 2);
-    url = line.substr(2, end);
+    url = line.substr(2, end - 2);
     start = end + 1;
     end = line.find_first_of("\t", start);
     title = line.substr(start, end - start);
