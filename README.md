@@ -28,10 +28,11 @@ version) installed on the system:
 * libmagic (http://www.darwinsys.com/file/, most of the time
   packaged), resp. for the mimeType detection
 * libz (http://www.zlib.net/), resp. for unpack compressed HTML files
+* gumbo (https://github.com/google/gumbo-parser), a pure-C DOM parser
 
 On Debian, you can ensure these are installed with:
 ```
-sudo apt-get install liblzma-dev libmagic-dev zlib1g-dev
+sudo apt-get install liblzma-dev libmagic-dev zlib1g-dev libgumbo-dev
 cd ../zimlib && ./autogen.sh && ./configure && make && cd ../zimwriterfs
 ```
 

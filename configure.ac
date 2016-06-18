@@ -36,8 +36,7 @@ fi
 # Set up CXXFLAGS/LDFLAGS and ensure they are substituted
 AC_ARG_VAR(CXXFLAGS, [C++ compiler flags])
 AC_ARG_VAR(LDFLAGS, linker flags)
-CFLAGS="-O3 -std=gnu99 -std=c99 $CFLAGS"
-CXXFLAGS="-O3 -Igumbo $CXXFLAGS"
+CXXFLAGS="-O3 $CXXFLAGS"
 
 # Check if the liblzma library is available
 AC_CHECK_HEADER([lzma.h],, [AC_MSG_ERROR([[cannot find lzma header]])])
@@ -58,6 +57,11 @@ AC_CHECK_LIB([magic], [magic_file],, [AC_MSG_ERROR([[cannot find libmagic]])])
 # Check if the libpthread library is available
 AC_CHECK_HEADER([pthread.h],, [AC_MSG_ERROR([[cannot find libpthread header]])])
 AC_CHECK_LIB([pthread], [pthread_exit],, [AC_MSG_ERROR([[cannot find libpthread]])])
+
+# Check if the gumbo library is available
+AC_CHECK_HEADER([gumbo.h],, [AC_MSG_ERROR([[cannot find libgumbo header]])])
+AC_CHECK_LIB([gumbo], [gumbo_parse],, [AC_MSG_ERROR([[cannot find libgumbo]])])
+
 
 # Check the existence of stat64 (to handle file >2GB) in the libc
 AC_CHECK_FUNCS([stat64])
