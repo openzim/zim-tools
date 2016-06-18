@@ -1,3 +1,6 @@
+zimwriterfs
+-----------
+
 `zimwriterfs` is a console tool to create [ZIM](http://www.openzim.org)
 files from a locally-stored directory containing "self-sufficient"
 HTML content (with pictures, javascript, and stylesheets). The result will
@@ -26,9 +29,12 @@ version) installed on the system:
   packaged), resp. for the mimeType detection
 * libz (http://www.zlib.net/), resp. for unpack compressed HTML files
 
+Once the dependencies are in place, to build:
+```
 ./autogen.sh
 ./configure
 make
+```
 
 OSX compilation
 ----------------
@@ -37,6 +43,7 @@ On MaxOSX, a script helps you build zimwriterfs both statically and dynamically.
 You must have a working and set up Kiwix repository (with dependencies ready).
 
 1. Install libmagic with brew (it's important)
-	- ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-	- brew install libmagic
-2. KIWIX_ROOT=/Users/xxx/src/kiwix ./macosx-build.sh
+	- `ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
+	- `brew install libmagic`
+2. Build kiwix:
+	- `KIWIX_ROOT=/Users/xxx/src/kiwix ./macosx-build.sh`
