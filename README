@@ -1,15 +1,15 @@
-zimwriterfs is a console tool to create ZIM (http://www.openzim.org)
-files from a localy stored directory containing a "self-sufficient"
-HTML content (with pictures, javascript, stylesheets). The result will
+`zimwriterfs` is a console tool to create [ZIM](http://www.openzim.org)
+files from a locally-stored directory containing "self-sufficient"
+HTML content (with pictures, javascript, and stylesheets). The result will
 contain all the files of the local directory compressed and merged in
 the ZIM file. Nothing more, nothing less. The generated file can be
-open with a ZIM reader, Kiwix (http://www.kiwix.org) for example, but
-you have other one (http://openzim.org/wiki/ZIM_Readers).
+opened with a ZIM reader; [Kiwix](http://www.kiwix.org) is one example, but
+there are [others](http://openzim.org/wiki/ZIM_Readers).
 
-zimwriterfs works for now only on POSIX compatible systems, you simply
+`zimwriterfs` works for now only on POSIX-compatible systems, you simply
 need to compile it and run it. The software does not need a lot of
 resources, but if you create a pretty big ZIM files, then it could
-take a wile to complete.
+take a while to complete.
 
 GNU/Linux compilation
 ---------------------
