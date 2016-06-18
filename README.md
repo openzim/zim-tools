@@ -29,10 +29,16 @@ version) installed on the system:
   packaged), resp. for the mimeType detection
 * libz (http://www.zlib.net/), resp. for unpack compressed HTML files
 
+On Debian, you can ensure these are installed with:
+```
+sudo apt-get install liblzma-dev libmagic-dev zlib1g-dev
+cd ../zimlib && ./autogen.sh && ./configure && make && cd ../zimwriterfs
+```
+
 Once the dependencies are in place, to build:
 ```
 ./autogen.sh
-./configure
+./configure CXXFLAGS=-I../zimlib/include LDFLAGS=-L../zimlib/src/.libs
 make
 ```
 
