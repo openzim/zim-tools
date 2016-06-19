@@ -874,7 +874,7 @@ zim::Blob ArticleSource::getData(const std::string& aid) {
       /* If a link appearch to be duplicated in the HTML, it will
 	 occurs only one time in the links variable */
       for(it = links.begin(); it != links.end(); it++) {
-	if (!it->first.empty() && it->first[0] != '#' && it->first[0] != '?') {
+	if (!it->first.empty() && it->first[0] != '#' && it->first[0] != '?' && it->first.substr(0, 5) != "data:") {
 	  replaceStringInPlace(html, "\"" + it->first + "\"", "\"" + computeNewUrl(aid, it->first) + "\"");
 	}
       }
