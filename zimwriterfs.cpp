@@ -604,13 +604,13 @@ inline std::string removeLocalTagAndParameters(const std::string &url) {
   /* Remove URL arguments */
   found = retVal.find("?");
   if (found != std::string::npos) {
-    retVal = retVal.substr(0, found-1);
+    retVal = retVal.substr(0, found);
   }
 
   /* Remove local tag */
   found = retVal.find("#");
   if (found != std::string::npos) {
-    retVal = retVal.substr(0, found-1);
+    retVal = retVal.substr(0, found);
   }
 
   return retVal;
