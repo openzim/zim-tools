@@ -1,3 +1,6 @@
 AUTOMAKE_OPTIONS=subdir-objects
 bin_PROGRAMS=zimwriterfs
-zimwriterfs_SOURCES=zimwriterfs.cpp
+
+zimwriterfs_SOURCES= \
+        zimwriterfs.cpp \
+        tools.cpp
