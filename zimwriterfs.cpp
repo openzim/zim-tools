@@ -754,7 +754,8 @@ std::string Article::getRedirectAid() const
 bool Article::shouldCompress() const {
   return (getMimeType().find("text") == 0 || 
 	  getMimeType() == "application/javascript" || 
-	  getMimeType() == "application/json" ? true : false);
+	  getMimeType() == "application/json" ||
+	  getMimeType() == "image/svg+xml" ? true : false);
 }
 
 /* ArticleSource class */
