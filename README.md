@@ -44,9 +44,19 @@ make
 ```
 
 OSX compilation
-----------------
+---------------
+OSX builds are similar to Linux, except we use homebrew.  Change to
+`../zimlib` and build zimlib as instructed in the README there.  Then
+return here and:
+```
+brew install gumbo-parser
+./autogen.sh
+./configure CXXFLAGS="-I../zimlib/include -I/usr/local/include" LDFLAGS=-L../zimlib/src/.libs
+make
+```
 
-On MaxOSX, a script helps you build zimwriterfs both statically and dynamically.
+Alternatively, there is a script included here to help you build both
+static and dynamic binaries for `zimwriterfs`.
 You must have a working and set up Kiwix repository (with dependencies ready).
 
 1. Install libmagic with brew (it's important)
