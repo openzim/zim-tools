@@ -3,4 +3,5 @@ bin_PROGRAMS=zimwriterfs
 
 zimwriterfs_SOURCES= \
         zimwriterfs.cpp \
-        tools.cpp
+        tools.cpp \
+        article.cpp

@@ -39,6 +39,7 @@
 
 
 #include "tools.h"
+#include "article.h"
 
 #define MAX_QUEUE_SIZE 100
 
@@ -135,203 +136,6 @@ bool popFromFilenameQueue(std::string &filename) {
   } while (isDirectoryVisitorRunning() || !isFilenameQueueEmpty());
 
   return retVal;
-}
-
-/* Article class */
-class Article : public zim::writer::Article {
-  protected:
-    char ns;
-    bool invalid;
-    std::string aid;
-    std::string url;
-    std::string title;
-    std::string mimeType;
-    std::string redirectAid;
-    std::string data;
-
-  public:
-    Article() {
-      invalid = false;
-    }
-    explicit Article(const std::string& id, const bool detectRedirects);
-    virtual std::string getAid() const;
-    virtual char getNamespace() const;
-    virtual std::string getUrl() const;
-    virtual bool isInvalid() const;
-    virtual std::string getTitle() const;
-    virtual bool isRedirect() const;
-    virtual std::string getMimeType() const;
-    virtual std::string getRedirectAid() const;
-    virtual bool shouldCompress() const;
-};
-
-class MetadataArticle : public Article {
-  public:
-  MetadataArticle(std::string &id) {
-    if (id == "Favicon") {
-      aid = "/-/" + id;
-      mimeType="image/png";
-      redirectAid = favicon;
-      ns = '-';
-      url = "favicon";
-    } else {
-      aid = "/M/" + id;
-      mimeType="text/plain";
-      ns = 'M';
-      url = id;
-    }
-  }
-};
-
-class RedirectArticle : public Article {
-  public:
-  RedirectArticle(const std::string &line) {
-    size_t start;
-    size_t end;
-    ns = line[0];
-    end = line.find_first_of("\t", 2);
-    url = line.substr(2, end - 2);
-    start = end + 1;
-    end = line.find_first_of("\t", start);
-    title = line.substr(start, end - start);
-    redirectAid = line.substr(end + 1);
-    aid = "/" + line.substr(0, 1) + "/" + url;
-    mimeType = "text/plain";
-  }
-};
-
-
-Article::Article(const std::string& path, const bool detectRedirects = true) {
-  invalid = false;
-
-  /* aid */
-  aid = path.substr(directoryPath.size()+1);
-
-  /* url */
-  url = aid;
-
-  /* mime-type */
-  mimeType = getMimeTypeForFile(aid);
-  
-  /* namespace */
-  ns = getNamespaceForMimeType(mimeType)[0];
-
-  /* HTML specific code */
-  if (mimeType.find("text/html") != std::string::npos) {
-    std::size_t found;
-    std::string html = getFileContent(path);
-    GumboOutput* output = gumbo_parse(html.c_str());
-    GumboNode* root = output->root;
-
-    /* Search the content of the <title> tag in the HTML */
-    if (root->type == GUMBO_NODE_ELEMENT && root->v.element.children.length >= 2) {
-      const GumboVector* root_children = &root->v.element.children;
-      GumboNode* head = NULL;
-      for (int i = 0; i < root_children->length; ++i) {
-	GumboNode* child = (GumboNode*)(root_children->data[i]);
-	if (child->type == GUMBO_NODE_ELEMENT &&
-	    child->v.element.tag == GUMBO_TAG_HEAD) {
-	  head = child;
-	  break;
-	}
-      }
-
-      if (head != NULL) {
-	GumboVector* head_children = &head->v.element.children;
-	for (int i = 0; i < head_children->length; ++i) {
-	  GumboNode* child = (GumboNode*)(head_children->data[i]);
-	  if (child->type == GUMBO_NODE_ELEMENT &&
-	      child->v.element.tag == GUMBO_TAG_TITLE) {
-	    if (child->v.element.children.length == 1) {
-	      GumboNode* title_text = (GumboNode*)(child->v.element.children.data[0]);
-	      if (title_text->type == GUMBO_NODE_TEXT) {
-		title = title_text->v.text.text;
-	      }
-	    }
-	  }
-	}
-
-	/* Detect if this is a redirection (if no redirects CSV specified) */
-	std::string targetUrl;
-	try {
-	  targetUrl = detectRedirects ? extractRedirectUrlFromHtml(head_children) : "";
-	} catch (std::string &error) {
-	  std::cerr << error << std::endl;
-	}
-	if (!targetUrl.empty()) {
-	  redirectAid = computeAbsolutePath(aid, decodeUrl(targetUrl));
-	  if (!fileExists(directoryPath + "/" + redirectAid)) {
-	    redirectAid.clear();
-	    invalid = true;
-	  }
-	}
-      }
-
-      /* If no title, then compute one from the filename */
-      if (title.empty()) {
-	found = path.rfind("/");
-	if (found != std::string::npos) {
-	  title = path.substr(found+1);
-	  found = title.rfind(".");
-	  if (found!=std::string::npos) {
-	    title = title.substr(0, found);
-	  }
-	} else {
-	  title = path;
-	}
-	std::replace(title.begin(), title.end(), '_',  ' ');
-      }
-    }
-
-    gumbo_destroy_output(&kGumboDefaultOptions, output);
-  }
-}
-
-std::string Article::getAid() const
-{
-  return aid;
-}
-
-bool Article::isInvalid() const
-{
-  return invalid;
-}
-
-char Article::getNamespace() const
-{
-  return ns;
-}
-
-std::string Article::getUrl() const
-{
-  return url;
-}
-
-std::string Article::getTitle() const
-{
-  return title;
-}
-
-bool Article::isRedirect() const
-{
-  return !redirectAid.empty();
-}
-
-std::string Article::getMimeType() const
-{
-  return mimeType;
-}
-
-std::string Article::getRedirectAid() const
-{
-  return redirectAid;
-}
-
-bool Article::shouldCompress() const {
-  return (getMimeType().find("text") == 0 || 
-	  getMimeType() == "application/javascript" || 
-	  getMimeType() == "application/json" ||
-	  getMimeType() == "image/svg+xml" ? true : false);
 }
 
 /* ArticleSource class */
@@ -657,7 +461,7 @@ void *visitDirectoryPath(void *path) {
 int main(int argc, char** argv) {
   ArticleSource source;
   int minChunkSize = 2048;
-
+  
 
   /* Argument parsing */
   static struct option long_options[] = {
