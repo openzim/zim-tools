@@ -524,8 +524,9 @@ static void getLinks(GumboNode* node, std::map<std::string, bool> &links) {
   }
 }
 
-static void replaceStringInPlaceOnce(std::string& subject, const std::string& search,
-				 const std::string& replace) {
+inline static void replaceStringInPlaceOnce(std::string& subject,
+					    const std::string& search,
+					    const std::string& replace) {
   size_t pos = 0;
   while ((pos = subject.find(search, pos)) != std::string::npos) {
     subject.replace(pos, search.length(), replace);
@@ -534,7 +535,7 @@ static void replaceStringInPlaceOnce(std::string& subject, const std::string& se
   }
 }
 
-static void replaceStringInPlace(std::string& subject, const std::string& search,
+inline static void replaceStringInPlace(std::string& subject, const std::string& search,
 				 const std::string& replace) {
   size_t pos = 0;
   while ((pos = subject.find(search, pos)) != std::string::npos) {
@@ -543,6 +544,13 @@ static void replaceStringInPlace(std::string& subject, const std::string& search
   }
 
   return;
+}
+
+inline static void stripTitleInvalidChars(std::string & str) {
+
+  /* Remove unicode orientation invisible characters */
+  replaceStringInPlace(str, "\u202A", "");
+  replaceStringInPlace(str, "\u202C", "");
 }
 
 static std::string getMimeTypeForFile(const std::string& filename) {
@@ -670,6 +678,7 @@ Article::Article(const std::string& path, const bool detectRedirects = true) {
 	      GumboNode* title_text = (GumboNode*)(child->v.element.children.data[0]);
 	      if (title_text->type == GUMBO_NODE_TEXT) {
 		title = title_text->v.text.text;
+		stripTitleInvalidChars(title);
 	      }
 	    }
 	  }
