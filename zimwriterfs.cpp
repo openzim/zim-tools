@@ -35,8 +35,7 @@
 #include "tools.h"
 #include "article.h"
 #include "articlesource.h"
-
-#define MAX_QUEUE_SIZE 100
+#include "queue.h"
 
 std::string language;
 std::string creator;
@@ -50,8 +49,6 @@ std::string redirectsPath;
 std::string zimPath;
 zim::writer::ZimCreator zimCreator;
 pthread_t directoryVisitor;
-pthread_mutex_t filenameQueueMutex;
-std::queue<std::string> filenameQueue;
 
 bool isDirectoryVisitorRunningFlag = false;
 pthread_mutex_t directoryVisitorRunningMutex;
@@ -83,50 +80,26 @@ bool isVerbose() {
   return retVal;
 }
 
-bool isFilenameQueueEmpty() {
-  pthread_mutex_lock(&filenameQueueMutex);
-  bool retVal = filenameQueue.empty();
-  pthread_mutex_unlock(&filenameQueueMutex);
-  return retVal;
-}
 
-void pushToFilenameQueue(const std::string &filename) {
-  unsigned int wait = 0;
-  unsigned int queueSize = 0;
+class FilenameQueue: public Queue<std::string> {
+    bool popFromQueue(std::string &filename) {
+        bool retVal = false;
+        unsigned int wait = 0;
 
-  do {
-    usleep(wait);
-    pthread_mutex_lock(&filenameQueueMutex);
-    unsigned queueSize = filenameQueue.size();
-    pthread_mutex_unlock(&filenameQueueMutex);
-    wait += 10;
-  } while (queueSize > MAX_QUEUE_SIZE);
+        do {
+            usleep(wait);
+            retVal = Queue::popFromQueue(filename);
+            if (retVal) {
+                break;
+            }
+            wait += 10;
+        } while (isDirectoryVisitorRunning() || !isEmpty());
 
-  pthread_mutex_lock(&filenameQueueMutex);
-  filenameQueue.push(filename);
-  pthread_mutex_unlock(&filenameQueueMutex); 
-}
-
-bool popFromFilenameQueue(std::string &filename) {
-  bool retVal = false;
-  unsigned int wait = 0;
-
-  do {
-    usleep(wait);
-    if (!isFilenameQueueEmpty()) {
-      pthread_mutex_lock(&filenameQueueMutex);
-      filename = filenameQueue.front();
-      filenameQueue.pop();
-      pthread_mutex_unlock(&filenameQueueMutex);
-      retVal = true;
-      break;
-    } else {
-      wait += 10;
+        return retVal;
     }
-  } while (isDirectoryVisitorRunning() || !isFilenameQueueEmpty());
+};
 
-  return retVal;
-}
+FilenameQueue filenameQueue;
 
 /* Non ZIM related code */
 void usage() {
@@ -196,7 +169,7 @@ void *visitDirectory(const std::string &path) {
 
       switch (entry->d_type) {
       case DT_REG:
-	pushToFilenameQueue(fullEntryName);
+	filenameQueue.pushToQueue(fullEntryName);
 	break;
       case DT_DIR:
 	visitDirectory(fullEntryName);
@@ -211,7 +184,7 @@ void *visitDirectory(const std::string &path) {
 	std::cerr << "Unable to deal with " << fullEntryName << " (this is a named pipe)" << std::endl;
 	break;
       case DT_LNK:
-	pushToFilenameQueue(fullEntryName);
+	filenameQueue.pushToQueue(fullEntryName);
 	break;
       case DT_SOCK:
 	std::cerr << "Unable to deal with " << fullEntryName << " (this is a UNIX domain socket)" << std::endl;
@@ -220,7 +193,7 @@ void *visitDirectory(const std::string &path) {
 	struct stat s;
 	if (stat(fullEntryName.c_str(), &s) == 0) {
 	  if (S_ISREG(s.st_mode)) {
-	    pushToFilenameQueue(fullEntryName);
+	    filenameQueue.pushToQueue(fullEntryName);
 	  } else if (S_ISDIR(s.st_mode)) {
 	    visitDirectory(fullEntryName);
           } else {
@@ -251,7 +224,7 @@ void *visitDirectoryPath(void *path) {
 }
 
 int main(int argc, char** argv) {
-  ArticleSource source;
+  ArticleSource source(filenameQueue);
   int minChunkSize = 2048;
   
 
@@ -371,7 +344,6 @@ int main(int argc, char** argv) {
   /* Init */
   magic = magic_open(MAGIC_MIME);
   magic_load(magic, NULL);
-  pthread_mutex_init(&filenameQueueMutex, NULL);
   pthread_mutex_init(&directoryVisitorRunningMutex, NULL);
   pthread_mutex_init(&verboseMutex, NULL);
 
@@ -392,5 +364,4 @@ int main(int argc, char** argv) {
   /* Destroy mutex */
   pthread_mutex_destroy(&directoryVisitorRunningMutex);
   pthread_mutex_destroy(&verboseMutex);
-  pthread_mutex_destroy(&filenameQueueMutex);
 }

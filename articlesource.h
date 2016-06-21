@@ -24,12 +24,13 @@
 #include <string>
 #include <queue>
 #include <fstream>
+#include "queue.h"
 
 #include <zim/writer/zimcreator.h>
 
 class ArticleSource : public zim::writer::ArticleSource {
   public:
-    explicit ArticleSource();
+    explicit ArticleSource(Queue<std::string>& filenameQueue);
     virtual const zim::writer::Article* getNextArticle();
     virtual zim::Blob getData(const std::string& aid);
     virtual std::string getMainPage();
@@ -39,6 +40,7 @@ class ArticleSource : public zim::writer::ArticleSource {
   private:
     std::queue<std::string> metadataQueue;
     std::queue<std::string> redirectsQueue;
+    Queue<std::string>&     filenameQueue;
 };
 
 #endif //OPENZIM_ZIMWRITERFS_ARTICLESOURCE_H

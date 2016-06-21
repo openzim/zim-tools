@@ -28,7 +28,6 @@
 #include <sstream>
 #include <map>
 
-bool popFromFilenameQueue(std::string &filename);
 bool isVerbose();
 
 extern std::string welcome;
@@ -44,8 +43,9 @@ char *data = NULL;
 unsigned int dataSize = 0;
 
 
-
-ArticleSource::ArticleSource() {
+ArticleSource::ArticleSource(Queue<std::string>& filenameQueue):
+    filenameQueue(filenameQueue)
+{
   /* Prepare metadata */
   metadataQueue.push("Language");
   metadataQueue.push("Publisher");
@@ -88,10 +88,10 @@ const zim::writer::Article* ArticleSource::getNextArticle() {
     std::string line = redirectsQueue.front();
     redirectsQueue.pop();
     article = new RedirectArticle(line);
-  } else if (popFromFilenameQueue(path)) {
+  } else if (filenameQueue.popFromQueue(path)) {
     do {
       article = new Article(path);
-    } while (article && article->isInvalid() && popFromFilenameQueue(path));
+    } while (article && article->isInvalid() && filenameQueue.popFromQueue(path));
   } else {
     article = NULL;
   }
