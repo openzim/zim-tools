@@ -40,6 +40,7 @@ std::string base64_encode(unsigned char const* bytes_to_encode, unsigned int in_
 
 void replaceStringInPlaceOnce(std::string& subject, const std::string& search, const std::string& replace);
 void replaceStringInPlace(std::string& subject, const std::string& search, const std::string& replace);
+void stripTitleInvalidChars(std::string & str);
 
 std::string extractRedirectUrlFromHtml(const GumboVector* head_children);
 void getLinks(GumboNode* node, std::map<std::string, bool> &links);

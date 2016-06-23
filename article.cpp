@@ -69,6 +69,7 @@ Article::Article(const std::string& path, const bool detectRedirects) {
 	      GumboNode* title_text = (GumboNode*)(child->v.element.children.data[0]);
 	      if (title_text->type == GUMBO_NODE_TEXT) {
 		title = title_text->v.text.text;
+		stripTitleInvalidChars(title);
 	      }
 	    }
 	  }
