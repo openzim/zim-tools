@@ -6,4 +6,7 @@ zimwriterfs_SOURCES= \
         tools.cpp \
         article.cpp \
         articlesource.cpp \
+        indexer.cpp \
+        resourceTools.cpp \
+        pathTools.cpp \
         mimetypecounter.cpp

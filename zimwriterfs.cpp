@@ -58,6 +58,7 @@ bool verboseFlag = false;
 pthread_mutex_t verboseMutex;
 bool inflateHtmlFlag = false;
 bool uniqueNamespace = false;
+bool createFullTextIndex = false;
 
 magic_t magic;
 
@@ -132,6 +133,7 @@ void usage() {
   std::cout << "\t-x, --inflateHtml\ttry to inflate HTML files before packing (*.html, *.htm, ...)" << std::endl;
   std::cout << "\t-u, --uniqueNamespace\tput everything in the same namespace 'A'. Might be necessary to avoid problems with dynamic/javascript data loading." << std::endl;
   std::cout << "\t-r, --redirects\t\tpath to the CSV file with the list of redirects (url, title, target_url tab separated)." << std::endl;
+  std::cout << "\t-i, --createFullTextIndex\t\tIndex the content and add it to the ZIM." << std::endl;
   std::cout << std::endl;
  
    std::cout << "Example:" << std::endl;
@@ -228,7 +230,7 @@ void *visitDirectoryPath(void *path) {
 int main(int argc, char** argv) {
   ArticleSource source(filenameQueue);
   int minChunkSize = 2048;
-  
+
 
   /* Argument parsing */
   static struct option long_options[] = {
@@ -245,13 +247,14 @@ int main(int argc, char** argv) {
     {"description", required_argument, 0, 'd'},
     {"creator", required_argument, 0, 'c'},
     {"publisher", required_argument, 0, 'p'},
+    {"createFullTextIndex", no_argument, 0, 'i'},
     {0, 0, 0, 0}
   };
   int option_index = 0;
   int c;
 
   do { 
-    c = getopt_long(argc, argv, "hvxuw:m:f:t:d:c:l:p:r:", long_options, &option_index);
+    c = getopt_long(argc, argv, "hvixuw:m:f:t:d:c:l:p:r:", long_options, &option_index);
     
     if (c != -1) {
       switch (c) {
@@ -274,6 +277,9 @@ int main(int argc, char** argv) {
       case 'f':
 	favicon = optarg;
 	break;
+      case 'i':
+        createFullTextIndex = true;
+        break;
       case 'l':
 	language = optarg;
 	break;
