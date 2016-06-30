@@ -32,6 +32,10 @@
 #include <sys/stat.h>
 #include <magic.h>
 
+#include <unicode/translit.h>
+#include <unicode/ucnv.h>
+
+
 #ifdef _WIN32
 #define SEPARATOR "\\"
 #else
@@ -523,3 +527,14 @@ std::string computeNewUrl(const std::string &aid, const std::string &url) {
   return computeRelativePath(baseUrl, newUrl);
 }
 
+std::string removeAccents(const std::string &text) {
+  ucnv_setDefaultName("UTF-8");
+  UErrorCode status = U_ZERO_ERROR;
+  Transliterator *removeAccentsTrans = Transliterator::createInstance("Lower; NFD; [:M:] remove; NFC", UTRANS_FORWARD, status);
+  UnicodeString ustring = UnicodeString(text.c_str());
+  removeAccentsTrans->transliterate(ustring);
+  delete removeAccentsTrans;
+  std::string unaccentedText;
+  ustring.toUTF8String(unaccentedText);
+  return unaccentedText;
+}

@@ -38,6 +38,9 @@
 #include "queue.h"
 #include "mimetypecounter.h"
 
+#if HAVE_XAPIAN
+#include "xapianIndexer.h"
+#endif
 
 std::string language;
 std::string creator;
@@ -229,6 +232,9 @@ void *visitDirectoryPath(void *path) {
 
 int main(int argc, char** argv) {
   ArticleSource source(filenameQueue);
+#if HAVE_XAPIAN
+  XapianIndexer* xapianIndexer = NULL;
+#endif
   int minChunkSize = 2048;
 
 
@@ -368,6 +374,17 @@ int main(int argc, char** argv) {
   pthread_create(&(directoryVisitor), NULL, visitDirectoryPath, (void*)NULL);
   pthread_detach(directoryVisitor);
 
+  /* Indexor */
+  if (createFullTextIndex)
+  {
+#if HAVE_XAPIAN
+       xapianIndexer = new XapianIndexer(language, isVerbose());
+       xapianIndexer->start(zimPath + ".indexdb");
+       source.add_customHandler(xapianIndexer);
+#else
+       std::cerr << "Zimwriterfs is compiled without xapian. Indexing is not available" << std::endl;
+#endif
+  }
 
   MimetypeCounter mimetypeCounter;
   source.add_customHandler(&mimetypeCounter);
@@ -381,6 +398,9 @@ int main(int argc, char** argv) {
     std::cerr << e.what() << std::endl;
   }
 
+#if HAVE_XAPIAN
+  delete xapianIndexer;
+#endif
   /* Destroy mutex */
   pthread_mutex_destroy(&directoryVisitorRunningMutex);
   pthread_mutex_destroy(&verboseMutex);
