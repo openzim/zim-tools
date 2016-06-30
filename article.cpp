@@ -24,7 +24,9 @@
 
 extern std::string directoryPath;
 
-Article::Article(const std::string& path, const bool detectRedirects) {
+Article::Article(ArticleSource* source, const std::string& path, const bool detectRedirects):
+    source(source)
+{
   invalid = false;
 
   /* aid */
@@ -156,4 +158,8 @@ bool Article::shouldCompress() const {
 	  getMimeType() == "application/javascript" || 
 	  getMimeType() == "application/json" ||
           getMimeType() == "image/svg+xml" ? true : false);
+}
+
+zim::Blob Article::getData() {
+    return source->getData(getAid());
 }

@@ -23,6 +23,7 @@
 
 #include <string>
 #include <zim/writer/zimcreator.h>
+#include <zim/blob.h>
 
 extern std::string favicon;
 
@@ -35,13 +36,13 @@ class Article : public zim::writer::Article {
     std::string title;
     std::string mimeType;
     std::string redirectAid;
-    std::string data;
+    mutable ArticleSource* source;
 
   public:
     Article() {
       invalid = false;
     }
-    explicit Article(const std::string& id, const bool detectRedirects = true);
+    explicit Article(ArticleSource* source, const std::string& id, const bool detectRedirects = true);
     virtual std::string getAid() const;
     virtual char getNamespace() const;
     virtual std::string getUrl() const;
@@ -51,6 +52,7 @@ class Article : public zim::writer::Article {
     virtual std::string getMimeType() const;
     virtual std::string getRedirectAid() const;
     virtual bool shouldCompress() const;
+    virtual zim::Blob getData();
 };
 
 class MetadataArticle : public Article {

@@ -83,14 +83,14 @@ const zim::writer::Article* ArticleSource::getNextArticle() {
   if (!metadataQueue.empty()) {
     path = metadataQueue.front();
     metadataQueue.pop();
-    article = new MetadataArticle(path);
+    article = new MetadataArticle(this, path);
   } else if (!redirectsQueue.empty()) {
     std::string line = redirectsQueue.front();
     redirectsQueue.pop();
-    article = new RedirectArticle(line);
+    article = new RedirectArticle(this, line);
   } else if (filenameQueue.popFromQueue(path)) {
     do {
-      article = new Article(path);
+      article = new Article(this, path);
     } while (article && article->isInvalid() && filenameQueue.popFromQueue(path));
   } else {
     article = NULL;
