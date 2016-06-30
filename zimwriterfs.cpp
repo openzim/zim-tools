@@ -36,6 +36,8 @@
 #include "article.h"
 #include "articlesource.h"
 #include "queue.h"
+#include "mimetypecounter.h"
+
 
 std::string language;
 std::string creator;
@@ -330,6 +332,14 @@ int main(int argc, char** argv) {
     exit(1);
   }
 
+  source.add_metadataArticle(new SimpleMetadataArticle("Language", language));
+  source.add_metadataArticle(new SimpleMetadataArticle("Publisher", publisher));
+  source.add_metadataArticle(new SimpleMetadataArticle("Creator", creator));
+  source.add_metadataArticle(new SimpleMetadataArticle("Title", title));
+  source.add_metadataArticle(new SimpleMetadataArticle("Description", description));
+  source.add_metadataArticle(new MetadataDateArticle());
+  source.add_metadataArticle(new MetadataFaviconArticle(favicon));
+
   /* Check redirects file and read it if necessary*/
   if (!redirectsPath.empty() && !fileExists(redirectsPath)) {
     std::cerr << "zimwriterfs: unable to find redirects CSV file at '" << redirectsPath << "'. Verify --redirects path/value." << std::endl;
@@ -351,6 +361,10 @@ int main(int argc, char** argv) {
   directoryVisitorRunning(true);
   pthread_create(&(directoryVisitor), NULL, visitDirectoryPath, (void*)NULL);
   pthread_detach(directoryVisitor);
+
+
+  MimetypeCounter mimetypeCounter;
+  source.add_customHandler(&mimetypeCounter);
 
   /* ZIM creation */
   setenv("ZIM_LZMA_LEVEL", "9e", 1);

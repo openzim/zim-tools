@@ -5,4 +5,5 @@ zimwriterfs_SOURCES= \
         zimwriterfs.cpp \
         tools.cpp \
         article.cpp \
-        articlesource.cpp
+        articlesource.cpp \
+        mimetypecounter.cpp

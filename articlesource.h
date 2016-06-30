@@ -27,20 +27,34 @@
 #include "queue.h"
 
 #include <zim/writer/zimcreator.h>
+#include <zim/blob.h>
+
+class Article;
+
+class IHandler
+{
+    public:
+        virtual void handleArticle(Article* article) = 0;
+        virtual Article* getMetaArticle() = 0;
+};
 
 class ArticleSource : public zim::writer::ArticleSource {
   public:
     explicit ArticleSource(Queue<std::string>& filenameQueue);
+    void add_metadataArticle(Article* article);
     virtual const zim::writer::Article* getNextArticle();
-    virtual zim::Blob getData(const std::string& aid);
     virtual std::string getMainPage();
+    virtual void add_customHandler(IHandler* handler);
     
     virtual void init_redirectsQueue_from_file(const std::string& path);
     
   private:
-    std::queue<std::string> metadataQueue;
+    std::queue<Article*>    metadataQueue;
     std::queue<std::string> redirectsQueue;
     Queue<std::string>&     filenameQueue;
+    std::vector<IHandler*>  articleHandlers;
+    std::vector<IHandler*>::iterator currentLoopHandler;
+    bool                    loopOverHandlerStarted;
 };
 
 #endif //OPENZIM_ZIMWRITERFS_ARTICLESOURCE_H

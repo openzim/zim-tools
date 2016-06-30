@@ -36,13 +36,8 @@ class Article : public zim::writer::Article {
     std::string title;
     std::string mimeType;
     std::string redirectAid;
-    mutable ArticleSource* source;
 
   public:
-    Article() {
-      invalid = false;
-    }
-    explicit Article(ArticleSource* source, const std::string& id, const bool detectRedirects = true);
     virtual std::string getAid() const;
     virtual char getNamespace() const;
     virtual std::string getUrl() const;
@@ -52,26 +47,53 @@ class Article : public zim::writer::Article {
     virtual std::string getMimeType() const;
     virtual std::string getRedirectAid() const;
     virtual bool shouldCompress() const;
-    virtual zim::Blob getData();
 };
 
 class MetadataArticle : public Article {
   public:
-  MetadataArticle(std::string &id) {
-    if (id == "Favicon") {
-      aid = "/-/" + id;
-      mimeType="image/png";
-      redirectAid = favicon;
+    explicit MetadataArticle(const std::string &id);
+};
+
+class SimpleMetadataArticle : public MetadataArticle {
+  private:
+    std::string value;
+  public:
+    explicit SimpleMetadataArticle(const std::string &id, const std::string& value);
+    virtual zim::Blob getData() const { return zim::Blob(value.c_str(), value.size()); }
+};
+
+class MetadataFaviconArticle : public Article {
+  public:
+    explicit MetadataFaviconArticle(std::string value) {
+      aid = "/-/Favicon";
+      mimeType = "image/png";
+      redirectAid = value;
       ns = '-';
       url = "favicon";
-    } else {
-      aid = "/M/" + id;
-      mimeType="text/plain";
-      ns = 'M';
-      url = id;
     }
-  }
+    virtual zim::Blob getData() const { return zim::Blob(); }
 };
+
+class MetadataDateArticle : public MetadataArticle
+{
+  private:
+    mutable std::string data;
+  public:
+    MetadataDateArticle();
+    virtual zim::Blob getData() const;
+};
+
+
+class FileArticle : public Article {
+  private:
+    mutable std::string data;
+    mutable bool        dataRead;
+
+  public:
+    explicit FileArticle(const std::string& id, const bool detectRedirects = true);
+    virtual zim::Blob getData() const;
+};
+
 
 class RedirectArticle : public Article {
   public:
@@ -88,6 +110,7 @@ class RedirectArticle : public Article {
     aid = "/" + line.substr(0, 1) + "/" + url;
     mimeType = "text/plain";
   }
+  virtual zim::Blob getData() const { return zim::Blob(); }
 };
 
 #endif // OPENZIM_ZIMWRITERFS_ARTICLE_H
