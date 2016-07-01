@@ -58,6 +58,7 @@ const zim::writer::Article* ArticleSource::getNextArticle() {
 
   if (article != NULL) {
     delete article;
+    article = NULL;
   }
 
   if (!metadataQueue.empty()) {
@@ -69,12 +70,16 @@ const zim::writer::Article* ArticleSource::getNextArticle() {
     article = new RedirectArticle(line);
   } else if (filenameQueue.popFromQueue(path)) {
     article = new FileArticle(path);
-    while (article && article->isInvalid() && filenameQueue.popFromQueue(path)) {
+    while (article->isInvalid() && filenameQueue.popFromQueue(path)) {
       delete article;
       article = new FileArticle(path);
     };
-  } else {
-    article = NULL;
+    if (article->isInvalid()) {
+      article = NULL;
+    }
+  }
+
+  if (article == NULL) {
     if ( !loopOverHandlerStarted )
     {
         currentLoopHandler = articleHandlers.begin();
