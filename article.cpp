@@ -102,7 +102,7 @@ FileArticle::FileArticle(const std::string& path, const bool detectRedirects):
     if (root->type == GUMBO_NODE_ELEMENT && root->v.element.children.length >= 2) {
       const GumboVector* root_children = &root->v.element.children;
       GumboNode* head = NULL;
-      for (int i = 0; i < root_children->length; ++i) {
+      for (unsigned int i = 0; i < root_children->length; ++i) {
 	GumboNode* child = (GumboNode*)(root_children->data[i]);
 	if (child->type == GUMBO_NODE_ELEMENT &&
 	    child->v.element.tag == GUMBO_TAG_HEAD) {
@@ -113,7 +113,7 @@ FileArticle::FileArticle(const std::string& path, const bool detectRedirects):
 
       if (head != NULL) {
 	GumboVector* head_children = &head->v.element.children;
-	for (int i = 0; i < head_children->length; ++i) {
+	for (unsigned int i = 0; i < head_children->length; ++i) {
 	  GumboNode* child = (GumboNode*)(head_children->data[i]);
 	  if (child->type == GUMBO_NODE_ELEMENT &&
 	      child->v.element.tag == GUMBO_TAG_TITLE) {

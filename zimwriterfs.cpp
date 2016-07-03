@@ -136,7 +136,7 @@ void usage() {
   std::cout << "\t-x, --inflateHtml\ttry to inflate HTML files before packing (*.html, *.htm, ...)" << std::endl;
   std::cout << "\t-u, --uniqueNamespace\tput everything in the same namespace 'A'. Might be necessary to avoid problems with dynamic/javascript data loading." << std::endl;
   std::cout << "\t-r, --redirects\t\tpath to the CSV file with the list of redirects (url, title, target_url tab separated)." << std::endl;
-  std::cout << "\t-i, --withFullTextIndex\tIndex the content and add it to the ZIM." << std::endl;
+  std::cout << "\t-i, --withFullTextIndex\tindex the content and add it to the ZIM." << std::endl;
   std::cout << std::endl;
  
    std::cout << "Example:" << std::endl;
@@ -167,7 +167,7 @@ void *visitDirectory(const std::string &path) {
 
   /* Read directory content */
   struct dirent *entry;
-  while (entry = readdir(directory)) {
+  while ((entry = readdir(directory)) != NULL) {
     std::string entryName = entry->d_name;
 
     /* Ignore this system navigation virtual directories */
@@ -218,16 +218,20 @@ void *visitDirectory(const std::string &path) {
   }
   
   closedir(directory);
+
+  return NULL;
 }
 
 void *visitDirectoryPath(void *path) {
-  visitDirectory(directoryPath);
+  visitDirectory(*((std::string*)path));
 
   if (isVerbose())
     std::cout << "Quitting visitor" << std::endl;
 
   directoryVisitorRunning(false); 
   pthread_exit(NULL);
+
+  return NULL;
 }
 
 int main(int argc, char** argv) {
@@ -371,7 +375,7 @@ int main(int argc, char** argv) {
 
   /* Directory visitor */
   directoryVisitorRunning(true);
-  pthread_create(&(directoryVisitor), NULL, visitDirectoryPath, (void*)NULL);
+  pthread_create(&(directoryVisitor), NULL, visitDirectoryPath, &directoryPath);
   pthread_detach(directoryVisitor);
 
   /* Indexor */

@@ -372,14 +372,14 @@ static bool isLocalUrl(const std::string url) {
 std::string extractRedirectUrlFromHtml(const GumboVector* head_children) {
   std::string url;
   
-  for (int i = 0; i < head_children->length; ++i) {
+  for (unsigned int i = 0; i < head_children->length; ++i) {
     GumboNode* child = (GumboNode*)(head_children->data[i]);
     if (child->type == GUMBO_NODE_ELEMENT &&
 	child->v.element.tag == GUMBO_TAG_META) {
       GumboAttribute* attribute;
-      if (attribute = gumbo_get_attribute(&child->v.element.attributes, "http-equiv")) {
+      if ((attribute = gumbo_get_attribute(&child->v.element.attributes, "http-equiv")) != NULL) {
 	if (!strcmp(attribute->value, "refresh")) {
-	  if (attribute = gumbo_get_attribute(&child->v.element.attributes, "content")) {
+	  if ((attribute = gumbo_get_attribute(&child->v.element.attributes, "content")) != NULL) {
 	    std::string targetUrl = attribute->value;
 	    std::size_t found = targetUrl.find("URL=") != std::string::npos ? targetUrl.find("URL=") : targetUrl.find("url=");
 	    if (found!=std::string::npos) {
@@ -412,7 +412,7 @@ void getLinks(GumboNode* node, std::map<std::string, bool> &links) {
   }
 
   GumboVector* children = &node->v.element.children;
-  for (int i = 0; i < children->length; ++i) {
+  for (unsigned int i = 0; i < children->length; ++i) {
     getLinks(static_cast<GumboNode*>(children->data[i]), links);
   }
 }
