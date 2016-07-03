@@ -61,7 +61,7 @@ bool verboseFlag = false;
 pthread_mutex_t verboseMutex;
 bool inflateHtmlFlag = false;
 bool uniqueNamespace = false;
-bool createFullTextIndex = false;
+bool withFullTextIndex = false;
 
 magic_t magic;
 
@@ -136,7 +136,7 @@ void usage() {
   std::cout << "\t-x, --inflateHtml\ttry to inflate HTML files before packing (*.html, *.htm, ...)" << std::endl;
   std::cout << "\t-u, --uniqueNamespace\tput everything in the same namespace 'A'. Might be necessary to avoid problems with dynamic/javascript data loading." << std::endl;
   std::cout << "\t-r, --redirects\t\tpath to the CSV file with the list of redirects (url, title, target_url tab separated)." << std::endl;
-  std::cout << "\t-i, --createFullTextIndex\t\tIndex the content and add it to the ZIM." << std::endl;
+  std::cout << "\t-i, --withFullTextIndex\tIndex the content and add it to the ZIM." << std::endl;
   std::cout << std::endl;
  
    std::cout << "Example:" << std::endl;
@@ -253,7 +253,7 @@ int main(int argc, char** argv) {
     {"description", required_argument, 0, 'd'},
     {"creator", required_argument, 0, 'c'},
     {"publisher", required_argument, 0, 'p'},
-    {"createFullTextIndex", no_argument, 0, 'i'},
+    {"withFullTextIndex", no_argument, 0, 'i'},
     {0, 0, 0, 0}
   };
   int option_index = 0;
@@ -284,7 +284,7 @@ int main(int argc, char** argv) {
 	favicon = optarg;
 	break;
       case 'i':
-        createFullTextIndex = true;
+        withFullTextIndex = true;
         break;
       case 'l':
 	language = optarg;
@@ -375,14 +375,13 @@ int main(int argc, char** argv) {
   pthread_detach(directoryVisitor);
 
   /* Indexor */
-  if (createFullTextIndex)
-  {
+  if (withFullTextIndex) {
 #if HAVE_XAPIAN
        xapianIndexer = new XapianIndexer(language, isVerbose());
        xapianIndexer->start(zimPath + ".indexdb");
        source.add_customHandler(xapianIndexer);
 #else
-       std::cerr << "Zimwriterfs is compiled without xapian. Indexing is not available" << std::endl;
+       std::cerr << "Zimwriterfs is compiled without Xapian. Indexing is not available." << std::endl;
 #endif
   }
 
