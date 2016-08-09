@@ -404,6 +404,8 @@ int main(int argc, char** argv) {
 #if HAVE_XAPIAN
   delete xapianIndexer;
 #endif
+
+  magic_close(magic);
   /* Destroy mutex */
   pthread_mutex_destroy(&directoryVisitorRunningMutex);
   pthread_mutex_destroy(&verboseMutex);
