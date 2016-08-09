@@ -246,19 +246,22 @@ std::string base64_encode(unsigned char const* bytes_to_encode, unsigned int in_
 
 }
 
-std::string decodeUrl(const std::string &encodedUrl) {
-  std::string decodedUrl = encodedUrl;
-  std::string::size_type pos = 0;
-  char ch;
+static char charFromHex(std::string a) {
+  std::istringstream Blat(a);
+  int Z;
+  Blat >> std::hex >> Z;
+  return char (Z);
+}
 
-  while ((pos = decodedUrl.find('%', pos)) != std::string::npos &&
-	 pos + 2 < decodedUrl.length()) {
-    sscanf(decodedUrl.substr(pos + 1, 2).c_str(), "%x", (unsigned int*)&ch);
-    decodedUrl.replace(pos, 3, 1, ch);
+std::string decodeUrl(const std::string &originalUrl) {
+  std::string url = originalUrl;
+  std::string::size_type pos = 0;
+  while ((pos = url.find('%', pos)) != std::string::npos &&
+	 pos + 2 < url.length()) {
+    url.replace(pos, 3, 1, charFromHex(url.substr(pos + 1, 2)));
     ++pos;
   }
-
-  return decodedUrl;
+  return url;
 }
 
 std::string removeLastPathElement(const std::string& path, const bool removePreSeparator, const bool removePostSeparator) {
