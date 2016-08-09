@@ -75,6 +75,7 @@ const zim::writer::Article* ArticleSource::getNextArticle() {
       article = new FileArticle(path);
     };
     if (article->isInvalid()) {
+      delete article;
       article = NULL;
     }
   }
