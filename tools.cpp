@@ -423,11 +423,9 @@ void getLinks(GumboNode* node, std::map<std::string, bool> &links) {
 void replaceStringInPlaceOnce(std::string& subject,
                               const std::string& search,
                               const std::string& replace) {
-  size_t pos = 0;
-  while ((pos = subject.find(search, pos)) != std::string::npos) {
+  size_t pos = subject.find(search, 0);
+  if (pos != std::string::npos) {
     subject.replace(pos, search.length(), replace);
-    pos += replace.length();
-    return; /* Do it once */
   }
 }
 
