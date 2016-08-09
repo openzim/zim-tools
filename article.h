@@ -47,6 +47,7 @@ class Article : public zim::writer::Article {
     virtual std::string getMimeType() const;
     virtual std::string getRedirectAid() const;
     virtual bool shouldCompress() const;
+    virtual ~Article() {};
 };
 
 class MetadataArticle : public Article {
