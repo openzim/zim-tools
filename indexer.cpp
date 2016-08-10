@@ -101,10 +101,6 @@
     }
     self->indexingPostlude();
 
-    /* Write content id file */
-    string path = appendToDirectory(self->getIndexPath(), "content.id");
-    writeTextFile(path, self->getZimId());
-
     usleep(100);
 
     self->articleIndexerRunning(false);
