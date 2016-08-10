@@ -96,9 +96,6 @@ void XapianIndexer::indexingPostlude() {
     this->writableDatabase.commit_transaction();
     this->writableDatabase.commit();
     this->writableDatabase.compact(indexPath, Xapian::DBCOMPACT_SINGLE_FILE);
-
-    // commit is not available is old version of xapian and seems not mandatory there
-    // this->writableDatabase.commit();
 }
 
 void XapianIndexer::handleArticle(Article* article)
