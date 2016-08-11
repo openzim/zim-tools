@@ -108,7 +108,7 @@ void XapianIndexer::handleArticle(Article* article)
         return;
 
     token.title = article->getTitle();
-    token.url = article->getUrl();
+    token.url = std::string(1, article->getNamespace()) + '/' + article->getUrl();
     zim::Blob article_content = article->getData();
     token.content = std::string(article_content.data(), article_content.size());
 
