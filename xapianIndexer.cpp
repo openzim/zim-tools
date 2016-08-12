@@ -32,6 +32,17 @@ XapianIndexer::XapianIndexer(const std::string& language, const bool verbose) {
   */
 }
 
+XapianIndexer::~XapianIndexer(){
+  if (!indexPath.empty()) {
+    try {
+      remove_all(indexPath + ".tmp");
+      remove_all(indexPath);
+    } catch(...) {
+      /* Do not raise */
+    }
+  }
+}
+
 void XapianIndexer::indexingPrelude(const string indexPath_) {
     indexPath = indexPath_;
     this->writableDatabase = Xapian::WritableDatabase(indexPath + ".tmp", Xapian::DB_CREATE_OR_OVERWRITE);

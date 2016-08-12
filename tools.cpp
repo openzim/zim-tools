@@ -31,6 +31,7 @@
 #include <cerrno>
 #include <sys/stat.h>
 #include <magic.h>
+#include <dirent.h>
 
 #include <unicode/translit.h>
 #include <unicode/ucnv.h>
@@ -538,4 +539,20 @@ std::string removeAccents(const std::string &text) {
   std::string unaccentedText;
   ustring.toUTF8String(unaccentedText);
   return unaccentedText;
+}
+
+void remove_all(const std::string& path) {
+  DIR *dir;
+  struct dirent *ent;
+  if ((dir = opendir (path.c_str())) != NULL) {
+    /* It's a directory, remove all its entries. */
+    while ((ent = readdir (dir)) != NULL) {
+      if (strcmp(ent->d_name, ".") and strcmp(ent->d_name, "..")) {
+        std::string childPath = path + SEPARATOR + ent->d_name;
+        remove_all(childPath);
+      }
+    }
+    closedir (dir);
+  }
+  remove(path.c_str());
 }

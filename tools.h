@@ -47,4 +47,6 @@ void getLinks(GumboNode* node, std::map<std::string, bool> &links);
 
 std::string removeAccents(const std::string &text);
 
+void remove_all(const std::string& path);
+
 #endif // OPENZIM_ZIMWRITERFS_TOOLS_H

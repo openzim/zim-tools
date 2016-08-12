@@ -50,6 +50,7 @@ class XapianMetaArticle : public Article {
 class XapianIndexer : public Indexer, public IHandler {
     public:
         XapianIndexer(const std::string& language, bool verbose);
+        virtual ~XapianIndexer();
         std::string getIndexPath() { return indexPath; }
 
     protected:
