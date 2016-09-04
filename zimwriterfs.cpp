@@ -46,6 +46,8 @@ std::string language;
 std::string creator;
 std::string publisher;
 std::string title;
+std::string tags;
+std::string name;
 std::string description;
 std::string welcome;
 std::string favicon; 
@@ -124,6 +126,8 @@ void usage() {
   std::cout << "\t-d, --description\tshort description of the content" << std::endl;
   std::cout << "\t-c, --creator\t\tcreator(s) of the content" << std::endl;
   std::cout << "\t-p, --publisher\t\tcreator of the ZIM file itself" << std::endl;
+  std::cout << "\t-a, --tags\t\tags semicolon separated" << std::endl;
+  std::cout << "\t-n, --name\t\tcustom (version independent) identifier for the content" << std::endl;
   std::cout << std::endl;
   std::cout << "\tHTML_DIRECTORY\t\tis the path of the directory containing the HTML pages you want to put in the ZIM file," << std::endl;
   std::cout << "\tZIM_FILE\t\tis the path of the ZIM file you want to obtain." << std::endl;
@@ -241,19 +245,20 @@ int main(int argc, char** argv) {
 #endif
   int minChunkSize = 2048;
 
-
   /* Argument parsing */
   static struct option long_options[] = {
     {"help", no_argument, 0, 'h'},
     {"verbose", no_argument, 0, 'v'},
     {"welcome", required_argument, 0, 'w'},
     {"minchunksize", required_argument, 0, 'm'},
+    {"name", required_argument, 0, 'n'},
     {"redirects", required_argument, 0, 'r'},
     {"inflateHtml", no_argument, 0, 'x'},
     {"uniqueNamespace", no_argument, 0, 'u'},
     {"favicon", required_argument, 0, 'f'},
     {"language", required_argument, 0, 'l'},
     {"title", required_argument, 0, 't'},
+    {"tags", required_argument, 0, 'a'},
     {"description", required_argument, 0, 'd'},
     {"creator", required_argument, 0, 'c'},
     {"publisher", required_argument, 0, 'p'},
@@ -268,6 +273,9 @@ int main(int argc, char** argv) {
     
     if (c != -1) {
       switch (c) {
+      case 'a':
+	tags = optarg;
+	break;
       case 'h':
 	usage();
 	exit(0);	
@@ -295,6 +303,9 @@ int main(int argc, char** argv) {
 	break;
       case 'm':
 	minChunkSize = atoi(optarg);
+	break;
+      case 'n':
+	name = optarg;
 	break;
       case 'p':
 	publisher = optarg;
@@ -353,6 +364,8 @@ int main(int argc, char** argv) {
   source.add_metadataArticle(new SimpleMetadataArticle("Creator", creator));
   source.add_metadataArticle(new SimpleMetadataArticle("Title", title));
   source.add_metadataArticle(new SimpleMetadataArticle("Description", description));
+  source.add_metadataArticle(new SimpleMetadataArticle("Name", name));
+  source.add_metadataArticle(new SimpleMetadataArticle("Tags", tags));
   source.add_metadataArticle(new MetadataDateArticle());
   source.add_metadataArticle(new MetadataFaviconArticle(favicon));
 
