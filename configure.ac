@@ -1,5 +1,5 @@
 # autotools initializations
-AC_INIT([zimwriterfs], [0.1])
+AC_INIT([zimwriterfs], [1.0])
 
 # where are autotools scripts located
 AC_CONFIG_AUX_DIR([.])
