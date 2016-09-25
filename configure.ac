@@ -7,6 +7,11 @@ AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
 
+# Empty default flags
+if test -z $CXXFLAGS; then
+    CXXFLAGS=''
+fi
+
 # find CC compiler
 AC_PROG_CC
 
@@ -36,7 +41,18 @@ fi
 # Set up CXXFLAGS/LDFLAGS and ensure they are substituted
 AC_ARG_VAR(CXXFLAGS, [C++ compiler flags])
 AC_ARG_VAR(LDFLAGS, linker flags)
-CXXFLAGS="-O3 $CXXFLAGS"
+CXXFLAGS="-Wall $CXXFLAGS"
+
+# Enable debug
+AC_ARG_ENABLE(debug,
+AS_HELP_STRING([--enable-debug],
+               [enable debugging, default: no]),
+[case "${enableval}" in
+             yes) debug=true ;;
+             no)  debug=false ;;
+             *)   AC_MSG_ERROR([bad value ${enableval} for --enable-debug]) ;;
+esac], [debug=false])
+AM_CONDITIONAL(DEBUG, test x"$debug" = x"true")
 
 # Check if the liblzma library is available
 AC_CHECK_HEADER([lzma.h],, [AC_MSG_ERROR([[cannot find lzma header]])])

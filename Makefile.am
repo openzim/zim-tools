@@ -34,3 +34,9 @@ zimwriterfs_SOURCES += \
         xapian/htmlparse.h \
         xapian/namedentities.h
 endif
+
+if DEBUG
+CXXFLAGS += -g3 -O0
+else
+CXXFLAGS += -O3
+endif
