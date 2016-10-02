@@ -40,7 +40,7 @@ class XapianMetaArticle : public Article {
             indexer(indexer)
         {
             ns = 'Z';
-            aid = url = "/Z/fulltextIndex/xapian";
+            aid = url = "/fulltextIndex/xapian";
             title = "Xapian Fulltext Index";
             mimeType = "application/octet-stream+xapian";
         };
