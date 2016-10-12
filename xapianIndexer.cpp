@@ -56,6 +56,7 @@ void XapianIndexer::indexingPrelude(const string indexPath_) {
       }
 
       this->indexer.set_stopper(&(this->stopper));
+      this->indexer.set_stopper_strategy(Xapian::TermGenerator::STOP_ALL);
     }
 }
 
