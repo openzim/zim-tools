@@ -20,14 +20,15 @@
 #ifndef OPENZIM_ZIMWRITERFS_XAPIANINDEXER_H
 #define OPENZIM_ZIMWRITERFS_XAPIANINDEXER_H
 
-
 #include "indexer.h"
 #include "articlesource.h"
 #include "article.h"
+#include "tools.h"
 
 #include <xapian.h>
 #include "xapian/myhtmlparse.h"
 #include <zim/blob.h>
+#include <unicode/locid.h>
 
 class XapianIndexer;
 

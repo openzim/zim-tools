@@ -18,18 +18,20 @@
  */
 
 #include "xapianIndexer.h"
-#include "tools.h"
-
-#include <unistd.h>
 
 /* Constructor */
 XapianIndexer::XapianIndexer(const std::string& language, const bool verbose) {
     setVerboseFlag(verbose);
     readStopWords(language);
-  /*
-  stemmer(Xapian::Stem("french")) {
-  this->indexer.set_stemmer(this->stemmer);
-  */
+
+    /* Build ICU Local object to retrieve ISO-639 language code (from
+       ISO-639-3) */
+    icu::Locale *languageLocale = new icu::Locale(language.c_str());
+
+    /* Configuring language base steemming */
+    this->stemmer = Xapian::Stem(languageLocale->getLanguage());
+    this->indexer.set_stemmer(this->stemmer);
+    this->indexer.set_stemming_strategy(Xapian::TermGenerator::STEM_ALL);
 }
 
 XapianIndexer::~XapianIndexer(){
