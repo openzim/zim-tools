@@ -29,9 +29,13 @@ XapianIndexer::XapianIndexer(const std::string& language, const bool verbose) {
     icu::Locale *languageLocale = new icu::Locale(language.c_str());
 
     /* Configuring language base steemming */
-    this->stemmer = Xapian::Stem(languageLocale->getLanguage());
-    this->indexer.set_stemmer(this->stemmer);
-    this->indexer.set_stemming_strategy(Xapian::TermGenerator::STEM_ALL);
+    try {
+      this->stemmer = Xapian::Stem(languageLocale->getLanguage());
+      this->indexer.set_stemmer(this->stemmer);
+      this->indexer.set_stemming_strategy(Xapian::TermGenerator::STEM_ALL);
+    } catch (...) {
+      std::cout << "No steemming for language '" << languageLocale->getLanguage() << "'" << std::endl;
+    }
 }
 
 XapianIndexer::~XapianIndexer(){
