@@ -176,21 +176,20 @@ AC_ARG_WITH([xapian],
 	[xapian_dir=$withval],
 	[with_xapian=yes])
 
-
 AS_IF([test "x$with_xapian" == xno],
         [AM_CONDITIONAL(HAVE_XAPIAN, false)],
 	[OLDPATH=$PATH
 	 AS_IF([test "x$with_xapian" != xyes],
 	       PATH="$with_xapian:$PATH")
-	 AC_CHECK_TOOLS(XAPIAN_CONFIG, xapian-config-1.3, xapian-config,[],$PATH)
+	 AC_CHECK_TOOLS(XAPIAN_CONFIG, xapian-config-1.4, xapian-config,[],$PATH)
 	 AS_IF([test "x$XAPIAN_CONFIG" == x ],
 	        AC_MSG_ERROR([[cannot find xapian-config file]])
 	      )
 	 XAPIAN_VERSION=`$XAPIAN_CONFIG --version`
 	 good_version=yes
-	 AS_VERSION_COMPARE($XAPIAN_VERSION, "xapian-config - xapian-core 1.3.4", [good_version=no], [], [])
+	 AS_VERSION_COMPARE($XAPIAN_VERSION, "xapian-config - xapian-core 1.4.1", [good_version=no], [], [])
 	 AS_IF([test "x$good_version" == xno],
-	        AC_MSG_ERROR([[xapian version must be >= 1.3.4]])
+	        AC_MSG_ERROR([[xapian version must be >= 1.4.1]])
 	      )
 	 AM_CONDITIONAL(HAVE_XAPIAN, true)
 	 AC_DEFINE(HAVE_XAPIAN)
