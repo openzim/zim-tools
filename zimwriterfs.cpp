@@ -126,7 +126,7 @@ void usage() {
   std::cout << "\t-d, --description\tshort description of the content" << std::endl;
   std::cout << "\t-c, --creator\t\tcreator(s) of the content" << std::endl;
   std::cout << "\t-p, --publisher\t\tcreator of the ZIM file itself" << std::endl;
-  std::cout << "\t-a, --tags\t\tags semicolon separated" << std::endl;
+  std::cout << "\t-a, --tags\t\ttags - semicolon separated" << std::endl;
   std::cout << "\t-n, --name\t\tcustom (version independent) identifier for the content" << std::endl;
   std::cout << std::endl;
   std::cout << "\tHTML_DIRECTORY\t\tis the path of the directory containing the HTML pages you want to put in the ZIM file," << std::endl;
@@ -357,6 +357,12 @@ int main(int argc, char** argv) {
   if (!fileExists(directoryPath + "/" + favicon)) {
     std::cerr << "zimwriterfs: unable to find favicon at " << directoryPath << "/" << favicon << "'. --favicon path/value must be relative to HTML_DIRECTORY." << std::endl;
     exit(1);
+  }
+
+  /* System tags */
+  if (withFullTextIndex) {
+    tags += tags.empty() ? "" : ";";
+    tags += "_ftindex";
   }
 
   source.add_metadataArticle(new SimpleMetadataArticle("Language", language));
