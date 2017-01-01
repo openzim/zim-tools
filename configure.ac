@@ -187,9 +187,9 @@ AS_IF([test "x$with_xapian" == xno],
 	      )
 	 XAPIAN_VERSION=`$XAPIAN_CONFIG --version`
 	 good_version=yes
-	 AS_VERSION_COMPARE($XAPIAN_VERSION, "xapian-config - xapian-core 1.4.1", [good_version=no], [], [])
+	 AS_VERSION_COMPARE($XAPIAN_VERSION, "xapian-config - xapian-core 1.4.2", [good_version=no], [], [])
 	 AS_IF([test "x$good_version" == xno],
-	        AC_MSG_ERROR([[xapian version must be >= 1.4.1]])
+	        AC_MSG_ERROR([[xapian version must be >= 1.4.2]])
 	      )
 	 AM_CONDITIONAL(HAVE_XAPIAN, true)
 	 AC_DEFINE(HAVE_XAPIAN)
