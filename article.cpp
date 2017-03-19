@@ -127,7 +127,7 @@ FileArticle::FileArticle(const std::string& path, const bool detectRedirects):
 	  }
 	}
 
-	/* Detect if this is a redirection (if no redirects CSV specified) */
+	/* Detect if this is a redirection (if no redirects TSV file specified) */
 	std::string targetUrl;
 	try {
 	  targetUrl = detectRedirects ? extractRedirectUrlFromHtml(head_children) : "";

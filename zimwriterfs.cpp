@@ -139,7 +139,7 @@ void usage() {
   std::cout << "\t-m, --minChunkSize\tnumber of bytes per ZIM cluster (defaul: 2048)" << std::endl;
   std::cout << "\t-x, --inflateHtml\ttry to inflate HTML files before packing (*.html, *.htm, ...)" << std::endl;
   std::cout << "\t-u, --uniqueNamespace\tput everything in the same namespace 'A'. Might be necessary to avoid problems with dynamic/javascript data loading." << std::endl;
-  std::cout << "\t-r, --redirects\t\tpath to the CSV file with the list of redirects (url, title, target_url tab separated)." << std::endl;
+  std::cout << "\t-r, --redirects\t\tpath to the TSV file with the list of redirects (url, title, target_url tab separated)." << std::endl;
   std::cout << "\t-i, --withFullTextIndex\tindex the content and add it to the ZIM." << std::endl;
   std::cout << std::endl;
  
@@ -377,11 +377,11 @@ int main(int argc, char** argv) {
 
   /* Check redirects file and read it if necessary*/
   if (!redirectsPath.empty() && !fileExists(redirectsPath)) {
-    std::cerr << "zimwriterfs: unable to find redirects CSV file at '" << redirectsPath << "'. Verify --redirects path/value." << std::endl;
+    std::cerr << "zimwriterfs: unable to find redirects TSV file at '" << redirectsPath << "'. Verify --redirects path/value." << std::endl;
     exit(1);
   } else {
     if (isVerbose())
-      std::cout << "Reading redirects CSV file " << redirectsPath << "..." << std::endl;
+      std::cout << "Reading redirects TSV file " << redirectsPath << "..." << std::endl;
     
     source.init_redirectsQueue_from_file(redirectsPath);
   }
