@@ -52,6 +52,7 @@ XapianIndexer::~XapianIndexer(){
 void XapianIndexer::indexingPrelude(const string indexPath_) {
     indexPath = indexPath_;
     this->writableDatabase = Xapian::WritableDatabase(indexPath + ".tmp", Xapian::DB_CREATE_OR_OVERWRITE);
+    this->writableDatabase.set_metadata("valuesmap", "title:0;snippet:1;size:2;wordcount:3");
     this->writableDatabase.begin_transaction(true);
 
     /* Insert the stopwords */
