@@ -29,14 +29,10 @@
 #include <sstream>
 
 #include <pthread.h>
-/*#include <stringTools.h>
-#include <otherTools.h>
-#include <resourceTools.h>*/
 #include <zim/file.h>
 #include <zim/article.h>
 #include <zim/fileiterator.h>
 #include <zim/writer/zimcreator.h>
-/*#include "reader.h"*/
 
 using namespace std;
 

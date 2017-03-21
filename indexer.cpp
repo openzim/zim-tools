@@ -89,6 +89,10 @@
 
       indexedArticleCount += 1;
 
+      if ( (indexedArticleCount % 1000 == 0) && self->getVerboseFlag()) {
+          std::cout << indexedArticleCount << " articled indexed." <<std::endl;
+      }
+
       /* Make a hard-disk flush every 10.000 articles */
       if (indexedArticleCount % 5000 == 0) {
 	self->flush();
@@ -137,10 +141,6 @@
   bool Indexer::popFromToIndexQueue(indexerToken &token) {
     while (this->isToIndexQueueEmpty()) {
       usleep(500);
-      if (this->getVerboseFlag()) {
-	std::cout << "Waiting... ToIndexQueue is empty for now..." << std::endl;
-      }
-
       pthread_testcancel();
     }
 
