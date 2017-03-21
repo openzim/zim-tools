@@ -52,7 +52,7 @@ XapianIndexer::~XapianIndexer(){
 void XapianIndexer::indexingPrelude(const string indexPath_) {
     indexPath = indexPath_;
     this->writableDatabase = Xapian::WritableDatabase(indexPath + ".tmp", Xapian::DB_CREATE_OR_OVERWRITE);
-    this->writableDatabase.set_metadata("valuesmap", "title:0;snippet:1;size:2;wordcount:3");
+    this->writableDatabase.set_metadata("valuesmap", "title:0;wordcount:1");
     this->writableDatabase.begin_transaction(true);
 
     /* Insert the stopwords */
@@ -72,17 +72,13 @@ void XapianIndexer::index(const string &url,
                           const string &unaccentedTitle,
                           const string &keywords,
                           const string &content,
-                          const string &snippet,
-                          const string &size,
                           const string &wordCount) {
 
     /* Put the data in the document */
     Xapian::Document currentDocument;
     currentDocument.clear_values();
     currentDocument.add_value(0, title);
-    currentDocument.add_value(1, snippet);
-    currentDocument.add_value(2, size);
-    currentDocument.add_value(3, wordCount);
+    currentDocument.add_value(1, wordCount);
     currentDocument.set_data(url);
     indexer.set_document(currentDocument);
 
@@ -149,20 +145,6 @@ void XapianIndexer::handleArticle(Article* article)
 	stringstream countWordStringStream;
 	countWordStringStream << countWords(htmlParser.dump);
 	token.wordCount = countWordStringStream.str();
-
-	/* snippet */
-	std::string snippet = std::string(htmlParser.dump, 0, 300);
-	std::string::size_type last = snippet.find_last_of('.');
-	if (last == snippet.npos)
-	  last = snippet.find_last_of(' ');
-	if (last != snippet.npos)
-	  snippet = snippet.substr(0, last);
-	token.snippet = snippet;
-
-	/* size */
-	stringstream sizeStringStream;
-	sizeStringStream << token.content.size() / 1024;
-	token.size = sizeStringStream.str();
 
 	/* Remove accent */
 	token.title = removeAccents(token.accentedTitle);

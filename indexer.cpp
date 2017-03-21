@@ -84,8 +84,6 @@
 		  token.title,
 		  token.keywords,
 		  token.content,
-		  token.snippet,
-		  token.size,
 		  token.wordCount
 		  );
 
