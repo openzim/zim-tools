@@ -74,6 +74,7 @@ class XapianIndexer : public Indexer, public IHandler {
         Xapian::TermGenerator indexer;
         std::string indexPath;
         std::string language;
+        std::string stopwords;
 };
 
 #endif // OPENZIM_ZIMWRITERFS_XAPIANINDEXER_H

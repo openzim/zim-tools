@@ -18,13 +18,13 @@
  */
 
 #include "xapianIndexer.h"
+#include "resourceTools.h"
 
 /* Constructor */
 XapianIndexer::XapianIndexer(const std::string& language, const bool verbose) :
     language(language)
 {
     setVerboseFlag(verbose);
-    readStopWords(language);
 
     /* Build ICU Local object to retrieve ISO-639 language code (from
        ISO-639-3) */
@@ -38,6 +38,17 @@ XapianIndexer::XapianIndexer(const std::string& language, const bool verbose) :
     } catch (...) {
         std::cout << "No steemming for language '" << languageLocale.getLanguage() << "'" << std::endl;
     }
+
+     /* Read the stopwords */
+    std::string stopWord;
+    this->stopwords = getResourceAsString("stopwords/"+language);
+    std::istringstream file(this->stopwords);
+    while (std::getline(file, stopWord, '\n')) {
+        this->stopper.add(stopWord);
+    }
+
+    this->indexer.set_stopper(&(this->stopper));
+    this->indexer.set_stopper_strategy(Xapian::TermGenerator::STOP_ALL);
 }
 
 XapianIndexer::~XapianIndexer(){
@@ -56,18 +67,8 @@ void XapianIndexer::indexingPrelude(const string indexPath_) {
     this->writableDatabase = Xapian::WritableDatabase(indexPath + ".tmp", Xapian::DB_CREATE_OR_OVERWRITE);
     this->writableDatabase.set_metadata("valuesmap", "title:0;wordcount:1");
     this->writableDatabase.set_metadata("language", language);
+    this->writableDatabase.set_metadata("stopwords", stopwords);
     this->writableDatabase.begin_transaction(true);
-
-    /* Insert the stopwords */
-    if (!this->stopWords.empty()) {
-      std::vector<std::string>::iterator it = this->stopWords.begin();
-      for( ; it != this->stopWords.end(); ++it) {
-	this->stopper.add(*it);
-      }
-
-      this->indexer.set_stopper(&(this->stopper));
-      this->indexer.set_stopper_strategy(Xapian::TermGenerator::STOP_ALL);
-    }
 }
 
 void XapianIndexer::index(const string &url,

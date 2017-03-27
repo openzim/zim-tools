@@ -57,18 +57,6 @@
   Indexer::~Indexer() {
   }
 
-  /* Read the stopwords */
-  void Indexer::readStopWords(const string languageCode) {
-    std::string stopWord;
-    std::istringstream file(getResourceAsString("stopwords/" + languageCode));
-
-    this->stopWords.clear();
-
-    while (getline(file, stopWord, '\n')) {
-      this->stopWords.push_back(stopWord);
-    }
-  }
-
   /* Article indexer methods */
   void *Indexer::indexArticles(void *ptr) {
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
