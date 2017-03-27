@@ -20,21 +20,23 @@
 #include "xapianIndexer.h"
 
 /* Constructor */
-XapianIndexer::XapianIndexer(const std::string& language, const bool verbose) {
+XapianIndexer::XapianIndexer(const std::string& language, const bool verbose) :
+    language(language)
+{
     setVerboseFlag(verbose);
     readStopWords(language);
 
     /* Build ICU Local object to retrieve ISO-639 language code (from
        ISO-639-3) */
-    icu::Locale *languageLocale = new icu::Locale(language.c_str());
+    icu::Locale languageLocale(language.c_str());
 
     /* Configuring language base steemming */
     try {
-      this->stemmer = Xapian::Stem(languageLocale->getLanguage());
-      this->indexer.set_stemmer(this->stemmer);
-      this->indexer.set_stemming_strategy(Xapian::TermGenerator::STEM_ALL);
+        this->stemmer = Xapian::Stem(languageLocale.getLanguage());
+        this->indexer.set_stemmer(this->stemmer);
+        this->indexer.set_stemming_strategy(Xapian::TermGenerator::STEM_ALL);
     } catch (...) {
-      std::cout << "No steemming for language '" << languageLocale->getLanguage() << "'" << std::endl;
+        std::cout << "No steemming for language '" << languageLocale.getLanguage() << "'" << std::endl;
     }
 }
 
@@ -53,6 +55,7 @@ void XapianIndexer::indexingPrelude(const string indexPath_) {
     indexPath = indexPath_;
     this->writableDatabase = Xapian::WritableDatabase(indexPath + ".tmp", Xapian::DB_CREATE_OR_OVERWRITE);
     this->writableDatabase.set_metadata("valuesmap", "title:0;wordcount:1");
+    this->writableDatabase.set_metadata("language", language);
     this->writableDatabase.begin_transaction(true);
 
     /* Insert the stopwords */
