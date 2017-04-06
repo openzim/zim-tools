@@ -49,4 +49,4 @@ RUN cd openzim/zimwriterfs && ./configure
 RUN cd openzim/zimwriterfs && make all install
 
 # Boot commands
-CMD zimwriterfs && /bin/bash
+CMD zimwriterfs ; /bin/bash
