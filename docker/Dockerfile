@@ -39,6 +39,7 @@ RUN wget https://oligarchy.co.uk/xapian/1.4.3/xapian-core-1.4.3.tar.xz
 RUN tar xvf xapian-core-1.4.3.tar.xz
 RUN cd xapian-core-1.4.3 && ./configure
 RUN cd xapian-core-1.4.3 && make all install
+RUN rm -rf xapian
 
 # Install zimwriterfs
 RUN apt-get install -y libgumbo-dev
@@ -47,6 +48,7 @@ RUN apt-get install -y libicu-dev
 RUN cd openzim/zimwriterfs && ./autogen.sh
 RUN cd openzim/zimwriterfs && ./configure
 RUN cd openzim/zimwriterfs && make all install
+RUN rm -rf openzim
 
 # Boot commands
 CMD zimwriterfs ; /bin/bash
