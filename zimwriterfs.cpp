@@ -126,8 +126,6 @@ void usage() {
   std::cout << "\t-d, --description\tshort description of the content" << std::endl;
   std::cout << "\t-c, --creator\t\tcreator(s) of the content" << std::endl;
   std::cout << "\t-p, --publisher\t\tcreator of the ZIM file itself" << std::endl;
-  std::cout << "\t-a, --tags\t\ttags - semicolon separated" << std::endl;
-  std::cout << "\t-n, --name\t\tcustom (version independent) identifier for the content" << std::endl;
   std::cout << std::endl;
   std::cout << "\tHTML_DIRECTORY\t\tis the path of the directory containing the HTML pages you want to put in the ZIM file," << std::endl;
   std::cout << "\tZIM_FILE\t\tis the path of the ZIM file you want to obtain." << std::endl;
@@ -141,6 +139,8 @@ void usage() {
   std::cout << "\t-u, --uniqueNamespace\tput everything in the same namespace 'A'. Might be necessary to avoid problems with dynamic/javascript data loading." << std::endl;
   std::cout << "\t-r, --redirects\t\tpath to the TSV file with the list of redirects (url, title, target_url tab separated)." << std::endl;
   std::cout << "\t-i, --withFullTextIndex\tindex the content and add it to the ZIM." << std::endl;
+  std::cout << "\t-a, --tags\t\ttags - semicolon separated" << std::endl;
+  std::cout << "\t-n, --name\t\tcustom (version independent) identifier for the content" << std::endl;
   std::cout << std::endl;
  
    std::cout << "Example:" << std::endl;
