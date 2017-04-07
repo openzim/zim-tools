@@ -1,0 +1,72 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# vim: ai ts=4 sts=4 et sw=4 nu
+
+""" zimwriterfs drop-in replacement for macOS (or Linux) using Docker """
+
+import os
+import sys
+import subprocess
+
+VOLUME_SRC = os.getcwd()  # "~/my/volume"
+VOLUME_DST = "/data"
+DEBUG = False
+
+CONTAINER_NAME = 'zimwriterfs'
+IMAGE_NAME = 'openzim/zimwriterfs'
+VOLUME_SRC = os.path.expanduser(VOLUME_SRC)
+
+
+def run(arguments):
+    if str is not bytes:  # python3
+        return subprocess.run(arguments).returncode
+    else:
+        return subprocess.call(arguments)
+
+
+def stop_container():
+    run(['docker', 'stop', CONTAINER_NAME])
+
+
+def remove_container():
+    run(['docker', 'rm', '-f', CONTAINER_NAME])
+
+
+def stop_and_remove_container():
+    stop_container()
+    remove_container()
+
+
+def start_container(parameters):
+    command = ['docker', 'run', '--name', CONTAINER_NAME, '-v',
+               "{src}:{dst}".format(src=VOLUME_SRC, dst=VOLUME_DST),
+               IMAGE_NAME, 'zimwriterfs'] + parameters
+    if DEBUG:
+        print(" ".join(command))
+    return run(command)
+
+
+def update_path(fpath):
+    if not fpath.startswith('/'):
+        return os.path.join(VOLUME_DST, fpath)
+    return fpath
+
+
+def main(arguments):
+    if len(arguments) >= 7:
+        main_arguments = arguments[:len(arguments) - 2]
+        html_folder = arguments[len(arguments) - 2]
+        zim_file = arguments[len(arguments) - 1]
+
+        arguments = main_arguments + [update_path(html_folder),
+                                      update_path(zim_file)]
+
+    stop_and_remove_container()
+    retcode = start_container(arguments)
+    stop_and_remove_container()
+    sys.exit(retcode)
+
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
+
