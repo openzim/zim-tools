@@ -27,10 +27,11 @@ RUN apt-get install -y g++
 RUN apt-get install -y liblzma-dev
 
 # Install zimlib
-RUN git clone https://gerrit.wikimedia.org/r/p/openzim.git
-RUN cd openzim/zimlib && ./autogen.sh
-RUN cd openzim/zimlib && ./configure
-RUN cd openzim/zimlib && make all install
+RUN git clone https://github.com/openzim/libzim.git
+RUN cd libzim && ./autogen.sh
+RUN cd libzim && ./configure
+RUN cd libzim && make all install
+RUN rm -rf libzim
 
 # Install Xapian
 RUN apt-get install -y wget
@@ -45,10 +46,11 @@ RUN rm -rf xapian
 RUN apt-get install -y libgumbo-dev
 RUN apt-get install -y libmagic-dev
 RUN apt-get install -y libicu-dev
-RUN cd openzim/zimwriterfs && ./autogen.sh
-RUN cd openzim/zimwriterfs && ./configure
-RUN cd openzim/zimwriterfs && make all install
-RUN rm -rf openzim
+RUN git clone https://github.com/openzim/zimwriterfs.git
+RUN cd zimwriterfs && ./autogen.sh
+RUN cd zimwriterfs && ./configure
+RUN cd zimwriterfs && make all install
+RUN rm -rf zimwriterfs
 
 # Boot commands
 CMD zimwriterfs ; /bin/bash
