@@ -543,16 +543,22 @@ std::string removeAccents(const std::string &text) {
 
 void remove_all(const std::string& path) {
   DIR *dir;
-  struct dirent *ent;
-  if ((dir = opendir (path.c_str())) != NULL) {
-    /* It's a directory, remove all its entries. */
+
+  /* It's a directory, remove all its entries first */
+  if ((dir = opendir(path.c_str())) != NULL) {
+    struct dirent *ent;
     while ((ent = readdir (dir)) != NULL) {
       if (strcmp(ent->d_name, ".") and strcmp(ent->d_name, "..")) {
-        std::string childPath = path + SEPARATOR + ent->d_name;
-        remove_all(childPath);
+	std::string childPath = path + SEPARATOR + ent->d_name;
+	remove_all(childPath);
       }
     }
     closedir (dir);
+    rmdir(path.c_str());
   }
-  remove(path.c_str());
+
+  /* It's a file */
+  else {
+    remove(path.c_str());
+  }
 }

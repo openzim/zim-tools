@@ -52,6 +52,10 @@ XapianIndexer::XapianIndexer(const std::string& language, const bool verbose) :
 }
 
 XapianIndexer::~XapianIndexer(){
+
+  /* Need to release directory handle first */
+  this->writableDatabase = Xapian::WritableDatabase();
+
   if (!indexPath.empty()) {
     try {
       remove_all(indexPath + ".tmp");
