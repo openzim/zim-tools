@@ -115,6 +115,7 @@ void XapianIndexer::indexingPostlude() {
     this->writableDatabase.commit_transaction();
     this->writableDatabase.commit();
     this->writableDatabase.compact(indexPath, Xapian::DBCOMPACT_SINGLE_FILE);
+    this->writableDatabase.close();
 }
 
 void XapianIndexer::handleArticle(Article* article)
