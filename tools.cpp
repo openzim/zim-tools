@@ -410,6 +410,9 @@ void getLinks(GumboNode* node, std::map<std::string, bool> &links) {
   if (attribute == NULL) {
     attribute = gumbo_get_attribute(&node->v.element.attributes, "src");
   }
+  if (attribute == NULL) {
+    attribute = gumbo_get_attribute(&node->v.element.attributes, "poster");
+  }
 
   if (attribute != NULL && isLocalUrl(attribute->value)) {
     links[attribute->value] = true;
