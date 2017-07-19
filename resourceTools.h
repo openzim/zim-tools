@@ -3,8 +3,6 @@
 
 #include <string>
 
-std::string getResourceAsString(const std::string &name);
+std::string getResourceAsString(const std::string& name);
 
-
-#endif // OPENZIM_ZIMWRITERFS_RESOURCETOOLS_H
-
+#endif  // OPENZIM_ZIMWRITERFS_RESOURCETOOLS_H

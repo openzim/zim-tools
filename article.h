@@ -21,84 +21,97 @@
 #ifndef OPENZIM_ZIMWRITERFS_ARTICLE_H
 #define OPENZIM_ZIMWRITERFS_ARTICLE_H
 
-#include <string>
-#include <zim/writer/zimcreator.h>
 #include <zim/blob.h>
+#include <zim/writer/zimcreator.h>
+#include <string>
 
 extern std::string favicon;
 
-class Article : public zim::writer::Article {
-  protected:
-    char ns;
-    bool invalid;
-    std::string aid;
-    std::string url;
-    std::string title;
-    std::string mimeType;
-    std::string redirectAid;
+class Article : public zim::writer::Article
+{
+ protected:
+  char ns;
+  bool invalid;
+  std::string aid;
+  std::string url;
+  std::string title;
+  std::string mimeType;
+  std::string redirectAid;
 
-  public:
-    virtual std::string getAid() const;
-    virtual char getNamespace() const;
-    virtual std::string getUrl() const;
-    virtual bool isInvalid() const;
-    virtual std::string getTitle() const;
-    virtual bool isRedirect() const;
-    virtual std::string getMimeType() const;
-    virtual std::string getRedirectAid() const;
-    virtual bool shouldCompress() const;
-    virtual ~Article() {};
+ public:
+  virtual std::string getAid() const;
+  virtual char getNamespace() const;
+  virtual std::string getUrl() const;
+  virtual bool isInvalid() const;
+  virtual std::string getTitle() const;
+  virtual bool isRedirect() const;
+  virtual std::string getMimeType() const;
+  virtual std::string getRedirectAid() const;
+  virtual bool shouldCompress() const;
+  virtual ~Article(){};
 };
 
-class MetadataArticle : public Article {
-  public:
-    explicit MetadataArticle(const std::string &id);
+class MetadataArticle : public Article
+{
+ public:
+  explicit MetadataArticle(const std::string& id);
 };
 
-class SimpleMetadataArticle : public MetadataArticle {
-  private:
-    std::string value;
-  public:
-    explicit SimpleMetadataArticle(const std::string &id, const std::string& value);
-    virtual zim::Blob getData() const { return zim::Blob(value.c_str(), value.size()); }
+class SimpleMetadataArticle : public MetadataArticle
+{
+ private:
+  std::string value;
+
+ public:
+  explicit SimpleMetadataArticle(const std::string& id,
+                                 const std::string& value);
+  virtual zim::Blob getData() const
+  {
+    return zim::Blob(value.c_str(), value.size());
+  }
 };
 
-class MetadataFaviconArticle : public Article {
-  public:
-    explicit MetadataFaviconArticle(std::string value) {
-      aid = "/-/Favicon";
-      mimeType = "image/png";
-      redirectAid = value;
-      ns = '-';
-      url = "favicon";
-    }
-    virtual zim::Blob getData() const { return zim::Blob(); }
+class MetadataFaviconArticle : public Article
+{
+ public:
+  explicit MetadataFaviconArticle(std::string value)
+  {
+    aid = "/-/Favicon";
+    mimeType = "image/png";
+    redirectAid = value;
+    ns = '-';
+    url = "favicon";
+  }
+  virtual zim::Blob getData() const { return zim::Blob(); }
 };
 
 class MetadataDateArticle : public MetadataArticle
 {
-  private:
-    mutable std::string data;
-  public:
-    MetadataDateArticle();
-    virtual zim::Blob getData() const;
+ private:
+  mutable std::string data;
+
+ public:
+  MetadataDateArticle();
+  virtual zim::Blob getData() const;
 };
 
+class FileArticle : public Article
+{
+ private:
+  mutable std::string data;
+  mutable bool dataRead;
 
-class FileArticle : public Article {
-  private:
-    mutable std::string data;
-    mutable bool        dataRead;
-
-  public:
-    explicit FileArticle(const std::string& id, const bool detectRedirects = true);
-    virtual zim::Blob getData() const;
+ public:
+  explicit FileArticle(const std::string& id,
+                       const bool detectRedirects = true);
+  virtual zim::Blob getData() const;
 };
 
-
-class RedirectArticle : public Article {
-  public:
-  RedirectArticle(const std::string &line) {
+class RedirectArticle : public Article
+{
+ public:
+  RedirectArticle(const std::string& line)
+  {
     size_t start;
     size_t end;
     ns = line[0];
@@ -114,4 +127,4 @@ class RedirectArticle : public Article {
   virtual zim::Blob getData() const { return zim::Blob(); }
 };
 
-#endif // OPENZIM_ZIMWRITERFS_ARTICLE_H
+#endif  // OPENZIM_ZIMWRITERFS_ARTICLE_H

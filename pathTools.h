@@ -20,27 +20,28 @@
 #ifndef OPENZIM_ZIMWRITERFS_PATHTOOLS_H
 #define OPENZIM_ZIMWRITERFS_PATHTOOLS_H
 
+#include <fcntl.h>
+#include <limits.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fstream>
+#include <ios>
+#include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <sstream>
-#include <iostream>
-#include <fstream>
-#include <string.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <ios>
-#include <limits.h>
 
 #ifdef _WIN32
 #include <direct.h>
 #endif
 
-std::string appendToDirectory(const std::string &directoryPath, const std::string &filename);
+std::string appendToDirectory(const std::string& directoryPath,
+                              const std::string& filename);
 
 std::string getExecutablePath();
 
-bool writeTextFile(const std::string &path, const std::string &content);
+bool writeTextFile(const std::string& path, const std::string& content);
 
-#endif //OPENZIM_ZIMWRITERFS_PATHTOOLS_H
+#endif  // OPENZIM_ZIMWRITERFS_PATHTOOLS_H

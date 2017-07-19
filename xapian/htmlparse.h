@@ -22,28 +22,31 @@
 #ifndef OMEGA_INCLUDED_HTMLPARSE_H
 #define OMEGA_INCLUDED_HTMLPARSE_H
 
-#include <string>
 #include <map>
+#include <string>
 
 using std::string;
 using std::map;
 
-class HtmlParser {
-	map<string, string> parameters;
-    protected:
-	void decode_entities(string &s);
-	bool in_script;
-	string charset;
-	static map<string, unsigned int> named_ents;
+class HtmlParser
+{
+  map<string, string> parameters;
 
-	bool get_parameter(const string & param, string & value);
-    public:
-	virtual void process_text(const string &/*text*/) { }
-	virtual void opening_tag(const string &/*tag*/) { }
-	virtual void closing_tag(const string &/*tag*/) { }
-	virtual void parse_html(const string &text);
-	HtmlParser();
-	virtual ~HtmlParser() { }
+ protected:
+  void decode_entities(string& s);
+  bool in_script;
+  string charset;
+  static map<string, unsigned int> named_ents;
+
+  bool get_parameter(const string& param, string& value);
+
+ public:
+  virtual void process_text(const string& /*text*/) {}
+  virtual void opening_tag(const string& /*tag*/) {}
+  virtual void closing_tag(const string& /*tag*/) {}
+  virtual void parse_html(const string& text);
+  HtmlParser();
+  virtual ~HtmlParser() {}
 };
 
-#endif // OMEGA_INCLUDED_HTMLPARSE_H
+#endif  // OMEGA_INCLUDED_HTMLPARSE_H

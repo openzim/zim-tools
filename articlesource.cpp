@@ -30,30 +30,31 @@ bool isVerbose();
 
 extern std::string welcome;
 
-
-ArticleSource::ArticleSource(Queue<std::string>& filenameQueue):
-    filenameQueue(filenameQueue),
-    loopOverHandlerStarted(false)
+ArticleSource::ArticleSource(Queue<std::string>& filenameQueue)
+    : filenameQueue(filenameQueue), loopOverHandlerStarted(false)
 {
 }
 
-void ArticleSource::init_redirectsQueue_from_file(const std::string& path){
-    std::ifstream in_stream;
-    std::string line;
+void ArticleSource::init_redirectsQueue_from_file(const std::string& path)
+{
+  std::ifstream in_stream;
+  std::string line;
 
-    in_stream.open(path.c_str());
-    while (std::getline(in_stream, line)) {
-      redirectsQueue.push(line);
-    }
-    in_stream.close();
+  in_stream.open(path.c_str());
+  while (std::getline(in_stream, line)) {
+    redirectsQueue.push(line);
+  }
+  in_stream.close();
 }
 
-std::string ArticleSource::getMainPage() {
+std::string ArticleSource::getMainPage()
+{
   return welcome;
 }
 
-Article *article = NULL;
-const zim::writer::Article* ArticleSource::getNextArticle() {
+Article* article = NULL;
+const zim::writer::Article* ArticleSource::getNextArticle()
+{
   std::string path;
 
   if (article != NULL) {
@@ -81,25 +82,21 @@ const zim::writer::Article* ArticleSource::getNextArticle() {
   }
 
   if (article == NULL) {
-    if ( !loopOverHandlerStarted )
-    {
-        currentLoopHandler = articleHandlers.begin();
-        loopOverHandlerStarted = true;
+    if (!loopOverHandlerStarted) {
+      currentLoopHandler = articleHandlers.begin();
+      loopOverHandlerStarted = true;
     } else {
-        currentLoopHandler++;
+      currentLoopHandler++;
     }
-    if ( currentLoopHandler != articleHandlers.end() )
-    {
-        article = (*currentLoopHandler)->getMetaArticle();
+    if (currentLoopHandler != articleHandlers.end()) {
+      article = (*currentLoopHandler)->getMetaArticle();
     }
   }
 
-  if (article != NULL)
-  {
+  if (article != NULL) {
     for (std::vector<IHandler*>::iterator it = articleHandlers.begin();
          it != articleHandlers.end();
-         ++it)
-    {
+         ++it) {
       (*it)->handleArticle(article);
     }
   }
@@ -109,10 +106,10 @@ const zim::writer::Article* ArticleSource::getNextArticle() {
 
 void ArticleSource::add_customHandler(IHandler* handler)
 {
-    articleHandlers.push_back(handler);
+  articleHandlers.push_back(handler);
 }
 
 void ArticleSource::add_metadataArticle(Article* article)
 {
-   metadataQueue.push(article);
+  metadataQueue.push(article);
 }

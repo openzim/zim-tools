@@ -18,227 +18,245 @@
  */
 
 #include "indexer.h"
-#include "resourceTools.h"
-#include "pathTools.h"
 #include <unistd.h>
+#include "pathTools.h"
+#include "resourceTools.h"
 
-  /* Count word */
-  unsigned int Indexer::countWords(const string &text) {
-    unsigned int numWords = 1;
-    unsigned int length = text.size();
+/* Count word */
+unsigned int Indexer::countWords(const string& text)
+{
+  unsigned int numWords = 1;
+  unsigned int length = text.size();
 
-    for(unsigned int i=0; i<length;) {
-      while(i<length && text[i] != ' ') {
-	i++;
-      }
-      numWords++;
+  for (unsigned int i = 0; i < length;) {
+    while (i < length && text[i] != ' ') {
       i++;
     }
-
-    return numWords;
+    numWords++;
+    i++;
   }
 
-  /* Constructor */
-  Indexer::Indexer() :
-    keywordsBoostFactor(3),
-    verboseFlag(false) {
+  return numWords;
+}
 
-    /* Initialize mutex */
-    pthread_mutex_init(&threadIdsMutex, NULL);
-    pthread_mutex_init(&toIndexQueueMutex, NULL);
-    pthread_mutex_init(&articleIndexerRunningMutex, NULL);
-    pthread_mutex_init(&articleCountMutex, NULL);
-    pthread_mutex_init(&zimIdMutex, NULL);
-    pthread_mutex_init(&indexPathMutex, NULL);
-    pthread_mutex_init(&verboseMutex, NULL);
-  }
+/* Constructor */
+Indexer::Indexer() : keywordsBoostFactor(3), verboseFlag(false)
+{
+  /* Initialize mutex */
+  pthread_mutex_init(&threadIdsMutex, NULL);
+  pthread_mutex_init(&toIndexQueueMutex, NULL);
+  pthread_mutex_init(&articleIndexerRunningMutex, NULL);
+  pthread_mutex_init(&articleCountMutex, NULL);
+  pthread_mutex_init(&zimIdMutex, NULL);
+  pthread_mutex_init(&indexPathMutex, NULL);
+  pthread_mutex_init(&verboseMutex, NULL);
+}
 
-  /* Destructor */
-  Indexer::~Indexer() {
-  }
+/* Destructor */
+Indexer::~Indexer()
+{
+}
 
-  /* Article indexer methods */
-  void *Indexer::indexArticles(void *ptr) {
-    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
-    Indexer *self = (Indexer *)ptr;
-    unsigned int indexedArticleCount = 0;
-    indexerToken token;
+/* Article indexer methods */
+void* Indexer::indexArticles(void* ptr)
+{
+  pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+  Indexer* self = (Indexer*)ptr;
+  unsigned int indexedArticleCount = 0;
+  indexerToken token;
 
-    self->indexingPrelude(self->getIndexPath());
+  self->indexingPrelude(self->getIndexPath());
 
-    while (self->popFromToIndexQueue(token)) {
-      self->index(token.url,
-		  token.accentedTitle,
-		  token.title,
-		  token.keywords,
-		  token.content,
-		  token.wordCount
-		  );
+  while (self->popFromToIndexQueue(token)) {
+    self->index(token.url,
+                token.accentedTitle,
+                token.title,
+                token.keywords,
+                token.content,
+                token.wordCount);
 
-      indexedArticleCount += 1;
+    indexedArticleCount += 1;
 
-      if ( (indexedArticleCount % 1000 == 0) && self->getVerboseFlag()) {
-          std::cout << indexedArticleCount << " articled indexed." <<std::endl;
-      }
-
-      /* Make a hard-disk flush every 10.000 articles */
-      if (indexedArticleCount % 5000 == 0) {
-	self->flush();
-      }
-
-      /* Test if the thread should be cancelled */
-      pthread_testcancel();
-    }
-    self->indexingPostlude();
-
-    usleep(100);
-
-    self->articleIndexerRunning(false);
-    pthread_exit(NULL);
-    return NULL;
-  }
-
-  void Indexer::articleIndexerRunning(bool value) {
-    pthread_mutex_lock(&articleIndexerRunningMutex);
-    this->articleIndexerRunningFlag = value;
-    pthread_mutex_unlock(&articleIndexerRunningMutex);
-  }
-
-  bool Indexer::isArticleIndexerRunning() {
-    pthread_mutex_lock(&articleIndexerRunningMutex);
-    bool retVal = this->articleIndexerRunningFlag;
-    pthread_mutex_unlock(&articleIndexerRunningMutex);
-    return retVal;
-  }
-
-  /* ToIndexQueue methods */
-  bool Indexer::isToIndexQueueEmpty() {
-    pthread_mutex_lock(&toIndexQueueMutex);
-    bool retVal = this->toIndexQueue.empty();
-    pthread_mutex_unlock(&toIndexQueueMutex);
-    return retVal;
-  }
-
-  void Indexer::pushToIndexQueue(indexerToken &token) {
-    pthread_mutex_lock(&toIndexQueueMutex);
-    this->toIndexQueue.push(token);
-    pthread_mutex_unlock(&toIndexQueueMutex);
-    usleep(int(this->toIndexQueue.size() / 200) / 10 * 1000);
-  }
-
-  bool Indexer::popFromToIndexQueue(indexerToken &token) {
-    while (this->isToIndexQueueEmpty()) {
-      usleep(500);
-      pthread_testcancel();
+    if ((indexedArticleCount % 1000 == 0) && self->getVerboseFlag()) {
+      std::cout << indexedArticleCount << " articled indexed." << std::endl;
     }
 
-    pthread_mutex_lock(&toIndexQueueMutex);
-    token = this->toIndexQueue.front();
-    this->toIndexQueue.pop();
-    pthread_mutex_unlock(&toIndexQueueMutex);
-
-    if (token.title == ""){
-        //This is a empty token, end of the queue.
-        return false;
-    }
-    return true;
-  }
-
-  /* Index methods */
-  void Indexer::setIndexPath(const string path) {
-    pthread_mutex_lock(&indexPathMutex);
-    this->indexPath = path;
-    pthread_mutex_unlock(&indexPathMutex);
-  }
-
-  string Indexer::getIndexPath() {
-    pthread_mutex_lock(&indexPathMutex);
-    string retVal = this->indexPath;
-    pthread_mutex_unlock(&indexPathMutex);
-    return retVal;
-  }
-
-  void Indexer::setArticleCount(const unsigned int articleCount) {
-    pthread_mutex_lock(&articleCountMutex);
-    this->articleCount = articleCount;
-    pthread_mutex_unlock(&articleCountMutex);
-  }
-
-  unsigned int Indexer::getArticleCount() {
-    pthread_mutex_lock(&articleCountMutex);
-    unsigned int retVal = this->articleCount;
-    pthread_mutex_unlock(&articleCountMutex);
-    return retVal;
-  }
-
-  void Indexer::setZimId(const string id) {
-    pthread_mutex_lock(&zimIdMutex);
-    this->zimId = id;
-    pthread_mutex_unlock(&zimIdMutex);
-  }
-
-  string Indexer::getZimId() {
-    pthread_mutex_lock(&zimIdMutex);
-    string retVal = this->zimId;
-    pthread_mutex_unlock(&zimIdMutex);
-    return retVal;
-  }
-
-  /* Manage */
-  bool Indexer::start(const string indexPath) {
-    if (this->getVerboseFlag()) {
-      std::cout << "Indexing starting..." <<std::endl;
+    /* Make a hard-disk flush every 10.000 articles */
+    if (indexedArticleCount % 5000 == 0) {
+      self->flush();
     }
 
-    this->setArticleCount(0);
-    this->setIndexPath(indexPath);
+    /* Test if the thread should be cancelled */
+    pthread_testcancel();
+  }
+  self->indexingPostlude();
+
+  usleep(100);
+
+  self->articleIndexerRunning(false);
+  pthread_exit(NULL);
+  return NULL;
+}
+
+void Indexer::articleIndexerRunning(bool value)
+{
+  pthread_mutex_lock(&articleIndexerRunningMutex);
+  this->articleIndexerRunningFlag = value;
+  pthread_mutex_unlock(&articleIndexerRunningMutex);
+}
+
+bool Indexer::isArticleIndexerRunning()
+{
+  pthread_mutex_lock(&articleIndexerRunningMutex);
+  bool retVal = this->articleIndexerRunningFlag;
+  pthread_mutex_unlock(&articleIndexerRunningMutex);
+  return retVal;
+}
+
+/* ToIndexQueue methods */
+bool Indexer::isToIndexQueueEmpty()
+{
+  pthread_mutex_lock(&toIndexQueueMutex);
+  bool retVal = this->toIndexQueue.empty();
+  pthread_mutex_unlock(&toIndexQueueMutex);
+  return retVal;
+}
+
+void Indexer::pushToIndexQueue(indexerToken& token)
+{
+  pthread_mutex_lock(&toIndexQueueMutex);
+  this->toIndexQueue.push(token);
+  pthread_mutex_unlock(&toIndexQueueMutex);
+  usleep(int(this->toIndexQueue.size() / 200) / 10 * 1000);
+}
+
+bool Indexer::popFromToIndexQueue(indexerToken& token)
+{
+  while (this->isToIndexQueueEmpty()) {
+    usleep(500);
+    pthread_testcancel();
+  }
+
+  pthread_mutex_lock(&toIndexQueueMutex);
+  token = this->toIndexQueue.front();
+  this->toIndexQueue.pop();
+  pthread_mutex_unlock(&toIndexQueueMutex);
+
+  if (token.title == "") {
+    // This is a empty token, end of the queue.
+    return false;
+  }
+  return true;
+}
+
+/* Index methods */
+void Indexer::setIndexPath(const string path)
+{
+  pthread_mutex_lock(&indexPathMutex);
+  this->indexPath = path;
+  pthread_mutex_unlock(&indexPathMutex);
+}
+
+string Indexer::getIndexPath()
+{
+  pthread_mutex_lock(&indexPathMutex);
+  string retVal = this->indexPath;
+  pthread_mutex_unlock(&indexPathMutex);
+  return retVal;
+}
+
+void Indexer::setArticleCount(const unsigned int articleCount)
+{
+  pthread_mutex_lock(&articleCountMutex);
+  this->articleCount = articleCount;
+  pthread_mutex_unlock(&articleCountMutex);
+}
+
+unsigned int Indexer::getArticleCount()
+{
+  pthread_mutex_lock(&articleCountMutex);
+  unsigned int retVal = this->articleCount;
+  pthread_mutex_unlock(&articleCountMutex);
+  return retVal;
+}
+
+void Indexer::setZimId(const string id)
+{
+  pthread_mutex_lock(&zimIdMutex);
+  this->zimId = id;
+  pthread_mutex_unlock(&zimIdMutex);
+}
+
+string Indexer::getZimId()
+{
+  pthread_mutex_lock(&zimIdMutex);
+  string retVal = this->zimId;
+  pthread_mutex_unlock(&zimIdMutex);
+  return retVal;
+}
+
+/* Manage */
+bool Indexer::start(const string indexPath)
+{
+  if (this->getVerboseFlag()) {
+    std::cout << "Indexing starting..." << std::endl;
+  }
+
+  this->setArticleCount(0);
+  this->setIndexPath(indexPath);
+
+  pthread_mutex_lock(&threadIdsMutex);
+
+  this->articleIndexerRunning(true);
+  pthread_create(
+      &(this->articleIndexer), NULL, Indexer::indexArticles, (void*)this);
+  pthread_detach(this->articleIndexer);
+  pthread_mutex_unlock(&threadIdsMutex);
+
+  return true;
+}
+
+bool Indexer::isRunning()
+{
+  if (this->getVerboseFlag()) {
+    std::cout << "isArticleIndexer running: "
+              << (this->isArticleIndexerRunning() ? "yes" : "no") << std::endl;
+  }
+
+  return this->isArticleIndexerRunning();
+}
+
+bool Indexer::stop()
+{
+  if (this->isRunning()) {
+    bool isArticleIndexerRunning = this->isArticleIndexerRunning();
 
     pthread_mutex_lock(&threadIdsMutex);
 
-    this->articleIndexerRunning(true);
-    pthread_create(&(this->articleIndexer), NULL, Indexer::indexArticles, (void*)this);
-    pthread_detach(this->articleIndexer);
-    pthread_mutex_unlock(&threadIdsMutex);
-
-    return true;
-  }
-
-  bool Indexer::isRunning() {
-      if (this->getVerboseFlag()) {
-	std::cout << "isArticleIndexer running: " << (this->isArticleIndexerRunning() ? "yes" : "no") << std::endl;
-      }
-
-    return this->isArticleIndexerRunning();
-  }
-
-  bool Indexer::stop() {
-    if (this->isRunning()) {
-      bool isArticleIndexerRunning = this->isArticleIndexerRunning();
-
-      pthread_mutex_lock(&threadIdsMutex);
-
-      if (isArticleIndexerRunning) {
-	pthread_cancel(this->articleIndexer);
-	this->articleIndexerRunning(false);
-      }
-
-      pthread_mutex_unlock(&threadIdsMutex);
+    if (isArticleIndexerRunning) {
+      pthread_cancel(this->articleIndexer);
+      this->articleIndexerRunning(false);
     }
 
-    return true;
+    pthread_mutex_unlock(&threadIdsMutex);
   }
 
-  /* Manage the verboseFlag */
-  void Indexer::setVerboseFlag(const bool value) {
-    pthread_mutex_lock(&verboseMutex);
-    this->verboseFlag = value;
-    pthread_mutex_unlock(&verboseMutex);
-  }
+  return true;
+}
 
-  bool Indexer::getVerboseFlag() {
-    bool value;
-    pthread_mutex_lock(&verboseMutex);
-    value = this->verboseFlag;
-    pthread_mutex_unlock(&verboseMutex);
-    return value;
-  }
+/* Manage the verboseFlag */
+void Indexer::setVerboseFlag(const bool value)
+{
+  pthread_mutex_lock(&verboseMutex);
+  this->verboseFlag = value;
+  pthread_mutex_unlock(&verboseMutex);
+}
+
+bool Indexer::getVerboseFlag()
+{
+  bool value;
+  pthread_mutex_lock(&verboseMutex);
+  value = this->verboseFlag;
+  pthread_mutex_unlock(&verboseMutex);
+  return value;
+}
