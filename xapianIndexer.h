@@ -20,61 +20,62 @@
 #ifndef OPENZIM_ZIMWRITERFS_XAPIANINDEXER_H
 #define OPENZIM_ZIMWRITERFS_XAPIANINDEXER_H
 
-#include "indexer.h"
-#include "articlesource.h"
 #include "article.h"
+#include "articlesource.h"
+#include "indexer.h"
 #include "tools.h"
 
-#include <xapian.h>
-#include "xapian/myhtmlparse.h"
-#include <zim/blob.h>
 #include <unicode/locid.h>
+#include <xapian.h>
+#include <zim/blob.h>
+#include "xapian/myhtmlparse.h"
 
 class XapianIndexer;
 
-class XapianMetaArticle : public Article {
-    private:
-        XapianIndexer* indexer;
-        mutable std::string data;
-    public:
-        XapianMetaArticle(XapianIndexer* indexer):
-            indexer(indexer)
-        {
-            ns = 'Z';
-            aid = url = "/fulltextIndex/xapian";
-            title = "Xapian Fulltext Index";
-            mimeType = "application/octet-stream+xapian";
-        };
-        virtual zim::Blob getData() const;
+class XapianMetaArticle : public Article
+{
+ private:
+  XapianIndexer* indexer;
+  mutable std::string data;
+
+ public:
+  XapianMetaArticle(XapianIndexer* indexer) : indexer(indexer)
+  {
+    ns = 'Z';
+    aid = url = "/fulltextIndex/xapian";
+    title = "Xapian Fulltext Index";
+    mimeType = "application/octet-stream+xapian";
+  };
+  virtual zim::Blob getData() const;
 };
 
-class XapianIndexer : public Indexer, public IHandler {
-    public:
-        XapianIndexer(const std::string& language, bool verbose);
-        virtual ~XapianIndexer();
-        std::string getIndexPath() { return indexPath; }
+class XapianIndexer : public Indexer, public IHandler
+{
+ public:
+  XapianIndexer(const std::string& language, bool verbose);
+  virtual ~XapianIndexer();
+  std::string getIndexPath() { return indexPath; }
+ protected:
+  void indexingPrelude(const string indexPath);
+  void index(const string& url,
+             const string& title,
+             const string& unaccentedTitle,
+             const string& keywords,
+             const string& content,
+             const string& wordCount);
+  void flush();
+  void indexingPostlude();
+  void handleArticle(Article* article);
+  XapianMetaArticle* getMetaArticle();
+  zim::Blob getData();
 
-    protected:
-        void indexingPrelude(const string indexPath);
-        void index(const string &url,
-                   const string &title,
-                   const string &unaccentedTitle,
-                   const string &keywords,
-                   const string &content,
-                   const string &wordCount);
-        void flush();
-        void indexingPostlude();
-        void handleArticle(Article* article);
-        XapianMetaArticle* getMetaArticle();
-        zim::Blob getData();
-
-        Xapian::WritableDatabase writableDatabase;
-        Xapian::Stem stemmer;
-        Xapian::SimpleStopper stopper;
-        Xapian::TermGenerator indexer;
-        std::string indexPath;
-        std::string language;
-        std::string stopwords;
+  Xapian::WritableDatabase writableDatabase;
+  Xapian::Stem stemmer;
+  Xapian::SimpleStopper stopper;
+  Xapian::TermGenerator indexer;
+  std::string indexPath;
+  std::string language;
+  std::string stopwords;
 };
 
-#endif // OPENZIM_ZIMWRITERFS_XAPIANINDEXER_H
+#endif  // OPENZIM_ZIMWRITERFS_XAPIANINDEXER_H

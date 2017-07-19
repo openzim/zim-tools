@@ -21,22 +21,26 @@
 #include "mimetypecounter.h"
 #include <sstream>
 
-MetadataCounterArticle::MetadataCounterArticle(MimetypeCounter* counter):
-    MetadataArticle("Counter"),
-    counter(counter)
-{}
+MetadataCounterArticle::MetadataCounterArticle(MimetypeCounter* counter)
+    : MetadataArticle("Counter"), counter(counter)
+{
+}
 
 zim::Blob MetadataCounterArticle::getData() const
 {
   std::stringstream stream;
-  for (std::map<std::string, unsigned int>::iterator it = counter->counters.begin(); it != counter->counters.end(); ++it) {
+  for (std::map<std::string, unsigned int>::iterator it
+       = counter->counters.begin();
+       it != counter->counters.end();
+       ++it) {
     stream << it->first << "=" << it->second << ";";
   }
   data = stream.str();
   return zim::Blob(data.data(), data.size());
 }
 
-void MimetypeCounter::handleArticle(Article* article) {
+void MimetypeCounter::handleArticle(Article* article)
+{
   if (!article->isRedirect()) {
     std::string mimeType = article->getMimeType();
     if (counters.find(mimeType) == counters.end()) {

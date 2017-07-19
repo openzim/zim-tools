@@ -20,8 +20,8 @@
 #include "pathTools.h"
 
 #ifdef __APPLE__
-#include <mach-o/dyld.h>
 #include <limits.h>
+#include <mach-o/dyld.h>
 #elif _WIN32
 #include <windows.h>
 #include "Shlwapi.h"
@@ -42,25 +42,26 @@
 #define PATH_MAX 1024
 #endif
 
-
-std::string appendToDirectory(const std::string &directoryPath, const std::string &filename) {
+std::string appendToDirectory(const std::string& directoryPath,
+                              const std::string& filename)
+{
   std::string newPath = directoryPath + SEPARATOR + filename;
   return newPath;
 }
 
-
-std::string getExecutablePath() {
+std::string getExecutablePath()
+{
   char binRootPath[PATH_MAX];
 
 #ifdef _WIN32
-  GetModuleFileName( NULL, binRootPath, PATH_MAX);
+  GetModuleFileName(NULL, binRootPath, PATH_MAX);
   return std::string(binRootPath);
 #elif __APPLE__
   uint32_t max = (uint32_t)PATH_MAX;
   _NSGetExecutablePath(binRootPath, &max);
   return std::string(binRootPath);
 #else
-  ssize_t size =  readlink("/proc/self/exe", binRootPath, PATH_MAX);
+  ssize_t size = readlink("/proc/self/exe", binRootPath, PATH_MAX);
   if (size != -1) {
     return std::string(binRootPath, size);
   }
@@ -69,7 +70,8 @@ std::string getExecutablePath() {
   return "";
 }
 
-bool writeTextFile(const std::string &path, const std::string &content) {
+bool writeTextFile(const std::string& path, const std::string& content)
+{
   std::ofstream file;
   file.open(path.c_str());
   file << content;

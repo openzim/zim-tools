@@ -29,37 +29,42 @@
 // \xa0?
 #define WHITESPACE " \t\n\r"
 
-class MyHtmlParser : public HtmlParser {
-    public:
-	bool in_script_tag;
-	bool in_style_tag;
-	bool pending_space;
-	bool indexing_allowed;
-	bool charset_from_meta;
-	string title, sample, keywords, dump;
-	void process_text(const string &text);
-	void opening_tag(const string &tag);
-	void closing_tag(const string &tag);
-	void parse_html(const string &text, const string &charset_,
-			bool charset_from_meta_);
-	MyHtmlParser() :
-		in_script_tag(false),
-		in_style_tag(false),
-		pending_space(false),
-		indexing_allowed(true),
-		charset_from_meta(false) { }
+class MyHtmlParser : public HtmlParser
+{
+ public:
+  bool in_script_tag;
+  bool in_style_tag;
+  bool pending_space;
+  bool indexing_allowed;
+  bool charset_from_meta;
+  string title, sample, keywords, dump;
+  void process_text(const string& text);
+  void opening_tag(const string& tag);
+  void closing_tag(const string& tag);
+  void parse_html(const string& text,
+                  const string& charset_,
+                  bool charset_from_meta_);
+  MyHtmlParser()
+      : in_script_tag(false),
+        in_style_tag(false),
+        pending_space(false),
+        indexing_allowed(true),
+        charset_from_meta(false)
+  {
+  }
 
-	void reset() {
-	    in_script_tag = false;
-	    in_style_tag = false;
-	    pending_space = false;
-	    indexing_allowed = true;
-	    charset_from_meta = false;
-	    title.resize(0);
-	    sample.resize(0);
-	    keywords.resize(0);
-	    dump.resize(0);
-	}
+  void reset()
+  {
+    in_script_tag = false;
+    in_style_tag = false;
+    pending_space = false;
+    indexing_allowed = true;
+    charset_from_meta = false;
+    title.resize(0);
+    sample.resize(0);
+    keywords.resize(0);
+    dump.resize(0);
+  }
 };
 
-#endif // OMEGA_INCLUDED_MYHTMLPARSE_H
+#endif  // OMEGA_INCLUDED_MYHTMLPARSE_H
