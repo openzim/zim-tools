@@ -1,0 +1,8 @@
+
+executable('zimsearch', 'zimSearch.cpp',
+           dependencies : libzim_dep,
+           install: true)
+
+executable('zimbench', 'zimBench.cpp',
+           dependencies : [libzim_dep, rt_dep],
+           install: true)
