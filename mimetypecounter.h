@@ -23,6 +23,7 @@
 
 #include "article.h"
 #include "articlesource.h"
+#include <map>
 
 class MimetypeCounter;
 
