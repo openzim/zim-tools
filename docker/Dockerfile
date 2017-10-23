@@ -42,6 +42,7 @@ RUN apt-get install -y libicu-dev
 RUN apt-get install -y python3-pip
 RUN ln -s /usr/bin/python3 /usr/bin/python
 RUN git clone https://github.com/openzim/libzim.git
+RUN cd libzim && git checkout 3.0.0
 RUN pip3 install meson
 RUN cd libzim && git clone git://github.com/ninja-build/ninja.git
 RUN cd libzim/ninja && git checkout release
