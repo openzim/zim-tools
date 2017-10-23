@@ -64,5 +64,16 @@ RUN rm -rf zimwriterfs
 RUN ldconfig
 ENV LD_LIBRARY_PATH /usr/local/lib/x86_64-linux-gnu/
 
+# Cleaning
+RUN apt-get remove --purge --assume-yes git
+RUN apt-get remove --purge --assume-yes pkg-config
+RUN apt-get remove --purge --assume-yes libtool
+RUN apt-get remove --purge --assume-yes automake
+RUN apt-get remove --purge --assume-yes autoconf
+RUN apt-get remove --purge --assume-yes make
+RUN apt-get remove --purge --assume-yes g++
+RUN apt-get remove --purge --assume-yes liblzma-dev
+RUN rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/*
+
 # Boot commands
 CMD zimwriterfs ; /bin/bash
