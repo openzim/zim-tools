@@ -72,6 +72,7 @@ void XapianIndexer::indexingPrelude(const string indexPath_)
   this->writableDatabase.set_metadata("valuesmap", "title:0;wordcount:1");
   this->writableDatabase.set_metadata("language", language);
   this->writableDatabase.set_metadata("stopwords", stopwords);
+  this->writableDatabase.set_metadata("prefixes", "S");
   this->writableDatabase.begin_transaction(true);
 }
 
@@ -94,6 +95,7 @@ void XapianIndexer::index(const string& url,
   if (!unaccentedTitle.empty()) {
     this->indexer.index_text_without_positions(
         unaccentedTitle, this->getTitleBoostFactor(content.size()));
+    this->indexer.index_text(unaccentedTitle, 1, "S");
   }
 
   /* Index the keywords */
