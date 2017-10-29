@@ -382,7 +382,9 @@ static bool isLocalUrl(const std::string url)
   if (url.find(":") != std::string::npos) {
     return (!(url.find("://") != std::string::npos || url.find("//") == 0
               || url.find("tel:") == 0
-              || url.find("geo:") == 0));
+              || url.find("geo:") == 0
+              || url.find("javascript:") == 0
+              || url.find("mailto:") == 0));
   }
   return true;
 }
