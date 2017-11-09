@@ -18,3 +18,7 @@ executable('zimdiff', 'zimDiff.cpp',
 executable('zimpatch', 'zimPatch.cpp',
            dependencies: libzim_dep,
            install: true)
+
+executable('zimsplit', 'zimSplit.cpp',
+           dependencies: libzim_dep,
+           install: true)
