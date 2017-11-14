@@ -73,7 +73,8 @@ void* Indexer::indexArticles(void* ptr)
                 token.title,
                 token.keywords,
                 token.content,
-                token.wordCount);
+                token.wordCount,
+                token.geoPosition);
 
     indexedArticleCount += 1;
 

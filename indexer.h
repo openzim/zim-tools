@@ -43,6 +43,7 @@ struct indexerToken {
   string keywords;
   string content;
   string wordCount;
+  string geoPosition;
 };
 
 class Indexer
@@ -64,7 +65,8 @@ class Indexer
                      const string& unaccentedTitle,
                      const string& keywords,
                      const string& content,
-                     const string& wordCount) = 0;
+                     const string& wordCount,
+                     const string& geoPosition) = 0;
   virtual void flush() = 0;
   virtual void indexingPostlude() = 0;
 

@@ -62,7 +62,8 @@ class XapianIndexer : public Indexer, public IHandler
              const string& unaccentedTitle,
              const string& keywords,
              const string& content,
-             const string& wordCount);
+             const string& wordCount,
+             const string& geoPosition);
   void flush();
   void indexingPostlude();
   void handleArticle(Article* article);
