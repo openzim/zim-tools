@@ -143,6 +143,18 @@ void MyHtmlParser::opening_tag(const string& tag)
                 indexing_allowed = false;
                 throw true;
               }
+            } else if (name == "geo.position") {
+              auto sep_pos = content.find(";");
+              if (sep_pos != string::npos) {
+                try {
+                  latitude = stof(content.substr(0, sep_pos));
+                  longitude = stof(content.substr(sep_pos+1));
+                  has_geoPosition = true;
+                } catch (...)
+                {
+                    //invalid value in content, just pass and continue.
+                }
+              }
             }
             break;
           }

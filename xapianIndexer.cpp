@@ -69,7 +69,7 @@ void XapianIndexer::indexingPrelude(const string indexPath_)
   indexPath = indexPath_;
   this->writableDatabase = Xapian::WritableDatabase(
       indexPath + ".tmp", Xapian::DB_CREATE_OR_OVERWRITE);
-  this->writableDatabase.set_metadata("valuesmap", "title:0;wordcount:1");
+  this->writableDatabase.set_metadata("valuesmap", "title:0;wordcount:1;geo.position:2");
   this->writableDatabase.set_metadata("language", language);
   this->writableDatabase.set_metadata("stopwords", stopwords);
   this->writableDatabase.set_metadata("prefixes", "S");
@@ -81,13 +81,15 @@ void XapianIndexer::index(const string& url,
                           const string& unaccentedTitle,
                           const string& keywords,
                           const string& content,
-                          const string& wordCount)
+                          const string& wordCount,
+                          const string& geoPosition)
 {
   /* Put the data in the document */
   Xapian::Document currentDocument;
   currentDocument.clear_values();
   currentDocument.add_value(0, title);
   currentDocument.add_value(1, wordCount);
+  currentDocument.add_value(2, geoPosition);
   currentDocument.set_data(url);
   indexer.set_document(currentDocument);
 
@@ -165,6 +167,12 @@ void XapianIndexer::handleArticle(Article* article)
     token.title = removeAccents(token.accentedTitle);
     token.keywords = removeAccents(htmlParser.keywords);
     token.content = removeAccents(htmlParser.dump);
+
+    /* Index geoPosition */
+    if (htmlParser.has_geoPosition) {
+      token.geoPosition = Xapian::LatLongCoord(
+          htmlParser.latitude, htmlParser.longitude).serialise();
+    }
     pushToIndexQueue(token);
   }
 }
