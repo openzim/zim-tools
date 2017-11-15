@@ -29,6 +29,8 @@ version) installed on the system:
   packaged), resp. for the mimeType detection
 * libz (http://www.zlib.net/), resp. for unpack compressed HTML files
 * gumbo (https://github.com/google/gumbo-parser), a pure-C DOM parser
+* libicu (http://site.icu-project.org/), for unicode string
+  manipulation. It'always packaged
 
 On Debian, you can ensure these are installed with:
 ```
