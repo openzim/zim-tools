@@ -85,7 +85,8 @@ class ZimSplitter
         close_file();
         part_name = prefix + get_new_suffix();
         std::cout << "opening new file " << part_name << std::endl;
-        ofile = std::move(std::ofstream(part_name, std::ios::binary));
+        std::ofstream tmp(part_name, std::ios::binary);
+        ofile.swap(tmp);
         out_size = 0;
     }
 
