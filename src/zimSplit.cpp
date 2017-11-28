@@ -48,9 +48,9 @@ class ZimSplitter
         partSize(partSize),
         first_index(0),
         second_index(0),
+        ifile(fname, std::ios::binary),
         out_size(0)
       {
-        ifile = std::ifstream(fname, std::ios::binary);
         batch_buffer = new char[BUFFER_SIZE];
     }
 
