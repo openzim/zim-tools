@@ -172,7 +172,7 @@ XAPIAN_ENABLE=0
 
 # if --with-x, add path to LIBRARY_PATH
 AC_ARG_WITH([xapian],
-	[AS_HELP_STRING([--with-xapian=DIR], [alternat location for xapian-config] @@)],
+	[AS_HELP_STRING([--with-xapian=DIR], [alternat location for xapian-config])],
 	[xapian_dir=$withval],
 	[with_xapian=yes])
 
