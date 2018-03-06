@@ -41,7 +41,7 @@ fi
 # Set up CXXFLAGS/LDFLAGS and ensure they are substituted
 AC_ARG_VAR(CXXFLAGS, [C++ compiler flags])
 AC_ARG_VAR(LDFLAGS, linker flags)
-CXXFLAGS="-Wall $CXXFLAGS"
+CXXFLAGS="-Wall -std=c++11 $CXXFLAGS"
 
 # Enable debug
 AC_ARG_ENABLE(debug,
