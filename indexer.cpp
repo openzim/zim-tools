@@ -227,24 +227,6 @@ bool Indexer::isRunning()
   return this->isArticleIndexerRunning();
 }
 
-bool Indexer::stop()
-{
-  if (this->isRunning()) {
-    bool isArticleIndexerRunning = this->isArticleIndexerRunning();
-
-    pthread_mutex_lock(&threadIdsMutex);
-
-    if (isArticleIndexerRunning) {
-      pthread_cancel(this->articleIndexer);
-      this->articleIndexerRunning(false);
-    }
-
-    pthread_mutex_unlock(&threadIdsMutex);
-  }
-
-  return true;
-}
-
 /* Manage the verboseFlag */
 void Indexer::setVerboseFlag(const bool value)
 {
