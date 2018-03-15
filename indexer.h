@@ -53,7 +53,6 @@ class Indexer
   virtual ~Indexer();
 
   bool start(const string indexPath);
-  bool stop();
   bool isRunning();
   void setVerboseFlag(const bool value);
   void pushToIndexQueue(indexerToken& token);
