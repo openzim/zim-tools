@@ -164,7 +164,7 @@ void usage()
                "dynamic/javascript data loading."
             << std::endl;
   std::cout << "\t-r, --redirects\t\tpath to the TSV file with the list of "
-               "redirects (url, title, target_url tab separated)."
+               "redirects (namespace, url, title, target_url tab separated)."
             << std::endl;
   std::cout
       << "\t-i, --withFullTextIndex\tindex the content and add it to the ZIM."
