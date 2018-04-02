@@ -79,7 +79,7 @@ void* Indexer::indexArticles(void* ptr)
     indexedArticleCount += 1;
 
     if ((indexedArticleCount % 1000 == 0) && self->getVerboseFlag()) {
-      std::cout << indexedArticleCount << " articled indexed." << std::endl;
+      std::cout << indexedArticleCount << " articles indexed." << std::endl;
     }
 
     /* Make a hard-disk flush every 10.000 articles */
