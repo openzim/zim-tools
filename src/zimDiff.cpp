@@ -109,7 +109,7 @@ public:
         return "";
     }
 
-    virtual std::string getParameter()
+    virtual std::string getParameter() const
     {
         return Ar.getParameter();
     }

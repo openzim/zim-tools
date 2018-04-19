@@ -111,7 +111,7 @@ public:
         return redirectAid;
     }
 
-    virtual std::string getParameter()
+    virtual std::string getParameter() const
     {
         return Ar.getParameter();
     }
@@ -125,7 +125,6 @@ public:
 class ArticleSource : public zim::writer::ArticleSource
 {
     Article tempArticle;
-    unsigned _next;
     zim::File start_file;
     zim::File diff_file;
     zim::Uuid fileUid;
@@ -135,7 +134,6 @@ class ArticleSource : public zim::writer::ArticleSource
     std::vector<std::string> delete_list;
     std::vector< int > dlist;
     unsigned int index;
-    unsigned int indexprev;
     std::vector< int> redirect;
     std::vector< std::pair<std::string , std::string > >redirectList;
 
@@ -158,7 +156,6 @@ class ArticleSource : public zim::writer::ArticleSource
 
 public:
     explicit ArticleSource(std::string start_filename="",std::string diff_filename="")
-        :_next(0)
     {
         index=0;
         start_file=zim::File(start_filename);
