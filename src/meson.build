@@ -22,3 +22,7 @@ executable('zimpatch', 'zimPatch.cpp',
 executable('zimsplit', 'zimSplit.cpp',
            dependencies: libzim_dep,
            install: true)
+
+executable('zimcheck', 'zimCheck.cpp',
+           dependencies: libzim_dep,
+           install: true)
