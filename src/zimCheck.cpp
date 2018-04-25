@@ -89,76 +89,52 @@ int main (int argc, char **argv)
         switch (c)
         {
         case 'A':
-            run_all = true;
-            break;
         case 'a':
             run_all = true;
             break;
         case 'C':
-            checksum = true;
-            break;
         case 'c':
             checksum = true;
             break;
         case 'M':
-            metadata = true;
-            break;
         case 'm':
             metadata = true;
             break;
-        case 'F':
-            favicon = true;
-            break;
         case 'B':
+        case 'b':
             prog = true;
             break;
+        case 'F':
         case 'f':
             favicon = true;
             break;
         case 'P':
-            main_page = true;
-            break;
         case 'p':
             main_page = true;
             break;
         case 'R':
-            redundant_data = true;
-            break;
         case 'r':
             redundant_data = true;
             break;
         case 'U':
-            url_check = true;
-            break;
         case 'u':
             url_check = true;
             break;
         case 'X':
-            url_check_external = true;
-            break;
         case 'x':
             url_check_external = true;
             break;
         case 'E':
-            mime_check = true;
-            break;
         case 'e':
             mime_check = true;
             break;
         case 'D':
-            error_details = true;
-            break;
         case 'd':
             error_details = true;
             break;
         case 'H':
-            help=true;
-            break;
         case 'h':
             help=true;
-            break;
-        case 'b':
-            prog=true;
             break;
         case '?':
             if (optopt == 'c')
