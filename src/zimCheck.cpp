@@ -255,14 +255,16 @@ int main (int argc, char **argv)
         if( run_all || favicon || no_args )
         {
             std::cout << "[INFO] Searching for Favicon.." << std::endl;
-            test_ = false;
-            for (zim::File::const_iterator it = f.begin(); it != f.end(); ++it)
-            {
-                if(it -> getNamespace() == '-')
-                    if(it -> getTitle() == "favicon.png" )
-                        test_ = true;
+            bool found = false;
+            static const char* const favicon_paths[] = {"-/favicon.png", "I/favicon.png", "I/favicon", "-/favicon"};
+            for (auto &path: favicon_paths) {
+              auto article = f.getArticleByUrl(path);
+              if (article.good()) {
+                found = true;
+                break;
+              }
             }
-            if( test_ )
+            if( found )
             {
                 std::cout << "  [INFO] Favicon found." << std::endl;
             }
@@ -270,7 +272,7 @@ int main (int argc, char **argv)
             {
                 std::cout << "  [ERROR] Favivon not found in ZIM file." << std::endl;
             }
-            overall_status &= test_;
+            overall_status &= found;
         }
 
 
