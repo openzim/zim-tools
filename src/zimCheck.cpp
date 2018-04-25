@@ -329,7 +329,6 @@ int main (int argc, char **argv)
             }
             std::cout << "  Verifying Similar Articles for redundancies.." << std::endl;
             test_ = true;
-            //std::cout << "  Verifying Similar Articles for redundancies.." << std::endl;
             std::string output_details;
             progress.reset(hash_main.size());
             for(auto &it: hash_main)
@@ -396,42 +395,44 @@ int main (int argc, char **argv)
             std::string output_details;
             std::string previousLink;
             int previousIndex = -1;
-            int index;
             std::vector < std::string > links;
             for (zim::File::const_iterator it = f.begin(); it != f.end(); ++it)
             {
                 progress.report();
-                if( it -> getMimeType() == "text/html")
+
+                if( it->isRedirect() || it->isLinktarget() || it->isDeleted())
+                    continue;
+                if( it->getMimeType() != "text/html")
+                    continue;
+
+                getLinks( it -> getData() , &links);
+                for(unsigned int i = 0; i < links.size(); i++)
                 {
-                    getLinks( it -> getPage() , &links);
-                    for(unsigned int i = 0; i < links.size(); i++)
+                    //std::cout<<"\n"<<links[i]<<std::flush;
+                    links[i] = process_links( links[i] );
+                    //std::cout<<"\n"<<links[i]<<std::flush;
+                    if(isInternalUrl( &links[i] ) )
                     {
-                        //std::cout<<"\n"<<links[i]<<std::flush;
-                        links[i] = process_links( links[i] );
-                        //std::cout<<"\n"<<links[i]<<std::flush;
-                        if(isInternalUrl( &links[i] ) )
+                        bool found = false;
+                        int nm = ( int )( links[i] )[1];
+                        if(std::binary_search( titles[ nm ].begin(), titles[nm].end(),( links[i]).substr( 3 )))
+                            found = true;
+                        if( !found)
                         {
-                            bool found = false;
-                            int nm = ( int )( links[i] )[1];
-                            if(std::binary_search( titles[ nm ].begin(), titles[nm].end(),( links[i]).substr( 3 )))
-                                found = true;
-                            if( !found)
+                            if( error_details )
                             {
-                                if( error_details )
+                                int index = it -> getIndex();
+                                if(( previousLink != links[i]) && ( previousIndex != index))
                                 {
-                                    index = it -> getIndex();
-                                    if(( previousLink != links[i]) && ( previousIndex != index))
-                                    {
-                                        output_details += "    [ERROR] Article '";
-                                        output_details += links[i];
-                                        output_details += "' was not found. Linked in Article ";
-                                        output_details += std::to_string(index ) + "\n";
-                                        previousLink = links[i];
-                                        previousIndex = index;
-                                    }
+                                    output_details += "    [ERROR] Article '";
+                                    output_details += links[i];
+                                    output_details += "' was not found. Linked in Article ";
+                                    output_details += std::to_string(index ) + "\n";
+                                    previousLink = links[i];
+                                    previousIndex = index;
                                 }
-                                test_ = false;
                             }
+                            test_ = false;
                         }
                     }
                 }
