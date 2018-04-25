@@ -133,7 +133,6 @@ std::string process_links(std::string input)
 {
     std::string output;
     output.clear();
-    int pos = 0;
 
     //URL Decoding.
     char ch;

@@ -56,9 +56,6 @@ int main (int argc, char **argv)
     bool no_args = false;
     bool help = false;
     bool prog=false;
-    int aflag = 0;
-    int bflag = 0;
-    int index;
     int c;
     std::string filename = "";
     progress_bar progress( '#', 10);
@@ -474,7 +471,6 @@ int main (int argc, char **argv)
             std::string output_details;
             for(unsigned int i=0; i < to_verify.size(); i++)
             {
-                bool op = false;
                 zim::File::const_iterator it = f.begin();
                 std::string s1, s2;
                 for(int k = 0; k< to_verify[i].first; k++)
@@ -541,7 +537,6 @@ int main (int argc, char **argv)
             std::string previousLink;
             int previousIndex = -1;
             int index;
-            int k = 0;
             std::vector < std::string > links;
             for (zim::File::const_iterator it = f.begin(); it != f.end(); ++it)
             {
@@ -555,7 +550,6 @@ int main (int argc, char **argv)
                         //std::cout<<"\n"<<links[i]<<std::flush;
                         if(isInternalUrl( &links[i] ) )
                         {
-                            k++;
                             bool found = false;
                             int nm = ( int )( links[i] )[1];
                             if(std::binary_search( titles[ nm ].begin(), titles[nm].end(),( links[i]).substr( 3 )))
@@ -603,7 +597,6 @@ int main (int argc, char **argv)
         //All external URLs are parsed, and non-wikipedia URLs are reported.
         if( run_all || url_check_external || no_args )
         {
-            int found_count = 0;
             std::cout << "\n[INFO] Searching for External Dependencies:"<< std::flush;
             if(prog)
             {
