@@ -23,6 +23,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 #include <list>
 #include <algorithm>
 #include <regex>
@@ -304,118 +305,57 @@ int main (int argc, char **argv)
 
 
         //Test 5: Redundant Data:
-        //The entire file is parsed, and the articles are hashed and stores in separate linked lists(std::list), one each for each namespace.
-        //The lists are then sorted according to the hashes, and the articles with the same hashes are compared.
-        //A list of pairs of indexes of articles(those that have the same hash) are then created.
-        //Once the list of articles are created, they are compared one by one to see if they have the same content.If they do, it is reported to the user.
+        //The entire file is parsed, and the articles are hashed and stores in separate hashmap of lists.
+        //Article with the same hashes are then compared.
+        //If they have the same content it is reported to the user.
         if( run_all || redundant_data || no_args)
         {
             std::cout << "[INFO] Searching for redundant articles.." << std::endl;
             test_ = false;
-            int max = 0;
-            int k;
-            progress.reset(articleCount);
-            for (zim::File::const_iterator it = f.begin(); it != f.end(); ++it)
-            {
-                progress.report();
-                k= it -> getArticleSize();
-                if( k > max )
-                    max = k;
-            }
-            //Data Storage system
-
-            //The hashes are stored as a pair: The first element in the pair- unsigned int contains the hash obtained from the adler32 function.
-            //The second element, an int, contains the index of the article in the ZIM file.
-            //   std::pair<unsigned int, int>
-
-            std::vector< std::list< std::pair< unsigned int, int> > >hash_main;
-
-            //Allocating Double Hash Tree.
-            hash_main.resize( max + 1 );
-
-            //List of Articles to be compared against
-            std::pair< unsigned int, int > article;
+            // Article are store in a map<hash, list<index>>.
+            // So all article with the same hash will be stored in the same list.
+            std::map<unsigned int, std::list<zim::article_index_type>> hash_main;
 
             //Adding data to hash Tree.
-            //std::cout << "Adding Data to Hash Tables from file..." << std::endl;
-            int i = 0;
-            std::string ar;
-            zim::Blob bl;
+            std::cout << "  Adding Data to Hash Tables from file..." << std::endl;
             progress.reset(articleCount);
-            int sz = 0;
             for (zim::File::const_iterator it = f.begin(); it != f.end(); ++it)
             {
                 progress.report();
-                bl = it-> getData();
-                sz = bl.size();
-                ar.clear();
-                for(int j=0; j < sz; j++)
-                    ar += bl.data()[j];
-                article.first = adler32(ar);
-                article.second = i;
-                hash_main[ ar.size() ].push_back( article );
-                i++;
-            }
-            //Checking through hash tree for redundancies.
-            //Sorting the hash tree.
-            //std::cout << " Sorting Hash Tree..." << std::endl;
-            int hash_main_size = hash_main.size();
-            progress.reset(hash_main_size);
-            for(int i = 0; i < hash_main_size; i++)
-            {
-                progress.report();
-                hash_main[i].sort();
-            }
-            std::vector< std::pair< int , int > > to_verify;     //Vector containing list of pairs of articles whose hash has been found to be the same.
-            //The above list of pairs of articles will be compared directly for redundancies.
-
-
-            progress.reset(hash_main_size);
-            for(int i = 0; i< hash_main_size; i++)
-            {
-                progress.report();
-                std::list< std::pair< unsigned int, int > >::iterator it = hash_main[i].begin();
-                std::pair< unsigned int, int> prev;
-                prev.second = it -> second;
-                prev.first = it -> first;
-                ++it;
-                for (; it != hash_main[i].end(); ++it)
-                {
-                    if(it -> first == prev.first)
-                    {
-                        if(it -> second != prev.second)
-                        {
-                            to_verify.push_back( std::make_pair( it->second , prev.second ));
-                        }
-                    }
-                    prev.second = it -> second;
-                    prev.first = it -> first;
+                if (it->isRedirect() || it->isLinktarget() || it->isDeleted() ) {
+                    continue;
                 }
+                hash_main[ adler32(it->getData()) ].push_back( it->getIndex() );
             }
+            std::cout << "  Verifying Similar Articles for redundancies.." << std::endl;
             test_ = true;
             //std::cout << "  Verifying Similar Articles for redundancies.." << std::endl;
-            progress.reset(to_verify.size());
             std::string output_details;
-            for(unsigned int i=0; i < to_verify.size(); i++)
+            progress.reset(hash_main.size());
+            for(auto &it: hash_main)
             {
                 progress.report();
-                zim::File::const_iterator it = f.begin();
-                std::string s1, s2;
-                for(int k = 0; k< to_verify[i].first; k++)
-                    ++it;
-                s1 = it -> getPage();
-                it = f.begin();
-                for(int k = 0; k < to_verify[i].second; k++)
-                    ++it;
-                s2 = it -> getPage();
-                if( s1 == s2 )
-                {
-                    test_ = false;
-                    output_details += "    [ERROR] Articles ";
-                    output_details += std::to_string( (long long)to_verify[i].first );
-                    output_details += " and ";
-                    output_details += std::to_string( (long long)to_verify[i].second );
-                    output_details += " have the same content\n";
+                auto l = it.second;
+                // If only one article has this hash, no need to test.
+                if(l.size() <= 1)
+                    continue;
+                for (auto current=l.begin(); current!=l.end(); current++) {
+                    auto a1 = f.getArticle(*current);
+                    std::string s1 = a1.getData();
+                    for(auto other=std::next(current); other!=l.end(); other++) {
+                        auto a2 = f.getArticle(*other);
+                        std::string s2 = a2.getData();
+			if (s1 != s2 )
+                            continue;
+                        test_ = false;
+                        output_details += "    [ERROR] Articles ";
+                        output_details += a1.getTitle() + " (idx ";
+                        output_details += std::to_string( a1.getIndex() );
+                        output_details += ") and ";
+                        output_details += a2.getTitle() + " (idx ";
+                        output_details += std::to_string( a2.getIndex() );
+                        output_details += ") have the same content\n";
+                    }
                 }
             }
             if( test_ )
