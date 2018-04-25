@@ -227,50 +227,28 @@ int main (int argc, char **argv)
         if( run_all || metadata || no_args)
         {
             std::cout << "[INFO] Searching for metadata entries.." << std::endl;
-            bool test_meta[6];
-            for(int i = 0; i < 6; i++)
-                test_meta[i] = false;
-            for (zim::File::const_iterator it = f.findx('M', "").second; ( (it != f.end() ) && ( it->getNamespace() == 'M')); ++it)
-            {
-                if(it -> getTitle() == "Title")
-                    test_meta[0] = true;
-                if(it -> getTitle() == "Creator")
-                    test_meta[1] = true;
-                if(it -> getTitle() == "Publisher")
-                    test_meta[2] = true;
-                if(it -> getTitle() == "Date")
-                    test_meta[3] = true;
-                if(it -> getTitle()=="Description")
-                    test_meta[4] = true;
-                if(it -> getTitle()=="Language")
-                    test_meta[5] = true;
-            }
-            test_ = true;
-            for(int i = 0; i < 6; i++)
-                if( !test_meta[i])
-                    test_ = false;
-            if( test_ )
-                std::cout << "  [INFO] All essential metadata entries found" << std::endl;
-            else
-            {
-                std::cout << "  [ERROR] Missing metadata entries" << std::endl;
-                if( error_details )
-                {
-                    if( !test_meta[0] )
-                        std::cout << "    [ERROR] Title not found in Metadata" << std::endl;
-                    if( !test_meta[1] )
-                        std::cout << "    [ERROR] Creator not found in Metadata" << std::endl;
-                    if( !test_meta[2] )
-                        std::cout << "    [ERROR] Publisher not found in Metadata" << std::endl;
-                    if( !test_meta[3] )
-                        std::cout << "    [ERROR] Date not found in Metadata" << std::endl;
-                    if( !test_meta[4] )
-                        std::cout << "    [ERROR] Description not found in Metadata" << std::endl;
-                    if( !test_meta[5] )
-                        std::cout << "    [ERROR] Language not found in Metadata" << std::endl;
+            static const char* const test_meta[] = {
+                "Title",
+                "Creator",
+                "Publisher",
+                "Date",
+                "Description",
+                "Language"};
+            bool missing_meta_data = false;
+            for (auto &meta : test_meta) {
+              auto article = f.getArticle('M', meta);
+              if (!article.good()) {
+                if (!missing_meta_data) {
+                  std::cout << "  [ERROR] Missing metadata entries" << std::endl;
+                  missing_meta_data = true;
                 }
+                std::cout << "  [ERROR] " << meta << " not found in Metadata" << std::endl;
+              }
             }
-            overall_status &= test_;
+            if (!missing_meta_data) {
+              std::cout << "  [INFO] All essential metadata entries found" << std::endl;
+            }
+            overall_status &= !missing_meta_data;
         }
 
         //Test 3: Test for Favicon.
