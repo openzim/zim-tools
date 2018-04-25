@@ -463,16 +463,19 @@ int main (int argc, char **argv)
             for (zim::File::const_iterator it = f.begin(); it != f.end(); ++it)
             {
                 progress.report();
-                if( it -> getMimeType() == "text/html" )
+
+                if( it->isRedirect() || it->isLinktarget() || it->isDeleted())
+                    continue;
+                if( it->getMimeType() != "text/html" )
+                    continue;
+
+                getDependencies( it -> getPage() , &links );
+                for(auto &link: links)
                 {
-                    getDependencies( it -> getPage() , &links );
-                    for(unsigned int i=0; i< links.size(); i++)
+                    if( isExternalUrl( &link ) )
                     {
-                        if( isExternalUrl( &links[i] ) )
-                        {
-                            test_ = false;
-                            externalDependencyList.push_back( it -> getUrl() );
-                        }
+                        test_ = false;
+                        externalDependencyList.push_back( it -> getUrl() );
                     }
                 }
             }
