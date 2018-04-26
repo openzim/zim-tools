@@ -1,0 +1,31 @@
+language: cpp
+dist: trusty
+sudo: false
+cache: ccache
+before_install:
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then eval "${MATRIX_EVAL}"; fi
+- PATH=$PATH:$HOME/bin
+- ${CXX} --version
+install: travis/install_deps.sh
+script: travis/compile.sh
+env:
+  global:
+    - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+  matrix:
+    - PLATFORM="native_static"
+    - PLATFORM="native_dyn"
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-5
+      - python3-pip
+      - libbz2-dev
+      - ccache
+      - zlib1g-dev
+      - uuid-dev
+matrix:
+  include:
+    - env: PLATFORM="native_dyn"
+      os: osx
