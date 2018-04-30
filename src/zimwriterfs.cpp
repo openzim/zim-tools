@@ -37,6 +37,7 @@
 #include "mimetypecounter.h"
 #include "queue.h"
 #include "tools.h"
+#include "config.h"
 
 #if HAVE_XAPIAN
 #include "xapianIndexer.h"

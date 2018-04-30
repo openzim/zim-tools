@@ -57,9 +57,8 @@ RUN rm -rf libzim
 RUN apt-get install -y libgumbo-dev
 RUN apt-get install -y libmagic-dev
 RUN git clone https://github.com/openzim/zimwriterfs.git
-RUN cd zimwriterfs && ./autogen.sh
-RUN cd zimwriterfs && ./configure
-RUN cd zimwriterfs && make all install
+RUN cd zimwriterfs && meson . build
+RUN cd zimwriterfs/build && ninja install
 RUN rm -rf zimwriterfs
 RUN ldconfig
 ENV LD_LIBRARY_PATH /usr/local/lib/x86_64-linux-gnu/
