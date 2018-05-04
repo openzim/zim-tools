@@ -39,10 +39,6 @@
 #include "tools.h"
 #include "config.h"
 
-#if HAVE_XAPIAN
-#include "xapianIndexer.h"
-#endif
-
 std::string language;
 std::string creator;
 std::string publisher;
@@ -285,9 +281,6 @@ void* visitDirectoryPath(void* path)
 int main(int argc, char** argv)
 {
   ArticleSource source(filenameQueue);
-#if HAVE_XAPIAN
-  XapianIndexer* xapianIndexer = NULL;
-#endif
   int minChunkSize = 2048;
 
   /* Argument parsing */
@@ -458,17 +451,7 @@ int main(int argc, char** argv)
   pthread_detach(directoryVisitor);
 
   /* Indexor */
-  if (withFullTextIndex) {
-#if HAVE_XAPIAN
-    xapianIndexer = new XapianIndexer(language, isVerbose());
-    xapianIndexer->start(zimPath + ".indexdb");
-    source.add_customHandler(xapianIndexer);
-#else
-    std::cerr
-        << "Zimwriterfs is compiled without Xapian. Indexing is not available."
-        << std::endl;
-#endif
-  }
+  zimCreator.setIndexing(withFullTextIndex, language);
 
   MimetypeCounter mimetypeCounter;
   source.add_customHandler(&mimetypeCounter);
@@ -481,10 +464,6 @@ int main(int argc, char** argv)
   } catch (const std::exception& e) {
     std::cerr << e.what() << std::endl;
   }
-
-#if HAVE_XAPIAN
-  delete xapianIndexer;
-#endif
 
   magic_close(magic);
   /* Destroy mutex */

@@ -66,6 +66,7 @@ class MetadataArticle : public zim::writer::Article
   virtual bool isDeleted() const { return false; }
   virtual std::string getMimeType() const { return "text/plain"; }
   virtual std::string getRedirectAid() const { return ""; }
+  virtual bool shouldIndex() const { return false; }
   virtual bool shouldCompress() const { return true; }
   virtual std::string getFilename() const { return ""; }
 };
@@ -103,6 +104,7 @@ class MetadataFaviconArticle : public MetadataArticle
   virtual bool isRedirect() const { return true; }
   virtual std::string getMimeType() const { return "image/png"; }
   virtual std::string getRedirectAid() const { return redirectAid; }
+  virtual bool shouldIndex() const { return false; }
   virtual bool shouldCompress() const { return false; }
   virtual std::string getFilename() const { return ""; }
   virtual zim::Blob getData() const { return zim::Blob(); }
@@ -138,6 +140,7 @@ class FileArticle : public Article
   virtual zim::Blob getData() const;
   virtual bool isLinktarget() const { return false; }
   virtual bool isDeleted() const { return false; }
+  virtual bool shouldIndex() const;
   virtual zim::size_type getSize() const;
   virtual std::string getFilename() const;
   virtual bool isInvalid() const;
@@ -164,6 +167,7 @@ class RedirectArticle : public Article
   virtual bool isRedirect() const { return true; }
   virtual bool isLinktarget() const { return false; }
   virtual bool isDeleted() const { return false; }
+  virtual bool shouldIndex() const { return false; }
   virtual zim::size_type getSize() const { return 0; }
   virtual std::string getFilename() const  { return ""; }
 };

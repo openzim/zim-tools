@@ -70,6 +70,11 @@ bool Article::shouldCompress() const
       || getMimeType() == "image/svg+xml";
 }
 
+bool FileArticle::shouldIndex() const
+{
+  return getMimeType().find("text/html") == 0;
+}
+
 void FileArticle::readData() const
 {
   data = getFileContent(_getFilename());
