@@ -554,16 +554,13 @@ inline std::string removeLocalTagAndParameters(const std::string& url)
   return retVal;
 }
 
-std::string computeNewUrl(const std::string& aid, const std::string& url)
+std::string computeNewUrl(const std::string& aid, const std::string& baseUrl, const std::string& targetUrl)
 {
-  std::string filename = computeAbsolutePath(aid, url);
+  std::string filename = computeAbsolutePath(aid, targetUrl);
   std::string targetMimeType
       = getMimeTypeForFile(removeLocalTagAndParameters(decodeUrl(filename)));
-  std::string originMimeType = getMimeTypeForFile(aid);
   std::string newUrl
       = "/" + getNamespaceForMimeType(targetMimeType) + "/" + filename;
-  std::string baseUrl
-      = "/" + getNamespaceForMimeType(originMimeType) + "/" + aid;
   return computeRelativePath(baseUrl, newUrl);
 }
 

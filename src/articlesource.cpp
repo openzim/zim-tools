@@ -52,7 +52,7 @@ std::string ArticleSource::getMainPage()
   return welcome;
 }
 
-Article* article = NULL;
+zim::writer::Article* article = NULL;
 const zim::writer::Article* ArticleSource::getNextArticle()
 {
   std::string path;
@@ -70,14 +70,16 @@ const zim::writer::Article* ArticleSource::getNextArticle()
     redirectsQueue.pop();
     article = new RedirectArticle(line);
   } else if (filenameQueue.popFromQueue(path)) {
-    article = new FileArticle(path);
-    while (article->isInvalid() && filenameQueue.popFromQueue(path)) {
-      delete article;
-      article = new FileArticle(path);
+    FileArticle* farticle = new FileArticle(path);
+    while (farticle->isInvalid() && filenameQueue.popFromQueue(path)) {
+      delete farticle;
+      farticle = new FileArticle(path);
     };
-    if (article->isInvalid()) {
-      delete article;
+    if (farticle->isInvalid()) {
+      delete farticle;
       article = NULL;
+    } else {
+      article = farticle;
     }
   }
 
@@ -109,7 +111,7 @@ void ArticleSource::add_customHandler(IHandler* handler)
   articleHandlers.push_back(handler);
 }
 
-void ArticleSource::add_metadataArticle(Article* article)
+void ArticleSource::add_metadataArticle(MetadataArticle* article)
 {
   metadataQueue.push(article);
 }
