@@ -31,6 +31,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <vector>
+#include <memory>
 
 #include <unicode/translit.h>
 #include <unicode/ucnv.h>
@@ -156,10 +157,9 @@ inline bool seemsToBeHtml(const std::string& path)
 
 std::string getFileContent(const std::string& path)
 {
-  std::ifstream in(path.c_str(), ::std::ios::binary);
+  std::ifstream in(path, std::ios::binary| std::ios::ate);
   if (in) {
     std::string contents;
-    in.seekg(0, std::ios::end);
     contents.resize(in.tellg());
     in.seekg(0, std::ios::beg);
     in.read(&contents[0], contents.size());
@@ -485,17 +485,18 @@ std::string getMimeTypeForFile(const std::string& filename)
   std::string mimeType;
 
   /* Try to get the mimeType from the file extension */
-  if (filename.find_last_of(".") != std::string::npos) {
-    mimeType = filename.substr(filename.find_last_of(".") + 1);
-    if (extMimeTypes.find(mimeType) != extMimeTypes.end()) {
-      return extMimeTypes[mimeType];
-    }
+  auto index_of_last_dot = filename.find_last_of(".");
+  if (index_of_last_dot != std::string::npos) {
+    mimeType = filename.substr(index_of_last_dot + 1);
+    try {
+      return extMimeTypes.at(mimeType);
+    } catch (std::out_of_range) {}
   }
 
   /* Try to get the mimeType from the cache */
-  if (fileMimeTypes.find(filename) != fileMimeTypes.end()) {
-    return fileMimeTypes[filename];
-  }
+  try {
+    return fileMimeTypes.at(filename);
+  } catch (std::out_of_range) {}
 
   /* Try to get the mimeType with libmagic */
   try {
@@ -567,12 +568,11 @@ std::string computeNewUrl(const std::string& aid, const std::string& baseUrl, co
 std::string removeAccents(const std::string& text)
 {
   ucnv_setDefaultName("UTF-8");
-  UErrorCode status = U_ZERO_ERROR;
-  Transliterator* removeAccentsTrans = Transliterator::createInstance(
-      "Lower; NFD; [:M:] remove; NFC", UTRANS_FORWARD, status);
+  static UErrorCode status = U_ZERO_ERROR;
+  static std::unique_ptr<Transliterator> removeAccentsTrans(Transliterator::createInstance(
+      "Lower; NFD; [:M:] remove; NFC", UTRANS_FORWARD, status));
   UnicodeString ustring = UnicodeString(text.c_str());
   removeAccentsTrans->transliterate(ustring);
-  delete removeAccentsTrans;
   std::string unaccentedText;
   ustring.toUTF8String(unaccentedText);
   return unaccentedText;
