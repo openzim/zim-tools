@@ -138,6 +138,11 @@ public:
             || getMimeType() == "application/json"
             || getMimeType() == "image/svg+xml";
     }
+
+    bool shouldIndex() const
+    {
+        return false;
+    }
 };
 
 class ArticleSource : public zim::writer::ArticleSource

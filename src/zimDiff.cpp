@@ -136,6 +136,11 @@ public:
             || getMimeType() == "application/json"
             || getMimeType() == "image/svg+xml";
     }
+
+    bool shouldIndex() const
+    {
+        return false;
+    }
 };
 
 
@@ -200,6 +205,11 @@ public:
             || getMimeType() == "application/javascript"
             || getMimeType() == "application/json"
             || getMimeType() == "image/svg+xml";
+    }
+
+    bool shouldIndex() const
+    {
+        return false;
     }
 };
 
