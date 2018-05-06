@@ -120,6 +120,14 @@ public:
     {
         return Ar.getData();
     }
+
+    bool shouldCompress() const
+    {
+        return getMimeType().find("text") == 0
+            || getMimeType() == "application/javascript"
+            || getMimeType() == "application/json"
+            || getMimeType() == "image/svg+xml";
+    }
 };
 
 class ArticleSource : public zim::writer::ArticleSource

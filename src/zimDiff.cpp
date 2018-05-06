@@ -54,13 +54,13 @@ public:
       _id(id),
       isRd(false)
     {}
-    
+
     explicit Article(const zim::Article a):
       _id(NumberToString(a.getIndex())),
       Ar(a),
       isRd(false)
     {}
-    
+
     void setRedirect()
     {
         isRd=true;
@@ -118,6 +118,14 @@ public:
     {
         return Ar.getData();
     }
+
+    bool shouldCompress() const
+    {
+        return getMimeType().find("text") == 0
+            || getMimeType() == "application/javascript"
+            || getMimeType() == "application/json"
+            || getMimeType() == "image/svg+xml";
+    }
 };
 
 
@@ -164,6 +172,14 @@ public:
     zim::Blob getData() const
     {
         return zim::Blob(&_data[0], _data.size());
+    }
+
+    bool shouldCompress() const
+    {
+        return getMimeType().find("text") == 0
+            || getMimeType() == "application/javascript"
+            || getMimeType() == "application/json"
+            || getMimeType() == "image/svg+xml";
     }
 };
 
