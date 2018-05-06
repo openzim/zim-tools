@@ -119,6 +119,16 @@ public:
         return Ar.getData();
     }
 
+    zim::size_type getSize() const
+    {
+        return Ar.getArticleSize();
+    }
+
+    std::string getFilename() const
+    {
+        return "";
+    }
+
     bool shouldCompress() const
     {
         return getMimeType().find("text") == 0
@@ -172,6 +182,16 @@ public:
     zim::Blob getData() const
     {
         return zim::Blob(&_data[0], _data.size());
+    }
+
+    virtual zim::size_type getSize() const
+    {
+        return _data.size();
+    }
+
+    virtual std::string getFilename() const
+    {
+        return "";
     }
 
     bool shouldCompress() const
