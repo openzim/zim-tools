@@ -51,14 +51,16 @@ zim::size_type MetadataCounterArticle::getSize() const
   return data.size();
 }
 
-void MimetypeCounter::handleArticle(zim::writer::Article* article)
+void MimetypeCounter::handleArticle(const zim::writer::Article& article)
 {
-  if (!article->isRedirect()) {
-    std::string mimeType = article->getMimeType();
-    if (counters.find(mimeType) == counters.end()) {
-      counters[mimeType] = 1;
-    } else {
-      counters[mimeType]++;
-    }
+  if (article.isRedirect()) {
+    return;
+  }
+
+  std::string mimeType = article.getMimeType();
+  if (counters.find(mimeType) == counters.end()) {
+    counters[mimeType] = 1;
+  } else {
+    counters[mimeType]++;
   }
 }

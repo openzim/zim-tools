@@ -6,7 +6,7 @@ sources = [
   'zimwriterfs.cpp',
   'tools.cpp',
   'article.cpp',
-  'articlesource.cpp',
+  'zimcreatorfs.cpp',
   'mimetypecounter.cpp'
 ]
 
