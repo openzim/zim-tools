@@ -213,9 +213,8 @@ public:
     }
 };
 
-class ArticleSource : public zim::writer::ArticleSource
+class ZimCreatorDiff : public zim::writer::ZimCreator
 {
-    Article tempArticle;
     ArticleRaw dlist;               //Metadata article containing list of articles to be deleted.
     ArticleRaw startFileUID;        //Metadata article containing start file UID
     ArticleRaw endFileUID;          //Metadata article containing end file UID
@@ -225,29 +224,15 @@ class ArticleSource : public zim::writer::ArticleSource
     int fileSize;
     zim::File file_1;
     zim::File file_2;
-    zim::File::const_iterator itr;
     std::list<std::string > deleteList;
-    bool dlistToggle;
-    bool startIdToggle;
-    bool endIdToggle;
-    bool mainAurlToggle;
-    bool layoutAurlToggle;
-    bool redirectListToggle;
 
 public:
-    explicit ArticleSource(std::string filename_1="",std::string filename_2="")
+    explicit ZimCreatorDiff(std::string filename_1="",std::string filename_2="")
     {
-        dlistToggle=false;
-        startIdToggle=false;
-        endIdToggle=false;
-        mainAurlToggle=false;
-        layoutAurlToggle=false;
-        redirectListToggle=false;
         file_1 = zim::File(filename_1);
         file_2 = zim::File(filename_2);
         fileSize = file_2.getFileheader().getArticleCount();
         deleteList.clear();
-        itr=file_2.begin();
         std::string rdlist="";
         //Scanning Data from files, generating list of articles to be deleted
         for(zim::File::const_iterator it = file_1.begin(); it != file_1.end(); ++it)
@@ -357,85 +342,41 @@ public:
         return;
     }
 
-    virtual const zim::writer::Article* getNextArticle()
+    virtual void create(const std::string& fname)
     {
+        startZimCreation(fname);
         //Add All articles in file_2 that are not in file_1 and those that are not the same in file_1
 
         //Articles are added frm file_2.
         //loop till an article read to be added is found.
-        bool found=false;
-        while(itr!=file_2.end())        //While not reaching EOF
+        for(auto& article1: file_2)
         {
             //irt is the file pointer in file_2
-            if(!file_1.getArticleByUrl(itr->getLongUrl()).good()) //If the article is not present in FILe 1
+            if(!file_1.getArticleByUrl(article1.getLongUrl()).good()) //If the article is not present in FILe 1
             {
-                tempArticle=Article(*itr);
-                if(itr->isRedirect())
+                Article tempArticle(article1);
+                if(article1.isRedirect())
                     tempArticle.setRedirect();
-                ++itr;
-                found=true;
-                break;
+                addArticle(tempArticle);
+                continue;
             }
             //if this place of the loop is reached, it is sure that the article is presentin file_1
-            if(!(file_1.getArticleByUrl(itr->getLongUrl()).getData()==itr->getData()))      //if the data stored in the same article is different in file_1 and 2
+            if(!(file_1.getArticleByUrl(article1.getLongUrl()).getData()==article1.getData()))      //if the data stored in the same article is different in file_1 and 2
             {
-                tempArticle=Article(*itr);
-                if(itr->isRedirect())
+                Article tempArticle(article1);
+                if(article1.isRedirect())
                     tempArticle.setRedirect();
-                ++itr;
-                found=true;
-                break;
+                addArticle(tempArticle);
             }
-            ++itr;
-        }
-        if(found)
-        {
-            return &tempArticle;
         }
         //Add Metadata articles.
-
-        //Add list of articles to be deleted.
-        if(!dlistToggle)
-        {
-            dlistToggle=true;
-            return &dlist;
-        }
-
-
-        //Add startFile UID
-        if(!startIdToggle)
-        {
-            startIdToggle=true;
-            return &startFileUID;
-        }
-
-
-        //Add endFile UID
-        if(!endIdToggle)
-        {
-            endIdToggle=true;
-            return &endFileUID;
-        }
-
-        if(!mainAurlToggle)
-        {
-            mainAurlToggle=true;
-            return &mainAurl;
-        }
-
-        if(!layoutAurlToggle)
-        {
-            layoutAurlToggle=true;
-            return &layoutAurl;
-        }
-
-        if(!redirectListToggle)
-        {
-            redirectListToggle=true;
-            return &redirectList;
-        }
-        //Once all Articles have been added, reset list pointers, so that the Data can be read.
-        return 0;
+        addArticle(dlist);
+        addArticle(startFileUID);
+        addArticle(endFileUID);
+        addArticle(mainAurl);
+        addArticle(layoutAurl);
+        addArticle(redirectList);
+        finishZimCreation();
     }
 };
 
@@ -483,13 +424,9 @@ int main(int argc, char* argv[])
     std::string op_file= argv[3];
     try
     {
-        zim::writer::ZimCreator c;
-
-        //Callling zimwriter to create the diff_file
-        //Create the article source class, from which the content for the file will be read.
-        ArticleSource src(filename_1,filename_2);
+        ZimCreatorDiff c(filename_1, filename_2);
         //Create the actual file.
-        c.create(op_file, src);
+        c.create(op_file);
 
     }
     catch (const std::exception& e)
