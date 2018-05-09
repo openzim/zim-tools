@@ -295,6 +295,16 @@ int main(int argc, char** argv)
   zimCreator.addArticle(MetadataDateArticle());
   zimCreator.addArticle(MetadataFaviconArticle(favicon));
 
+  /* Init */
+  magic = magic_open(MAGIC_MIME);
+  magic_load(magic, NULL);
+  pthread_mutex_init(&verboseMutex, NULL);
+
+  /* Directory visitor */
+  MimetypeCounter mimetypeCounter;
+  zimCreator.add_customHandler(&mimetypeCounter);
+  zimCreator.visitDirectory(directoryPath);
+
   /* Check redirects file and read it if necessary*/
   if (!redirectsPath.empty() && !fileExists(redirectsPath)) {
     std::cerr << "zimwriterfs: unable to find redirects TSV file at '"
@@ -308,16 +318,6 @@ int main(int argc, char** argv)
 
     zimCreator.add_redirectArticles_from_file(redirectsPath);
   }
-
-  /* Init */
-  magic = magic_open(MAGIC_MIME);
-  magic_load(magic, NULL);
-  pthread_mutex_init(&verboseMutex, NULL);
-
-  /* Directory visitor */
-  MimetypeCounter mimetypeCounter;
-  zimCreator.add_customHandler(&mimetypeCounter);
-  zimCreator.visitDirectory(directoryPath);
 
   zimCreator.finishZimCreation();
 
