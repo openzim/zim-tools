@@ -36,6 +36,7 @@ class IHandler
  public:
   virtual void handleArticle(Article* article) = 0;
   virtual Article* getMetaArticle() = 0;
+  virtual ~IHandler() = default;
 };
 
 class ArticleSource : public zim::writer::ArticleSource
