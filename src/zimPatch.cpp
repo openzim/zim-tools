@@ -120,20 +120,40 @@ public:
     {
         return Ar.getData();
     }
+
+    virtual zim::size_type getSize() const
+    {
+        return Ar.getArticleSize();
+    }
+
+    virtual std::string getFilename() const
+    {
+        return "";
+    }
+
+    bool shouldCompress() const
+    {
+        return getMimeType().find("text") == 0
+            || getMimeType() == "application/javascript"
+            || getMimeType() == "application/json"
+            || getMimeType() == "image/svg+xml";
+    }
+
+    bool shouldIndex() const
+    {
+        return false;
+    }
 };
 
-class ArticleSource : public zim::writer::ArticleSource
+class ZimCreatorPatch : public zim::writer::ZimCreator
 {
-    Article tempArticle;
     zim::File start_file;
     zim::File diff_file;
     zim::Uuid fileUid;
     std::string mainAid;
     std::string layoutAid;
-    zim::File::const_iterator it;
     std::vector<std::string> delete_list;
     std::vector< int > dlist;
-    unsigned int index;
     std::vector< int> redirect;
     std::vector< std::pair<std::string , std::string > >redirectList;
 
@@ -155,9 +175,8 @@ class ArticleSource : public zim::writer::ArticleSource
     }
 
 public:
-    explicit ArticleSource(std::string start_filename="",std::string diff_filename="")
+    explicit ZimCreatorPatch(std::string start_filename="",std::string diff_filename="")
     {
-        index=0;
         start_file=zim::File(start_filename);
         diff_file=zim::File(diff_filename);
         std::string id=diff_file.getArticleByUrl("M/endfileuid").getPage();
@@ -308,79 +327,62 @@ public:
     {
         return layoutAid;
     }
-    virtual const zim::writer::Article* getNextArticle()
+
+    void create(const std::string& fname)
     {
+        startZimCreation(fname);
 
         //Add all articles in File_1 that have not ben deleted.
         std::string url="";
-
-        if(index<start_file.getFileheader().getArticleCount()) //Meaning still on file_1
+        for (unsigned int index = 0; index < start_file.getFileheader().getArticleCount(); index++)
         {
-            bool eof=false;     //To show wether EOF was reached or not.
-            int id=0;
+            int id=index;
             zim::Article tmpAr=start_file.getArticle(index);
-            id=index;
-            while(dlist[index]==1)
+            if(dlist[id]==1)
             {
-                index++;
-                if(index>=start_file.getFileheader().getArticleCount())
-                {
-                    eof=true;
-                    break;
-                }
-                tmpAr=start_file.getArticle(index);
-                id=index;
+                continue;
             }
-            if(!eof)
+
+            Article tempArticle(tmpAr,id);
+            //If the article is also present in file_2
+            if(diff_file.getArticleByUrl(tmpAr.getLongUrl()).good())
             {
-                tempArticle=Article(tmpAr,index);
-                id=index;
-                //If the article is also present in file_2
-                if(diff_file.getArticleByUrl(tmpAr.getLongUrl()).good())
-                {
-                    tmpAr=diff_file.getArticleByUrl(tmpAr.getLongUrl());
-                    tempArticle=Article(tmpAr,start_file.getFileheader().getArticleCount()+diff_file.getArticleByUrl(tmpAr.getLongUrl()).getIndex());
-                    id=tmpAr.getIndex()+start_file.getFileheader().getArticleCount();
-                }
-                index++;
-                if(redirect[id]!=0)
-                    tempArticle.setRedirectAid(NumberToString((long long)redirect[id]));
-                //std::cout<<"\nArticle: "<<tempArticle.getNamespace()<<"/"<<tempArticle.getUrl();
-                //std::cout<<"\nIndex: "<<tempArticle.getAid();
-                //getchar();
-                return &tempArticle;
+                tmpAr=diff_file.getArticleByUrl(tmpAr.getLongUrl());
+                tempArticle=Article(tmpAr,start_file.getFileheader().getArticleCount()+diff_file.getArticleByUrl(tmpAr.getLongUrl()).getIndex());
+                id=tmpAr.getIndex()+start_file.getFileheader().getArticleCount();
             }
+            if(redirect[id]!=0)
+                tempArticle.setRedirectAid(NumberToString((long long)redirect[id]));
+            //std::cout<<"\nArticle: "<<tempArticle.getNamespace()<<"/"<<tempArticle.getUrl();
+            //std::cout<<"\nIndex: "<<tempArticle.getAid();
+            //getchar();
+            addArticle(tempArticle);
         }
+
         //Now adding new articles in file_2
-        if(index<(start_file.getFileheader().getArticleCount()+diff_file.getFileheader().getArticleCount()))
+        for (unsigned int index =0; index<+diff_file.getFileheader().getArticleCount(); index++)
         {
-            int id=0;
-            zim::Article tmpAr=diff_file.getArticle(index-start_file.getFileheader().getArticleCount());
+            int id=start_file.getFileheader().getArticleCount()+index;
+            zim::Article tmpAr=diff_file.getArticle(index);
             //If the article is already in file_1, it has been added.
-            while(start_file.getArticleByUrl(tmpAr.getLongUrl()).good()||isAdditionalMetadata(tmpAr.getLongUrl()))
+            if(start_file.getArticleByUrl(tmpAr.getLongUrl()).good()||isAdditionalMetadata(tmpAr.getLongUrl()))
             {
-                index++;
-                if(index>=(start_file.getFileheader().getArticleCount()+diff_file.getFileheader().getArticleCount()))
-                    break;
-                tmpAr=diff_file.getArticle(index-start_file.getFileheader().getArticleCount());
+                continue;
             }
-            if(index<(start_file.getFileheader().getArticleCount()+diff_file.getFileheader().getArticleCount()))
-            {
-                tempArticle=Article(tmpAr,index);
-                id=index;
-                index++;
-                //std::cout<<"\nRedirectID: "<<redirect[id];
-                //std::cout<<"\nID: "<<id;
-                if(redirect[id]!=0)
-                    tempArticle.setRedirectAid(NumberToString((long long)redirect[id]));
-                //std::cout<<"\nArticle: "<<tempArticle.getNamespace()<<"/"<<tempArticle.getUrl();
-                //std::cout<<"\nIndex: "<<tempArticle.getAid();
-                //std::cout<<"\nIsredirect: "<<tempArticle.isRedirect();
-                //getchar();
-                return &tempArticle;
-            }
+
+            Article tempArticle(tmpAr,id);
+            //std::cout<<"\nRedirectID: "<<redirect[id];
+            //std::cout<<"\nID: "<<id;
+            if(redirect[id]!=0)
+                tempArticle.setRedirectAid(NumberToString((long long)redirect[id]));
+            //std::cout<<"\nArticle: "<<tempArticle.getNamespace()<<"/"<<tempArticle.getUrl();
+            //std::cout<<"\nIndex: "<<tempArticle.getAid();
+            //std::cout<<"\nIsredirect: "<<tempArticle.isRedirect();
+            //getchar();
+            addArticle(tempArticle);
+
         }
-        return 0;
+        finishZimCreation();
     }
 };
 
@@ -513,12 +515,11 @@ int main(int argc, char* argv[])
             return 0;
         }
 
-        zim::writer::ZimCreator c;
+        ZimCreatorPatch c(start_filename, diff_filename);
         c.setMinChunkSize(2048);
         //Create the article source class, from which the content for the file will be read.
-        ArticleSource src(start_filename,diff_filename);
         //Create the actual file.
-        c.create(end_filename,src);
+        c.create(end_filename);
 
     }
     catch (const std::exception& e)
