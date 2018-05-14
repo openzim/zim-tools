@@ -17,11 +17,9 @@
  * MA 02110-1301, USA.
  */
 
-#include <dirent.h>
 #include <getopt.h>
 #include <pthread.h>
 #include <stdio.h>
-#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <ctime>
@@ -30,18 +28,12 @@
 #include <cstdio>
 #include <queue>
 
-#include <zim/writer/zimcreator.h>
-
 #include "article.h"
-#include "articlesource.h"
+#include "zimcreatorfs.h"
 #include "mimetypecounter.h"
 #include "queue.h"
 #include "tools.h"
 #include "config.h"
-
-#if HAVE_XAPIAN
-#include "xapianIndexer.h"
-#endif
 
 std::string language;
 std::string creator;
@@ -55,11 +47,7 @@ std::string favicon;
 std::string directoryPath;
 std::string redirectsPath;
 std::string zimPath;
-zim::writer::ZimCreator zimCreator;
-pthread_t directoryVisitor;
 
-bool isDirectoryVisitorRunningFlag = false;
-pthread_mutex_t directoryVisitorRunningMutex;
 bool verboseFlag = false;
 pthread_mutex_t verboseMutex;
 bool inflateHtmlFlag = false;
@@ -68,21 +56,6 @@ bool withFullTextIndex = false;
 
 magic_t magic;
 
-void directoryVisitorRunning(bool value)
-{
-  pthread_mutex_lock(&directoryVisitorRunningMutex);
-  isDirectoryVisitorRunningFlag = value;
-  pthread_mutex_unlock(&directoryVisitorRunningMutex);
-}
-
-bool isDirectoryVisitorRunning()
-{
-  pthread_mutex_lock(&directoryVisitorRunningMutex);
-  bool retVal = isDirectoryVisitorRunningFlag;
-  pthread_mutex_unlock(&directoryVisitorRunningMutex);
-  return retVal;
-}
-
 bool isVerbose()
 {
   pthread_mutex_lock(&verboseMutex);
@@ -90,28 +63,6 @@ bool isVerbose()
   pthread_mutex_unlock(&verboseMutex);
   return retVal;
 }
-
-class FilenameQueue : public Queue<std::string>
-{
-  bool popFromQueue(std::string& filename)
-  {
-    bool retVal = false;
-    unsigned int wait = 0;
-
-    do {
-      usleep(wait);
-      retVal = Queue::popFromQueue(filename);
-      if (retVal) {
-        break;
-      }
-      wait += 10;
-    } while (isDirectoryVisitorRunning() || !isEmpty());
-
-    return retVal;
-  }
-};
-
-FilenameQueue filenameQueue;
 
 /* Non ZIM related code */
 void usage()
@@ -190,104 +141,8 @@ void usage()
   std::cout << std::endl;
 }
 
-void* visitDirectory(const std::string& path)
-{
-  if (isVerbose())
-    std::cout << "Visiting directory " << path << std::endl;
-
-  pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
-  DIR* directory;
-
-  /* Open directory */
-  directory = opendir(path.c_str());
-  if (directory == NULL) {
-    std::cerr << "zimwriterfs: unable to open directory " << path << std::endl;
-    exit(1);
-  }
-
-  /* Read directory content */
-  struct dirent* entry;
-  while ((entry = readdir(directory)) != NULL) {
-    std::string entryName = entry->d_name;
-
-    /* Ignore this system navigation virtual directories */
-    if (entryName != "." && entryName != "..") {
-      std::string fullEntryName = path + '/' + entryName;
-
-      switch (entry->d_type) {
-        case DT_REG:
-          filenameQueue.pushToQueue(fullEntryName);
-          break;
-        case DT_DIR:
-          visitDirectory(fullEntryName);
-          break;
-        case DT_BLK:
-          std::cerr << "Unable to deal with " << fullEntryName
-                    << " (this is a block device)" << std::endl;
-          break;
-        case DT_CHR:
-          std::cerr << "Unable to deal with " << fullEntryName
-                    << " (this is a character device)" << std::endl;
-          break;
-        case DT_FIFO:
-          std::cerr << "Unable to deal with " << fullEntryName
-                    << " (this is a named pipe)" << std::endl;
-          break;
-        case DT_LNK:
-          filenameQueue.pushToQueue(fullEntryName);
-          break;
-        case DT_SOCK:
-          std::cerr << "Unable to deal with " << fullEntryName
-                    << " (this is a UNIX domain socket)" << std::endl;
-          break;
-        case DT_UNKNOWN:
-          struct stat s;
-          if (stat(fullEntryName.c_str(), &s) == 0) {
-            if (S_ISREG(s.st_mode)) {
-              filenameQueue.pushToQueue(fullEntryName);
-            } else if (S_ISDIR(s.st_mode)) {
-              visitDirectory(fullEntryName);
-            } else {
-              std::cerr << "Unable to deal with " << fullEntryName
-                        << " (no clue what kind of file it is - from stat())"
-                        << std::endl;
-            }
-          } else {
-            std::cerr << "Unable to stat " << fullEntryName << std::endl;
-          }
-          break;
-        default:
-          std::cerr << "Unable to deal with " << fullEntryName
-                    << " (no clue what kind of file it is)" << std::endl;
-          break;
-      }
-    }
-  }
-
-  closedir(directory);
-
-  return NULL;
-}
-
-void* visitDirectoryPath(void* path)
-{
-  visitDirectory(*((std::string*)path));
-
-  if (isVerbose())
-    std::cout << "Quitting visitor" << std::endl;
-
-  directoryVisitorRunning(false);
-  pthread_exit(NULL);
-
-  return NULL;
-}
-
 int main(int argc, char** argv)
 {
-  ArticleSource source(filenameQueue);
-#if HAVE_XAPIAN
-  XapianIndexer* xapianIndexer = NULL;
-#endif
   int minChunkSize = 2048;
 
   /* Argument parsing */
@@ -415,22 +270,40 @@ int main(int argc, char** argv)
     exit(1);
   }
 
+
+
   /* System tags */
   if (withFullTextIndex) {
     tags += tags.empty() ? "" : ";";
     tags += "_ftindex";
+
   }
 
-  source.add_metadataArticle(new SimpleMetadataArticle("Language", language));
-  source.add_metadataArticle(new SimpleMetadataArticle("Publisher", publisher));
-  source.add_metadataArticle(new SimpleMetadataArticle("Creator", creator));
-  source.add_metadataArticle(new SimpleMetadataArticle("Title", title));
-  source.add_metadataArticle(
-      new SimpleMetadataArticle("Description", description));
-  source.add_metadataArticle(new SimpleMetadataArticle("Name", name));
-  source.add_metadataArticle(new SimpleMetadataArticle("Tags", tags));
-  source.add_metadataArticle(new MetadataDateArticle());
-  source.add_metadataArticle(new MetadataFaviconArticle(favicon));
+  setenv("ZIM_LZMA_LEVEL", "9e", 1);
+  ZimCreatorFS zimCreator(welcome);
+  zimCreator.setMinChunkSize(minChunkSize);
+  zimCreator.setIndexing(withFullTextIndex, language);
+  zimCreator.startZimCreation(zimPath);
+
+  zimCreator.addArticle(SimpleMetadataArticle("Language", language));
+  zimCreator.addArticle(SimpleMetadataArticle("Publisher", publisher));
+  zimCreator.addArticle(SimpleMetadataArticle("Creator", creator));
+  zimCreator.addArticle(SimpleMetadataArticle("Title", title));
+  zimCreator.addArticle(SimpleMetadataArticle("Description", description));
+  zimCreator.addArticle(SimpleMetadataArticle("Name", name));
+  zimCreator.addArticle(SimpleMetadataArticle("Tags", tags));
+  zimCreator.addArticle(MetadataDateArticle());
+  zimCreator.addArticle(MetadataFaviconArticle(favicon));
+
+  /* Init */
+  magic = magic_open(MAGIC_MIME);
+  magic_load(magic, NULL);
+  pthread_mutex_init(&verboseMutex, NULL);
+
+  /* Directory visitor */
+  MimetypeCounter mimetypeCounter;
+  zimCreator.add_customHandler(&mimetypeCounter);
+  zimCreator.visitDirectory(directoryPath);
 
   /* Check redirects file and read it if necessary*/
   if (!redirectsPath.empty() && !fileExists(redirectsPath)) {
@@ -443,51 +316,12 @@ int main(int argc, char** argv)
       std::cout << "Reading redirects TSV file " << redirectsPath << "..."
                 << std::endl;
 
-    source.init_redirectsQueue_from_file(redirectsPath);
+    zimCreator.add_redirectArticles_from_file(redirectsPath);
   }
 
-  /* Init */
-  magic = magic_open(MAGIC_MIME);
-  magic_load(magic, NULL);
-  pthread_mutex_init(&directoryVisitorRunningMutex, NULL);
-  pthread_mutex_init(&verboseMutex, NULL);
-
-  /* Directory visitor */
-  directoryVisitorRunning(true);
-  pthread_create(&(directoryVisitor), NULL, visitDirectoryPath, &directoryPath);
-  pthread_detach(directoryVisitor);
-
-  /* Indexor */
-  if (withFullTextIndex) {
-#if HAVE_XAPIAN
-    xapianIndexer = new XapianIndexer(language, isVerbose());
-    xapianIndexer->start(zimPath + ".indexdb");
-    source.add_customHandler(xapianIndexer);
-#else
-    std::cerr
-        << "Zimwriterfs is compiled without Xapian. Indexing is not available."
-        << std::endl;
-#endif
-  }
-
-  MimetypeCounter mimetypeCounter;
-  source.add_customHandler(&mimetypeCounter);
-
-  /* ZIM creation */
-  setenv("ZIM_LZMA_LEVEL", "9e", 1);
-  try {
-    zimCreator.setMinChunkSize(minChunkSize);
-    zimCreator.create(zimPath, source);
-  } catch (const std::exception& e) {
-    std::cerr << e.what() << std::endl;
-  }
-
-#if HAVE_XAPIAN
-  delete xapianIndexer;
-#endif
+  zimCreator.finishZimCreation();
 
   magic_close(magic);
   /* Destroy mutex */
-  pthread_mutex_destroy(&directoryVisitorRunningMutex);
   pthread_mutex_destroy(&verboseMutex);
 }

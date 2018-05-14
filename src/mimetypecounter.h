@@ -22,7 +22,7 @@
 #define OPENZIM_ZIMWRITERFS_MIMETYPECOUNTER_H
 
 #include "article.h"
-#include "articlesource.h"
+#include "zimcreatorfs.h"
 #include <map>
 
 class MimetypeCounter;
@@ -32,17 +32,19 @@ class MetadataCounterArticle : public MetadataArticle
  private:
   MimetypeCounter* counter;
   mutable std::string data;
+  void genData() const;
 
  public:
   MetadataCounterArticle(MimetypeCounter* counter);
   virtual zim::Blob getData() const;
+  virtual zim::size_type getSize() const;
 };
 
 class MimetypeCounter : public IHandler
 {
  public:
-  void handleArticle(Article* article);
-  MetadataCounterArticle* getMetaArticle()
+  void handleArticle(const zim::writer::Article& article);
+  zim::writer::Article* getMetaArticle()
   {
     return new MetadataCounterArticle(this);
   }

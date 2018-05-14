@@ -23,17 +23,13 @@
 
 #include <iomanip>
 #include <sstream>
+#include <fstream>
 
 extern std::string directoryPath;
 
 std::string Article::getAid() const
 {
   return aid;
-}
-
-bool Article::isInvalid() const
-{
-  return invalid;
 }
 
 char Article::getNamespace() const
@@ -68,12 +64,21 @@ std::string Article::getRedirectAid() const
 
 bool Article::shouldCompress() const
 {
-  return (getMimeType().find("text") == 0
-                  || getMimeType() == "application/javascript"
-                  || getMimeType() == "application/json"
-                  || getMimeType() == "image/svg+xml"
-              ? true
-              : false);
+  return getMimeType().find("text") == 0
+      || getMimeType() == "application/javascript"
+      || getMimeType() == "application/json"
+      || getMimeType() == "image/svg+xml";
+}
+
+bool FileArticle::shouldIndex() const
+{
+  return getMimeType().find("text/html") == 0;
+}
+
+void FileArticle::readData() const
+{
+  data = getFileContent(_getFilename());
+  dataRead = true;
 }
 
 FileArticle::FileArticle(const std::string& path, const bool detectRedirects)
@@ -94,65 +99,81 @@ FileArticle::FileArticle(const std::string& path, const bool detectRedirects)
   ns = getNamespaceForMimeType(mimeType)[0];
 
   /* HTML specific code */
-  if (mimeType.find("text/html") != std::string::npos) {
-    std::size_t found;
-    std::string html = getFileContent(path);
-    GumboOutput* output = gumbo_parse(html.c_str());
-    GumboNode* root = output->root;
+  if ( mimeType.find("text/html") != std::string::npos
+    || mimeType.find("text/css") != std::string::npos ) {
+    readData();
+  }
 
-    /* Search the content of the <title> tag in the HTML */
-    if (root->type == GUMBO_NODE_ELEMENT
-        && root->v.element.children.length >= 2) {
-      const GumboVector* root_children = &root->v.element.children;
-      GumboNode* head = NULL;
-      for (unsigned int i = 0; i < root_children->length; ++i) {
-        GumboNode* child = (GumboNode*)(root_children->data[i]);
-        if (child->type == GUMBO_NODE_ELEMENT
-            && child->v.element.tag == GUMBO_TAG_HEAD) {
-          head = child;
-          break;
-        }
+  if ( mimeType.find("text/html") != std::string::npos ) {
+    parseAndAdaptHtml(detectRedirects);
+  } else if (mimeType.find("text/css") != std::string::npos) {
+    adaptCss();
+  }
+}
+
+bool FileArticle::isInvalid() const
+{
+  return invalid;
+}
+
+void FileArticle::parseAndAdaptHtml(bool detectRedirects)
+{
+  GumboOutput* output = gumbo_parse(data.c_str());
+  GumboNode* root = output->root;
+
+  /* Search the content of the <title> tag in the HTML */
+  if (root->type == GUMBO_NODE_ELEMENT
+      && root->v.element.children.length >= 2) {
+    const GumboVector* root_children = &root->v.element.children;
+    GumboNode* head = NULL;
+    for (unsigned int i = 0; i < root_children->length; ++i) {
+      GumboNode* child = (GumboNode*)(root_children->data[i]);
+      if (child->type == GUMBO_NODE_ELEMENT
+          && child->v.element.tag == GUMBO_TAG_HEAD) {
+        head = child;
+        break;
       }
+    }
 
-      if (head != NULL) {
-        GumboVector* head_children = &head->v.element.children;
-        for (unsigned int i = 0; i < head_children->length; ++i) {
-          GumboNode* child = (GumboNode*)(head_children->data[i]);
-          if (child->type == GUMBO_NODE_ELEMENT
-              && child->v.element.tag == GUMBO_TAG_TITLE) {
-            if (child->v.element.children.length == 1) {
-              GumboNode* title_text
-                  = (GumboNode*)(child->v.element.children.data[0]);
-              if (title_text->type == GUMBO_NODE_TEXT) {
-                title = title_text->v.text.text;
-                stripTitleInvalidChars(title);
-              }
+    if (head != NULL) {
+      GumboVector* head_children = &head->v.element.children;
+      for (unsigned int i = 0; i < head_children->length; ++i) {
+        GumboNode* child = (GumboNode*)(head_children->data[i]);
+        if (child->type == GUMBO_NODE_ELEMENT
+            && child->v.element.tag == GUMBO_TAG_TITLE) {
+          if (child->v.element.children.length == 1) {
+            GumboNode* title_text
+                = (GumboNode*)(child->v.element.children.data[0]);
+            if (title_text->type == GUMBO_NODE_TEXT) {
+              title = title_text->v.text.text;
+              stripTitleInvalidChars(title);
             }
           }
         }
+      }
 
-        /* Detect if this is a redirection (if no redirects TSV file specified)
-         */
-        std::string targetUrl;
-        try {
-          targetUrl = detectRedirects
-                          ? extractRedirectUrlFromHtml(head_children)
-                          : "";
-        } catch (std::string& error) {
-          std::cerr << error << std::endl;
-        }
-        if (!targetUrl.empty()) {
-          redirectAid = computeAbsolutePath(aid, decodeUrl(targetUrl));
-          if (!fileExists(directoryPath + "/" + redirectAid)) {
-            redirectAid.clear();
-            invalid = true;
-          }
+      /* Detect if this is a redirection (if no redirects TSV file specified)
+       */
+      std::string targetUrl;
+      try {
+        targetUrl = detectRedirects
+                        ? extractRedirectUrlFromHtml(head_children)
+                        : "";
+      } catch (std::string& error) {
+        std::cerr << error << std::endl;
+      }
+      if (!targetUrl.empty()) {
+        redirectAid = computeAbsolutePath(aid, decodeUrl(targetUrl));
+        if (!fileExists(directoryPath + "/" + redirectAid)) {
+          redirectAid.clear();
+          invalid = true;
         }
       }
 
       /* If no title, then compute one from the filename */
       if (title.empty()) {
-        found = path.rfind("/");
+        auto path = _getFilename();
+        auto found = path.rfind("/");
         if (found != std::string::npos) {
           title = path.substr(found + 1);
           found = title.rfind(".");
@@ -165,116 +186,123 @@ FileArticle::FileArticle(const std::string& path, const bool detectRedirects)
         std::replace(title.begin(), title.end(), '_', ' ');
       }
     }
+  }
 
-    /* Update links in the html to let them still be valid */
-    std::map<std::string, bool> links;
-    getLinks(root, links);
-    std::map<std::string, bool>::iterator it;
+  /* Update links in the html to let them still be valid */
+  std::map<std::string, bool> links;
+  getLinks(root, links);
+  std::string longUrl = std::string("/") + ns + "/" + url;
+  /* If a link appearch to be duplicated in the HTML, it will
+     occurs only one time in the links variable */
+  for (auto& linkPair: links) {
+    auto target = linkPair.first;
+    if (!target.empty() && target[0] != '#' && target[0] != '?'
+        && target.substr(0, 5) != "data:") {
+      replaceStringInPlace(data,
+                           "\"" + target + "\"",
+                           "\"" + computeNewUrl(aid, longUrl, target) + "\"");
+    }
+  }
+  gumbo_destroy_output(&kGumboDefaultOptions, output);
+}
 
-    /* If a link appearch to be duplicated in the HTML, it will
-       occurs only one time in the links variable */
-    for (it = links.begin(); it != links.end(); it++) {
-      if (!it->first.empty() && it->first[0] != '#' && it->first[0] != '?'
-          && it->first.substr(0, 5) != "data:") {
-        replaceStringInPlace(html,
-                             "\"" + it->first + "\"",
-                             "\"" + computeNewUrl(aid, it->first) + "\"");
+void FileArticle::adaptCss() {
+  /* Rewrite url() values in the CSS */
+  size_t startPos = 0;
+  size_t endPos = 0;
+  std::string url;
+  std::string longUrl = std::string("/") + ns + "/" + this->url;
+
+  while ((startPos = data.find("url(", endPos))
+         && startPos != std::string::npos) {
+    /* URL delimiters */
+    endPos = data.find(")", startPos);
+    startPos = startPos + (data[startPos + 4] == '\''
+                                   || data[startPos + 4] == '"'
+                               ? 5
+                               : 4);
+    endPos = endPos - (data[endPos - 1] == '\''
+                               || data[endPos - 1] == '"'
+                           ? 1
+                           : 0);
+    url = data.substr(startPos, endPos - startPos);
+    std::string startDelimiter = data.substr(startPos - 1, 1);
+    std::string endDelimiter = data.substr(endPos, 1);
+
+    if (url.substr(0, 5) != "data:") {
+      /* Deal with URL with arguments (using '? ') */
+      std::string path = url;
+      size_t markPos = url.find("?");
+      if (markPos != std::string::npos) {
+        path = url.substr(0, markPos);
+      }
+
+      /* Embeded fonts need to be inline because Kiwix is
+         otherwise not able to load same because of the
+         same-origin security */
+      std::string mimeType = getMimeTypeForFile(path);
+      if (mimeType == "application/font-ttf"
+          || mimeType == "application/font-woff"
+          || mimeType == "application/vnd.ms-opentype"
+          || mimeType == "application/vnd.ms-fontobject") {
+        try {
+          std::string fontContent = getFileContent(
+              directoryPath + "/" + computeAbsolutePath(aid, path));
+          replaceStringInPlaceOnce(
+              data,
+              startDelimiter + url + endDelimiter,
+              startDelimiter + "data:" + mimeType + ";base64,"
+                  + base64_encode(reinterpret_cast<const unsigned char*>(
+                                      fontContent.c_str()),
+                                  fontContent.length())
+                  + endDelimiter);
+        } catch (...) {
+        }
+      } else {
+        /* Deal with URL with arguments (using '? ') */
+        if (markPos != std::string::npos) {
+          endDelimiter = url.substr(markPos, 1);
+        }
+
+        replaceStringInPlaceOnce(
+            data,
+            startDelimiter + url + endDelimiter,
+            startDelimiter + computeNewUrl(aid, longUrl, path) + endDelimiter);
       }
     }
-
-    data = html;
-    dataRead = true;
-
-    gumbo_destroy_output(&kGumboDefaultOptions, output);
   }
 }
 
 zim::Blob FileArticle::getData() const
 {
-  if (dataRead)
-    return zim::Blob(data.data(), data.size());
-  ;
+  if (!dataRead)
+    readData();
 
-  std::string aidPath = directoryPath + "/" + aid;
-  std::string fileContent = getFileContent(aidPath);
-
-  if (getMimeType().find("text/css") == 0) {
-    /* Rewrite url() values in the CSS */
-    size_t startPos = 0;
-    size_t endPos = 0;
-    std::string url;
-
-    while ((startPos = fileContent.find("url(", endPos))
-           && startPos != std::string::npos) {
-      /* URL delimiters */
-      endPos = fileContent.find(")", startPos);
-      startPos = startPos + (fileContent[startPos + 4] == '\''
-                                     || fileContent[startPos + 4] == '"'
-                                 ? 5
-                                 : 4);
-      endPos = endPos - (fileContent[endPos - 1] == '\''
-                                 || fileContent[endPos - 1] == '"'
-                             ? 1
-                             : 0);
-      url = fileContent.substr(startPos, endPos - startPos);
-      std::string startDelimiter = fileContent.substr(startPos - 1, 1);
-      std::string endDelimiter = fileContent.substr(endPos, 1);
-
-      if (url.substr(0, 5) != "data:") {
-        /* Deal with URL with arguments (using '? ') */
-        std::string path = url;
-        size_t markPos = url.find("?");
-        if (markPos != std::string::npos) {
-          path = url.substr(0, markPos);
-        }
-
-        /* Embeded fonts need to be inline because Kiwix is
-           otherwise not able to load same because of the
-           same-origin security */
-        std::string mimeType = getMimeTypeForFile(path);
-        if (mimeType == "application/font-ttf"
-            || mimeType == "application/font-woff"
-            || mimeType == "application/vnd.ms-opentype"
-            || mimeType == "application/vnd.ms-fontobject") {
-          try {
-            std::string fontContent = getFileContent(
-                directoryPath + "/" + computeAbsolutePath(aid, path));
-            replaceStringInPlaceOnce(
-                fileContent,
-                startDelimiter + url + endDelimiter,
-                startDelimiter + "data:" + mimeType + ";base64,"
-                    + base64_encode(reinterpret_cast<const unsigned char*>(
-                                        fontContent.c_str()),
-                                    fontContent.length())
-                    + endDelimiter);
-          } catch (...) {
-          }
-        } else {
-          /* Deal with URL with arguments (using '? ') */
-          if (markPos != std::string::npos) {
-            endDelimiter = url.substr(markPos, 1);
-          }
-
-          replaceStringInPlaceOnce(
-              fileContent,
-              startDelimiter + url + endDelimiter,
-              startDelimiter + computeNewUrl(aid, path) + endDelimiter);
-        }
-      }
-    }
-  }
-
-  data = fileContent;
-  dataRead = true;
   return zim::Blob(data.data(), data.size());
 }
 
-MetadataArticle::MetadataArticle(const std::string& id)
+std::string FileArticle::_getFilename() const
 {
-  aid = "/M/" + id;
-  mimeType = "text/plain";
-  ns = 'M';
-  url = id;
+  return directoryPath + "/" + aid;
+}
+
+std::string FileArticle::getFilename() const
+{
+  // If data is read (because we changed the content), use the content
+  // not the content of the filename.
+  if (dataRead)
+    return "";
+  return _getFilename();
+}
+
+zim::size_type FileArticle::getSize() const
+{
+  if (dataRead) {
+    return data.size();
+  }
+
+  std::ifstream in(_getFilename(), std::ios::binary|std::ios::ate);
+  return in.tellg();
 }
 
 SimpleMetadataArticle::SimpleMetadataArticle(const std::string& id,
@@ -287,16 +315,29 @@ MetadataDateArticle::MetadataDateArticle() : MetadataArticle("Date")
 {
 }
 
+void MetadataDateArticle::genDate() const
+{
+  time_t t = time(0);
+  struct tm* now = localtime(&t);
+  std::stringstream stream;
+  stream << (now->tm_year + 1900) << '-' << std::setw(2) << std::setfill('0')
+         << (now->tm_mon + 1) << '-' << std::setw(2) << std::setfill('0')
+         << now->tm_mday;
+  data = stream.str();
+}
+
 zim::Blob MetadataDateArticle::getData() const
 {
-  if (data.size() == 0) {
-    time_t t = time(0);
-    struct tm* now = localtime(&t);
-    std::stringstream stream;
-    stream << (now->tm_year + 1900) << '-' << std::setw(2) << std::setfill('0')
-           << (now->tm_mon + 1) << '-' << std::setw(2) << std::setfill('0')
-           << now->tm_mday;
-    data = stream.str();
+  if (data.empty()) {
+    genDate();
   }
   return zim::Blob(data.data(), data.size());
+}
+
+zim::size_type MetadataDateArticle::getSize() const
+{
+  if(data.empty()) {
+    genDate();
+  }
+  return data.size();
 }

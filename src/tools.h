@@ -36,7 +36,7 @@ bool fileExists(const std::string& path);
 std::string removeLastPathElement(const std::string& path,
                                   const bool removePreSeparator,
                                   const bool removePostSeparator);
-std::string computeNewUrl(const std::string& aid, const std::string& url);
+std::string computeNewUrl(const std::string& aid, const std::string& baseUrl, const std::string& targetUrl);
 
 std::string base64_encode(unsigned char const* bytes_to_encode,
                           unsigned int in_len);

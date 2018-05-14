@@ -26,8 +26,7 @@ MetadataCounterArticle::MetadataCounterArticle(MimetypeCounter* counter)
 {
 }
 
-zim::Blob MetadataCounterArticle::getData() const
-{
+void MetadataCounterArticle::genData() const{
   std::stringstream stream;
   for (std::map<std::string, unsigned int>::iterator it
        = counter->counters.begin();
@@ -36,17 +35,32 @@ zim::Blob MetadataCounterArticle::getData() const
     stream << it->first << "=" << it->second << ";";
   }
   data = stream.str();
+}
+
+zim::Blob MetadataCounterArticle::getData() const
+{
+  if (data.empty())
+    genData();
   return zim::Blob(data.data(), data.size());
 }
 
-void MimetypeCounter::handleArticle(Article* article)
+zim::size_type MetadataCounterArticle::getSize() const
 {
-  if (!article->isRedirect()) {
-    std::string mimeType = article->getMimeType();
-    if (counters.find(mimeType) == counters.end()) {
-      counters[mimeType] = 1;
-    } else {
-      counters[mimeType]++;
-    }
+  if (data.empty())
+    genData();
+  return data.size();
+}
+
+void MimetypeCounter::handleArticle(const zim::writer::Article& article)
+{
+  if (article.isRedirect()) {
+    return;
+  }
+
+  std::string mimeType = article.getMimeType();
+  if (counters.find(mimeType) == counters.end()) {
+    counters[mimeType] = 1;
+  } else {
+    counters[mimeType]++;
   }
 }

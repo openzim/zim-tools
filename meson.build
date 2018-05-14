@@ -18,11 +18,6 @@ libzim_dep = dependency('libzim', static:static_linkage)
 zlib_dep = dependency('zlib', static:static_linkage)
 gumbo_dep = dependency('gumbo', static:static_linkage)
 
-xapian_dep = dependency('xapian-core',
-                        required:false,
-                        static:static_linkage)
-conf.set10('HAVE_XAPIAN', xapian_dep.found())
-
 magic_include_path = ''
 magic_prefix_install = get_option('magic-install-prefix')
 if magic_prefix_install == ''
@@ -55,10 +50,6 @@ else
   else
     error('magic.h not found')
   endif
-endif
-
-if xapian_dep.found()
-  icu_dep = dependency('icu-i18n', static:static_linkage)
 endif
 
 subdir('src')

@@ -18,45 +18,42 @@
  * MA 02110-1301, USA.
  */
 
-#ifndef OPENZIM_ZIMWRITERFS_ARTICLESOURCE_H
-#define OPENZIM_ZIMWRITERFS_ARTICLESOURCE_H
+#ifndef OPENZIM_ZIMWRITERFS_ZIMCREATORFS_H
+#define OPENZIM_ZIMWRITERFS_ZIMCREATORFS_H
 
-#include <fstream>
 #include <queue>
 #include <string>
-#include "queue.h"
+#include "article.h"
 
-#include <zim/blob.h>
 #include <zim/writer/zimcreator.h>
-
-class Article;
 
 class IHandler
 {
  public:
-  virtual void handleArticle(Article* article) = 0;
-  virtual Article* getMetaArticle() = 0;
+  virtual void handleArticle(const zim::writer::Article& article) = 0;
+  virtual zim::writer::Article* getMetaArticle() = 0;
   virtual ~IHandler() = default;
 };
 
-class ArticleSource : public zim::writer::ArticleSource
+class ZimCreatorFS : public zim::writer::ZimCreator
 {
  public:
-  explicit ArticleSource(Queue<std::string>& filenameQueue);
-  void add_metadataArticle(Article* article);
-  virtual const zim::writer::Article* getNextArticle();
+  ZimCreatorFS(std::string mainPage)
+    : zim::writer::ZimCreator(true),
+      mainPage(mainPage) {}
+  virtual ~ZimCreatorFS() = default;
   virtual std::string getMainPage();
-  virtual void add_customHandler(IHandler* handler);
+   virtual void add_customHandler(IHandler* handler);
+   virtual void add_redirectArticles_from_file(const std::string& path);
+   virtual void visitDirectory(const std::string& path);
 
-  virtual void init_redirectsQueue_from_file(const std::string& path);
+   virtual void addArticle(const std::string& path);
+   virtual void addArticle(const zim::writer::Article& article);
+   virtual void finishZimCreation();
 
  private:
-  std::queue<Article*> metadataQueue;
-  std::queue<std::string> redirectsQueue;
-  Queue<std::string>& filenameQueue;
   std::vector<IHandler*> articleHandlers;
-  std::vector<IHandler*>::iterator currentLoopHandler;
-  bool loopOverHandlerStarted;
+  std::string mainPage;
 };
 
 #endif  // OPENZIM_ZIMWRITERFS_ARTICLESOURCE_H
