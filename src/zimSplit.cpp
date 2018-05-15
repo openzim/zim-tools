@@ -85,8 +85,7 @@ class ZimSplitter
         close_file();
         part_name = prefix + get_new_suffix();
         std::cout << "opening new file " << part_name << std::endl;
-        std::ofstream tmp(part_name, std::ios::binary);
-        ofile.swap(tmp);
+        ofile.open(part_name, std::ios::binary);
         out_size = 0;
     }
 
@@ -95,9 +94,6 @@ class ZimSplitter
     }
 
     void copy_out(zim::offset_type size) {
-        std::istreambuf_iterator<char> begin_source(ifile);
-        std::ostreambuf_iterator<char> begin_dest(ofile);
-
         while (size > 0) {
            auto size_to_copy = std::min<zim::offset_type>(size, BUFFER_SIZE);
            ifile.read(batch_buffer, size_to_copy);
