@@ -13,6 +13,8 @@ then
   brew upgrade python3
   pip3 install meson==0.43.0
 
+  brew install libmagic
+
   wget https://github.com/ninja-build/ninja/releases/download/v1.8.2/ninja-mac.zip
   unzip ninja-mac.zip ninja
 else

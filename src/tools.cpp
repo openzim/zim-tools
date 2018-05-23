@@ -506,9 +506,11 @@ std::string getMimeTypeForFile(const std::string& filename)
       mimeType = mimeType.substr(0, mimeType.find(";"));
     }
     fileMimeTypes[filename] = mimeType;
+  } catch (...) { }
+  if (mimeType.empty()) {
+    return "application/octet-stream";
+  } else {
     return mimeType;
-  } catch (...) {
-    return "";
   }
 }
 
