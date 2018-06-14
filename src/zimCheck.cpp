@@ -21,6 +21,7 @@
 #include <getopt.h>
 #include <zim/fileiterator.h>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 #include <map>
@@ -329,7 +330,7 @@ int main (int argc, char **argv)
             }
             std::cout << "  Verifying Similar Articles for redundancies.." << std::endl;
             test_ = true;
-            std::string output_details;
+            std::ostringstream output_details;
             progress.reset(hash_main.size());
             for(auto &it: hash_main)
             {
@@ -347,13 +348,13 @@ int main (int argc, char **argv)
 			if (s1 != s2 )
                             continue;
                         test_ = false;
-                        output_details += "    [ERROR] Articles ";
-                        output_details += a1.getTitle() + " (idx ";
-                        output_details += std::to_string( a1.getIndex() );
-                        output_details += ") and ";
-                        output_details += a2.getTitle() + " (idx ";
-                        output_details += std::to_string( a2.getIndex() );
-                        output_details += ") have the same content\n";
+                        output_details << "    [ERROR] Articles "
+                                       << a1.getTitle()
+                                       << " (idx " << a1.getIndex()
+                                       << ") and "
+                                       << a2.getTitle()
+                                       << " (idx " << a2.getIndex()
+                                       << ") have the same content\n";
                     }
                 }
             }
@@ -363,7 +364,7 @@ int main (int argc, char **argv)
             {
                 std::cout << "  [ERROR] Redundant articles have been found in ZIM file." << std::endl;
                 if( error_details )
-                    std::cout << "  Details:\n" << output_details << std::endl;
+                    std::cout << "  Details:\n" << output_details.str() << std::endl;
             }
             overall_status &= test_;
         }
@@ -392,7 +393,7 @@ int main (int argc, char **argv)
             }
             progress.reset(articleCount);
             test_ = true;
-            std::string output_details;
+            std::ostringstream output_details;
             std::string previousLink;
             int previousIndex = -1;
             std::vector < std::string > links;
@@ -424,10 +425,10 @@ int main (int argc, char **argv)
                                 int index = it -> getIndex();
                                 if(( previousLink != links[i]) && ( previousIndex != index))
                                 {
-                                    output_details += "    [ERROR] Article '";
-                                    output_details += links[i];
-                                    output_details += "' was not found. Linked in Article ";
-                                    output_details += std::to_string(index ) + "\n";
+                                    output_details << "    [ERROR] Article '"
+                                                   << links[i]
+                                                   << "' was not found. Linked in Article "
+                                                   << index  << "\n";
                                     previousLink = links[i];
                                     previousIndex = index;
                                 }
@@ -444,7 +445,7 @@ int main (int argc, char **argv)
                 std::cout << "  [ERROR] Invalid internal URLs found in ZIM file." << std::endl;
                 if( error_details)
                 {
-                    std::cout << "  Details:\n" << output_details << std::endl;
+                    std::cout << "  Details:\n" << output_details.str() << std::endl;
                 }
             }
             overall_status &= test_;
