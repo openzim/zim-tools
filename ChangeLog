@@ -1,0 +1,9 @@
+zim-tools 1.0.0
+===============
+
+ * Remove warnings.
+ * Compile zim-tools with travis.
+ * Add zim-check tool.
+ * Addapt zimDiff and zimPatch to new version of libzim writer.
+ * [zimSplit] Do not create a new ofstream for each part. (Do not need gcc5)
+ * Do not use `std::to_string` (Allow compilation with gcc4.8)
