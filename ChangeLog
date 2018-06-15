@@ -1,0 +1,11 @@
+zimwriterfs 1.2
+===============
+
+ * Revert "Add leading '/' at indexer url.
+ * Move to meson build system.
+ * Addapt to new libzim's writer's API.
+ * Add travic CI.
+ * Add redirect articles after "normal" articles.
+ * Explicitly use icu namespace to allow use of packaged icu lib.
+ * Fix help/log typos.
+ * Better README.
