@@ -27,38 +27,33 @@ RUN apt-get install -y make
 RUN apt-get install -y g++
 RUN apt-get install -y liblzma-dev
 RUN apt-get install -y coreutils
+RUN apt-get install -y meson
+RUN apt-get install -y ninja-build
 
 # Install Xapian
 RUN apt-get install -y wget
 RUN apt-get install -y zlib1g-dev
-RUN wget https://oligarchy.co.uk/xapian/1.4.3/xapian-core-1.4.3.tar.xz
-RUN tar xvf xapian-core-1.4.3.tar.xz
-RUN cd xapian-core-1.4.3 && ./configure
-RUN cd xapian-core-1.4.3 && make all install
+RUN wget https://oligarchy.co.uk/xapian/1.4.5/xapian-core-1.4.5.tar.xz
+RUN tar xvf xapian-core-1.4.5.tar.xz
+RUN cd xapian-core-1.4.5 && ./configure
+RUN cd xapian-core-1.4.5 && make all install
 RUN rm -rf xapian
 
 # Install zimlib
 RUN apt-get install -y libicu-dev
-RUN apt-get install -y python3-pip
-RUN ln -s /usr/bin/python3 /usr/bin/python
 RUN git clone https://github.com/openzim/libzim.git
-RUN cd libzim && git checkout 3.0.0
-RUN pip3 install meson
-RUN cd libzim && git clone git://github.com/ninja-build/ninja.git
-RUN cd libzim/ninja && git checkout release
-RUN cd libzim/ninja && ./configure.py --bootstrap
-RUN cp libzim/ninja/ninja /usr/local/bin/
+RUN cd libzim && git checkout 4.0.0
 RUN cd libzim && meson . build
-RUN cd libzim/build && ninja
-RUN cd libzim/build && ninja install
+RUN cd libzim && ninja -C build install
 RUN rm -rf libzim
 
 # Install zimwriterfs
 RUN apt-get install -y libgumbo-dev
 RUN apt-get install -y libmagic-dev
 RUN git clone https://github.com/openzim/zimwriterfs.git
+RUN cd zimwriterfs && git checkout 1.2
 RUN cd zimwriterfs && meson . build
-RUN cd zimwriterfs/build && ninja install
+RUN cd zimwriterfs && ninja -C build install
 RUN rm -rf zimwriterfs
 RUN ldconfig
 ENV LD_LIBRARY_PATH /usr/local/lib/x86_64-linux-gnu/
