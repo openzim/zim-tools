@@ -123,6 +123,12 @@ ninja -C build uninstall
 Like for the installation, you might need to run the command as root
 (or using 'sudo').
 
+Binaries
+---------
+
+Statically pre-compiled binaries are provided here
+https://download.openzim.org/release/zimwriterfs/.
+
 Troubleshooting
 ---------------
 
