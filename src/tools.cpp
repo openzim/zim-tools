@@ -490,13 +490,13 @@ std::string getMimeTypeForFile(const std::string& filename)
     mimeType = filename.substr(index_of_last_dot + 1);
     try {
       return extMimeTypes.at(mimeType);
-    } catch (std::out_of_range) {}
+    } catch (std::out_of_range&) {}
   }
 
   /* Try to get the mimeType from the cache */
   try {
     return fileMimeTypes.at(filename);
-  } catch (std::out_of_range) {}
+  } catch (std::out_of_range&) {}
 
   /* Try to get the mimeType with libmagic */
   try {
