@@ -25,6 +25,7 @@
 #include <fstream>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <regex>
 
 bool isVerbose();
 
@@ -39,8 +40,23 @@ void ZimCreatorFS::add_redirectArticles_from_file(const std::string& path)
   std::string line;
 
   in_stream.open(path.c_str());
+  int line_number = 1;
   while (std::getline(in_stream, line)) {
-    addArticle(RedirectArticle(line));
+    std::regex line_regex("(.)\\t(.+)\\t(.+)\\t(.+)");
+    std::smatch matches;
+    if (!std::regex_search(line, matches, line_regex) || matches.size() != 5) {
+      std::cerr << "zimwriterfs: line #" << line_number
+                << " has invalid format in redirect file " << path << ": '"
+                << line << "'" << std::endl;
+      in_stream.close();
+      exit(1);
+    }
+
+    addArticle(RedirectArticle(matches[1].str()[0],
+                               matches[2].str(),
+                               matches[3].str(),
+                               matches[4].str()));
+    ++line_number;
   }
   in_stream.close();
 }
