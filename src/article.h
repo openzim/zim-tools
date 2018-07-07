@@ -149,18 +149,16 @@ class FileArticle : public Article
 class RedirectArticle : public Article
 {
  public:
-  RedirectArticle(const std::string& line)
+  explicit RedirectArticle(char ns,
+                           const std::string& url,
+                           const std::string& title,
+                           const std::string& redirectAid)
   {
-    size_t start;
-    size_t end;
-    ns = line[0];
-    end = line.find_first_of("\t", 2);
-    url = line.substr(2, end - 2);
-    start = end + 1;
-    end = line.find_first_of("\t", start);
-    title = line.substr(start, end - start);
-    redirectAid = line.substr(end + 1);
-    aid = "/" + line.substr(0, 1) + "/" + url;
+    this->ns = ns;
+    this->url = url;
+    this->title = title;
+    this->redirectAid = redirectAid;
+    aid = std::string("/") + ns + "/" + url;
     mimeType = "text/plain";
   }
   virtual zim::Blob getData() const { return zim::Blob(); }
