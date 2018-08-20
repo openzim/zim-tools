@@ -17,6 +17,7 @@
  * MA 02110-1301, USA.
  */
 
+/* Includes */
 #include <getopt.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -35,6 +36,10 @@
 #include "tools.h"
 #include "config.h"
 
+/* Macros */
+#define VERSION_NUMBER "1"
+
+/* Global access strings */
 std::string language;
 std::string creator;
 std::string publisher;
@@ -64,7 +69,16 @@ bool isVerbose()
   return retVal;
 }
 
-/* Non ZIM related code */
+/* Print current version defined in the macro */
+void version()
+{
+  std::cout << "Version:  " << "v" << VERSION_NUMBER << std::endl;
+  std::cout << "\tSee -h or --help argument flags for further argument options" << std::endl;
+  std::cout << "\tCopyright 2013-2016 Emmanuel Engelhart <kelson@kiwix.org>" << std::endl;
+
+}
+
+/* Print correct console usage options */
 void usage()
 {
   std::cout << "Usage: zimwriterfs [mandatory arguments] [optional arguments] "
@@ -105,6 +119,7 @@ void usage()
   std::cout << "\t-v, --verbose\t\tprint processing details on STDOUT"
             << std::endl;
   std::cout << "\t-h, --help\t\tprint this help" << std::endl;
+  std::cout << "\t-V, --version\tprint the version number" << std::endl;
   std::cout
       << "\t-m, --minChunkSize\tnumber of bytes per ZIM cluster (defaul: 2048)"
       << std::endl;
@@ -141,6 +156,7 @@ void usage()
   std::cout << std::endl;
 }
 
+/* Main program entry point */
 int main(int argc, char** argv)
 {
   int minChunkSize = 2048;
@@ -149,6 +165,7 @@ int main(int argc, char** argv)
   static struct option long_options[]
       = {{"help", no_argument, 0, 'h'},
          {"verbose", no_argument, 0, 'v'},
+         {"version", no_argument, 0, 'V'},
          {"welcome", required_argument, 0, 'w'},
          {"minchunksize", required_argument, 0, 'm'},
          {"name", required_argument, 0, 'n'},
@@ -169,12 +186,16 @@ int main(int argc, char** argv)
 
   do {
     c = getopt_long(
-        argc, argv, "hvixuw:m:f:t:d:c:l:p:r:", long_options, &option_index);
+        argc, argv, "hVvixuw:m:f:t:d:c:l:p:r:", long_options, &option_index);
 
     if (c != -1) {
       switch (c) {
         case 'a':
           tags = optarg;
+          break;
+        case 'V':
+          version();
+          exit(0);
           break;
         case 'h':
           usage();
