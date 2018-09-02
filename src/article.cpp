@@ -243,6 +243,7 @@ void FileArticle::adaptCss() {
       std::string mimeType = getMimeTypeForFile(path);
       if (mimeType == "application/font-ttf"
           || mimeType == "application/font-woff"
+          || mimeType == "application/font-woff2"
           || mimeType == "application/vnd.ms-opentype"
           || mimeType == "application/vnd.ms-fontobject") {
         try {
