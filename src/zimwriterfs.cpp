@@ -36,8 +36,10 @@
 #include "tools.h"
 #include "config.h"
 
-/* Macros */
-#define VERSION_NUMBER "1"
+/* Check for version number */
+#ifndef VERSION
+  #define VERSION "UNKNOWN"
+#endif
 
 /* Global access strings */
 std::string language;
@@ -72,7 +74,8 @@ bool isVerbose()
 /* Print current version defined in the macro */
 void version()
 {
-  std::cout << "Version:  " << "v" << VERSION_NUMBER << std::endl;
+  // Access the version number through meson macro define
+  std::cout << "Version:  " << "v" << VERSION << std::endl;
   std::cout << "\tSee -h or --help argument flags for further argument options" << std::endl;
   std::cout << "\tCopyright 2013-2016 Emmanuel Engelhart <kelson@kiwix.org>" << std::endl;
 
@@ -119,7 +122,7 @@ void usage()
   std::cout << "\t-v, --verbose\t\tprint processing details on STDOUT"
             << std::endl;
   std::cout << "\t-h, --help\t\tprint this help" << std::endl;
-  std::cout << "\t-V, --version\tprint the version number" << std::endl;
+  std::cout << "\t-V, --version\t\tprint the version number" << std::endl;
   std::cout
       << "\t-m, --minChunkSize\tnumber of bytes per ZIM cluster (defaul: 2048)"
       << std::endl;
