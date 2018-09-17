@@ -14,3 +14,9 @@ stamp-h1
 .*.swp
 *.zim
 zimwriterfs
+bin
+build
+lib
+share
+include
+pip-selfcheck.json
