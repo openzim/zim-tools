@@ -9,3 +9,4 @@ zimwriterfs 1.2
  * Explicitly use icu namespace to allow use of packaged icu lib.
  * Fix help/log typos.
  * Better README.
+ * Added -V --version command line arguments
