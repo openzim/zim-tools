@@ -88,6 +88,8 @@ static std::map<std::string, std::string> _create_extMimeTypes()
   extMimeTypes["TTF"] = "application/font-ttf";
   extMimeTypes["woff"] = "application/font-woff";
   extMimeTypes["WOFF"] = "application/font-woff";
+  extMimeTypes["woff2"] = "application/font-woff2";
+  extMimeTypes["WOFF2"] = "application/font-woff2";
   extMimeTypes["vtt"] = "text/vtt";
   extMimeTypes["VTT"] = "text/vtt";
 
@@ -526,6 +528,7 @@ std::string getNamespaceForMimeType(const std::string& mimeType)
   } else {
     if (mimeType == "application/font-ttf"
         || mimeType == "application/font-woff"
+        || mimeType == "application/font-woff2"
         || mimeType == "application/vnd.ms-opentype"
         || mimeType == "application/vnd.ms-fontobject"
         || mimeType == "application/javascript"
