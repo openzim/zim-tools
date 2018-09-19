@@ -10,7 +10,6 @@ cd $HOME
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]
 then
   brew update
-  brew install nodejs
   brew upgrade python3
   pip3 install meson==0.43.0
 
