@@ -31,7 +31,7 @@ if [[ "${TRAVIS_OS_NAME}" == "osx" ]]
 then
   cd ..
   mkdir zimtools
-  cp build/src/* ./zimtools
+  cp -r build/src/* ./zimtools
   npm i -g appdmg && \
   appdmg appdmg.json zimtools-osx.dmg
 fi
