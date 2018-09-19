@@ -63,6 +63,16 @@ cp ninja ../bin
 cd ..
 ```
 
+### macOS
+
+```bash
+brew install icu4c
+export LDFLAGS="-L/usr/local/opt/icu4c/lib"
+export CPPFLAGS="-I/usr/local/opt/icu4c/include"
+brew link icu4c --force
+```
+
+
 Compilation
 -----------
 

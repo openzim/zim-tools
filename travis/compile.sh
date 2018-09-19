@@ -25,3 +25,13 @@ fi
 meson . build ${MESON_OPTION}
 cd build
 ninja
+
+# Generate DMG
+if [[ "${TRAVIS_OS_NAME}" == "osx" ]]
+then
+  cd ..
+  mkdir zimtools
+  cp build/src/* ./zimtools
+  npm i -g appdmg && \
+  appdmg appdmg.json zimtools-osx.dmg
+fi

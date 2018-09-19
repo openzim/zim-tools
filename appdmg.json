@@ -1,0 +1,24 @@
+{
+    "title": "ZimTools Binaries",
+    "icon": "openzim.png",
+    "window": {
+        "size": {
+            "width": 640,
+            "height": 344
+        }
+    },
+    "contents": [
+        {
+            "x": 448,
+            "y": 122,
+            "type": "link",
+            "path": "/Applications"
+        },
+        {
+            "x": 192,
+            "y": 122,
+            "type": "file",
+            "path": "zimtools"
+        }
+    ]
+}
