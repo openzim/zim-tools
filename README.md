@@ -93,7 +93,7 @@ ninja -C build
 By default, it will compile dynamic linked libraries. All binary files
 will be created in the "build" directory created automatically by
 Meson. If you want statically linked libraries, you can add
-`--default-library=static` option to the Meson command.
+`-Dstatic-linkage=true` option to the Meson command.
 
 Depending of you system, `ninja` may be called `ninja-build`.
 
