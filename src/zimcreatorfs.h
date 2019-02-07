@@ -38,8 +38,8 @@ class IHandler
 class ZimCreatorFS : public zim::writer::ZimCreator
 {
  public:
-  ZimCreatorFS(std::string mainPage)
-    : zim::writer::ZimCreator(true),
+  ZimCreatorFS(std::string mainPage, bool verbose)
+    : zim::writer::ZimCreator(verbose),
       mainPage(mainPage) {}
   virtual ~ZimCreatorFS() = default;
   virtual std::string getMainPage();
