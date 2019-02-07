@@ -304,7 +304,7 @@ int main(int argc, char** argv)
   }
 
   setenv("ZIM_LZMA_LEVEL", "9e", 1);
-  ZimCreatorFS zimCreator(welcome);
+  ZimCreatorFS zimCreator(welcome, isVerbose());
   zimCreator.setMinChunkSize(minChunkSize);
   zimCreator.setIndexing(withFullTextIndex, language);
   zimCreator.startZimCreation(zimPath);
