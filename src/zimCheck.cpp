@@ -323,7 +323,10 @@ int main (int argc, char **argv)
             for (zim::File::const_iterator it = f.begin(); it != f.end(); ++it)
             {
                 progress.report();
-                if (it->isRedirect() || it->isLinktarget() || it->isDeleted() ) {
+                if (it->isRedirect() ||
+                    it->isLinktarget() ||
+                    it->isDeleted() ||
+                    it->getArticleSize() == 0) {
                     continue;
                 }
                 hash_main[ adler32(it->getData()) ].push_back( it->getIndex() );
