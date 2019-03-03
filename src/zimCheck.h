@@ -67,7 +67,7 @@ void getDependencies(std::string page, std::vector <std::string> *links)        
 {
     int sz=page.size();
     links->clear();
-    int startingPoint,length;
+    int startingPoint;
     for(int i = 0; i< sz; i++)
     {
         if(page[i] == ' ' && i+5 < sz)
@@ -85,8 +85,9 @@ void getDependencies(std::string page, std::vector <std::string> *links)        
                 {
                     i++;
                 }
-                length=i-startingPoint;
-                links->push_back(page.substr(startingPoint,length));
+                std::string url = page.substr(startingPoint, i-startingPoint);
+                if (std::regex_match(url, std::regex("http(s|)://")))
+                    links->push_back(url);
             }
         }
     }
