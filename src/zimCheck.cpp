@@ -326,7 +326,8 @@ int main (int argc, char **argv)
                 if (it->isRedirect() ||
                     it->isLinktarget() ||
                     it->isDeleted() ||
-                    it->getArticleSize() == 0) {
+                    it->getArticleSize() == 0 ||
+                    it->getNamespace() == 'M') {
                     continue;
                 }
                 hash_main[ adler32(it->getData()) ].push_back( it->getIndex() );
