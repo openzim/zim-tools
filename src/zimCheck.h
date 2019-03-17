@@ -105,25 +105,15 @@ int adler32(std::string buf)                        //Adler32 Hash Function. Use
     return (s2 << 16) | s1;
 }
 
-inline bool isExternalUrl(std::string *input_string)       //Checks if an external URL is a wikipedia URL.
+inline bool isExternalUrl(const std::string& input_string)
 {
-    if(std::regex_match( *input_string,std::regex(".*.wikipedia.org/.*")))
-        return false;
-
-    if(std::regex_match( *input_string,std::regex("/./.*")))
-        return false;
-
-    if(std::regex_match( *input_string,std::regex(".*.wikimedia.org/.*")))
-        return  false;
-    return true;
+    static std::regex external_url_regex = std::regex("[^:/?#]+:\\/\\/.*", std::regex_constants::icase);
+    return std::regex_match(input_string, external_url_regex);
 }
 
-inline bool isInternalUrl(std::string *input_string)                 //Checks if a URL is an internal URL or not. Uses RegExp.
+inline bool isInternalUrl(const std::string& input_string)                 //Checks if a URL is an internal URL or not. Uses RegExp.
 {
-    if(std::regex_match( *input_string,std::regex("/./.*")))
-        return true;
-    else
-        return false;
+    return !isExternalUrl(input_string);
 }
 
 //Removes extra spaces from URLs. Usually done by the browser, so web authors sometimes tend to ignore it.
