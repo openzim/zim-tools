@@ -17,12 +17,12 @@
  *
  */
 
-
 void getLinks(std::string page, std::vector <std::string> *links)           //Returns a vector of the links in a particular page. includes links under 'href' and 'src'
 {
     int sz=page.size();
     links->clear();
-    int startingPoint,length;
+    int startingPoint;
+
     for(int i = 0; i< sz; i++)
     {
         if(page[i] == ' ' && i+5 < sz)
@@ -36,11 +36,9 @@ void getLinks(std::string page, std::vector <std::string> *links)           //Re
                     i++;
                 startingPoint= ++i;
                 while(page[i] != '"')
-                {
                     i++;
-                }
-                length=i-startingPoint;
-                links->push_back(page.substr(startingPoint,length));
+
+                links->push_back(page.substr(startingPoint, i-startingPoint));
             }
 
             if( (page[i+1] == 's') && (page[i+2] == 'r') && (page[i+3]=='c'))      //Links under 'src' category.
@@ -51,13 +49,10 @@ void getLinks(std::string page, std::vector <std::string> *links)           //Re
                 while(page[i] != '"')
                     i++;
                 startingPoint= ++i;
-
                 while(page[i] != '"')
-                {
                     i++;
-                }
-                length=i-startingPoint;
-                links->push_back(page.substr(startingPoint,length));
+
+                links->push_back(page.substr(startingPoint, i-startingPoint));
             }
         }
     }
@@ -68,6 +63,7 @@ void getDependencies(std::string page, std::vector <std::string> *links)        
     int sz=page.size();
     links->clear();
     int startingPoint;
+
     for(int i = 0; i< sz; i++)
     {
         if(page[i] == ' ' && i+5 < sz)
@@ -80,14 +76,10 @@ void getDependencies(std::string page, std::vector <std::string> *links)        
                 while(page[i] != '"')
                     i++;
                 startingPoint= ++i;
-
                 while(page[i] != '"')
-                {
                     i++;
-                }
-                std::string url = page.substr(startingPoint, i-startingPoint);
-                if (std::regex_match(url, std::regex("http(s|)://")))
-                    links->push_back(url);
+
+                links->push_back(page.substr(startingPoint, i-startingPoint));
             }
         }
     }
@@ -108,23 +100,13 @@ int adler32(std::string buf)                        //Adler32 Hash Function. Use
 
 inline bool isExternalUrl(std::string *input_string)       //Checks if an external URL is a wikipedia URL.
 {
-    if(std::regex_match( *input_string,std::regex(".*.wikipedia.org/.*")))
-        return false;
-
-    if(std::regex_match( *input_string,std::regex("/./.*")))
-        return false;
-
-    if(std::regex_match( *input_string,std::regex(".*.wikimedia.org/.*")))
-        return  false;
-    return true;
+    static std::regex external_url_regex = std::regex("http[s]{0,1}:\\/\\/.*", std::regex_constants::icase);
+    return std::regex_match(*input_string, external_url_regex) ? true : false;
 }
 
 inline bool isInternalUrl(std::string *input_string)                 //Checks if a URL is an internal URL or not. Uses RegExp.
 {
-    if(std::regex_match( *input_string,std::regex("/./.*")))
-        return true;
-    else
-        return false;
+    return !isExternalUrl(input_string);
 }
 
 //Removes extra spaces from URLs. Usually done by the browser, so web authors sometimes tend to ignore it.
