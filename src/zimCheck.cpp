@@ -413,6 +413,9 @@ int main (int argc, char **argv)
                 getLinks( it -> getData() , &links);
                 for(unsigned int i = 0; i < links.size(); i++)
                 {
+                    // TODO: Code in this loop is really buggy, see #32
+                    continue;
+
                     //std::cout<<"\n"<<links[i]<<std::flush;
                     links[i] = process_links( links[i] );
                     //std::cout<<"\n"<<links[i]<<std::flush;
