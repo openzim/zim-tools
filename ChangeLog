@@ -1,7 +1,10 @@
 zimwriterfs 1.3
 ===============
+
  * Proper support of woff2 font files
  * Added -V --version command line arguments
+ * Properly handle wrong format of the redirect files.
+ * Do not make zimwriterfs verbose by default.
 
 zimwriterfs 1.2
 ===============
