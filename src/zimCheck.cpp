@@ -384,16 +384,15 @@ int main (int argc, char **argv)
         if( run_all || url_check || no_args)
         {
             std::cout << "[INFO] Verifying internal URLs.." << std::endl;
-            std::vector < std::vector <std::string> >titles;
-            titles.resize( 256 );
+            std::vector<std::string> urls[256];
             std::string ar;
             for ( zim::File::const_iterator it = f.begin(); it != f.end(); ++it)
             {
-                titles[ ( int )it->getNamespace() ].push_back( it->getTitle() );
+                urls[(int)it->getNamespace()].push_back( it->getUrl() );
             }
-            for(int i = 0; i < 256; i++)
+            for(auto& urlV: urls)
             {
-                std::sort( titles[i].begin() , titles[i].end() );
+                std::sort( urlV.begin() , urlV.end() );
             }
             progress.reset(articleCount);
             test_ = true;
@@ -420,7 +419,8 @@ int main (int argc, char **argv)
                     {
                         bool found = false;
                         int nm = ( int )( links[i] )[1];
-                        if(std::binary_search( titles[ nm ].begin(), titles[nm].end(),( links[i]).substr( 3 )))
+                        auto& urlV = urls[nm];
+                        if(std::binary_search(urlV.begin(), urlV.end(),( links[i]).substr( 3 )))
                             found = true;
                         if( !found)
                         {
