@@ -304,24 +304,44 @@ int main (int argc, char **argv)
             overall_status &= test_;
         }
 
+        /* Now we want to avoid to loop on the tests but on the article.
+         *
+         * If we loop of the tests we will have :
+         *
+         * for (test: tests) {
+         *     for(article: articles) {
+         *          data = article->getData();
+         *          ...
+         *     }
+         * }
+         *
+         * And so we will get several the data of an article (and so decompression and so).
+         * By looping on the articles first, we have :
+         *
+         * for (article: articles) {
+         *     data = article->getData() {
+         *     for (test: tests) {
+         *         ...
+         *     }
+         * }
+         */
 
-        //Test 5: Redundant Data:
-        //The entire file is parsed, and the articles are hashed and stores in separate hashmap of lists.
-        //Article with the same hashes are then compared.
-        //If they have the same content it is reported to the user.
-        if( run_all || redundant_data || no_args)
+
+        // Article are store in a map<hash, list<index>>.
+        // So all article with the same hash will be stored in the same list.
+        std::map<unsigned int, std::list<zim::article_index_type>> hash_main;
+
+        std::string previousLink;
+        int previousIndex = -1;
+
+        std::list<std::string> externalDependencyList;
+
+        if ( run_all || no_args || redundant_data || url_check || url_check_external )
         {
-            std::cout << "[INFO] Searching for redundant articles.." << std::endl;
-            test_ = false;
-            // Article are store in a map<hash, list<index>>.
-            // So all article with the same hash will be stored in the same list.
-            std::map<unsigned int, std::list<zim::article_index_type>> hash_main;
-
-            //Adding data to hash Tree.
-            std::cout << "  Adding Data to Hash Tables from file..." << std::endl;
             progress.reset(articleCount);
             for (zim::File::const_iterator it = f.begin(); it != f.end(); ++it)
             {
+                auto data = it->getData();
                 progress.report();
                 if (it->isRedirect() ||
                     it->isLinktarget() ||
@@ -330,8 +350,70 @@ int main (int argc, char **argv)
                     it->getNamespace() == 'M') {
                     continue;
                 }
-                hash_main[ adler32(it->getData()) ].push_back( it->getIndex() );
+
+                if( run_all || redundant_data || no_args)
+                    hash_main[adler32(data)].push_back( it->getIndex() );
+
+                if( run_all || url_check || no_args)
+                {
+                    auto baseUrl = it->getLongUrl();
+                    auto pos = baseUrl.find_last_of('/');
+                    baseUrl.resize(pos==baseUrl.npos?0:pos);
+
+                    auto links = getLinks(it->getData());
+                    for(auto olink: links)
+                    {
+                        if(olink.front() == '#')
+                            continue;
+                        if(isInternalUrl(olink)) {
+                            auto link = normalize_link(olink, baseUrl);
+                            char nm = link[0];
+                            std::string shortUrl(link.substr(2));
+                            auto a = f.getArticle(nm, shortUrl);
+                            if(!a.good())
+                            {
+                                if( error_details )
+                                {
+                                    int index = it->getIndex();
+                                    if( (previousLink != link) && (previousIndex != index) )
+                                    {
+                                        std::cout  << "    [ERROR] Article '"
+                                                       << link << "'(" << olink << ")"
+                                                       << " was not found. Linked in Article "
+                                                       << it->getLongUrl() << "(" << index << ")" << "\n";
+                                        previousLink = link;
+                                        previousIndex = index;
+                                    }
+                                }
+                                test_ = false;
+                            }
+                        }
+                    }
+                }
+
+                if (run_all || url_check_external || no_args )
+                {
+                    auto links = getDependencies(it->getPage());
+                    for(auto &link: links)
+                    {
+                        if( isExternalUrl( link ) )
+                        {
+                            test_ = false;
+                            externalDependencyList.push_back( it -> getUrl() );
+                        }
+                    }
+                }
             }
+        }
+
+        //Test 5: Redundant Data:
+        //The entire file is parsed, and the articles are hashed and stores in separate hashmap of lists.
+        //Article with the same hashes are then compared.
+        //If they have the same content it is reported to the user.
+        if ( run_all || redundant_data || no_args )
+        {
+            std::cout << "[INFO] Searching for redundant articles.." << std::endl;
+            test_ = false;
             std::cout << "  Verifying Similar Articles for redundancies.." << std::endl;
             test_ = true;
             std::ostringstream output_details;
@@ -369,125 +451,6 @@ int main (int argc, char **argv)
                 std::cout << "  [ERROR] Redundant articles have been found in ZIM file." << std::endl;
                 if( error_details )
                     std::cout << "  Details:\n" << output_details.str() << std::endl;
-            }
-            overall_status &= test_;
-        }
-
-
-        //Test 6: Verifying Internal URLs
-        //All internal URLS are parsed, and compared with the existing articles in the zim file.
-        //If the internal URL is not valid, an error is reported.
-        //A list of Titles are collected from the file, and stored as a hash, similar to the way the hash is stored for redundancy check.
-        //Each URL obtained is compared with the hash.
-
-
-        if( run_all || url_check || no_args)
-        {
-            std::cout << "[INFO] Verifying internal URLs.." << std::endl;
-            progress.reset(articleCount);
-            test_ = true;
-            std::ostringstream output_details;
-            std::string previousLink;
-            int previousIndex = -1;
-            for (zim::File::const_iterator it = f.begin(); it != f.end(); ++it)
-            {
-                progress.report();
-
-                if( it->isRedirect() || it->isLinktarget() || it->isDeleted())
-                    continue;
-                if( it->getMimeType() != "text/html")
-                    continue;
-
-                auto baseUrl = it->getLongUrl();
-                auto pos = baseUrl.find_last_of('/');
-                baseUrl.resize(pos==baseUrl.npos?0:pos);
-
-                auto links = getLinks(it->getData());
-                for(auto olink: links)
-                {
-                    if(olink.front() == '#')
-                        continue;
-                    if(isInternalUrl(olink)) {
-                        auto link = normalize_link(olink, baseUrl);
-                        char nm = link[0];
-                        std::string shortUrl(link.substr(2));
-                        auto a = f.getArticle(nm, shortUrl);
-                        if(!a.good())
-                        {
-                            if( error_details )
-                            {
-                                int index = it->getIndex();
-                                if( (previousLink != link) && (previousIndex != index) )
-                                {
-                                    std::cout  << "    [ERROR] Article '"
-                                                   << link << "'(" << olink << ")"
-                                                   << " was not found. Linked in Article "
-                                                   << it->getLongUrl() << "(" << index << ")" << "\n";
-                                    previousLink = link;
-                                    previousIndex = index;
-                                }
-                            }
-                            test_ = false;
-                        }
-                    }
-                }
-            }
-            if( test_ ) {
-                std::cout << "  [INFO] All internal URLs are valid" << std::endl;
-            } else {
-                std::cout << "  [ERROR] Invalid internal URLs found in ZIM file." << std::endl;
-                if( error_details) {
-                    std::cout << "  Details:\n" << output_details.str() << std::endl;
-                }
-            }
-            overall_status &= test_;
-        }
-
-
-        //Test 7: Checking for external Dependencies.
-        //All external URLs are parsed, and non-wikipedia URLs are reported.
-        if( run_all || url_check_external || no_args )
-        {
-            std::cout << "[INFO] Searching for External Dependencies:"<< std::endl;
-            progress.reset(articleCount);
-            std::list < std::string > externalDependencyList;
-            test_ = true ;
-            for (zim::File::const_iterator it = f.begin(); it != f.end(); ++it)
-            {
-                progress.report();
-
-                if( it->isRedirect() || it->isLinktarget() || it->isDeleted())
-                    continue;
-                if( it->getMimeType() != "text/html" )
-                    continue;
-
-                auto links = getDependencies(it->getPage());
-                for(auto &link: links)
-                {
-                    if( isExternalUrl( link ) )
-                    {
-                        test_ = false;
-                        externalDependencyList.push_back( it -> getUrl() );
-                    }
-                }
-            }
-            if( test_)
-                std::cout << "  [INFO] No external dependencies found." << std::endl;
-            else
-            {
-                std::cout << "  [ERROR] External Dependencies were found in file." << std::endl;
-                if(error_details)
-                {
-                    externalDependencyList.sort();
-                    std::list< std::string >::iterator prev = externalDependencyList.begin();
-                    std::cout << "    [ERROR] External dependencies were found in article '" << *prev << "'" << std::endl;
-                    for(std::list < std::string >::iterator i = ( ++prev ); i != externalDependencyList.end(); ++i)
-                    {
-                        if( *i != *prev )
-                            std::cout << "    [ERROR] External dependencies were found in article '" << *i << "'" << std::endl;
-                        prev = i;
-                    }
-                }
             }
             overall_status &= test_;
         }
