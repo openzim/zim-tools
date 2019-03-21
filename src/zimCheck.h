@@ -177,6 +177,7 @@ void displayHelp()
              "-X , --url_external    URL check - Internal URLs\n"
              "-E , --mime            MIME checks\n"
              "-D , --details         Details of error\n"
+             "-B , --progress        Print progress report\n"
              "-H , --help            Displays Help\n"
              "examples:\n"
              "./zimcheck -A wikipedia.zim\n"
