@@ -399,7 +399,6 @@ int main (int argc, char **argv)
             std::ostringstream output_details;
             std::string previousLink;
             int previousIndex = -1;
-            std::vector<std::string> links;
             for (zim::File::const_iterator it = f.begin(); it != f.end(); ++it)
             {
                 progress.report();
@@ -413,7 +412,7 @@ int main (int argc, char **argv)
                 auto pos = baseUrl.find_last_of('/');
                 baseUrl.resize(pos==baseUrl.npos?0:pos);
 
-                getLinks(it->getData(), &links);
+                auto links = getLinks(it->getData());
                 for(auto olink: links)
                 {
                     if(olink.front() == '#')
@@ -431,7 +430,7 @@ int main (int argc, char **argv)
                                 int index = it->getIndex();
                                 if( (previousLink != link) && (previousIndex != index) )
                                 {
-                                    output_details << "    [ERROR] Article '"
+                                    std::cout  << "    [ERROR] Article '"
                                                    << link << "'(" << olink << ")"
                                                    << " was not found. Linked in Article "
                                                    << it->getLongUrl() << "(" << index << ")" << "\n";
@@ -464,7 +463,6 @@ int main (int argc, char **argv)
             progress.reset(articleCount);
             std::list < std::string > externalDependencyList;
             test_ = true ;
-            std::vector< std::string > links;
             for (zim::File::const_iterator it = f.begin(); it != f.end(); ++it)
             {
                 progress.report();
@@ -474,7 +472,7 @@ int main (int argc, char **argv)
                 if( it->getMimeType() != "text/html" )
                     continue;
 
-                getDependencies( it -> getPage() , &links );
+                auto links = getDependencies(it->getPage());
                 for(auto &link: links)
                 {
                     if( isExternalUrl( link ) )

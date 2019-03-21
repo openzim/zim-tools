@@ -18,78 +18,45 @@
  */
 
 
-void getLinks(std::string page, std::vector <std::string> *links)           //Returns a vector of the links in a particular page. includes links under 'href' and 'src'
+std::vector<std::string> getLinks(const std::string& page, bool withHref = true)           //Returns a vector of the links in a particular page. includes links under 'href' and 'src'
 {
-    int sz=page.size();
-    links->clear();
-    int startingPoint,length;
-    for(int i = 0; i< sz; i++)
-    {
-        if(page[i] == ' ' && i+5 < sz)
-        {
-            if((page[i+1] == 'h') && (page[i+2] == 'r') && (page[i+3] =='e') && (page[i+4]=='f'))      //Links under 'href' category.
-            {
-                i += 5;
-                while(page[i] != '=')
-                    i++;
-                while(page[i] != '"')
-                    i++;
-                startingPoint= ++i;
-                while(page[i] != '"')
-                {
-                    i++;
-                }
-                length=i-startingPoint;
-                links->push_back(page.substr(startingPoint,length));
-            }
+    const char* p = page.c_str();
+    const char* linkStart;
+    std::vector<std::string> links;
 
-            if( (page[i+1] == 's') && (page[i+2] == 'r') && (page[i+3]=='c'))      //Links under 'src' category.
-            {
-                i += 4;
-                while(page[i] != '=')
-                    i++;
-                while(page[i] != '"')
-                    i++;
-                startingPoint= ++i;
-
-                while(page[i] != '"')
-                {
-                    i++;
-                }
-                length=i-startingPoint;
-                links->push_back(page.substr(startingPoint,length));
-            }
+    while (*p) {
+        if (withHref && strncmp(p, " href", 5) == 0) {
+            p += 5;
+        } else if (strncmp(p, " src", 4) == 0) {
+            p += 4;
+        } else {
+            p += 1;
+            continue;
         }
+
+        while (*p == ' ')
+            p += 1 ;
+        if (*(p++) != '=')
+            continue;
+        while (*p == ' ')
+            p += 1;
+        char delimiter = *p++;
+        if (delimiter != '\'' && delimiter != '"')
+            continue;
+
+        linkStart = p;
+        // [TODO] Handle escape char
+        while(*p != delimiter)
+            p++;
+        links.push_back(std::string(linkStart, p));
+        p += 1;
     }
+    return links;
 }
 
-void getDependencies(std::string page, std::vector <std::string> *links)           //Returns a vector of the links in a particular page. includes links under 'href' and 'src'
+std::vector<std::string> getDependencies(const std::string& page)           //Returns a vector of the links in a particular page. includes links under 'href' and 'src'
 {
-    int sz=page.size();
-    links->clear();
-    int startingPoint,length;
-    for(int i = 0; i< sz; i++)
-    {
-        if(page[i] == ' ' && i+5 < sz)
-        {
-            if( (page[i+1] == 's') && (page[i+2] == 'r') && (page[i+3]=='c'))      //Links under 'src' category.
-            {
-                i += 4;
-                while(page[i] != '=')
-                    i++;
-                while(page[i] != '"')
-                    i++;
-                startingPoint= ++i;
-
-                while(page[i] != '"')
-                {
-                    i++;
-                }
-                length=i-startingPoint;
-                links->push_back(page.substr(startingPoint,length));
-            }
-        }
-    }
+    return getLinks(page, false);
 }
 
 int adler32(std::string buf)                        //Adler32 Hash Function. Used to hash the BLOB data obtained from each article, for redundancy checks.
