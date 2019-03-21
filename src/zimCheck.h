@@ -119,30 +119,75 @@ inline bool isInternalUrl(const std::string& input_string)                 //Che
 //Removes extra spaces from URLs. Usually done by the browser, so web authors sometimes tend to ignore it.
 //Converts the %20 to space.Essential for comparing URLs.
 
-std::string process_links(const std::string& input)
+std::string normalize_link(const std::string& input, const std::string& baseUrl)
 {
     std::string output;
-    output.reserve(input.size());
+    output.reserve(baseUrl.size() + input.size() + 1);
+
+    bool in_query = false;
+    bool check_rel = false;
+    const char* p = input.c_str();
+    if ( *(p) == '/') {
+      // This is an absolute url.
+      p++;
+    } else {
+      //This is a relative url, use base url
+      output = baseUrl;
+      if (output.back() != '/')
+          output += '/';
+      check_rel = true;
+    }
 
     //URL Decoding.
-    const char* p = input.c_str();
     while (*p)
     {
+        if ( !in_query && check_rel ) {
+            if (strncmp(p, "../", 3) == 0) {
+                // We must go "up"
+                // Remove the '/' at the end of output.
+                output.resize(output.size()-1);
+                // Remove the last part.
+                auto pos = output.find_last_of('/');
+                output.resize(pos==output.npos?0:pos);
+                // Move after the "..".
+                p += 2;
+                check_rel = false;
+                continue;
+            }
+            if (strncmp(p, "./", 2) == 0) {
+                // We must simply skip this part
+                // Simply move after the ".".
+                p += 1;
+                check_rel = false;
+                continue;
+            }
+        }
         if ( *p == '#' )
+            // This is a beginning of the #anchor inside a page. No need to decode more
             break;
-        if ( *(p++) == '%')
+        if ( *p == '%')
         {
             char ch;
-            sscanf(p, "%2hhx", &ch);
+            sscanf(p+1, "%2hhx", &ch);
             output += ch;
-            p += 2;
+            p += 3;
+            continue;
         }
-        else
-        {
-            output += *(p++);
+        if ( *p == '?' ) {
+            // We are in the query, so don't try to interprete '/' as path separator
+            in_query = true;
         }
+        if ( *p == '/') {
+            check_rel = true;
+            if (output.empty()) {
+                // Do not add '/' at beginning of output
+                p++;
+                continue;
+            }
+        }
+        output += *(p++);
     }
-    return output.substr( 0 , k);
+    return output;
 }
 
 void displayHelp()

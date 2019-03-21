@@ -399,7 +399,7 @@ int main (int argc, char **argv)
             std::ostringstream output_details;
             std::string previousLink;
             int previousIndex = -1;
-            std::vector < std::string > links;
+            std::vector<std::string> links;
             for (zim::File::const_iterator it = f.begin(); it != f.end(); ++it)
             {
                 progress.report();
@@ -409,31 +409,33 @@ int main (int argc, char **argv)
                 if( it->getMimeType() != "text/html")
                     continue;
 
-                getLinks( it -> getData() , &links);
-                for(unsigned int i = 0; i < links.size(); i++)
+                auto baseUrl = it->getLongUrl();
+                auto pos = baseUrl.find_last_of('/');
+                baseUrl.resize(pos==baseUrl.npos?0:pos);
+
+                getLinks(it->getData(), &links);
+                for(auto link: links)
                 {
-                    //std::cout<<"\n"<<links[i]<<std::flush;
-                    links[i] = process_links( links[i] );
-                    //std::cout<<"\n"<<links[i]<<std::flush;
-                    if(isInternalUrl( &links[i] ) )
-                    {
-                        bool found = false;
-                        int nm = ( int )( links[i] )[1];
-                        auto& urlV = urls[nm];
-                        if(std::binary_search(urlV.begin(), urlV.end(),( links[i]).substr( 3 )))
-                            found = true;
+                    if(link.front() == '#')
+                        continue;
+                    if(isInternalUrl(link)) {
+                        link = normalize_link(link, baseUrl);
+                        char nm = link[0];
+                        std::string shortUrl(link.substr(2));
+                        auto& urlV = urls[(int)nm];
+                        bool found = std::binary_search(urlV.begin(), urlV.end(), shortUrl);
                         if( !found)
                         {
                             if( error_details )
                             {
-                                int index = it -> getIndex();
-                                if(( previousLink != links[i]) && ( previousIndex != index))
+                                int index = it->getIndex();
+                                if( (previousLink != link) && (previousIndex != index) )
                                 {
                                     output_details << "    [ERROR] Article '"
-                                                   << links[i]
+                                                   << link
                                                    << "' was not found. Linked in Article "
                                                    << index  << "\n";
-                                    previousLink = links[i];
+                                    previousLink = link;
                                     previousIndex = index;
                                 }
                             }
@@ -442,13 +444,11 @@ int main (int argc, char **argv)
                     }
                 }
             }
-            if( test_ )
+            if( test_ ) {
                 std::cout << "  [INFO] All internal URLs are valid" << std::endl;
-            else
-            {
+            } else {
                 std::cout << "  [ERROR] Invalid internal URLs found in ZIM file." << std::endl;
-                if( error_details)
-                {
+                if( error_details) {
                     std::cout << "  Details:\n" << output_details.str() << std::endl;
                 }
             }
@@ -477,7 +477,7 @@ int main (int argc, char **argv)
                 getDependencies( it -> getPage() , &links );
                 for(auto &link: links)
                 {
-                    if( isExternalUrl( &link ) )
+                    if( isExternalUrl( link ) )
                     {
                         test_ = false;
                         externalDependencyList.push_back( it -> getUrl() );
