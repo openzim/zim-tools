@@ -129,29 +129,29 @@ inline bool isInternalUrl(std::string *input_string)                 //Checks if
 //Removes extra spaces from URLs. Usually done by the browser, so web authors sometimes tend to ignore it.
 //Converts the %20 to space.Essential for comparing URLs.
 
-std::string process_links(std::string input)
+std::string process_links(const std::string& input)
 {
     std::string output;
-    output.clear();
+    output.reserve(input.size());
 
     //URL Decoding.
-    char ch;
-    unsigned int i, ii;
-    for (i=0; i < input.size(); i++)
+    const char* p = input.c_str();
+    while (*p)
     {
-        if ( int ( input[i] ) == 37)
+        if ( *p == '#' )
+            break;
+        if ( *(p++) == '%')
         {
-            sscanf( input.substr( i+1 , 2 ).c_str(), "%x", &ii);
-            ch=static_cast<char>(ii);
-            output +=ch;
-            i = i+2;
+            char ch;
+            sscanf(p, "%2hhx", &ch);
+            output += ch;
+            p += 2;
         }
         else
         {
-            output += input[i];
+            output += *(p++);
         }
     }
-    int k=output.rfind("#");
     return output.substr( 0 , k);
 }
 
