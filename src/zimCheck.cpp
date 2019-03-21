@@ -384,16 +384,6 @@ int main (int argc, char **argv)
         if( run_all || url_check || no_args)
         {
             std::cout << "[INFO] Verifying internal URLs.." << std::endl;
-            std::vector<std::string> urls[256];
-            std::string ar;
-            for ( zim::File::const_iterator it = f.begin(); it != f.end(); ++it)
-            {
-                urls[(int)it->getNamespace()].push_back( it->getUrl() );
-            }
-            for(auto& urlV: urls)
-            {
-                std::sort( urlV.begin() , urlV.end() );
-            }
             progress.reset(articleCount);
             test_ = true;
             std::ostringstream output_details;
@@ -421,9 +411,8 @@ int main (int argc, char **argv)
                         auto link = normalize_link(olink, baseUrl);
                         char nm = link[0];
                         std::string shortUrl(link.substr(2));
-                        auto& urlV = urls[(int)nm];
-                        bool found = std::binary_search(urlV.begin(), urlV.end(), shortUrl);
-                        if( !found)
+                        auto a = f.getArticle(nm, shortUrl);
+                        if(!a.good())
                         {
                             if( error_details )
                             {
