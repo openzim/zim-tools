@@ -414,12 +414,12 @@ int main (int argc, char **argv)
                 baseUrl.resize(pos==baseUrl.npos?0:pos);
 
                 getLinks(it->getData(), &links);
-                for(auto link: links)
+                for(auto olink: links)
                 {
-                    if(link.front() == '#')
+                    if(olink.front() == '#')
                         continue;
-                    if(isInternalUrl(link)) {
-                        link = normalize_link(link, baseUrl);
+                    if(isInternalUrl(olink)) {
+                        auto link = normalize_link(olink, baseUrl);
                         char nm = link[0];
                         std::string shortUrl(link.substr(2));
                         auto& urlV = urls[(int)nm];
@@ -432,9 +432,9 @@ int main (int argc, char **argv)
                                 if( (previousLink != link) && (previousIndex != index) )
                                 {
                                     output_details << "    [ERROR] Article '"
-                                                   << link
-                                                   << "' was not found. Linked in Article "
-                                                   << index  << "\n";
+                                                   << link << "'(" << olink << ")"
+                                                   << " was not found. Linked in Article "
+                                                   << it->getLongUrl() << "(" << index << ")" << "\n";
                                     previousLink = link;
                                     previousIndex = index;
                                 }
