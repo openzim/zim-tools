@@ -1,13 +1,13 @@
 zimwriterfs
 ===========
 
-`zimwriterfs` is a console tool to create [ZIM](http://www.openzim.org)
+`zimwriterfs` is a console tool to create [ZIM](https://openzim.org)
 files from a locally-stored directory containing "self-sufficient"
-HTML content (with pictures, javascript, and stylesheets). The result will
-contain all the files of the local directory compressed and merged in
-the ZIM file. Nothing more, nothing less. The generated file can be
-opened with a ZIM reader; [Kiwix](http://www.kiwix.org) is one example, but
-there are [others](http://openzim.org/wiki/ZIM_Readers).
+HTML content (with pictures, javascript and stylesheets). The result
+will contain all the files of the local directory compressed and
+merged in the ZIM file. Nothing more, nothing less. The generated file
+can be opened with a ZIM reader; [Kiwix](httpa://kiwix.org) is one
+example, but there are [others](https://openzim.org/wiki/ZIM_Readers).
 
 `zimwriterfs` works - for now - only on POSIX-compatible systems, you
 simply need to compile it and run it. The software does not need a lot
@@ -37,17 +37,17 @@ Dependencies
 prerequisites to the Kiwix library compilation. Following libraries
 need to be available:
 
-* liblzma (http://tukaani.org/xz/, most of the time packaged),
+* liblzma (https://tukaani.org/xz/, most of the time packaged),
   resp. for the LZMA comp.
-* libzim (http://openzim.org/download/, probably not packaged),
+* libzim (https://download.openzim.org/, probably not packaged),
   resp. for the ZIM compilation
 * libmagic (http://www.darwinsys.com/file/, most of the time
   packaged), resp. for the mimeType detection
-* libz (http://www.zlib.net/), resp. for unpack compressed HTML files
+* libz (https://zlib.net/), resp. for unpack compressed HTML files
 * gumbo (https://github.com/google/gumbo-parser), a pure-C DOM parser
 * libicu (http://site.icu-project.org/), for unicode string
   manipulation. It'always packaged
-* libxapian (http://xapian.org), which provide fulltext search
+* libxapian (https://xapian.org), which provide fulltext search
   indexing features.
 
 On (recent) Debian/Ubuntu, you can ensure these are installed with:
@@ -67,9 +67,9 @@ If you want to install these dependencies locally, then ensure that
 meson (through pkg-config) will properly find them.
 
 Environment
--------------
+-----------
 
-`zimwriterfs` builds using [Meson](http://mesonbuild.com/) version
+`zimwriterfs` builds using [Meson](https://mesonbuild.com/) version
 0.39 or higher. Meson relies itself on Ninja, pkg-config and few other
 compilation tools.
 
@@ -112,7 +112,7 @@ where you want to install the libraries. After the installation
 succeeded, you may need to run ldconfig (as root).
 
 Uninstallation
-------------
+--------------
 
 If you want to uninstall `zimwriterfs`:
 
@@ -124,10 +124,17 @@ Like for the installation, you might need to run the command as root
 (or using 'sudo').
 
 Binaries
----------
+--------
 
 Statically pre-compiled binaries are provided here
 https://download.openzim.org/release/zimwriterfs/.
+
+Docker
+------
+
+A Docker image with `zimwriterfs` can be built from the `docker`
+directory. The project maintains an official image available at
+https://hub.docker.com/r/openzim/mwoffliner.
 
 Troubleshooting
 ---------------
