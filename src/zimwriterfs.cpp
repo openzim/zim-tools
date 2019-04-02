@@ -34,7 +34,6 @@
 #include "mimetypecounter.h"
 #include "queue.h"
 #include "tools.h"
-#include "config.h"
 
 /* Check for version number */
 #ifndef VERSION

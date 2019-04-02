@@ -1,7 +1,3 @@
-configure_file(output : 'config.h',
-               configuration : conf,
-               input : 'config.h.in')
-
 sources = [
   'zimwriterfs.cpp',
   'tools.cpp',

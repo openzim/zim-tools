@@ -47,8 +47,6 @@ need to be available:
 * gumbo (https://github.com/google/gumbo-parser), a pure-C DOM parser
 * libicu (http://site.icu-project.org/), for unicode string
   manipulation. It'always packaged
-* libxapian (https://xapian.org), which provide fulltext search
-  indexing features.
 
 On (recent) Debian/Ubuntu, you can ensure these are installed with:
 

@@ -13,8 +13,6 @@ if static_linkage
   add_global_link_arguments('-static-libstdc++', '--static', language:'cpp')
 endif
 
-conf = configuration_data()
-
 thread_dep = dependency('threads')
 libzim_dep = dependency('libzim', version : '>=4.0.0', static:static_linkage)
 zlib_dep = dependency('zlib', static:static_linkage)
