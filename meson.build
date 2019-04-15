@@ -3,7 +3,7 @@ project('zimwriterfs', ['c', 'cpp'],
   license : 'GPL-3.0-or-later',
   default_options : ['c_std=c11', 'cpp_std=c++11', 'werror=true'])
 
-add_global_arguments('-DVERSION=@0@'.format(meson.project_version()), language : 'cpp')
+add_global_arguments('-DVERSION="@0@"'.format(meson.project_version()), language : 'cpp')
 
 compiler = meson.get_compiler('cpp')
 find_library_in_compiler = meson.version().version_compare('>=0.31.0')
