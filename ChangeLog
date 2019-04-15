@@ -1,3 +1,12 @@
+zim-tools 1.0.1
+===============
+
+ * Update build.
+ * [zimCheck] Far better zimCheck implementation :
+    - performance issue
+    - fix url check
+ * Build without rpath
+
 zim-tools 1.0.0
 ===============
 
