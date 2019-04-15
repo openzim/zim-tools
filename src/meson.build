@@ -11,5 +11,4 @@ deps = [thread_dep, libzim_dep, zlib_dep, gumbo_dep, magic_dep]
 zimwriterfs = executable('zimwriterfs',
                          sources,
                          dependencies : deps,
-                         install : true,
-                         install_rpath : join_paths(get_option('prefix'), get_option('libdir')))
+                         install : true)
