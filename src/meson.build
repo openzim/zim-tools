@@ -1,35 +1,28 @@
 
 executable('zimsearch', 'zimSearch.cpp',
   dependencies: libzim_dep,
-  install: true,
-  install_rpath: join_paths(get_option('prefix'), get_option('libdir')))
+  install: true)
 
 executable('zimbench', 'zimBench.cpp',
   dependencies: [libzim_dep, rt_dep],
-  install: true,
-  install_rpath: join_paths(get_option('prefix'), get_option('libdir')))
+  install: true)
 
 executable('zimdump', 'zimDump.cpp',
   dependencies: libzim_dep,
-  install: true,
-  install_rpath: join_paths(get_option('prefix'), get_option('libdir')))
+  install: true)
 
 executable('zimdiff', 'zimDiff.cpp',
   dependencies: libzim_dep,
-  install: true,
-  install_rpath: join_paths(get_option('prefix'), get_option('libdir')))
+  install: true)
 
 executable('zimpatch', 'zimPatch.cpp',
   dependencies: libzim_dep,
-  install: true,
-  install_rpath: join_paths(get_option('prefix'), get_option('libdir')))
+  install: true)
 
 executable('zimsplit', 'zimSplit.cpp',
   dependencies: libzim_dep,
-  install: true,
-  install_rpath: join_paths(get_option('prefix'), get_option('libdir')))
+  install: true)
 
 executable('zimcheck', 'zimCheck.cpp',
   dependencies: libzim_dep,
-  install: true,
-  install_rpath: join_paths(get_option('prefix'), get_option('libdir')))
+  install: true)
