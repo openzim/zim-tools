@@ -44,14 +44,9 @@ public:
         return Ar.getLongUrl();
     }
 
-    virtual char getNamespace() const
-   {
-        return Ar.getNamespace();
-    }
-
-    virtual std::string getUrl() const
+    virtual zim::writer::Url getUrl() const
     {
-        return Ar.getUrl();
+        return zim::writer::Url(Ar.getNamespace(), Ar.getUrl());
     }
 
     virtual std::string getTitle() const
