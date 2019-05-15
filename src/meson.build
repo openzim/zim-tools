@@ -26,3 +26,7 @@ executable('zimsplit', 'zimSplit.cpp',
 executable('zimcheck', 'zimCheck.cpp',
   dependencies: libzim_dep,
   install: true)
+
+executable('zimrecreate', 'zimRecreate.cpp',
+  dependencies: libzim_dep,
+  install: true)
