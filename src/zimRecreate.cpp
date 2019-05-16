@@ -39,11 +39,6 @@ public:
       Ar(a)
     {}
 
-    virtual std::string getAid() const
-    {
-        return Ar.getLongUrl();
-    }
-
     virtual zim::writer::Url getUrl() const
     {
         return zim::writer::Url(Ar.getNamespace(), Ar.getUrl());
@@ -65,9 +60,9 @@ public:
         return Ar.getMimeType();
     }
 
-    virtual std::string getRedirectAid() const {
+    virtual zim::writer::Url getRedirectUrl() const {
       auto redirectArticle = Ar.getRedirectArticle();
-      return redirectArticle.getLongUrl();
+      return zim::writer::Url(redirectArticle.getNamespace(), redirectArticle.getUrl());
     }
 
     virtual std::string getParameter() const
@@ -134,20 +129,20 @@ public:
         finishZimCreation();
     }
 
-    virtual std::string getMainPage() {
+    virtual zim::writer::Url getMainUrl() {
       if (!origin.getFileheader().hasMainPage()) {
-        return "";
+        return zim::writer::Url();
       }
       auto mainArticle = origin.getArticle(origin.getFileheader().getMainPage());
-      return mainArticle.getLongUrl();
+      return zim::writer::Url(mainArticle.getNamespace(), mainArticle.getUrl());
     }
 
-    virtual std::string getLayoutPage() {
+    virtual zim::writer::Url getLayoutUrl() {
       if (!origin.getFileheader().hasLayoutPage()) {
-       return "";
+       return zim::writer::Url();
       }
       auto layoutArticle = origin.getArticle(origin.getFileheader().getLayoutPage());
-      return layoutArticle.getLongUrl();
+      return zim::writer::Url(layoutArticle.getNamespace(), layoutArticle.getUrl());
     }
 };
 
