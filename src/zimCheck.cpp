@@ -476,7 +476,6 @@ int main (int argc, char **argv)
     std::string filename = "";
     ProgressBar progress(1);
     ErrorLogger error;
-    opterr = 0;
 
     //Parsing through arguments using getopt_long(). Both long and short arguments are allowed.
     while (1)
