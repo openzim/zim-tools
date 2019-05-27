@@ -22,7 +22,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <zim/writer/zimcreator.h>
+#include <zim/writer/creator.h>
 #include <zim/blob.h>
 #include <zim/article.h>
 #include <zim/file.h>
@@ -100,17 +100,17 @@ public:
 };
 
 
-class ZimRecreator : public zim::writer::ZimCreator
+class ZimRecreator : public zim::writer::Creator
 {
     zim::File origin;
 
 public:
     explicit ZimRecreator(std::string originFilename="") :
-      zim::writer::ZimCreator(true)
+      zim::writer::Creator(true)
     {
         origin = zim::File(originFilename);
         // [TODO] Use the correct language
-//        setIndexing(true, "eng");
+        setIndexing(true, "eng");
         setMinChunkSize(2048);
     }
 

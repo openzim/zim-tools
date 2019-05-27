@@ -23,7 +23,7 @@
 #include <sstream>
 #include <vector>
 #include <map>
-#include <zim/writer/zimcreator.h>
+#include <zim/writer/creator.h>
 #include <zim/blob.h>
 #include <zim/article.h>
 #include <zim/file.h>
@@ -135,7 +135,7 @@ public:
     }
 };
 
-class ZimCreatorPatch : public zim::writer::ZimCreator
+class ZimCreatorPatch : public zim::writer::Creator
 {
     zim::File start_file;
     zim::File diff_file;

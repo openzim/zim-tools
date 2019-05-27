@@ -22,7 +22,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <zim/writer/zimcreator.h>
+#include <zim/writer/creator.h>
 #include <zim/blob.h>
 #include <zim/article.h>
 #include <zim/file.h>
@@ -193,7 +193,7 @@ public:
     }
 };
 
-class ZimCreatorDiff : public zim::writer::ZimCreator
+class ZimCreatorDiff : public zim::writer::Creator
 {
     ArticleRaw dlist;               //Metadata article containing list of articles to be deleted.
     ArticleRaw startFileUID;        //Metadata article containing start file UID
