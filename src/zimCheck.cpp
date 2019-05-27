@@ -17,6 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
  *
  */
+
 #include <unistd.h>
 #include <zim/file.h>
 #include <getopt.h>
@@ -45,6 +46,11 @@ enum TestType {
     OTHER
 };
 
+enum StatusCode : int {
+   PASS = 0,
+   FAIL = 1,
+   EXCEPTION = 2
+};
 
 static const char *errorString[OTHER+1] = {
     "Invalid checksum",
@@ -452,13 +458,14 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
 
 int main (int argc, char **argv)
 {
-    //To calculate the total time taken by the program to run.
+    // To calculate the total time taken by the program to run.
     time_t startTime,endTime;
     double  timeDiffference;
     time( &startTime);
 
-    //The boolean values which will be used to store the output from getopt_long().
-    //These boolean values will be then read by the program to execute the different parts of the program.
+    // The boolean values which will be used to store the output from
+    // getopt_long().  These boolean values will be then read by the
+    // program to execute the different parts of the program.
 
     bool run_all = false;
     bool checksum = false;
@@ -472,11 +479,12 @@ int main (int argc, char **argv)
     bool error_details = false;
     bool no_args = true;
     bool help = false;
-    int c;
+
     std::string filename = "";
     ProgressBar progress(1);
     ErrorLogger error;
-    opterr = 0;
+
+    StatusCode status_code = PASS;
 
     //Parsing through arguments using getopt_long(). Both long and short arguments are allowed.
     while (1)
@@ -498,8 +506,8 @@ int main (int argc, char **argv)
             { 0, 0, 0, 0}
         };
         int option_index = 0;
-        c = getopt_long (argc, argv, "ACMFPRUXEDHBacmfpruxedhb",
-                         long_options, &option_index);
+        int c = getopt_long (argc, argv, "ACMFPRUXEDHBacmfpruxedhb",
+                             long_options, &option_index);
         //c = getopt (argc, argv, "ACMFPRUXED");
         if(c == -1)
             break;
@@ -703,9 +711,15 @@ int main (int argc, char **argv)
         error.report(error_details);
         std::cout << "[INFO] Overall Test Status: ";
         if( error.overalStatus())
+        {
             std::cout << "Pass" << std::endl;
+            status_code = PASS;
+        }
         else
+        {
             std::cout << "Fail" << std::endl;
+            status_code = FAIL;
+        }
         time( &endTime );
 
         timeDiffference = difftime( endTime , startTime );
@@ -715,7 +729,8 @@ int main (int argc, char **argv)
     catch (const std::exception & e)
     {
         std::cerr << e.what() << std::endl;
+        status_code = EXCEPTION;
     }
 
-    return 0;
+    return status_code;
 }

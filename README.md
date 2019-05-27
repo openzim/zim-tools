@@ -2,7 +2,7 @@ ZIM tools
 =============
 
 Various ZIM command line tools. More information about the ZIM format
-and the openZIM project at http://www.openzim.org/
+and the openZIM project at https://openzim.org
 
 Disclaimer
 ----------
@@ -17,7 +17,7 @@ Dependencies
 
 The Kiwix library relies on the libzim.
 
-* LibZIM ...................................... http://www.openzim.org/
+* ZIM library ...................................... https://openzim.org
 (package libzim-dev on Debian/Ubuntu)
 
 These dependencies may or may not be packaged by your operating
@@ -29,51 +29,34 @@ version by hand.
 If you want to install these dependencies locally, then ensure that
 meson (through pkg-config) will properly find them.
 
-Environnement
+Environment
 -------------
 
-The ZIM tools build using [Meson](http://mesonbuild.com/) version 0.39
-or higher. Meson relies itself on Ninja, pkg-config and few other
+The ZIM tools build using [Meson](https://mesonbuild.com/) version
+0.39 or higher. Meson relies itself on Ninja, pkg-config and few other
 compilation tools.
 
 Install first the few common compilation tools:
-* Automake
-* Libtool
-* Virtualenv
+* Meson
+* Ninja
 * Pkg-config
 
-Then install Meson itself:
-```
-virtualenv -p python3 ./ # Create virtualenv
-source bin/activate      # Activate the virtualenv
-pip3 install meson       # Install Meson
-hash -r                  # Refresh bash paths
-```
-
-Finally we need the Ninja tool (available in the $PATH). Here is a
-solution to download, build and install it locally:
-
-```
-git clone git://github.com/ninja-build/ninja.git
-cd ninja
-git checkout release
-./configure.py --bootstrap
-mkdir ../bin
-cp ninja ../bin
-cd ..
-```
+These tools should be packaged if you use a cutting edge operating
+system. If not, have a look to the "Troubleshooting" section.
 
 Compilation
 -----------
 
-Once all dependencies are installed, you can compile the ZIM tools
-with:
+Once all dependencies are installed, you can compile ZIM tools with:
 ```
-mkdir build
 meson . build
-cd build
-ninja
+ninja -C build
 ```
+
+By default, it will compile dynamic linked libraries. All binary files
+will be created in the "build" directory created automatically by
+Meson. If you want statically linked libraries, you can add
+`-Dstatic-linkage=true` option to the Meson command.
 
 Depending of you system, `ninja` may be called `ninja-build`.
 
@@ -84,7 +67,7 @@ If you want to install the ZIM tools you just have compiled on your
 system, here we go:
 
 ```
-ninja install # You have to be in the "build" directory
+ninja -C build install
 ```
 
 You might need to run the command as root (or using 'sudo'), depending
@@ -97,13 +80,41 @@ Uninstallation
 If you want to uninstall the ZIM tools:
 
 ```
-ninja uninstall # You have to be in the "build" directory
+ninja -C build uninstall
 ```
 
 Like for the installation, you might need to run the command as root
 (or using 'sudo').
 
+Troubleshooting
+---------------
+
+If you need to install Meson "manually":
+```
+virtualenv -p python3 ./ # Create virtualenv
+source bin/activate      # Activate the virtualenv
+pip3 install meson       # Install Meson
+hash -r                  # Refresh bash paths
+```
+
+If you need to install Ninja "manually":
+```
+git clone git://github.com/ninja-build/ninja.git
+cd ninja
+git checkout release
+./configure.py --bootstrap
+mkdir ../bin
+cp ninja ../bin
+cd ..
+```
+
+If the compilation still fails, you might need to get a more recent
+version of a dependency than the one packaged by your Linux
+distribution. Try then with a source tarball distributed by the
+problematic upstream project or even directly from the source code
+repository.
+
 License
 -------
 
-GPLv2 or later, see COPYING for more details.
+GPLv3 or later, see COPYING for more details.
