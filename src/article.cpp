@@ -27,19 +27,9 @@
 
 extern std::string directoryPath;
 
-std::string Article::getAid() const
+zim::writer::Url Article::getUrl() const
 {
-  return aid;
-}
-
-char Article::getNamespace() const
-{
-  return ns;
-}
-
-std::string Article::getUrl() const
-{
-  return url;
+  return zim::writer::Url(ns, url);
 }
 
 std::string Article::getTitle() const
@@ -49,7 +39,7 @@ std::string Article::getTitle() const
 
 bool Article::isRedirect() const
 {
-  return !redirectAid.empty();
+  return !redirectUrl.empty();
 }
 
 std::string Article::getMimeType() const
@@ -57,9 +47,9 @@ std::string Article::getMimeType() const
   return mimeType;
 }
 
-std::string Article::getRedirectAid() const
+zim::writer::Url Article::getRedirectUrl() const
 {
-  return redirectAid;
+  return redirectUrl;
 }
 
 bool Article::shouldCompress() const
@@ -86,14 +76,10 @@ FileArticle::FileArticle(const std::string& path, const bool detectRedirects)
 {
   invalid = false;
 
-  /* aid */
-  aid = path.substr(directoryPath.size() + 1);
-
-  /* url */
-  url = aid;
+  url = path.substr(directoryPath.size() + 1);
 
   /* mime-type */
-  mimeType = getMimeTypeForFile(aid);
+  mimeType = getMimeTypeForFile(url);
 
   /* namespace */
   ns = getNamespaceForMimeType(mimeType)[0];
@@ -163,10 +149,12 @@ void FileArticle::parseAndAdaptHtml(bool detectRedirects)
         std::cerr << error << std::endl;
       }
       if (!targetUrl.empty()) {
-        redirectAid = computeAbsolutePath(aid, decodeUrl(targetUrl));
-        if (!fileExists(directoryPath + "/" + redirectAid)) {
-          redirectAid.clear();
+        auto redirectUrl = computeAbsolutePath(url, decodeUrl(targetUrl));
+        if (!fileExists(directoryPath + "/" + redirectUrl)) {
+          redirectUrl.clear();
           invalid = true;
+        } else {
+          this->redirectUrl = zim::writer::Url(redirectUrl);
         }
       }
 
@@ -200,7 +188,7 @@ void FileArticle::parseAndAdaptHtml(bool detectRedirects)
         && target.substr(0, 5) != "data:") {
       replaceStringInPlace(data,
                            "\"" + target + "\"",
-                           "\"" + computeNewUrl(aid, longUrl, target) + "\"");
+                           "\"" + computeNewUrl(url, longUrl, target) + "\"");
     }
   }
   gumbo_destroy_output(&kGumboDefaultOptions, output);
@@ -248,7 +236,7 @@ void FileArticle::adaptCss() {
           || mimeType == "application/vnd.ms-fontobject") {
         try {
           std::string fontContent = getFileContent(
-              directoryPath + "/" + computeAbsolutePath(aid, path));
+              directoryPath + "/" + computeAbsolutePath(url, path));
           replaceStringInPlaceOnce(
               data,
               startDelimiter + url + endDelimiter,
@@ -268,7 +256,7 @@ void FileArticle::adaptCss() {
         replaceStringInPlaceOnce(
             data,
             startDelimiter + url + endDelimiter,
-            startDelimiter + computeNewUrl(aid, longUrl, path) + endDelimiter);
+            startDelimiter + computeNewUrl(url, longUrl, path) + endDelimiter);
       }
     }
   }
@@ -284,7 +272,7 @@ zim::Blob FileArticle::getData() const
 
 std::string FileArticle::_getFilename() const
 {
-  return directoryPath + "/" + aid;
+  return directoryPath + "/" + url;
 }
 
 std::string FileArticle::getFilename() const

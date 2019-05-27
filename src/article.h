@@ -22,7 +22,7 @@
 #define OPENZIM_ZIMWRITERFS_ARTICLE_H
 
 #include <zim/blob.h>
-#include <zim/writer/zimcreator.h>
+#include <zim/writer/creator.h>
 #include <string>
 
 extern std::string favicon;
@@ -31,20 +31,17 @@ class Article : public zim::writer::Article
 {
  protected:
   char ns;
-  std::string aid;
   std::string url;
   std::string title;
   std::string mimeType;
-  std::string redirectAid;
+  zim::writer::Url redirectUrl;
 
  public:
-  virtual std::string getAid() const;
-  virtual char getNamespace() const;
-  virtual std::string getUrl() const;
+  virtual zim::writer::Url getUrl() const;
   virtual std::string getTitle() const;
   virtual bool isRedirect() const;
   virtual std::string getMimeType() const;
-  virtual std::string getRedirectAid() const;
+  virtual zim::writer::Url getRedirectUrl() const;
   virtual bool shouldCompress() const;
   virtual ~Article(){};
 };
@@ -56,16 +53,14 @@ class MetadataArticle : public zim::writer::Article
 
  public:
   explicit MetadataArticle(const std::string& id) : id(id) {};
-  virtual std::string getAid() const { return "/M/" + id; }
-  virtual char getNamespace() const { return 'M'; }
-  virtual std::string getUrl() const { return id; }
+  virtual zim::writer::Url getUrl() const { return zim::writer::Url('M', id); }
+  virtual zim::writer::Url getRedirectUrl() const { return zim::writer::Url(); }
   virtual bool isInvalid() const { return false; }
   virtual std::string getTitle() const { return ""; }
   virtual bool isRedirect() const { return false; }
   virtual bool isLinktarget() const { return false; }
   virtual bool isDeleted() const { return false; }
   virtual std::string getMimeType() const { return "text/plain"; }
-  virtual std::string getRedirectAid() const { return ""; }
   virtual bool shouldIndex() const { return false; }
   virtual bool shouldCompress() const { return true; }
   virtual std::string getFilename() const { return ""; }
@@ -92,18 +87,16 @@ class SimpleMetadataArticle : public MetadataArticle
 class MetadataFaviconArticle : public MetadataArticle
 {
  private:
-   std::string redirectAid;
+   zim::writer::Url redirectUrl;
  public:
-  explicit MetadataFaviconArticle(std::string value)
-    : MetadataArticle(""), redirectAid(value) {}
-  virtual std::string getAid() const { return "/-/Favicon"; }
-  virtual char getNamespace() const { return '-'; }
-  virtual std::string getUrl() const { return "favicon"; }
+  explicit MetadataFaviconArticle(zim::writer::Url value)
+    : MetadataArticle(""), redirectUrl(value) {}
+  virtual zim::writer::Url getUrl() const { return zim::writer::Url('-', "favicon"); }
   virtual bool isInvalid() const { return false; }
   virtual std::string getTitle() const { return ""; }
   virtual bool isRedirect() const { return true; }
   virtual std::string getMimeType() const { return "image/png"; }
-  virtual std::string getRedirectAid() const { return redirectAid; }
+  virtual zim::writer::Url getRedirectUrl() const { return redirectUrl; }
   virtual bool shouldIndex() const { return false; }
   virtual bool shouldCompress() const { return false; }
   virtual std::string getFilename() const { return ""; }
@@ -152,13 +145,12 @@ class RedirectArticle : public Article
   explicit RedirectArticle(char ns,
                            const std::string& url,
                            const std::string& title,
-                           const std::string& redirectAid)
+                           const zim::writer::Url& redirectUrl)
   {
     this->ns = ns;
     this->url = url;
     this->title = title;
-    this->redirectAid = redirectAid;
-    aid = std::string("/") + ns + "/" + url;
+    this->redirectUrl = redirectUrl;
     mimeType = "text/plain";
   }
   virtual zim::Blob getData() const { return zim::Blob(); }

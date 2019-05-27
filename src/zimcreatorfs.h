@@ -25,7 +25,7 @@
 #include <string>
 #include "article.h"
 
-#include <zim/writer/zimcreator.h>
+#include <zim/writer/creator.h>
 
 class IHandler
 {
@@ -35,11 +35,11 @@ class IHandler
   virtual ~IHandler() = default;
 };
 
-class ZimCreatorFS : public zim::writer::ZimCreator
+class ZimCreatorFS : public zim::writer::Creator
 {
  public:
   ZimCreatorFS(std::string mainPage, bool verbose)
-    : zim::writer::ZimCreator(verbose),
+    : zim::writer::Creator(verbose),
       mainPage(mainPage) {}
   virtual ~ZimCreatorFS() = default;
   virtual std::string getMainPage();

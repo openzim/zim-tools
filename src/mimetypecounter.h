@@ -38,6 +38,7 @@ class MetadataCounterArticle : public MetadataArticle
   MetadataCounterArticle(MimetypeCounter* counter);
   virtual zim::Blob getData() const;
   virtual zim::size_type getSize() const;
+  virtual zim::writer::Url getRedirectUrl() const { return zim::writer::Url(); }
 };
 
 class MimetypeCounter : public IHandler
