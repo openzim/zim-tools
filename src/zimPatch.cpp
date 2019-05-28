@@ -22,7 +22,8 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <zim/writer/zimcreator.h>
+#include <map>
+#include <zim/writer/creator.h>
 #include <zim/blob.h>
 #include <zim/article.h>
 #include <zim/file.h>
@@ -49,7 +50,7 @@ class Article: public zim::writer::Article
     std::string _id;
     zim::Article Ar;
     bool isRd;
-    std::string redirectAid;
+    zim::writer::Url redirectUrl;
 
 public:
     Article():
@@ -68,26 +69,16 @@ public:
        isRd(false)
     {}
 
-    void setRedirectAid(std::string a)
+    void setRedirectUrl(zim::writer::Url u)
     {
-        redirectAid=a;
+        redirectUrl=u;
         isRd=true;
         return;
     }
 
-    virtual std::string getAid() const
+    virtual zim::writer::Url getUrl() const
     {
-        return _id;
-    }
-
-    virtual char getNamespace() const
-    {
-        return Ar.getNamespace();
-    }
-
-    virtual std::string getUrl() const
-    {
-        return Ar.getUrl();
+        return zim::writer::Url(Ar.getNamespace(), Ar.getUrl());
     }
 
     virtual std::string getTitle() const
@@ -105,10 +96,9 @@ public:
         return Ar.getMimeType();
     }
 
-    virtual std::string getRedirectAid() const
+    virtual zim::writer::Url getRedirectUrl() const
     {
-        //return std::to_string((long long)(Ar.getRedirectIndex()+1));
-        return redirectAid;
+        return redirectUrl;
     }
 
     virtual std::string getParameter() const
@@ -145,17 +135,16 @@ public:
     }
 };
 
-class ZimCreatorPatch : public zim::writer::ZimCreator
+class ZimCreatorPatch : public zim::writer::Creator
 {
     zim::File start_file;
     zim::File diff_file;
     zim::Uuid fileUid;
-    std::string mainAid;
-    std::string layoutAid;
+    zim::writer::Url mainUrl;
+    zim::writer::Url layoutUrl;
     std::vector<std::string> delete_list;
     std::vector< int > dlist;
-    std::vector< int> redirect;
-    std::vector< std::pair<std::string , std::string > >redirectList;
+    std::map<std::string, std::string> redirectList;
 
     bool isAdditionalMetadata(std::string url)
     {
@@ -199,31 +188,17 @@ public:
         }
         fileUid=zim::Uuid(tempArray);
         std::string tempString=diff_file.getArticleByUrl("M/mainaurl").getPage();
-        if(diff_file.getArticleByUrl(tempString).good())
+        if(diff_file.getArticleByUrl(tempString).good()
+         ||start_file.getArticleByUrl(tempString).good())
         {
-            mainAid=NumberToString((long long)diff_file.getArticleByUrl(tempString).getIndex()+start_file.getFileheader().getArticleCount());
-        }
-        else if(start_file.getArticleByUrl(tempString).good())
-        {
-            mainAid=NumberToString((long long)start_file.getArticleByUrl(tempString).getIndex());
-        }
-        else
-        {
-            mainAid="";
+            mainUrl=zim::writer::Url(tempString);
         }
 
         tempString=diff_file.getArticleByUrl("M/layoutaurl").getPage();
-        if(diff_file.getArticleByUrl(tempString).good())
+        if(diff_file.getArticleByUrl(tempString).good()
+         ||start_file.getArticleByUrl(tempString).good())
         {
-            layoutAid=NumberToString((long long)diff_file.getArticleByUrl(tempString).getIndex()+start_file.getFileheader().getArticleCount());
-        }
-        else if(start_file.getArticleByUrl(tempString).good())
-        {
-            layoutAid=NumberToString((long long)start_file.getArticleByUrl(tempString).getIndex());
-        }
-        else
-        {
-            layoutAid="";
+            layoutUrl=zim::writer::Url(tempString);
         }
 
         std::string tmp="";
@@ -243,46 +218,8 @@ public:
         }
         for(unsigned i=0;i<rdlist.size();i=i+2)
         {
-            redirectList.push_back(std::make_pair(rdlist[i],rdlist[i+1]));
+            redirectList[rdlist[i]] = rdlist[i+1];
         }
-        std::cout<<"\nProcessing redirect list..\n"<<std::flush;
-        redirect.resize(start_file.getFileheader().getArticleCount()+diff_file.getFileheader().getArticleCount());
-        for(unsigned int i=0;i<redirect.size();i++)
-        {
-            redirect[i]=0;
-        }
-        //To fix
-        for(unsigned int i=0;i<redirectList.size();i++)
-        {
-            int destId;
-            if(diff_file.getArticleByUrl(redirectList[i].second).good())
-            {
-               //If the article to which the redirect points is present in the diff_file.
-                destId=diff_file.getArticleByUrl(redirectList[i].second).getIndex()+start_file.getFileheader().getArticleCount();
-            }
-            else
-            {
-                //If the article to which the redirect points to is not present in the diff_File, it HAS to be present in the start_file.
-                destId=start_file.getArticleByUrl(redirectList[i].second).getIndex();
-            }
-            int startId;
-
-            if(diff_file.getArticleByUrl(redirectList[i].first).good())
-            {
-                //If the redirect was found in the diff_file.
-                startId=diff_file.getArticleByUrl(redirectList[i].first).getIndex()+start_file.getFileheader().getArticleCount();
-            }
-            else
-            {
-                //If the article was not found in the diff_file- i.e. if it is in the start_file.
-                startId=start_file.getArticleByUrl(redirectList[i].first).getIndex();
-            }
-            //std::cout<<"\nstartID: "<<startId;
-            //std::cout<<"\ndestID: "<<destId;
-            //getchar();
-            redirect[startId]=destId;
-        }
-        redirectList.clear();
 
         zim::Article a = diff_file.getArticleByUrl("M/dlist");
         std::string dllist=a.getPage();
@@ -319,13 +256,13 @@ public:
     {
         return fileUid;
     }
-    std::string getMainPage()
+    zim::writer::Url getMainPage()
     {
-        return mainAid;
+        return mainUrl;
     }
-    std::string getLayoutPage()
+    zim::writer::Url getLayoutPage()
     {
-        return layoutAid;
+        return layoutUrl;
     }
 
     void create(const std::string& fname)
@@ -351,10 +288,11 @@ public:
                 tempArticle=Article(tmpAr,start_file.getFileheader().getArticleCount()+diff_file.getArticleByUrl(tmpAr.getLongUrl()).getIndex());
                 id=tmpAr.getIndex()+start_file.getFileheader().getArticleCount();
             }
-            if(redirect[id]!=0)
-                tempArticle.setRedirectAid(NumberToString((long long)redirect[id]));
+            try {
+                tempArticle.setRedirectUrl(zim::writer::Url(redirectList.at(tmpAr.getLongUrl())));
+            } catch (...) {}
             //std::cout<<"\nArticle: "<<tempArticle.getNamespace()<<"/"<<tempArticle.getUrl();
-            //std::cout<<"\nIndex: "<<tempArticle.getAid();
+            //std::cout<<"\nIndex: "<<tempArticle.getIdx();
             //getchar();
             addArticle(tempArticle);
         }
@@ -371,12 +309,12 @@ public:
             }
 
             Article tempArticle(tmpAr,id);
-            //std::cout<<"\nRedirectID: "<<redirect[id];
             //std::cout<<"\nID: "<<id;
-            if(redirect[id]!=0)
-                tempArticle.setRedirectAid(NumberToString((long long)redirect[id]));
+            try {
+                tempArticle.setRedirectUrl(zim::writer::Url(redirectList.at(tmpAr.getLongUrl())));
+            } catch (...) {}
             //std::cout<<"\nArticle: "<<tempArticle.getNamespace()<<"/"<<tempArticle.getUrl();
-            //std::cout<<"\nIndex: "<<tempArticle.getAid();
+            //std::cout<<"\nIndex: "<<tempArticle.getIdx();
             //std::cout<<"\nIsredirect: "<<tempArticle.isRedirect();
             //getchar();
             addArticle(tempArticle);

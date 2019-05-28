@@ -22,7 +22,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <zim/writer/zimcreator.h>
+#include <zim/writer/creator.h>
 #include <zim/blob.h>
 #include <zim/article.h>
 #include <zim/file.h>
@@ -66,19 +66,9 @@ public:
         isRd=true;
     }
 
-    virtual std::string getAid() const
+    virtual zim::writer::Url getUrl() const
     {
-        return _id;
-    }
-
-    virtual char getNamespace() const
-    {
-        return Ar.getNamespace();
-    }
-
-    virtual std::string getUrl() const
-    {
-        return Ar.getUrl();
+        return zim::writer::Url(Ar.getNamespace(), Ar.getUrl());
     }
 
     virtual std::string getTitle() const
@@ -103,10 +93,9 @@ public:
         }
     }
 
-    virtual std::string getRedirectAid() const
-    {
-        //return std::to_string((long long)Ar.getRedirectIndex()+1);
-        return "";
+    virtual zim::writer::Url getRedirectUrl() const {
+      auto redirectArticle = Ar.getRedirectArticle();
+      return zim::writer::Url(redirectArticle.getNamespace(), redirectArticle.getUrl());
     }
 
     virtual std::string getParameter() const
@@ -149,40 +138,31 @@ class ArticleRaw : public zim::writer::Article  //Article class, stores all data
 public:
     std::string _id;
     std::string _data;
-    std::string Url;
-    std::string Title;
-    std::string MimeType;
-    std::string RedirectAid;
-    char nm;
-    bool IsRedirect;
+    zim::writer::Url url;
+    std::string title;
+    std::string mimeType;
+    zim::writer::Url redirectUrl;
+    bool _isRedirect;
     ArticleRaw()  { }
-    virtual std::string getAid() const
+    virtual zim::writer::Url getUrl() const
     {
-        return _id;
-    }
-    virtual char getNamespace() const
-    {
-        return nm;
-    }
-    virtual std::string getUrl() const
-    {
-        return Url;
+        return url;
     }
     virtual std::string getTitle() const
     {
-        return Title;
+        return title;
     }
     virtual bool isRedirect() const
     {
-        return IsRedirect;
+        return _isRedirect;
     }
     virtual std::string getMimeType() const
     {
-        return MimeType;
+        return mimeType;
     }
-    virtual std::string getRedirectAid() const
+    virtual zim::writer::Url getRedirectUrl() const
     {
-        return RedirectAid;
+        return redirectUrl;
     }
     zim::Blob getData() const
     {
@@ -213,7 +193,7 @@ public:
     }
 };
 
-class ZimCreatorDiff : public zim::writer::ZimCreator
+class ZimCreatorDiff : public zim::writer::Creator
 {
     ArticleRaw dlist;               //Metadata article containing list of articles to be deleted.
     ArticleRaw startFileUID;        //Metadata article containing start file UID
@@ -256,20 +236,18 @@ public:
         {
             dlListText+=*it+"\n";
         }
-        dlist.Title="dlist";
-        dlist.Url="dlist";
-        dlist.MimeType="text/plain";
+        dlist.title="dlist";
+        dlist.url=zim::writer::Url('M', "dlist");
+        dlist.mimeType="text/plain";
         dlist._data=dlListText;
-        dlist.nm='M';
         dlist._id=NumberToString((long long)fileSize+1);
-        dlist.IsRedirect=false;
-        dlist.RedirectAid="";
+        dlist._isRedirect=false;
 
         //StartFileUID
         //contains the UID of the start_file.
-        startFileUID.Title="startfileuid";
-        startFileUID.Url="startfileuid";
-        startFileUID.MimeType="text/plain";
+        startFileUID.title="startfileuid";
+        startFileUID.url=zim::writer::Url('M', "startfileuid");
+        startFileUID.mimeType="text/plain";
         const char *s=file_1.getFileheader().getUuid().data;
         std::string st="";
         for(int i=0;i<16;i++)
@@ -278,16 +256,14 @@ public:
             st+="\n";
         }
         startFileUID._data=st;
-        startFileUID.nm='M';
         startFileUID._id=NumberToString((long long)fileSize+2);
-        startFileUID.IsRedirect=false;
-        startFileUID.RedirectAid="";
+        startFileUID._isRedirect=false;
 
         //EndFileUID
         //contains the UID of the end_file.
-        endFileUID.Title="endfileuid";
-        endFileUID.Url="endfileuid";
-        endFileUID.MimeType="text/plain";
+        endFileUID.title="endfileuid";
+        endFileUID.url=zim::writer::Url('M', "endfileuid");
+        endFileUID.mimeType="text/plain";
         s=file_2.getFileheader().getUuid().data;
         st="";
         for(int i=0;i<16;i++)
@@ -296,50 +272,39 @@ public:
             st+="\n";
         }
         endFileUID._data=st;
-        endFileUID.nm='M';
         endFileUID._id=NumberToString((long long)fileSize+3);
-        endFileUID.IsRedirect=false;
-        endFileUID.RedirectAid="";
+        endFileUID._isRedirect=false;
 
         //Metadata article storing the MAIN Article for the new ZIM file.
-        mainAurl.Title="mainaurl";
-        mainAurl.Url="mainaurl";
-        mainAurl.MimeType="text/plain";
+        mainAurl.title="mainaurl";
+        mainAurl.url=zim::writer::Url('M', "mainaurl");
+        mainAurl.mimeType="text/plain";
         if(file_2.getFileheader().hasMainPage())
             mainAurl._data=file_2.getArticle(file_2.getFileheader().getMainPage()).getLongUrl();
         else
             mainAurl._data="";
-        mainAurl.nm='M';
         mainAurl._id=NumberToString((long long)fileSize+4);
-        mainAurl.IsRedirect=false;
-        mainAurl.RedirectAid="";
+        mainAurl._isRedirect=false;
 
 
         //Metadata entry storing the Layout Article for the new ZIM file.
-        layoutAurl.Title="layoutaurl";
-        layoutAurl.Url="layoutaurl";
-        layoutAurl.MimeType="text/plain";
+        layoutAurl.title="layoutaurl";
+        layoutAurl.url=zim::writer::Url('M', "layoutaurl");
+        layoutAurl.mimeType="text/plain";
         if(file_2.getFileheader().hasLayoutPage())
             layoutAurl._data=file_2.getArticle(file_2.getFileheader().getLayoutPage()).getLongUrl();
         else
             layoutAurl._data="";
-        layoutAurl.nm='M';
         layoutAurl._id=NumberToString((long long)fileSize+5);
-        layoutAurl.IsRedirect=false;
-        layoutAurl.RedirectAid="";
-
-
+        layoutAurl._isRedirect=false;
 
         //Meatadata entry for storing the redirect entries.
-        redirectList.Title="redirectlist";
-        redirectList.Url="redirectlist";
-        redirectList.MimeType="text/plain";
+        redirectList.title="redirectlist";
+        redirectList.url=zim::writer::Url('M', "redirectlist");
+        redirectList.mimeType="text/plain";
         redirectList._data=rdlist;
-        redirectList.nm='M';
         redirectList._id=NumberToString((long long)fileSize+6);
-        redirectList.IsRedirect=false;
-        redirectList.RedirectAid="";
-        return;
+        redirectList._isRedirect=false;
     }
 
     virtual void create(const std::string& fname)
