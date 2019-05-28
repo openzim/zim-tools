@@ -149,7 +149,7 @@ void ZimCreatorFS::addArticle(const std::string& path)
 
 void ZimCreatorFS::addArticle(const zim::writer::Article& article)
 {
-  ZimCreator::addArticle(article);
+  Creator::addArticle(article);
   for (auto& handler: articleHandlers) {
       handler->handleArticle(article);
   }
@@ -158,9 +158,9 @@ void ZimCreatorFS::addArticle(const zim::writer::Article& article)
 void ZimCreatorFS::finishZimCreation()
 {
   for(auto& handler: articleHandlers) {
-    ZimCreator::addArticle(*handler->getMetaArticle());
+    Creator::addArticle(*handler->getMetaArticle());
   }
-  ZimCreator::finishZimCreation();
+  Creator::finishZimCreation();
 }
 
 void ZimCreatorFS::add_customHandler(IHandler* handler)
