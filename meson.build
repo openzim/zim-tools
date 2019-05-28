@@ -1,5 +1,5 @@
 project('zimwriterfs', ['c', 'cpp'],
-  version : '1.3.1',
+  version : '1.3.2',
   license : 'GPL-3.0-or-later',
   default_options : ['c_std=c11', 'cpp_std=c++11', 'werror=true'])
 
@@ -14,7 +14,7 @@ if static_linkage
 endif
 
 thread_dep = dependency('threads')
-libzim_dep = dependency('libzim', version : '>=4.0.0', static:static_linkage)
+libzim_dep = dependency('libzim', version : '>=5.0.0', static:static_linkage)
 zlib_dep = dependency('zlib', static:static_linkage)
 gumbo_dep = dependency('gumbo', static:static_linkage)
 
