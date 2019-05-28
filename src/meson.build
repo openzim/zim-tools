@@ -4,7 +4,7 @@ executable('zimsearch', 'zimSearch.cpp',
   install: true)
 
 # [FIXME] There are some problem with clock_gettime and mingw.
-if target_machine.system() == 'windows'
+if target_machine.system() != 'windows'
   executable('zimbench', 'zimBench.cpp',
     dependencies: [libzim_dep, rt_dep],
     install: true)
