@@ -3,7 +3,6 @@
 set -e
 
 REPO_NAME=${TRAVIS_REPO_SLUG#*/}
-ARCHIVE_NAME=deps_${TRAVIS_OS_NAME}_${PLATFORM}_${REPO_NAME}.tar.xz
 
 # Ninja
 cd $HOME
@@ -15,6 +14,7 @@ then
 
   wget https://github.com/ninja-build/ninja/releases/download/v1.8.2/ninja-mac.zip
   unzip ninja-mac.zip ninja
+  ARCHIVE_NAME=deps_osx_${PLATFORM}_${REPO_NAME}.tar.xz
 else
   wget https://bootstrap.pypa.io/get-pip.py
   python3.5 get-pip.py --user
@@ -23,6 +23,7 @@ else
 
   wget https://github.com/ninja-build/ninja/releases/download/v1.8.2/ninja-linux.zip
   unzip ninja-linux.zip ninja
+  ARCHIVE_NAME=deps_linux_xenial_${PLATFORM}_${REPO_NAME}.tar.xz
 fi
 
 mkdir -p $HOME/bin
@@ -32,3 +33,4 @@ cp ninja $HOME/bin
 cd ${HOME}
 wget http://tmp.kiwix.org/ci/${ARCHIVE_NAME}
 tar xf ${HOME}/${ARCHIVE_NAME}
+sudo ln -s travis ../ci_builder
