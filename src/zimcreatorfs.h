@@ -42,7 +42,7 @@ class ZimCreatorFS : public zim::writer::Creator
     : zim::writer::Creator(verbose),
       mainPage(mainPage) {}
   virtual ~ZimCreatorFS() = default;
-  virtual std::string getMainPage();
+  virtual zim::writer::Url getMainUrl();
    virtual void add_customHandler(IHandler* handler);
    virtual void add_redirectArticles_from_file(const std::string& path);
    virtual void visitDirectory(const std::string& path);
