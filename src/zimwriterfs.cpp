@@ -329,17 +329,19 @@ int main(int argc, char** argv)
   zimCreator.visitDirectory(directoryPath);
 
   /* Check redirects file and read it if necessary*/
-  if (!redirectsPath.empty() && !fileExists(redirectsPath)) {
-    std::cerr << "zimwriterfs: unable to find redirects TSV file at '"
-              << redirectsPath << "'. Verify --redirects path/value."
-              << std::endl;
-    exit(1);
-  } else {
-    if (isVerbose())
-      std::cout << "Reading redirects TSV file " << redirectsPath << "..."
+  if (!redirectsPath.empty()) {
+    if (!fileExists(redirectsPath)) {
+      std::cerr << "zimwriterfs: unable to find redirects TSV file at '"
+                << redirectsPath << "'. Verify --redirects path/value."
                 << std::endl;
+      exit(1);
+    } else {
+      if (isVerbose())
+        std::cout << "Reading redirects TSV file " << redirectsPath << "..."
+                  << std::endl;
 
-    zimCreator.add_redirectArticles_from_file(redirectsPath);
+      zimCreator.add_redirectArticles_from_file(redirectsPath);
+    }
   }
 
   zimCreator.finishZimCreation();
