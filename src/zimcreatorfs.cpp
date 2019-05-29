@@ -29,9 +29,9 @@
 
 bool isVerbose();
 
-std::string ZimCreatorFS::getMainPage()
+zim::writer::Url ZimCreatorFS::getMainUrl()
 {
-  return mainPage;
+  return zim::writer::Url('A', mainPage);
 }
 
 void ZimCreatorFS::add_redirectArticles_from_file(const std::string& path)
