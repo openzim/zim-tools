@@ -29,16 +29,16 @@ RUN apt-get install -y ninja-build
 # Install Xapian
 RUN apt-get install -y wget
 RUN apt-get install -y zlib1g-dev
-RUN wget https://oligarchy.co.uk/xapian/1.4.11/xapian-core-1.4.11.tar.xz
-RUN tar xvf xapian-core-1.4.11.tar.xz
-RUN cd xapian-core-1.4.11 && ./configure
-RUN cd xapian-core-1.4.11 && make all install
+RUN wget https://oligarchy.co.uk/xapian/1.4.12/xapian-core-1.4.12.tar.xz
+RUN tar xvf xapian-core-1.4.12.tar.xz
+RUN cd xapian-core-1.4.12 && ./configure
+RUN cd xapian-core-1.4.12 && make all install
 RUN rm -rf xapian
 
 # Install zimlib
 RUN apt-get install -y libicu-dev
 RUN git clone https://github.com/openzim/libzim.git
-RUN cd libzim && git checkout 5.0.0
+RUN cd libzim && git checkout 5.0.1
 RUN cd libzim && meson . build
 RUN cd libzim && ninja -C build install
 RUN rm -rf libzim
@@ -47,7 +47,7 @@ RUN rm -rf libzim
 RUN apt-get install -y libgumbo-dev
 RUN apt-get install -y libmagic-dev
 RUN git clone https://github.com/openzim/zimwriterfs.git
-RUN cd zimwriterfs && git checkout 1.3.3
+RUN cd zimwriterfs && git checkout 1.3.4
 RUN cd zimwriterfs && meson . build
 RUN cd zimwriterfs && ninja -C build install
 RUN rm -rf zimwriterfs
