@@ -51,7 +51,7 @@ RUN rm -rf libzim
 RUN apt-get install -y libgumbo-dev
 RUN apt-get install -y libmagic-dev
 RUN git clone https://github.com/openzim/zimwriterfs.git
-RUN cd zimwriterfs && git checkout 1.3
+RUN cd zimwriterfs && git checkout 1.3.3
 RUN cd zimwriterfs && meson . build
 RUN cd zimwriterfs && ninja -C build install
 RUN rm -rf zimwriterfs
