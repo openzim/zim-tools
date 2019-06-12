@@ -310,7 +310,14 @@ int main(int argc, char* argv[])
     zim::Arg<bool> verbose(argc, argv, 'v');
     zim::Arg<bool> titleSort(argc, argv, 't');
     zim::Arg<bool> verifyChecksum(argc, argv, 'C');
-    zim::Arg<bool> version(argc, argv, 'V');
+    zim::Arg<bool> printVersion(argc, argv, 'V');
+
+    // version number
+    if (printVersion)
+    {
+      version();
+      return 0;
+    }
 
     if (argc <= 1)
     {
@@ -352,10 +359,6 @@ int main(int argc, char* argv[])
     // initalize app
     ZimDumper app(argv[1], titleSort);
     app.setVerbose(verbose);
-
-    // version number
-    //    if (version)
-    //version();
 
     // global info
     if (fileinfo)

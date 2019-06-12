@@ -5,7 +5,7 @@ project('zim-tools', ['c', 'cpp'],
 
 add_global_arguments(['-Werror', '-Wall'], language:'cpp')
 
-add_global_arguments('-DVERSION=@0@'.format(meson.project_version()), language : 'cpp')
+add_global_arguments('-DVERSION="@0@"'.format(meson.project_version()), language : 'cpp')
 
 static_linkage = get_option('static-linkage')
 if static_linkage

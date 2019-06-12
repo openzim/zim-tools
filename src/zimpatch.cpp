@@ -31,6 +31,7 @@
 #include <limits>
 #include <algorithm>
 
+#include "version.h"
 
 std::string NumberToString(int number)
 {
@@ -325,8 +326,9 @@ public:
 void displayHelp()
 {
     std::cout<<"\nzimpatch"
-             "\nA tool to compute the end_file using a atart_file and a diff_file."
-             "\nUsage: zimpatch [start_file] [diff_file] [output file]  \n";
+      "\nA tool to compute the end_file using a atart_file and a diff_file."
+      "\nUsage: zimpatch [start_file] [diff_file] [output file]"
+      "\nOption: -v, --version    print software version\n";
     return;
 }
 
@@ -407,24 +409,20 @@ int main(int argc, char* argv[])
 
     //Parsing arguments
     //There will be only three arguments, so no detailed parsing is required.
-    std::cout<<"zimpatch\nVERSION "<<VERSION<<"\n"<<std::flush;
     for(int i=0; i<argc; i++)
     {
-        if(std::string(argv[i])=="-h")
+        if(std::string(argv[i])=="-H" ||
+           std::string(argv[i])=="--help" ||
+           std::string(argv[i])=="-h")
         {
             displayHelp();
             return 0;
         }
 
-        if(std::string(argv[i])=="-H")
+        if(std::string(argv[i])=="--version" ||
+           std::string(argv[i])=="-v")
         {
-            displayHelp();
-            return 0;
-        }
-
-        if(std::string(argv[i])=="--help")
-        {
-            displayHelp();
+            version();
             return 0;
         }
     }

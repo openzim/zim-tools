@@ -21,6 +21,8 @@
 #include <zim/search.h>
 #include <zim/file.h>
 
+#include "version.h"
+
 void zimSearch(zim::Search& search)
 {
     for (zim::Search::iterator it = search.begin(); it != search.end(); ++it)
@@ -33,12 +35,21 @@ int main(int argc, char* argv[])
 {
   try
   {
+
+    // version number
+    if (argc > 1 && std::string(argv[1]) == "-v")
+    {
+      version();
+      return 0;
+    }
+
     if (argc <= 2)
     {
       std::cerr << "usage: " << argv[0] << " [-x indexfile] zimfile searchstring\n"
                    "\n"
                    "options\n"
                    "  -x indexfile   specify indexfile\n"
+                   "  -v             print software version\n"
                 << std::endl;
       return 1;
     }

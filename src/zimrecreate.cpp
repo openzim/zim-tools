@@ -29,6 +29,8 @@
 #include <algorithm>
 #include <sstream>
 
+#include "version.h"
+
 class Article : public zim::writer::Article         //Article class that will be passed to the zimwriter. Contains a zim::Article class, so it is easier to add a
 {
     zim::Article Ar;
@@ -148,7 +150,8 @@ void displayHelp()
 {
     std::cout<<"\nzimrecreate"
     "\nA tool to recreate a ZIM files from a existing ZIM."
-    "\nUsage: zimdiff [origin_file] [output file]  \n";
+    "\nUsage: zimdiff [origin_file] [output file]"
+    "\nOption: -v, --version    print software version\n";
     return;
 }
 
@@ -160,21 +163,18 @@ int main(int argc, char* argv[])
     std::cout<<"zimrecreate\n";
     for(int i=0;i<argc;i++)
     {
-        if(std::string(argv[i])=="-h")
+        if(std::string(argv[i])=="-H" ||
+           std::string(argv[i])=="--help" ||
+           std::string(argv[i])=="-h")
         {
             displayHelp();
             return 0;
         }
 
-        if(std::string(argv[i])=="-H")
+        if(std::string(argv[i])=="--version" ||
+           std::string(argv[i])=="-v")
         {
-            displayHelp();
-            return 0;
-        }
-
-        if(std::string(argv[i])=="--help")
-        {
-            displayHelp();
+            version();
             return 0;
         }
     }

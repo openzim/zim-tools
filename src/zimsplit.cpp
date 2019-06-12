@@ -23,6 +23,7 @@
 #include <zim/file.h>
 
 #include "arg.h"
+#include "version.h"
 
 #define BUFFER_SIZE 4096
 
@@ -165,16 +166,25 @@ int main(int argc, char* argv[])
     zim::Arg<std::string> out_prefix(argc, argv, 'o');
     zim::Arg<int> part_size(argc, argv, 's');
     zim::Arg<bool> force(argc, argv, "--force");
+    zim::Arg<bool> printVersion(argc, argv, "--version");
+
+    // version number
+    if (printVersion)
+    {
+      version();
+      return 0;
+    }
 
     if (argc <= 1)
     {
       std::cerr << "usage: " << argv[0] << " [options] zimfile\n"
-                   "\n"
-                   "options:\n"
-                   "  -o        prefix of output file parts\n"
-                   "  -s        size of each file parts\n"
-                   " --force    create zim parts even if it is impossible to have all part size smaller than requested.\n"
-                 << std::flush;
+        "\n"
+        "options:\n"
+        "  -o            prefix of output file parts\n"
+        "  -s            size of each file parts\n"
+        "  --force       create zim parts even if it is impossible to have all part size smaller than requested\n"
+        "  --version     print the software version\n"
+        << std::flush;
       return -1;
     }
 
