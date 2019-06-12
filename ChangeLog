@@ -2,6 +2,8 @@ zim-tools 1.0.3
 ===============
 
  * ZimCheck handles properly geo: mailto: tel: javascript: links
+ * Fix external URL checking error message and usage()
+ * Added -V --version command line arguments
 
 zim-tools 1.0.2
 ===============
