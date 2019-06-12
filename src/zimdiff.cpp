@@ -18,7 +18,6 @@
  */
 
 
-#define VERSION "0.6.0.0"
 #include <iostream>
 #include <sstream>
 #include <vector>

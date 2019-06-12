@@ -28,6 +28,7 @@
 #include <sys/types.h>
 
 #include "arg.h"
+#include "version.h"
 
 class ZimDumper
 {
@@ -309,6 +310,7 @@ int main(int argc, char* argv[])
     zim::Arg<bool> verbose(argc, argv, 'v');
     zim::Arg<bool> titleSort(argc, argv, 't');
     zim::Arg<bool> verifyChecksum(argc, argv, 'C');
+    zim::Arg<bool> version(argc, argv, 'V');
 
     if (argc <= 1)
     {
@@ -331,6 +333,7 @@ int main(int argc, char* argv[])
                    "  -D dir    dump all files into directory\n"
                    "  -v        verbose (print uncompressed length of articles when -i is set)\n"
                    "                    (print namespaces with counts with -F)\n"
+                   "  -V        print the software version number\n"
                    "  -Z        dump index data\n"
                    "  -C        verify checksum\n"
                    "\n"
@@ -349,6 +352,10 @@ int main(int argc, char* argv[])
     // initalize app
     ZimDumper app(argv[1], titleSort);
     app.setVerbose(verbose);
+
+    // version number
+    //    if (version)
+    //version();
 
     // global info
     if (fileinfo)
