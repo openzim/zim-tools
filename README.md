@@ -2,7 +2,7 @@ ZIM tools
 =============
 
 Various ZIM command line tools. More information about the ZIM format
-and the openZIM project at https://openzim.org
+and the openZIM project at https://openzim.org.
 
 Disclaimer
 ----------
@@ -17,8 +17,7 @@ Dependencies
 
 The Kiwix library relies on the libzim.
 
-* ZIM library ...................................... https://openzim.org
-(package libzim-dev on Debian/Ubuntu)
+* [ZIM](https://openzim.org) (package libzim-dev on Debian/Ubuntu)
 
 These dependencies may or may not be packaged by your operating
 system. They may also be packaged but only in an older version. The
