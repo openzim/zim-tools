@@ -1,9 +1,5 @@
 FROM ubuntu:latest
 
-# Increase standards system limits
-RUN echo "* - nofile unlimited" >  /etc/security/limits.conf
-RUN echo "* - stack  unlimited" >> /etc/security/limits.conf
-
 # Update system
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 RUN apt-get update -y
