@@ -162,12 +162,15 @@ int adler32(std::string buf)                        //Adler32 Hash Function. Use
 
 inline bool isExternalUrl(const std::string& input_string)
 {
-    // A string starting with "<scheme>://".
-    static std::regex external_url_regex = std::regex("[^:/?#]+:\\/\\/.*", std::regex_constants::icase);
+    // A string starting with "<scheme>://" or "geo:" or "tel:" or "javascript:" or "mailto:"
+    static std::regex external_url_regex =
+      std::regex("([^:/?#]+:\\/\\/|geo:|tel:|mailto:|javascript:).*",
+                 std::regex_constants::icase);
     return std::regex_match(input_string, external_url_regex);
 }
 
-inline bool isInternalUrl(const std::string& input_string)                 //Checks if a URL is an internal URL or not. Uses RegExp.
+// Checks if a URL is an internal URL or not. Uses RegExp.
+inline bool isInternalUrl(const std::string& input_string)
 {
     return !isExternalUrl(input_string);
 }
