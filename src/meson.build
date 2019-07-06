@@ -1,35 +1,35 @@
 
-executable('zimsearch', 'zimSearch.cpp',
+executable('zimsearch', 'zimsearch.cpp',
   dependencies: libzim_dep,
   install: true)
 
 # [FIXME] There are some problem with clock_gettime and mingw.
 if target_machine.system() != 'windows'
-  executable('zimbench', 'zimBench.cpp',
+  executable('zimbench', 'zimbench.cpp',
     dependencies: [libzim_dep, rt_dep],
     install: true)
 endif
 
-executable('zimdump', 'zimDump.cpp',
+executable('zimdump', 'zimdump.cpp',
   dependencies: libzim_dep,
   install: true)
 
-executable('zimdiff', 'zimDiff.cpp',
+executable('zimdiff', 'zimdiff.cpp',
   dependencies: libzim_dep,
   install: true)
 
-executable('zimpatch', 'zimPatch.cpp',
+executable('zimpatch', 'zimpatch.cpp',
   dependencies: libzim_dep,
   install: true)
 
-executable('zimsplit', 'zimSplit.cpp',
+executable('zimsplit', 'zimsplit.cpp',
   dependencies: libzim_dep,
   install: true)
 
-executable('zimcheck', 'zimCheck.cpp',
+executable('zimcheck', 'zimcheck.cpp',
   dependencies: libzim_dep,
   install: true)
 
-executable('zimrecreate', 'zimRecreate.cpp',
+executable('zimrecreate', 'zimrecreate.cpp',
   dependencies: libzim_dep,
   install: true)
