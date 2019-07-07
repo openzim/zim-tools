@@ -1,0 +1,42 @@
+[
+  {
+    "directory": "/home/nebrass/zim-tools/build",
+    "command": "ccache c++ -Isrc/25a6634@@zimsearch@exe -Isrc -I../src -I/usr/local/include -fdiagnostics-color=always -pipe -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wnon-virtual-dtor -Werror -std=c++11 -g -Werror -Wall -MD -MQ 'src/25a6634@@zimsearch@exe/zimsearch.cpp.o' -MF 'src/25a6634@@zimsearch@exe/zimsearch.cpp.o.d' -o 'src/25a6634@@zimsearch@exe/zimsearch.cpp.o' -c ../src/zimsearch.cpp",
+    "file": "../src/zimsearch.cpp"
+  },
+  {
+    "directory": "/home/nebrass/zim-tools/build",
+    "command": "ccache c++ -Isrc/25a6634@@zimbench@exe -Isrc -I../src -I/usr/local/include -fdiagnostics-color=always -pipe -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wnon-virtual-dtor -Werror -std=c++11 -g -Werror -Wall -MD -MQ 'src/25a6634@@zimbench@exe/zimbench.cpp.o' -MF 'src/25a6634@@zimbench@exe/zimbench.cpp.o.d' -o 'src/25a6634@@zimbench@exe/zimbench.cpp.o' -c ../src/zimbench.cpp",
+    "file": "../src/zimbench.cpp"
+  },
+  {
+    "directory": "/home/nebrass/zim-tools/build",
+    "command": "ccache c++ -Isrc/25a6634@@zimdump@exe -Isrc -I../src -I/usr/local/include -fdiagnostics-color=always -pipe -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wnon-virtual-dtor -Werror -std=c++11 -g -Werror -Wall -MD -MQ 'src/25a6634@@zimdump@exe/zimdump.cpp.o' -MF 'src/25a6634@@zimdump@exe/zimdump.cpp.o.d' -o 'src/25a6634@@zimdump@exe/zimdump.cpp.o' -c ../src/zimdump.cpp",
+    "file": "../src/zimdump.cpp"
+  },
+  {
+    "directory": "/home/nebrass/zim-tools/build",
+    "command": "ccache c++ -Isrc/25a6634@@zimdiff@exe -Isrc -I../src -I/usr/local/include -fdiagnostics-color=always -pipe -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wnon-virtual-dtor -Werror -std=c++11 -g -Werror -Wall -MD -MQ 'src/25a6634@@zimdiff@exe/zimdiff.cpp.o' -MF 'src/25a6634@@zimdiff@exe/zimdiff.cpp.o.d' -o 'src/25a6634@@zimdiff@exe/zimdiff.cpp.o' -c ../src/zimdiff.cpp",
+    "file": "../src/zimdiff.cpp"
+  },
+  {
+    "directory": "/home/nebrass/zim-tools/build",
+    "command": "ccache c++ -Isrc/25a6634@@zimpatch@exe -Isrc -I../src -I/usr/local/include -fdiagnostics-color=always -pipe -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wnon-virtual-dtor -Werror -std=c++11 -g -Werror -Wall -MD -MQ 'src/25a6634@@zimpatch@exe/zimpatch.cpp.o' -MF 'src/25a6634@@zimpatch@exe/zimpatch.cpp.o.d' -o 'src/25a6634@@zimpatch@exe/zimpatch.cpp.o' -c ../src/zimpatch.cpp",
+    "file": "../src/zimpatch.cpp"
+  },
+  {
+    "directory": "/home/nebrass/zim-tools/build",
+    "command": "ccache c++ -Isrc/25a6634@@zimsplit@exe -Isrc -I../src -I/usr/local/include -fdiagnostics-color=always -pipe -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wnon-virtual-dtor -Werror -std=c++11 -g -Werror -Wall -MD -MQ 'src/25a6634@@zimsplit@exe/zimsplit.cpp.o' -MF 'src/25a6634@@zimsplit@exe/zimsplit.cpp.o.d' -o 'src/25a6634@@zimsplit@exe/zimsplit.cpp.o' -c ../src/zimsplit.cpp",
+    "file": "../src/zimsplit.cpp"
+  },
+  {
+    "directory": "/home/nebrass/zim-tools/build",
+    "command": "ccache c++ -Isrc/25a6634@@zimcheck@exe -Isrc -I../src -I/usr/local/include -fdiagnostics-color=always -pipe -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wnon-virtual-dtor -Werror -std=c++11 -g -Werror -Wall -MD -MQ 'src/25a6634@@zimcheck@exe/zimcheck.cpp.o' -MF 'src/25a6634@@zimcheck@exe/zimcheck.cpp.o.d' -o 'src/25a6634@@zimcheck@exe/zimcheck.cpp.o' -c ../src/zimcheck.cpp",
+    "file": "../src/zimcheck.cpp"
+  },
+  {
+    "directory": "/home/nebrass/zim-tools/build",
+    "command": "ccache c++ -Isrc/25a6634@@zimrecreate@exe -Isrc -I../src -I/usr/local/include -fdiagnostics-color=always -pipe -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wnon-virtual-dtor -Werror -std=c++11 -g -Werror -Wall -MD -MQ 'src/25a6634@@zimrecreate@exe/zimrecreate.cpp.o' -MF 'src/25a6634@@zimrecreate@exe/zimrecreate.cpp.o.d' -o 'src/25a6634@@zimrecreate@exe/zimrecreate.cpp.o' -c ../src/zimrecreate.cpp",
+    "file": "../src/zimrecreate.cpp"
+  }
+]
