@@ -414,12 +414,14 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
                 continue;
 
             auto links = getDependencies(it->getPage());
-            for(auto &link: links)
+            for (auto &link: links)
             {
-                if( isExternalUrl( link ) )
+                if (isExternalUrl( link ))
                 {
-                    reporter.addError(URL_EXTERNAL, it->getLongUrl());
-                    reporter.setTestResult(URL_INTERNAL, false);
+                    std::ostringstream ss;
+                    ss << link << "is an external dependence in article " << it->getLongUrl();
+                    reporter.addError(URL_EXTERNAL, ss.str());
+                    reporter.setTestResult(URL_EXTERNAL, false);
                     break;
                 }
             }
