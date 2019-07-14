@@ -31,6 +31,8 @@
 
 #include <getopt.h>
 
+#include "version.h"
+
 std::string randomUrl()
 {
   std::string url;
@@ -55,7 +57,7 @@ int main(int argc, char* argv[])
   {
     while (true) {
       int option_index = 0;
-      int c = getopt_long(argc, argv, "sn:r:d:",
+      int c = getopt_long(argc, argv, "vsn:r:d:",
               long_options, &option_index);
 
       if (c!= -1) {
@@ -83,6 +85,9 @@ int main(int argc, char* argv[])
             distinctCountSet = true;
             distinctCount = atoi(optarg);
             break;
+          case 'v':
+            version();
+            return 0;
         };
       } else {
         if (optind < argc ) {
@@ -95,9 +100,10 @@ int main(int argc, char* argv[])
     if (filename.empty())
     {
       std::cerr << "usage: " << argv[0] << " [options] zimfile\n"
-                   "\t-n number\tnumber of linear accessed articles (default 1000)\n"
-                   "\t-r number\tnumber of random accessed articles (default: same as -n)\n"
-                   "\t-d number\tnumber of distinct articles used for random access (default: same as -r)\n"
+        "\t-n number\tnumber of linear accessed articles (default 1000)\n"
+        "\t-r number\tnumber of random accessed articles (default: same as -n)\n"
+        "\t-d number\tnumber of distinct articles used for random access (default: same as -r)\n\n"
+        "\t-v to print the software version\n"
                 << std::flush;
       return 1;
     }

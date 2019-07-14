@@ -31,8 +31,9 @@
 #include <algorithm>
 #include <regex>
 #include <ctime>
-#include "progress.h"
 
+#include "progress.h"
+#include "version.h"
 
 enum TestType {
     CHECKSUM,
@@ -271,6 +272,7 @@ void displayHelp()
              "-D , --details         Details of error\n"
              "-B , --progress        Print progress report\n"
              "-H , --help            Displays Help\n"
+             "-V , --version         Displays software version\n"
              "examples:\n"
              "./zimcheck -A wikipedia.zim\n"
              "./zimcheck --checksum --redundant wikipedia.zim\n"
@@ -497,22 +499,22 @@ int main (int argc, char **argv)
     {
         static struct option long_options[] =
         {
-            { "all",     no_argument,       0, 'A'},
-            { "checksum",  no_argument,       0, 'C'},
-            { "metadata",  no_argument,       0, 'M'},
-            { "favicon",  no_argument,       0, 'F'},
-            { "main",  no_argument,       0, 'P'},
-            { "redundant",  no_argument,       0, 'R'},
-            { "url_internal",  no_argument,       0, 'U'},
-            { "url_external",  no_argument,       0, 'X'},
-            { "mime",  no_argument,       0, 'E'},
-            { "details",  no_argument,       0, 'D'},
-            { "help",  no_argument,       0, 'H'},
-            { "progress",  no_argument,       0, 'B'},
+            { "all",          no_argument, 0, 'A'},
+            { "checksum",     no_argument, 0, 'C'},
+            { "metadata",     no_argument, 0, 'M'},
+            { "favicon",      no_argument, 0, 'F'},
+            { "main",         no_argument, 0, 'P'},
+            { "redundant",    no_argument, 0, 'R'},
+            { "url_internal", no_argument, 0, 'U'},
+            { "url_external", no_argument, 0, 'X'},
+            { "mime",         no_argument, 0, 'E'},
+            { "details",      no_argument, 0, 'D'},
+            { "help",         no_argument, 0, 'H'},
+            { "version",      no_argument, 0, 'V'},
             { 0, 0, 0, 0}
         };
         int option_index = 0;
-        int c = getopt_long (argc, argv, "ACMFPRUXEDHBacmfpruxedhb",
+        int c = getopt_long (argc, argv, "ACMFPRUXEDHBVacmfpruxedhbv",
                              long_options, &option_index);
         //c = getopt (argc, argv, "ACMFPRUXED");
         if(c == -1)
@@ -578,37 +580,22 @@ int main (int argc, char **argv)
             break;
         case '?':
             if (optopt == 'c')
-                std::cerr<<"Option "<<(char)optopt<<" requires an argument.\n"
-                         "options:\n"
-                         "  -A , --all        run all tests. Default if no flags are given.\n"
-                         "  -C        Internal CheckSum Test\n"
-                         "  -M        MetaData Entries\n"
-                         "  -F        Favicon\n"
-                         "  -P        Main page\n"
-                         "  -R        Redundant data check\n"
-                         "  -U        URL checks\n"
-                         "  -X        External Dependency check\n"
-                         "  -E        MIME checks\n"
-                         "  -D        Lists Details of the errors in the ZIM file.\n"
-                         "  -B        Print progress report.\n"
-                         "\n"
-                         "examples:\n"
-                         "  " << argv[0] << " -A wikipedia.zim\n"
-                         "  " << argv[0] << " -C wikipedia.zim\n"
-                         "  " << argv[0] << " -F -R wikipedia.zim\n"
-                         "  " << argv[0] << " -MI wikipedia.zim\n"
-                         "  " << argv[0] << " -U wikipedia.zim\n"
-                         "  " << argv[0] << " -R -U wikipedia.zim\n"
-                         "  " << argv[0] << " -R -U -MI wikipedia.zim\n"
-                         << std::flush;
+            {
+              std::cerr<<"Option "<<(char)optopt<<" requires an argument.\n";
+              displayHelp();
+            }
             else if ( isprint (optopt) )
-                std::cerr<<"Unknown option `"<<( char )optopt<<"'.\n";
+              std::cerr<<"Unknown option `"<<( char )optopt<<"'.\n";
             else
             {
                 std::cerr<<"Unknown option\n";
                 displayHelp();
             }
             return 1;
+        case 'V':
+        case 'v':
+          version();
+          return 0;
         default:
             abort ();
         }
