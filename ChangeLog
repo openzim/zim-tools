@@ -1,8 +1,13 @@
+zim-tools 1.0.3
+===============
+
+ * ZimCheck handles properly geo: mailto: tel: javascript: links
+
 zim-tools 1.0.2
 ===============
 
  * Update readme.
- * ZimCheck return a proper status code.
+ * ZimCheck returns a proper status code.
  * Update to last API of libzim 5.0.0
  * Temporally deactivate compilation of zimBench on windows.
 
