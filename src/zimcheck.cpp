@@ -266,7 +266,7 @@ void displayHelp()
              "-P , --main            Main page\n"
              "-R , --redundant       Redundant data check\n"
              "-U , --url_internal    URL check - Internal URLs\n"
-             "-X , --url_external    URL check - Internal URLs\n"
+             "-X , --url_external    URL check - External URLs\n"
              "-E , --mime            MIME checks\n"
              "-D , --details         Details of error\n"
              "-B , --progress        Print progress report\n"
@@ -343,7 +343,8 @@ void test_mainpage(const zim::File& f, ErrorLogger& reporter) {
 }
 
 
-void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progress, bool redundant_data, bool url_check, bool url_check_external) {
+void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progress,
+                   bool redundant_data, bool url_check, bool url_check_external) {
     std::cout << "[INFO] Verifying Articles' content.. " << std::endl;
     // Article are store in a map<hash, list<index>>.
     // So all article with the same hash will be stored in the same list.
@@ -383,14 +384,14 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
             auto links = getLinks(it->getData());
             for(auto olink: links)
             {
-                if(olink.front() == '#')
+                if (olink.front() == '#')
                     continue;
-                if(isInternalUrl(olink)) {
+                if (isInternalUrl(olink)) {
                     auto link = normalize_link(olink, baseUrl);
                     char nm = link[0];
                     std::string shortUrl(link.substr(2));
                     auto a = f.getArticle(nm, shortUrl);
-                    if(!a.good())
+                    if (!a.good())
                     {
                         int index = it->getIndex();
                         if ((previousLink != link) && (previousIndex != index) )
@@ -413,12 +414,14 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
                 continue;
 
             auto links = getDependencies(it->getPage());
-            for(auto &link: links)
+            for (auto &link: links)
             {
-                if( isExternalUrl( link ) )
+                if (isExternalUrl( link ))
                 {
-                    reporter.addError(URL_EXTERNAL, it->getLongUrl());
-                    reporter.setTestResult(URL_INTERNAL, false);
+                    std::ostringstream ss;
+                    ss << link << "is an external dependence in article " << it->getLongUrl();
+                    reporter.addError(URL_EXTERNAL, ss.str());
+                    reporter.setTestResult(URL_EXTERNAL, false);
                     break;
                 }
             }
@@ -644,6 +647,7 @@ int main (int argc, char **argv)
     {
         std::cout << "[INFO] Checking zim file " << filename << std::endl;
         zim::File f( filename );
+
         //Test 1: Internal Checksum
         if(checksum)
             test_checksum(f, error);
