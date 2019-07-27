@@ -123,7 +123,7 @@ void usage()
   std::cout << "\t-h, --help\t\tprint this help" << std::endl;
   std::cout << "\t-V, --version\t\tprint the version number" << std::endl;
   std::cout
-      << "\t-m, --minChunkSize\tnumber of bytes per ZIM cluster (defaul: 2048)"
+      << "\t-m, --minChunkSize\tnumber of bytes per ZIM cluster (default: 2048)"
       << std::endl;
   std::cout << "\t-x, --inflateHtml\ttry to inflate HTML files before packing "
                "(*.html, *.htm, ...)"
