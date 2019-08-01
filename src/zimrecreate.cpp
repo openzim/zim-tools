@@ -150,7 +150,7 @@ void displayHelp()
 {
     std::cout<<"\nzimrecreate"
     "\nA tool to recreate a ZIM files from a existing ZIM."
-    "\nUsage: zimdiff [origin_file] [output file]"
+    "\nUsage: zimrecreate [origin_file] [output file]"
     "\nOption: -v, --version    print software version\n";
     return;
 }
