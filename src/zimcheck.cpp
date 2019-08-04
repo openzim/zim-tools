@@ -217,7 +217,7 @@ std::string normalize_link(const std::string& input, const std::string& baseUrl)
             if (strncmp(p, "./", 2) == 0) {
                 // We must simply skip this part
                 // Simply move after the ".".
-                p += 1;
+                p += 2;
                 check_rel = false;
                 continue;
             }
@@ -381,7 +381,7 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
         {
             auto baseUrl = it->getLongUrl();
             auto pos = baseUrl.find_last_of('/');
-            baseUrl.resize(pos==baseUrl.npos?0:pos);
+            baseUrl.resize( pos==baseUrl.npos ? 0 : pos );
 
             auto links = getLinks(it->getData());
             for(auto olink: links)
