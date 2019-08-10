@@ -1,20 +1,25 @@
-zim-tools 1.0.3
-===============
+1.0.4
+=====
+
+ * zimcheck: Better handling of ./ in URL checking
+
+1.0.3
+=====
 
  * ZimCheck handles properly geo: mailto: tel: javascript: links
  * Fix external URL checking error message and usage()
  * Added -V --version command line arguments
 
-zim-tools 1.0.2
-===============
+1.0.2
+=====
 
  * Update readme.
  * ZimCheck returns a proper status code.
  * Update to last API of libzim 5.0.0
  * Temporally deactivate compilation of zimBench on windows.
 
-zim-tools 1.0.1
-===============
+1.0.1
+=====
 
  * Update build.
  * [zimCheck] Far better zimCheck implementation :
@@ -22,8 +27,8 @@ zim-tools 1.0.1
     - fix url check
  * Build without rpath
 
-zim-tools 1.0.0
-===============
+1.0.0
+=====
 
  * Remove warnings.
  * Compile zim-tools with travis.
