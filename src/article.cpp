@@ -236,7 +236,7 @@ void FileArticle::adaptCss() {
           || mimeType == "application/vnd.ms-fontobject") {
         try {
           std::string fontContent = getFileContent(
-              directoryPath + "/" + computeAbsolutePath(url, path));
+              directoryPath + "/" + computeAbsolutePath(this->url, path));
           replaceStringInPlaceOnce(
               data,
               startDelimiter + url + endDelimiter,
@@ -256,7 +256,7 @@ void FileArticle::adaptCss() {
         replaceStringInPlaceOnce(
             data,
             startDelimiter + url + endDelimiter,
-            startDelimiter + computeNewUrl(url, longUrl, path) + endDelimiter);
+            startDelimiter + computeNewUrl(this->url, longUrl, path) + endDelimiter);
       }
     }
   }
