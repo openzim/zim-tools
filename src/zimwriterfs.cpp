@@ -77,7 +77,6 @@ void version()
   std::cout << "Version:  " << "v" << VERSION << std::endl;
   std::cout << "\tSee -h or --help argument flags for further argument options" << std::endl;
   std::cout << "\tCopyright 2013-2016 Emmanuel Engelhart <kelson@kiwix.org>" << std::endl;
-
 }
 
 /* Print correct console usage options */
@@ -293,13 +292,10 @@ int main(int argc, char** argv)
     exit(1);
   }
 
-
-
   /* System tags */
   if (withFullTextIndex) {
     tags += tags.empty() ? "" : ";";
     tags += "_ftindex";
-
   }
 
   setenv("ZIM_LZMA_LEVEL", "9e", 1);

@@ -135,7 +135,6 @@ inline std::string inflateString(const std::string& str)
     if (outstring.size() < zs.total_out) {
       outstring.append(outbuffer, zs.total_out - outstring.size());
     }
-
   } while (ret == Z_OK);
 
   inflateEnd(&zs);
