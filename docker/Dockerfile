@@ -3,11 +3,11 @@ FROM ubuntu:latest
 # Update system
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 RUN apt-get update -y
-RUN apt-get install -y apt-utils
+RUN apt-get install -y --no-install-recommends apt-utils
 RUN apt-get dist-upgrade -y
 
 # Configure locales
-RUN apt-get install locales
+RUN apt-get install -y --no-install-recommends locales
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
