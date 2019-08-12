@@ -332,7 +332,7 @@ std::vector<std::string> split(const std::string& lhs, const char* rhs)
 std::string computeAbsolutePath(const std::string& path,
                                 const std::string& relativePath)
 {
-  /* Add a trailing / to the path if necessary */
+  /* Remove leaf part of the path if not already a directory */
   std::string absolutePath = path[path.length() - 1] == '/'
                                  ? path
                                  : removeLastPathElement(path, false, false);

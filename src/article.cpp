@@ -180,6 +180,7 @@ void FileArticle::parseAndAdaptHtml(bool detectRedirects)
   std::map<std::string, bool> links;
   getLinks(root, links);
   std::string longUrl = std::string("/") + ns + "/" + url;
+
   /* If a link appearch to be duplicated in the HTML, it will
      occurs only one time in the links variable */
   for (auto& linkPair: links) {
@@ -203,6 +204,7 @@ void FileArticle::adaptCss() {
 
   while ((startPos = data.find("url(", endPos))
          && startPos != std::string::npos) {
+
     /* URL delimiters */
     endPos = data.find(")", startPos);
     startPos = startPos + (data[startPos + 4] == '\''
@@ -218,6 +220,7 @@ void FileArticle::adaptCss() {
     std::string endDelimiter = data.substr(endPos, 1);
 
     if (url.substr(0, 5) != "data:") {
+
       /* Deal with URL with arguments (using '? ') */
       std::string path = url;
       size_t markPos = url.find("?");
