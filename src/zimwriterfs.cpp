@@ -46,6 +46,7 @@ std::string creator;
 std::string publisher;
 std::string title;
 std::string tags;
+std::string flavour;
 std::string name;
 std::string description;
 std::string welcome;
@@ -141,6 +142,8 @@ void usage()
   std::cout << "\t-n, --name\t\tcustom (version independent) identifier for "
                "the content"
             << std::endl;
+  std::cout << "\t-o, --flavour\t\tcustom (version independent) content flavour"
+            << std::endl;
   std::cout << std::endl;
 
   std::cout << "Example:" << std::endl;
@@ -170,6 +173,7 @@ int main(int argc, char** argv)
          {"welcome", required_argument, 0, 'w'},
          {"minchunksize", required_argument, 0, 'm'},
          {"name", required_argument, 0, 'n'},
+         {"flavour", required_argument, 0, 'o'},
          {"redirects", required_argument, 0, 'r'},
          {"inflateHtml", no_argument, 0, 'x'},
          {"uniqueNamespace", no_argument, 0, 'u'},
@@ -228,6 +232,9 @@ int main(int argc, char** argv)
           break;
         case 'n':
           name = optarg;
+          break;
+        case 'o':
+          flavour = optarg;
           break;
         case 'p':
           publisher = optarg;
@@ -310,6 +317,7 @@ int main(int argc, char** argv)
   zimCreator.addArticle(SimpleMetadataArticle("Title", title));
   zimCreator.addArticle(SimpleMetadataArticle("Description", description));
   zimCreator.addArticle(SimpleMetadataArticle("Name", name));
+  zimCreator.addArticle(SimpleMetadataArticle("Flavour", flavour));
   zimCreator.addArticle(SimpleMetadataArticle("Tags", tags));
   zimCreator.addArticle(MetadataDateArticle());
   zimCreator.addArticle(MetadataFaviconArticle(favicon));
