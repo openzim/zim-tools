@@ -3,6 +3,7 @@ zimwriterfs 1.3.5
 
  * Fix resources URL rewriting in CSS files
  * Add --flavour optional argument
+ * Add --scraper optional argument
 
 zimwriterfs 1.3.4
 =================
