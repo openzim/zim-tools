@@ -307,9 +307,12 @@ int main(int argc, char** argv)
   }
 
   /* System tags */
-  if (!withoutFullTextIndex) {
-    tags += tags.empty() ? "" : ";";
-    tags += "_ftindex";
+  tags += tags.empty() ? "" : ";";
+  if (withoutFullTextIndex) {
+    tags += "_ftindex:no";
+  } else {
+    tags += "_ftindex:yes";
+    tags += ";_ftindex"; // For backward compatibility
   }
 
   setenv("ZIM_LZMA_LEVEL", "9e", 1);
