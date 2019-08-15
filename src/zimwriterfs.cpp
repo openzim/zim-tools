@@ -328,7 +328,7 @@ int main(int argc, char** argv)
   zimCreator.addArticle(SimpleMetadataArticle("Scraper", scraper));
   zimCreator.addArticle(SimpleMetadataArticle("Tags", tags));
   zimCreator.addArticle(MetadataDateArticle());
-  zimCreator.addArticle(MetadataFaviconArticle(favicon));
+  zimCreator.addArticle(MetadataFaviconArticle(zim::writer::Url('I', favicon)));
 
   /* Init */
   magic = magic_open(MAGIC_MIME);
@@ -355,7 +355,6 @@ int main(int argc, char** argv)
       zimCreator.add_redirectArticles_from_file(redirectsPath);
     }
   }
-
   zimCreator.finishZimCreation();
 
   magic_close(magic);
