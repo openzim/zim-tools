@@ -4,6 +4,7 @@ zimwriterfs 1.3.5
  * Fix resources URL rewriting in CSS files
  * Add --flavour and --scraper optional arguments
  * Fix favicon redirection creation
+ * Replace --withFullTextIndex by --withoutFullTextIndex
 
 zimwriterfs 1.3.4
 =================
