@@ -1,12 +1,17 @@
 zimwriterfs
 ===========
 
+[![Build Status](https://travis-ci.org/openzim/zimwriterfs.svg?branch=master)](https://travis-ci.org/openzim/zimwriterfs)
+[![Docker Build Status](https://img.shields.io/docker/build/openzim/zimwriterfs)](https://hub.docker.com/r/openzim/zimwriterfs)
+[![CodeFactor](https://www.codefactor.io/repository/github/openzim/zimwriterfs/badge)](https://www.codefactor.io/repository/github/openzim/zimwriterfs)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
 `zimwriterfs` is a console tool to create [ZIM](https://openzim.org)
 files from a locally-stored directory containing "self-sufficient"
 HTML content (with pictures, javascript and stylesheets). The result
 will contain all the files of the local directory compressed and
 merged in the ZIM file. Nothing more, nothing less. The generated file
-can be opened with a ZIM reader; [Kiwix](httpa://kiwix.org) is one
+can be opened with a ZIM reader; [Kiwix](https://kiwix.org) is one
 example, but there are [others](https://openzim.org/wiki/ZIM_Readers).
 
 `zimwriterfs` works - for now - only on POSIX-compatible systems, you
@@ -34,26 +39,14 @@ Dependencies
 ------------
 
 `zimwriterfs` relies on many third parts software libraries. They are
-prerequisites to the Kiwix library compilation. Following libraries
+prerequisites to the Zimwriterfs compilation. Following libraries
 need to be available:
 
-* liblzma (https://tukaani.org/xz/, most of the time packaged),
-  resp. for the LZMA comp.
-* libzim (https://download.openzim.org/, probably not packaged),
-  resp. for the ZIM compilation
-* libmagic (http://www.darwinsys.com/file/, most of the time
-  packaged), resp. for the mimeType detection
-* libz (https://zlib.net/), resp. for unpack compressed HTML files
-* gumbo (https://github.com/google/gumbo-parser), a pure-C DOM parser
-* libicu (http://site.icu-project.org/), for unicode string
-  manipulation. It'always packaged
-
-On (recent) Debian/Ubuntu, you can ensure these are installed with:
-
-```
-sudo apt-get install liblzma-dev libmagic-dev zlib1g-dev libgumbo-dev
-libzim-dev libxapian-dev libicu-dev
-```
+* [ZIM](https://openzim.org) (package `libzim-dev` on Debian/Ubuntu)
+* [Magic](https://www.darwinsys.com/file/) (package  `libmagic-dev` on Debian/Ubuntu)
+* [Z](https://zlib.net/) (package `zlib1g-dev` on Debian/Ubuntu)
+* [Gumbo](https://github.com/google/gumbo-parser) (package `libgumbo-dev` on Debian/Ubuntu)
+* [ICU](http://site.icu-project.org/) (package `libicu-dev` on Debian/Ubuntu)
 
 These dependencies may or may not be packaged by your operating
 system. They may also be packaged but only in an older version. The
@@ -62,13 +55,13 @@ In the worse case, you will have to download and compile a more recent
 version by hand.
 
 If you want to install these dependencies locally, then ensure that
-meson (through pkg-config) will properly find them.
+meson (through `pkg-config`) will properly find them.
 
 Environment
 -----------
 
 `zimwriterfs` builds using [Meson](https://mesonbuild.com/) version
-0.39 or higher. Meson relies itself on Ninja, pkg-config and few other
+0.39 or higher. Meson relies itself on Ninja, Pkg-config and few other
 compilation tools.
 
 Install first the few common compilation tools:
@@ -77,13 +70,14 @@ Install first the few common compilation tools:
 * Pkg-config
 
 These tools should be packaged if you use a cutting edge operating
-system. If not, have a look to the "Troubleshooting" section.
+system. If not, have a look to the [Troubleshooting](#Troubleshooting)
+section.
 
 Compilation
 -----------
 
 Once all dependencies are installed, you can compile `zimwriterfs` with:
-```
+```bash
 meson . build
 ninja -C build
 ```
@@ -100,8 +94,7 @@ Installation
 
 If you want to install `zimwriterfs` and the headers you just have
 compiled on your system, here we go:
-
-```
+```bash
 ninja -C build install
 ```
 
@@ -113,8 +106,7 @@ Uninstallation
 --------------
 
 If you want to uninstall `zimwriterfs`:
-
-```
+```bash
 ninja -C build uninstall
 ```
 
@@ -138,7 +130,7 @@ Troubleshooting
 ---------------
 
 If you need to install Meson "manually":
-```
+```bash
 virtualenv -p python3 ./ # Create virtualenv
 source bin/activate      # Activate the virtualenv
 pip3 install meson       # Install Meson
@@ -146,7 +138,7 @@ hash -r                  # Refresh bash paths
 ```
 
 If you need to install Ninja "manually":
-```
+```bash
 git clone git://github.com/ninja-build/ninja.git
 cd ninja
 git checkout release
@@ -161,3 +153,9 @@ version of a dependency than the one packaged by your Linux
 distribution. Try then with a source tarball distributed by the
 problematic upstream project or even directly from the source code
 repository.
+
+License
+-------
+
+[GPLv3](https://www.gnu.org/licenses/gpl-3.0) or later, see
+[LICENSE](LICENSE) for more details.
