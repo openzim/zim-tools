@@ -60,7 +60,7 @@ bool verboseFlag = false;
 pthread_mutex_t verboseMutex;
 bool inflateHtmlFlag = false;
 bool uniqueNamespace = false;
-bool withFullTextIndex = false;
+bool withoutFullTextIndex = false;
 
 magic_t magic;
 
@@ -137,7 +137,7 @@ void usage()
                "redirects (namespace, url, title, target_url tab separated)."
             << std::endl;
   std::cout
-      << "\t-i, --withFullTextIndex\tindex the content and add it to the ZIM."
+      << "\t-j, --withoutFullTextIndex\tdon't index the content and add it to the ZIM."
       << std::endl;
   std::cout << "\t-a, --tags\t\ttags - semicolon separated" << std::endl;
   std::cout << "\t-n, --name\t\tcustom (version independent) identifier for "
@@ -188,7 +188,7 @@ int main(int argc, char** argv)
          {"description", required_argument, 0, 'd'},
          {"creator", required_argument, 0, 'c'},
          {"publisher", required_argument, 0, 'p'},
-         {"withFullTextIndex", no_argument, 0, 'i'},
+         {"withoutFullTextIndex", no_argument, 0, 'j'},
          {0, 0, 0, 0}};
   int option_index = 0;
   int c;
@@ -225,8 +225,8 @@ int main(int argc, char** argv)
         case 'f':
           favicon = optarg;
           break;
-        case 'i':
-          withFullTextIndex = true;
+        case 'j':
+          withoutFullTextIndex = true;
           break;
         case 'l':
           language = optarg;
@@ -307,15 +307,16 @@ int main(int argc, char** argv)
   }
 
   /* System tags */
-  if (withFullTextIndex) {
+  if (!withoutFullTextIndex) {
     tags += tags.empty() ? "" : ";";
     tags += "_ftindex";
   }
 
   setenv("ZIM_LZMA_LEVEL", "9e", 1);
   ZimCreatorFS zimCreator(welcome, isVerbose());
+
   zimCreator.setMinChunkSize(minChunkSize);
-  zimCreator.setIndexing(withFullTextIndex, language);
+  zimCreator.setIndexing(!withoutFullTextIndex, language);
   zimCreator.startZimCreation(zimPath);
 
   zimCreator.addArticle(SimpleMetadataArticle("Language", language));
