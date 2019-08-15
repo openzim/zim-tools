@@ -315,7 +315,6 @@ int main(int argc, char** argv)
     tags += ";_ftindex"; // For backward compatibility
   }
 
-  setenv("ZIM_LZMA_LEVEL", "9e", 1);
   ZimCreatorFS zimCreator(welcome, isVerbose());
 
   zimCreator.setMinChunkSize(minChunkSize);
