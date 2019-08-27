@@ -1,6 +1,7 @@
 /*
- * Copyright (C)  Kiran Mathew Koshy
- * Copyright (C)  Matthieu Gautier <mgautier@kymeria.fr>
+ * Copyright (C) Kiran Mathew Koshy
+ * Copyright (C) Matthieu Gautier <mgautier@kymeria.fr>
+ * Copyright (C) Emmanuel Engelhart <kelson@kiwix.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -37,6 +38,7 @@
 
 enum TestType {
     CHECKSUM,
+    EMPTY,
     METADATA,
     FAVICON,
     MAIN_PAGE,
@@ -70,6 +72,7 @@ class ErrorLogger {
   private:
     std::map<TestType, std::vector<std::string>> errors;
     bool testStatus[OTHER+1];
+
   public:
     ErrorLogger() {
         for (int testType=CHECKSUM; testType<=OTHER; ++testType) {
@@ -261,6 +264,7 @@ void displayHelp()
              "./zimcheckusage: ./zimcheck [options] zimfile\n"
              "options:\n"
              "-A , --all             run all tests. Default if no flags are given.\n"
+             "-0 , --empty           Empty content\n"
              "-C , --checksum        Internal CheckSum Test\n"
              "-M , --metadata        MetaData Entries\n"
              "-F , --favicon         Favicon\n"
@@ -346,7 +350,7 @@ void test_mainpage(const zim::File& f, ErrorLogger& reporter) {
 
 
 void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progress,
-                   bool redundant_data, bool url_check, bool url_check_external) {
+                   bool redundant_data, bool url_check, bool url_check_external, bool empty_check) {
     std::cout << "[INFO] Verifying Articles' content.. " << std::endl;
     // Article are store in a map<hash, list<index>>.
     // So all article with the same hash will be stored in the same list.
@@ -358,8 +362,18 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
     progress.reset(f.getFileheader().getArticleCount());
     for (zim::File::const_iterator it = f.begin(); it != f.end(); ++it)
     {
-        std::string data;
         progress.report();
+
+        if (it->getArticleSize() == 0 &&
+            empty_check &&
+            (it->getNamespace() == 'A' ||
+             it->getNamespace() == 'I')) {
+          std::ostringstream ss;
+          ss << "Ewntry " << it->getLongUrl() << " is empty";
+          reporter.addError(EMPTY, ss.str());
+          reporter.setTestResult(EMPTY, false);
+        }
+
         if (it->isRedirect() ||
             it->isLinktarget() ||
             it->isDeleted() ||
@@ -368,6 +382,7 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
             continue;
         }
 
+        std::string data;
         if (redundant_data || it->getMimeType() == "text/html")
             data = it->getData();
 
@@ -483,6 +498,7 @@ int main (int argc, char **argv)
     bool redundant_data = false;
     bool url_check = false;
     bool url_check_external = false;
+    bool empty_check = false;
     bool mime_check = false;
     bool error_details = false;
     bool no_args = true;
@@ -500,6 +516,7 @@ int main (int argc, char **argv)
         static struct option long_options[] =
         {
             { "all",          no_argument, 0, 'A'},
+            { "empty",        no_argument, 0, '0'},
             { "checksum",     no_argument, 0, 'C'},
             { "metadata",     no_argument, 0, 'M'},
             { "favicon",      no_argument, 0, 'F'},
@@ -525,6 +542,9 @@ int main (int argc, char **argv)
         case 'a':
             run_all = true;
             no_args = false;
+            break;
+        case '0':
+            empty_check = true;
             break;
         case 'C':
         case 'c':
@@ -609,9 +629,10 @@ int main (int argc, char **argv)
     }
 
     //If no arguments are given to the program, all the tests are performed.
-    if( run_all || no_args )
+    if ( run_all || no_args )
     {
-        checksum = metadata = favicon = main_page = redundant_data = url_check = url_check_external = mime_check = true;
+        checksum = metadata = favicon = main_page = redundant_data =
+          url_check = url_check_external = mime_check = empty_check = true;
     }
 
     //Obtaining filename from argument list
@@ -675,8 +696,8 @@ int main (int argc, char **argv)
          * }
          */
 
-        if ( redundant_data || url_check || url_check_external )
-            test_articles(f, error, progress, redundant_data, url_check, url_check_external);
+        if ( redundant_data || url_check || url_check_external || empty_check )
+          test_articles(f, error, progress, redundant_data, url_check, url_check_external, empty_check);
 
 
         //Test 8: Verifying MIME Types

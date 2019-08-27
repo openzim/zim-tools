@@ -312,13 +312,14 @@ public:
             try {
                 tempArticle.setRedirectUrl(zim::writer::Url(redirectList.at(tmpAr.getLongUrl())));
             } catch (...) {}
+
             //std::cout<<"\nArticle: "<<tempArticle.getNamespace()<<"/"<<tempArticle.getUrl();
             //std::cout<<"\nIndex: "<<tempArticle.getIdx();
             //std::cout<<"\nIsredirect: "<<tempArticle.isRedirect();
             //getchar();
             addArticle(tempArticle);
-
         }
+
         finishZimCreation();
     }
 };
@@ -406,9 +407,8 @@ bool checkDiffFile(std::string startFileName, std::string diffFileName)
 
 int main(int argc, char* argv[])
 {
-
-    //Parsing arguments
-    //There will be only three arguments, so no detailed parsing is required.
+    // Parsing arguments. There will be only three arguments, so no
+    // detailed parsing is required.
     for(int i=0; i<argc; i++)
     {
         if(std::string(argv[i])=="-H" ||
@@ -454,7 +454,6 @@ int main(int argc, char* argv[])
         //Create the article source class, from which the content for the file will be read.
         //Create the actual file.
         c.create(end_filename);
-
     }
     catch (const std::exception& e)
     {
