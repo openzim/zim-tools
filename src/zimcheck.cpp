@@ -1,6 +1,7 @@
 /*
- * Copyright (C)  Kiran Mathew Koshy
- * Copyright (C)  Matthieu Gautier <mgautier@kymeria.fr>
+ * Copyright (C) Kiran Mathew Koshy
+ * Copyright (C) Matthieu Gautier <mgautier@kymeria.fr>
+ * Copyright (C) Emmanuel Engelhart <kelson@kiwix.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -71,6 +72,7 @@ class ErrorLogger {
   private:
     std::map<TestType, std::vector<std::string>> errors;
     bool testStatus[OTHER+1];
+
   public:
     ErrorLogger() {
         for (int testType=CHECKSUM; testType<=OTHER; ++testType) {
