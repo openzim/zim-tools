@@ -279,19 +279,19 @@ public:
                 continue;
             }
 
-            Article tempArticle(tmpAr,id);
+            auto tempArticle = std::make_shared<Article>(tmpAr,id);
             //If the article is also present in file_2
             if(diff_file.getArticleByUrl(tmpAr.getLongUrl()).good())
             {
                 tmpAr=diff_file.getArticleByUrl(tmpAr.getLongUrl());
-                tempArticle=Article(tmpAr,start_file.getFileheader().getArticleCount()+diff_file.getArticleByUrl(tmpAr.getLongUrl()).getIndex());
+                tempArticle= std::make_shared<Article>(tmpAr,start_file.getFileheader().getArticleCount()+diff_file.getArticleByUrl(tmpAr.getLongUrl()).getIndex());
                 id=tmpAr.getIndex()+start_file.getFileheader().getArticleCount();
             }
             try {
-                tempArticle.setRedirectUrl(zim::writer::Url(redirectList.at(tmpAr.getLongUrl())));
+                tempArticle->setRedirectUrl(zim::writer::Url(redirectList.at(tmpAr.getLongUrl())));
             } catch (...) {}
-            //std::cout<<"\nArticle: "<<tempArticle.getNamespace()<<"/"<<tempArticle.getUrl();
-            //std::cout<<"\nIndex: "<<tempArticle.getIdx();
+            //std::cout<<"\nArticle: "<<tempArticle->getNamespace()<<"/"<<tempArticle->getUrl();
+            //std::cout<<"\nIndex: "<<tempArticle->getIdx();
             //getchar();
             addArticle(tempArticle);
         }
@@ -307,15 +307,14 @@ public:
                 continue;
             }
 
-            Article tempArticle(tmpAr,id);
+            auto tempArticle = std::make_shared<Article>(tmpAr,id);
             //std::cout<<"\nID: "<<id;
             try {
-                tempArticle.setRedirectUrl(zim::writer::Url(redirectList.at(tmpAr.getLongUrl())));
+                tempArticle->setRedirectUrl(zim::writer::Url(redirectList.at(tmpAr.getLongUrl())));
             } catch (...) {}
-
-            //std::cout<<"\nArticle: "<<tempArticle.getNamespace()<<"/"<<tempArticle.getUrl();
-            //std::cout<<"\nIndex: "<<tempArticle.getIdx();
-            //std::cout<<"\nIsredirect: "<<tempArticle.isRedirect();
+            //std::cout<<"\nArticle: "<<tempArticle->getNamespace()<<"/"<<tempArticle->getUrl();
+            //std::cout<<"\nIndex: "<<tempArticle->getIdx();
+            //std::cout<<"\nIsredirect: "<<tempArticle->isRedirect();
             //getchar();
             addArticle(tempArticle);
         }

@@ -195,12 +195,12 @@ public:
 
 class ZimCreatorDiff : public zim::writer::Creator
 {
-    ArticleRaw dlist;               //Metadata article containing list of articles to be deleted.
-    ArticleRaw startFileUID;        //Metadata article containing start file UID
-    ArticleRaw endFileUID;          //Metadata article containing end file UID
-    ArticleRaw mainAurl;
-    ArticleRaw layoutAurl;
-    ArticleRaw redirectList;
+    std::shared_ptr<ArticleRaw> dlist = std::make_shared<ArticleRaw>();               //Metadata article containing list of articles to be deleted.
+    std::shared_ptr<ArticleRaw> startFileUID = std::make_shared<ArticleRaw>();        //Metadata article containing start file UID
+    std::shared_ptr<ArticleRaw> endFileUID = std::make_shared<ArticleRaw>();          //Metadata article containing end file UID
+    std::shared_ptr<ArticleRaw> mainAurl = std::make_shared<ArticleRaw>();
+    std::shared_ptr<ArticleRaw> layoutAurl = std::make_shared<ArticleRaw>();
+    std::shared_ptr<ArticleRaw> redirectList = std::make_shared<ArticleRaw>();
     int fileSize;
     zim::File file_1;
     zim::File file_2;
@@ -236,18 +236,18 @@ public:
         {
             dlListText+=*it+"\n";
         }
-        dlist.title="dlist";
-        dlist.url=zim::writer::Url('M', "dlist");
-        dlist.mimeType="text/plain";
-        dlist._data=dlListText;
-        dlist._id=NumberToString((long long)fileSize+1);
-        dlist._isRedirect=false;
+        dlist->title="dlist";
+        dlist->url=zim::writer::Url('M', "dlist");
+        dlist->mimeType="text/plain";
+        dlist->_data=dlListText;
+        dlist->_id=NumberToString((long long)fileSize+1);
+        dlist->_isRedirect=false;
 
         //StartFileUID
         //contains the UID of the start_file.
-        startFileUID.title="startfileuid";
-        startFileUID.url=zim::writer::Url('M', "startfileuid");
-        startFileUID.mimeType="text/plain";
+        startFileUID->title="startfileuid";
+        startFileUID->url=zim::writer::Url('M', "startfileuid");
+        startFileUID->mimeType="text/plain";
         const char *s=file_1.getFileheader().getUuid().data;
         std::string st="";
         for(int i=0;i<16;i++)
@@ -255,15 +255,15 @@ public:
             st+=NumberToString((int)s[i]);
             st+="\n";
         }
-        startFileUID._data=st;
-        startFileUID._id=NumberToString((long long)fileSize+2);
-        startFileUID._isRedirect=false;
+        startFileUID->_data=st;
+        startFileUID->_id=NumberToString((long long)fileSize+2);
+        startFileUID->_isRedirect=false;
 
         //EndFileUID
         //contains the UID of the end_file.
-        endFileUID.title="endfileuid";
-        endFileUID.url=zim::writer::Url('M', "endfileuid");
-        endFileUID.mimeType="text/plain";
+        endFileUID->title="endfileuid";
+        endFileUID->url=zim::writer::Url('M', "endfileuid");
+        endFileUID->mimeType="text/plain";
         s=file_2.getFileheader().getUuid().data;
         st="";
         for(int i=0;i<16;i++)
@@ -271,40 +271,40 @@ public:
             st+=NumberToString((int)s[i]);
             st+="\n";
         }
-        endFileUID._data=st;
-        endFileUID._id=NumberToString((long long)fileSize+3);
-        endFileUID._isRedirect=false;
+        endFileUID->_data=st;
+        endFileUID->_id=NumberToString((long long)fileSize+3);
+        endFileUID->_isRedirect=false;
 
         //Metadata article storing the MAIN Article for the new ZIM file.
-        mainAurl.title="mainaurl";
-        mainAurl.url=zim::writer::Url('M', "mainaurl");
-        mainAurl.mimeType="text/plain";
+        mainAurl->title="mainaurl";
+        mainAurl->url=zim::writer::Url('M', "mainaurl");
+        mainAurl->mimeType="text/plain";
         if(file_2.getFileheader().hasMainPage())
-            mainAurl._data=file_2.getArticle(file_2.getFileheader().getMainPage()).getLongUrl();
+            mainAurl->_data=file_2.getArticle(file_2.getFileheader().getMainPage()).getLongUrl();
         else
-            mainAurl._data="";
-        mainAurl._id=NumberToString((long long)fileSize+4);
-        mainAurl._isRedirect=false;
+            mainAurl->_data="";
+        mainAurl->_id=NumberToString((long long)fileSize+4);
+        mainAurl->_isRedirect=false;
 
 
         //Metadata entry storing the Layout Article for the new ZIM file.
-        layoutAurl.title="layoutaurl";
-        layoutAurl.url=zim::writer::Url('M', "layoutaurl");
-        layoutAurl.mimeType="text/plain";
+        layoutAurl->title="layoutaurl";
+        layoutAurl->url=zim::writer::Url('M', "layoutaurl");
+        layoutAurl->mimeType="text/plain";
         if(file_2.getFileheader().hasLayoutPage())
-            layoutAurl._data=file_2.getArticle(file_2.getFileheader().getLayoutPage()).getLongUrl();
+            layoutAurl->_data=file_2.getArticle(file_2.getFileheader().getLayoutPage()).getLongUrl();
         else
-            layoutAurl._data="";
-        layoutAurl._id=NumberToString((long long)fileSize+5);
-        layoutAurl._isRedirect=false;
+            layoutAurl->_data="";
+        layoutAurl->_id=NumberToString((long long)fileSize+5);
+        layoutAurl->_isRedirect=false;
 
         //Meatadata entry for storing the redirect entries.
-        redirectList.title="redirectlist";
-        redirectList.url=zim::writer::Url('M', "redirectlist");
-        redirectList.mimeType="text/plain";
-        redirectList._data=rdlist;
-        redirectList._id=NumberToString((long long)fileSize+6);
-        redirectList._isRedirect=false;
+        redirectList->title="redirectlist";
+        redirectList->url=zim::writer::Url('M', "redirectlist");
+        redirectList->mimeType="text/plain";
+        redirectList->_data=rdlist;
+        redirectList->_id=NumberToString((long long)fileSize+6);
+        redirectList->_isRedirect=false;
     }
 
     virtual void create(const std::string& fname)
@@ -319,18 +319,18 @@ public:
             //irt is the file pointer in file_2
             if(!file_1.getArticleByUrl(article1.getLongUrl()).good()) //If the article is not present in FILe 1
             {
-                Article tempArticle(article1);
+                auto tempArticle = std::make_shared<Article>(article1);
                 if(article1.isRedirect())
-                    tempArticle.setRedirect();
+                    tempArticle->setRedirect();
                 addArticle(tempArticle);
                 continue;
             }
             //if this place of the loop is reached, it is sure that the article is presentin file_1
             if(!(file_1.getArticleByUrl(article1.getLongUrl()).getData()==article1.getData()))      //if the data stored in the same article is different in file_1 and 2
             {
-                Article tempArticle(article1);
+                auto tempArticle = std::make_shared<Article>(article1);
                 if(article1.isRedirect())
-                    tempArticle.setRedirect();
+                    tempArticle->setRedirect();
                 addArticle(tempArticle);
             }
         }

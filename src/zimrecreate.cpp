@@ -123,8 +123,8 @@ public:
               // Index is recreated by zimCreator. Do not add it
               continue;
             }
-            Article tempArticle(article);
-            addArticle(tempArticle);
+          auto tempArticle = std::make_shared<Article>(article);
+          addArticle(tempArticle);
         }
         finishZimCreation();
     }
