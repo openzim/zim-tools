@@ -119,7 +119,7 @@ public:
         startZimCreation(fname);
         for(auto& article: origin)
         {
-            if (article.getNamespace() == 'Z' && article.getNamespace() == 'X') {
+            if (article.getNamespace() == 'Z' || article.getNamespace() == 'X') {
               // Index is recreated by zimCreator. Do not add it
               continue;
             }
