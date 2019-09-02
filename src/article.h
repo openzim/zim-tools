@@ -42,6 +42,7 @@ class Article : public zim::writer::Article
   virtual bool isRedirect() const;
   virtual std::string getMimeType() const;
   virtual zim::writer::Url getRedirectUrl() const;
+  virtual bool shouldIndex() const;
   virtual bool shouldCompress() const;
   virtual ~Article(){};
 };
@@ -97,7 +98,6 @@ class MetadataFaviconArticle : public MetadataArticle
   virtual bool isRedirect() const { return true; }
   virtual std::string getMimeType() const { return "image/png"; }
   virtual zim::writer::Url getRedirectUrl() const { return redirectUrl; }
-  virtual bool shouldIndex() const { return false; }
   virtual bool shouldCompress() const { return false; }
   virtual std::string getFilename() const { return ""; }
   virtual zim::Blob getData() const { return zim::Blob(); }
@@ -133,7 +133,6 @@ class FileArticle : public Article
   virtual zim::Blob getData() const;
   virtual bool isLinktarget() const { return false; }
   virtual bool isDeleted() const { return false; }
-  virtual bool shouldIndex() const;
   virtual zim::size_type getSize() const;
   virtual std::string getFilename() const;
   virtual bool isInvalid() const;
@@ -145,19 +144,11 @@ class RedirectArticle : public Article
   explicit RedirectArticle(char ns,
                            const std::string& url,
                            const std::string& title,
-                           const zim::writer::Url& redirectUrl)
-  {
-    this->ns = ns;
-    this->url = url;
-    this->title = title;
-    this->redirectUrl = redirectUrl;
-    mimeType = "text/plain";
-  }
+                           const zim::writer::Url& redirectUrl);
   virtual zim::Blob getData() const { return zim::Blob(); }
   virtual bool isRedirect() const { return true; }
   virtual bool isLinktarget() const { return false; }
   virtual bool isDeleted() const { return false; }
-  virtual bool shouldIndex() const { return false; }
   virtual zim::size_type getSize() const { return 0; }
   virtual std::string getFilename() const  { return ""; }
 };
