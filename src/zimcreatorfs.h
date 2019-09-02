@@ -30,8 +30,8 @@
 class IHandler
 {
  public:
-  virtual void handleArticle(const zim::writer::Article& article) = 0;
-  virtual zim::writer::Article* getMetaArticle() = 0;
+  virtual void handleArticle(std::shared_ptr<zim::writer::Article> article) = 0;
+  virtual std::shared_ptr<zim::writer::Article> getMetaArticle() = 0;
   virtual ~IHandler() = default;
 };
 
@@ -48,7 +48,7 @@ class ZimCreatorFS : public zim::writer::Creator
    virtual void visitDirectory(const std::string& path);
 
    virtual void addArticle(const std::string& path);
-   virtual void addArticle(const zim::writer::Article& article);
+   virtual void addArticle(std::shared_ptr<zim::writer::Article> article);
    virtual void finishZimCreation();
 
  private:

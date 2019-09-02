@@ -321,17 +321,28 @@ int main(int argc, char** argv)
   zimCreator.setIndexing(!withoutFullTextIndex, language);
   zimCreator.startZimCreation(zimPath);
 
-  zimCreator.addArticle(SimpleMetadataArticle("Language", language));
-  zimCreator.addArticle(SimpleMetadataArticle("Publisher", publisher));
-  zimCreator.addArticle(SimpleMetadataArticle("Creator", creator));
-  zimCreator.addArticle(SimpleMetadataArticle("Title", title));
-  zimCreator.addArticle(SimpleMetadataArticle("Description", description));
-  zimCreator.addArticle(SimpleMetadataArticle("Name", name));
-  zimCreator.addArticle(SimpleMetadataArticle("Flavour", flavour));
-  zimCreator.addArticle(SimpleMetadataArticle("Scraper", scraper));
-  zimCreator.addArticle(SimpleMetadataArticle("Tags", tags));
-  zimCreator.addArticle(MetadataDateArticle());
-  zimCreator.addArticle(MetadataFaviconArticle(zim::writer::Url('I', favicon)));
+  zimCreator.addArticle(
+    std::make_shared<SimpleMetadataArticle>("Language", language));
+  zimCreator.addArticle(
+    std::make_shared<SimpleMetadataArticle>("Publisher", publisher));
+  zimCreator.addArticle(
+    std::make_shared<SimpleMetadataArticle>("Creator", creator));
+  zimCreator.addArticle(
+    std::make_shared<SimpleMetadataArticle>("Title", title));
+  zimCreator.addArticle(
+    std::make_shared<SimpleMetadataArticle>("Description", description));
+  zimCreator.addArticle(
+    std::make_shared<SimpleMetadataArticle>("Name", name));
+  zimCreator.addArticle(
+    std::make_shared<SimpleMetadataArticle>("Flavour", flavour));
+  zimCreator.addArticle(
+    std::make_shared<SimpleMetadataArticle>("Scraper", scraper));
+  zimCreator.addArticle(
+    std::make_shared<SimpleMetadataArticle>("Tags", tags));
+  zimCreator.addArticle(
+    std::make_shared<MetadataDateArticle>());
+  zimCreator.addArticle(
+    std::make_shared<MetadataFaviconArticle>(zim::writer::Url('I', favicon)));
 
   /* Init */
   magic = magic_open(MAGIC_MIME);

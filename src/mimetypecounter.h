@@ -44,10 +44,10 @@ class MetadataCounterArticle : public MetadataArticle
 class MimetypeCounter : public IHandler
 {
  public:
-  void handleArticle(const zim::writer::Article& article);
-  zim::writer::Article* getMetaArticle()
+  void handleArticle(std::shared_ptr<zim::writer::Article> article);
+  std::shared_ptr<zim::writer::Article> getMetaArticle()
   {
-    return new MetadataCounterArticle(this);
+    return std::make_shared<MetadataCounterArticle>(this);
   }
 
  private:
