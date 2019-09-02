@@ -43,13 +43,14 @@ class ZimCreatorFS : public zim::writer::Creator
       mainPage(mainPage) {}
   virtual ~ZimCreatorFS() = default;
   virtual zim::writer::Url getMainUrl();
-   virtual void add_customHandler(IHandler* handler);
-   virtual void add_redirectArticles_from_file(const std::string& path);
-   virtual void visitDirectory(const std::string& path);
+  virtual void add_customHandler(IHandler* handler);
+  virtual void add_redirectArticles_from_file(const std::string& path);
+  virtual void visitDirectory(const std::string& path);
 
-   virtual void addArticle(const std::string& path);
-   virtual void addArticle(std::shared_ptr<zim::writer::Article> article);
-   virtual void finishZimCreation();
+  virtual void addMetadata(const std::string& metadata, const std::string& content);
+  virtual void addArticle(const std::string& path);
+  virtual void addArticle(std::shared_ptr<zim::writer::Article> article);
+  virtual void finishZimCreation();
 
  private:
   std::vector<IHandler*> articleHandlers;
