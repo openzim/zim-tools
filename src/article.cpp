@@ -60,7 +60,7 @@ bool Article::shouldCompress() const
       || getMimeType() == "image/svg+xml";
 }
 
-bool FileArticle::shouldIndex() const
+bool Article::shouldIndex() const
 {
   return getMimeType().find("text/html") == 0;
 }
@@ -297,6 +297,18 @@ zim::size_type FileArticle::getSize() const
   return in.tellg();
 }
 
+RedirectArticle::RedirectArticle(char ns,
+                                 const std::string& url,
+                                 const std::string& title,
+                                 const zim::writer::Url& redirectUrl)
+{
+  this->ns = ns;
+  this->url = url;
+  this->title = title;
+  this->redirectUrl = redirectUrl;
+  mimeType = getMimeTypeForFile(redirectUrl.getUrl());
+}
+
 SimpleMetadataArticle::SimpleMetadataArticle(const std::string& id,
                                              const std::string& value)
     : MetadataArticle(id), value(value)
@@ -333,3 +345,4 @@ zim::size_type MetadataDateArticle::getSize() const
   }
   return data.size();
 }
+

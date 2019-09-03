@@ -52,10 +52,12 @@ void ZimCreatorFS::add_redirectArticles_from_file(const std::string& path)
       exit(1);
     }
 
-    addArticle(RedirectArticle(matches[1].str()[0],
-                               matches[2].str(),
-                               matches[3].str(),
-                               matches[4].str()));
+    auto redirectArticle = std::make_shared<RedirectArticle>(
+      matches[1].str()[0],
+      matches[2].str(),
+      matches[3].str(),
+      matches[4].str());
+    addArticle(redirectArticle);
     ++line_number;
   }
   in_stream.close();
@@ -138,16 +140,22 @@ void ZimCreatorFS::visitDirectory(const std::string& path)
   closedir(directory);
 }
 
+void ZimCreatorFS::addMetadata(const std::string& metadata, const std::string& content)
+{
+  auto article = std::make_shared<SimpleMetadataArticle>(metadata, content);
+  addArticle(article);
+}
+
 void ZimCreatorFS::addArticle(const std::string& path)
 {
-  FileArticle farticle(path);
-  if (farticle.isInvalid()) {
+  auto farticle = std::make_shared<FileArticle>(path);
+  if (farticle->isInvalid()) {
     return;
   }
   addArticle(farticle);
 }
 
-void ZimCreatorFS::addArticle(const zim::writer::Article& article)
+void ZimCreatorFS::addArticle(std::shared_ptr<zim::writer::Article> article)
 {
   Creator::addArticle(article);
   for (auto& handler: articleHandlers) {
@@ -158,7 +166,7 @@ void ZimCreatorFS::addArticle(const zim::writer::Article& article)
 void ZimCreatorFS::finishZimCreation()
 {
   for(auto& handler: articleHandlers) {
-    Creator::addArticle(*handler->getMetaArticle());
+    Creator::addArticle(handler->getMetaArticle());
   }
   Creator::finishZimCreation();
 }
