@@ -12,7 +12,7 @@ if static_linkage
   add_global_link_arguments('-static-libstdc++', '--static', language:'cpp')
 endif
 
-libzim_dep = dependency('libzim', version : '>=5.0.0', static:static_linkage)
+libzim_dep = dependency('libzim', version : '>=6.0.0', static:static_linkage)
 
 compiler = meson.get_compiler('cpp')
 rt_dep = compiler.find_library('rt', required:false)

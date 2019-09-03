@@ -1,6 +1,8 @@
 1.0.5
 =====
 
+ * Adapt to the new libzim's creator api
+ * zimrecreate: Better performance.
  * zimcheck: Check if an entry is empty
 
 1.0.4
