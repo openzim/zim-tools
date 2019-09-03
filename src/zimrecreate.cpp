@@ -99,6 +99,20 @@ public:
     }
 };
 
+using pair_type = std::pair<zim::article_index_type, zim::cluster_index_type>;
+
+class ComparatorByCluster {
+  public:
+    ComparatorByCluster(const zim::File& origin):
+      origin(origin) {
+    }
+
+    bool operator() (pair_type i, pair_type j) {
+      return i.second < j.second;
+    }
+  const zim::File& origin;
+};
+
 
 class ZimRecreator : public zim::writer::Creator
 {
@@ -116,15 +130,32 @@ public:
 
     virtual void create(const std::string& fname)
     {
-        startZimCreation(fname);
-        for(auto& article: origin)
+        std::cout << "generate list of articles" << std::endl;
+        std::vector<pair_type> article_list;
+        auto nb_articles = origin.getCountArticles();
+        article_list.reserve(nb_articles);
+        for(zim::article_index_type i=0; i<nb_articles; i++) {
+            auto article = origin.getArticle(i);
+            article_list.push_back(std::make_pair(i, article.getClusterNumber()));
+            if ((i % 10000) == 0)
+              std::cout << i << "/" << nb_articles << std::endl;
+        }
+        std::cout << "sorting articles" << std::endl;
         {
-            if (article.getNamespace() == 'Z' && article.getNamespace() == 'X') {
-              // Index is recreated by zimCreator. Do not add it
-              continue;
-            }
-            Article tempArticle(article);
-            addArticle(tempArticle);
+          ComparatorByCluster comparator(origin);
+          std::sort(article_list.begin(), article_list.end(), comparator);
+        }
+        std::cout << "starting zim creation" << std::endl;
+        startZimCreation(fname);
+        for(auto& pair: article_list)
+        {
+          auto article = origin.getArticle(pair.first);
+          if (article.getNamespace() == 'Z' || article.getNamespace() == 'X') {
+            // Index is recreated by zimCreator. Do not add it
+            continue;
+          }
+          auto tempArticle = std::make_shared<Article>(article);
+          addArticle(tempArticle);
         }
         finishZimCreation();
     }
