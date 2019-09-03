@@ -1,6 +1,10 @@
 zimwriterfs 1.3.6
 =================
 
+ * Remove specific script to compile zimwriterfs on macos.
+ * Adapt to new libzim's creator api.
+ * Correctly index redirect title.
+
 zimwriterfs 1.3.5
 =================
 

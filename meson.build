@@ -14,7 +14,7 @@ if static_linkage
 endif
 
 thread_dep = dependency('threads')
-libzim_dep = dependency('libzim', version : '>=5.0.0', static:static_linkage)
+libzim_dep = dependency('libzim', version : '>=6.0.0', static:static_linkage)
 zlib_dep = dependency('zlib', static:static_linkage)
 gumbo_dep = dependency('gumbo', static:static_linkage)
 
