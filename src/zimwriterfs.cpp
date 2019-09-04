@@ -189,13 +189,17 @@ int main(int argc, char** argv)
          {"creator", required_argument, 0, 'c'},
          {"publisher", required_argument, 0, 'p'},
          {"withoutFullTextIndex", no_argument, 0, 'j'},
+
+         // Only for backward compatibility
+         {"withFullTextIndex", no_argument, 0, 'i'},
+
          {0, 0, 0, 0}};
   int option_index = 0;
   int c;
 
   do {
     c = getopt_long(
-        argc, argv, "hVvixuw:m:f:t:d:c:l:p:r:", long_options, &option_index);
+        argc, argv, "hVvijxuw:m:f:t:d:c:l:p:r:", long_options, &option_index);
 
     if (c != -1) {
       switch (c) {
@@ -225,6 +229,8 @@ int main(int argc, char** argv)
         case 'f':
           favicon = optarg;
           break;
+        case 'i':
+          withoutFullTextIndex = false;
         case 'j':
           withoutFullTextIndex = true;
           break;
