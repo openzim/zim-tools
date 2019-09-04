@@ -60,7 +60,7 @@ bool verboseFlag = false;
 pthread_mutex_t verboseMutex;
 bool inflateHtmlFlag = false;
 bool uniqueNamespace = false;
-bool withoutFullTextIndex = false;
+bool withoutFTIndex = false;
 
 magic_t magic;
 
@@ -111,10 +111,10 @@ void usage()
   std::cout << "\t-p, --publisher\t\tcreator of the ZIM file itself"
             << std::endl;
   std::cout << std::endl;
-  std::cout << "\tHTML_DIRECTORY\t\tis the path of the directory containing "
-               "the HTML pages you want to put in the ZIM file,"
+  std::cout << "\tHTML_DIRECTORY\t\tpath of the directory containing "
+               "the HTML pages you want to put in the ZIM file."
             << std::endl;
-  std::cout << "\tZIM_FILE\t\tis the path of the ZIM file you want to obtain."
+  std::cout << "\tZIM_FILE\t\tpath of the ZIM file you want to obtain."
             << std::endl;
   std::cout << std::endl;
 
@@ -133,11 +133,11 @@ void usage()
                "'A'. Might be necessary to avoid problems with "
                "dynamic/javascript data loading."
             << std::endl;
-  std::cout << "\t-r, --redirects\t\tpath to the TSV file with the list of "
-               "redirects (namespace, url, title, target_url tab separated)."
+  std::cout << "\t-r, --redirects\t\tpath to a TSV file containing a list of "
+               "redirects (namespace url title target_url)."
             << std::endl;
   std::cout
-      << "\t-j, --withoutFullTextIndex\tdon't index the content and add it to the ZIM."
+      << "\t-j, --withoutFTIndex\tdon't create and add a fulltext index of the content to the ZIM."
       << std::endl;
   std::cout << "\t-a, --tags\t\ttags - semicolon separated" << std::endl;
   std::cout << "\t-n, --name\t\tcustom (version independent) identifier for "
@@ -145,7 +145,7 @@ void usage()
             << std::endl;
   std::cout << "\t-o, --flavour\t\tcustom (version independent) content flavour"
             << std::endl;
-  std::cout << "\t-s, --scraper\t\tname of tool used to produce HTML content"
+  std::cout << "\t-s, --scraper\t\tname & version of tool used to produce HTML content"
             << std::endl;
   std::cout << std::endl;
 
@@ -188,14 +188,18 @@ int main(int argc, char** argv)
          {"description", required_argument, 0, 'd'},
          {"creator", required_argument, 0, 'c'},
          {"publisher", required_argument, 0, 'p'},
-         {"withoutFullTextIndex", no_argument, 0, 'j'},
+         {"withoutFTIndex", no_argument, 0, 'j'},
+
+         // Only for backward compatibility
+         {"withFullTextIndex", no_argument, 0, 'i'},
+
          {0, 0, 0, 0}};
   int option_index = 0;
   int c;
 
   do {
     c = getopt_long(
-        argc, argv, "hVvixuw:m:f:t:d:c:l:p:r:", long_options, &option_index);
+        argc, argv, "hVvijxuw:m:f:t:d:c:l:p:r:", long_options, &option_index);
 
     if (c != -1) {
       switch (c) {
@@ -225,8 +229,10 @@ int main(int argc, char** argv)
         case 'f':
           favicon = optarg;
           break;
+        case 'i':
+          withoutFTIndex = false;
         case 'j':
-          withoutFullTextIndex = true;
+          withoutFTIndex = true;
           break;
         case 'l':
           language = optarg;
@@ -308,7 +314,7 @@ int main(int argc, char** argv)
 
   /* System tags */
   tags += tags.empty() ? "" : ";";
-  if (withoutFullTextIndex) {
+  if (withoutFTIndex) {
     tags += "_ftindex:no";
   } else {
     tags += "_ftindex:yes";
@@ -318,7 +324,7 @@ int main(int argc, char** argv)
   ZimCreatorFS zimCreator(welcome, isVerbose());
 
   zimCreator.setMinChunkSize(minChunkSize);
-  zimCreator.setIndexing(!withoutFullTextIndex, language);
+  zimCreator.setIndexing(!withoutFTIndex, language);
   zimCreator.startZimCreation(zimPath);
 
   zimCreator.addMetadata("Language", language);

@@ -31,7 +31,7 @@ RUN rm -rf xapian
 
 # Install zimlib (libicu-dev)
 RUN git clone https://github.com/openzim/libzim.git
-RUN cd libzim && git checkout 5.1.0
+RUN cd libzim && git checkout 6.0.0
 RUN cd libzim && meson . build
 RUN cd libzim && ninja -C build install
 RUN rm -rf libzim
