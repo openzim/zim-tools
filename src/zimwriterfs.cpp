@@ -60,7 +60,7 @@ bool verboseFlag = false;
 pthread_mutex_t verboseMutex;
 bool inflateHtmlFlag = false;
 bool uniqueNamespace = false;
-bool withoutFullTextIndex = false;
+bool withoutFTIndex = false;
 
 magic_t magic;
 
@@ -137,7 +137,7 @@ void usage()
                "redirects (namespace, url, title, target_url tab separated)."
             << std::endl;
   std::cout
-      << "\t-j, --withoutFullTextIndex\tdon't index the content and add it to the ZIM."
+      << "\t-j, --withoutFTIndex\tdon't fulltext index the content and add it to the ZIM."
       << std::endl;
   std::cout << "\t-a, --tags\t\ttags - semicolon separated" << std::endl;
   std::cout << "\t-n, --name\t\tcustom (version independent) identifier for "
@@ -188,7 +188,7 @@ int main(int argc, char** argv)
          {"description", required_argument, 0, 'd'},
          {"creator", required_argument, 0, 'c'},
          {"publisher", required_argument, 0, 'p'},
-         {"withoutFullTextIndex", no_argument, 0, 'j'},
+         {"withoutFTIndex", no_argument, 0, 'j'},
 
          // Only for backward compatibility
          {"withFullTextIndex", no_argument, 0, 'i'},
@@ -230,9 +230,9 @@ int main(int argc, char** argv)
           favicon = optarg;
           break;
         case 'i':
-          withoutFullTextIndex = false;
+          withoutFTIndex = false;
         case 'j':
-          withoutFullTextIndex = true;
+          withoutFTIndex = true;
           break;
         case 'l':
           language = optarg;
@@ -314,7 +314,7 @@ int main(int argc, char** argv)
 
   /* System tags */
   tags += tags.empty() ? "" : ";";
-  if (withoutFullTextIndex) {
+  if (withoutFTIndex) {
     tags += "_ftindex:no";
   } else {
     tags += "_ftindex:yes";
@@ -324,7 +324,7 @@ int main(int argc, char** argv)
   ZimCreatorFS zimCreator(welcome, isVerbose());
 
   zimCreator.setMinChunkSize(minChunkSize);
-  zimCreator.setIndexing(!withoutFullTextIndex, language);
+  zimCreator.setIndexing(!withoutFTIndex, language);
   zimCreator.startZimCreation(zimPath);
 
   zimCreator.addMetadata("Language", language);
