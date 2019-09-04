@@ -111,10 +111,10 @@ void usage()
   std::cout << "\t-p, --publisher\t\tcreator of the ZIM file itself"
             << std::endl;
   std::cout << std::endl;
-  std::cout << "\tHTML_DIRECTORY\t\tis the path of the directory containing "
-               "the HTML pages you want to put in the ZIM file,"
+  std::cout << "\tHTML_DIRECTORY\t\tpath of the directory containing "
+               "the HTML pages you want to put in the ZIM file."
             << std::endl;
-  std::cout << "\tZIM_FILE\t\tis the path of the ZIM file you want to obtain."
+  std::cout << "\tZIM_FILE\t\tpath of the ZIM file you want to obtain."
             << std::endl;
   std::cout << std::endl;
 
@@ -133,11 +133,11 @@ void usage()
                "'A'. Might be necessary to avoid problems with "
                "dynamic/javascript data loading."
             << std::endl;
-  std::cout << "\t-r, --redirects\t\tpath to the TSV file with the list of "
-               "redirects (namespace, url, title, target_url tab separated)."
+  std::cout << "\t-r, --redirects\t\tpath to a TSV file containing a list of "
+               "redirects (namespace url title target_url)."
             << std::endl;
   std::cout
-      << "\t-j, --withoutFTIndex\tdon't fulltext index the content and add it to the ZIM."
+      << "\t-j, --withoutFTIndex\tdon't create and add a fulltext index of the content to the ZIM."
       << std::endl;
   std::cout << "\t-a, --tags\t\ttags - semicolon separated" << std::endl;
   std::cout << "\t-n, --name\t\tcustom (version independent) identifier for "
@@ -145,7 +145,7 @@ void usage()
             << std::endl;
   std::cout << "\t-o, --flavour\t\tcustom (version independent) content flavour"
             << std::endl;
-  std::cout << "\t-s, --scraper\t\tname of tool used to produce HTML content"
+  std::cout << "\t-s, --scraper\t\tname & version of tool used to produce HTML content"
             << std::endl;
   std::cout << std::endl;
 
