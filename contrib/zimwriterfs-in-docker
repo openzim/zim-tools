@@ -2,7 +2,16 @@
 # -*- coding: utf-8 -*-
 # vim: ai ts=4 sts=4 et sw=4 nu
 
-""" zimwriterfs drop-in replacement for macOS (or Linux) using Docker """
+""" zimwriterfs drop-in replacement for macOS (or Linux) using Docker
+
+    allows you to use zimwriterfs directly without having to compile/install it ;
+    by pulling/running it from its docker image.
+
+    >> just place it in /usr/local/bin/zimwriterfs.
+
+    script will automatically mount (as volumes) and replace (in the command args)
+    the HTML_FOLDER and the parent folder of the requested ZIM file.
+"""
 
 import os
 import sys
@@ -80,6 +89,7 @@ def stop_and_remove_container():
 
 
 def start_container(volumes, parameters):
+    run(['docker', 'pull', IMAGE_NAME])
     command = ['docker', 'run', '--name', CONTAINER_NAME] \
         + [vol_param for volume in volumes for vol_param in volume] \
         + [IMAGE_NAME, 'zimwriterfs'] + parameters
