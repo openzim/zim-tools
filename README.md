@@ -4,9 +4,19 @@ ZIM tools
 Various ZIM command line tools. More information about the ZIM format
 and the [openZIM project](https://openzim.org).
 
+[![latest release](https://img.shields.io/github/v/tag/openzim/zim-tools?label=latest%20release&sort=semver)](https://download.openzim.org/release/zim-tools/)
 [![Build Status](https://travis-ci.org/openzim/zim-tools.svg?branch=master)](https://travis-ci.org/openzim/zim-tools)
 [![CodeFactor](https://www.codefactor.io/repository/github/openzim/zim-tools/badge)](https://www.codefactor.io/repository/github/openzim/zim-tools)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
+
+Releases
+----------
+
+Tagged source code and prebuilt Linux x86-64 binaries can be found at:
+
+- https://download.openzim.org/release/zim-tools/ 
+
 
 Disclaimer
 ----------
