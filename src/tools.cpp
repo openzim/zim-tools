@@ -96,6 +96,8 @@ static std::map<std::string, std::string> _create_extMimeTypes()
   extMimeTypes["WEBM"] = "video/webm";
   extMimeTypes["mp4"] = "video/mp4";
   extMimeTypes["MP4"] = "video/mp4";
+  extMimeTypes["doc"] = "application/msword";
+  extMimeTypes["DOC"] = "application/msword";
 
   return extMimeTypes;
 }
