@@ -72,8 +72,10 @@ static std::map<std::string, std::string> _create_extMimeTypes()
   extMimeTypes["epub"] = "application/epub+zip";
   extMimeTypes["PDF"] = "application/pdf";
   extMimeTypes["pdf"] = "application/pdf";
-  extMimeTypes["OGG"] = "application/ogg";
-  extMimeTypes["ogg"] = "application/ogg";
+  extMimeTypes["OGG"] = "audio/ogg";
+  extMimeTypes["ogg"] = "audio/ogg";
+  extMimeTypes["OGV"] = "video/ogg";
+  extMimeTypes["ogv"] = "video/ogg";
   extMimeTypes["JS"] = "application/javascript";
   extMimeTypes["js"] = "application/javascript";
   extMimeTypes["JSON"] = "application/json";
@@ -98,6 +100,16 @@ static std::map<std::string, std::string> _create_extMimeTypes()
   extMimeTypes["MP4"] = "video/mp4";
   extMimeTypes["doc"] = "application/msword";
   extMimeTypes["DOC"] = "application/msword";
+  extMimeTypes["docx"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  extMimeTypes["DOCX"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  extMimeTypes["ppt"] = "application/vnd.ms-powerpoint";
+  extMimeTypes["PPT"] = "application/vnd.ms-powerpoint";
+  extMimeTypes["odt"] = "application/vnd.oasis.opendocument.text";
+  extMimeTypes["ODT"] = "application/vnd.oasis.opendocument.text";
+  extMimeTypes["odp"] = "application/vnd.oasis.opendocument.text";
+  extMimeTypes["ODP"] = "application/vnd.oasis.opendocument.text";
+  extMimeTypes["zip"] = "application/zip";
+  extMimeTypes["ZIP"] = "application/zip";
 
   return extMimeTypes;
 }
