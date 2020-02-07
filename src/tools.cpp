@@ -110,6 +110,8 @@ static std::map<std::string, std::string> _create_extMimeTypes()
   extMimeTypes["ODP"] = "application/vnd.oasis.opendocument.text";
   extMimeTypes["zip"] = "application/zip";
   extMimeTypes["ZIP"] = "application/zip";
+  extMimeTypes["wasm"] = "application/wasm";
+  extMimeTypes["WASM"] = "application/wasm";
 
   return extMimeTypes;
 }
