@@ -23,15 +23,15 @@ RUN apt-get update -y && \
 RUN update-ca-certificates
 
 # Install Xapian (wget zlib1g-dev)
-RUN wget https://oligarchy.co.uk/xapian/1.4.12/xapian-core-1.4.12.tar.xz
-RUN tar xvf xapian-core-1.4.12.tar.xz
-RUN cd xapian-core-1.4.12 && ./configure
-RUN cd xapian-core-1.4.12 && make all install
+RUN wget https://oligarchy.co.uk/xapian/1.4.14/xapian-core-1.4.14.tar.xz
+RUN tar xvf xapian-core-1.4.14.tar.xz
+RUN cd xapian-core-1.4.14 && ./configure
+RUN cd xapian-core-1.4.14 && make all install
 RUN rm -rf xapian
 
 # Install zimlib (libicu-dev)
 RUN git clone https://github.com/openzim/libzim.git
-RUN cd libzim && git checkout 6.0.0
+RUN cd libzim && git checkout 6.0.2
 RUN cd libzim && meson . build
 RUN cd libzim && ninja -C build install
 RUN rm -rf libzim
