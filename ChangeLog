@@ -1,7 +1,9 @@
 zimwriterfs 1.3.8
 =================
 
- * Fix buggy mimetype for .doc files
+ * Fix a few buggy mimetypes
+ * Fix the support of --name
+ * New --source argument
 
 zimwriterfs 1.3.7
 =================

@@ -49,6 +49,7 @@ std::string tags;
 std::string flavour;
 std::string scraper;
 std::string name;
+std::string source;
 std::string description;
 std::string welcome;
 std::string favicon;
@@ -140,6 +141,7 @@ void usage()
       << "\t-j, --withoutFTIndex\tdon't create and add a fulltext index of the content to the ZIM."
       << std::endl;
   std::cout << "\t-a, --tags\t\ttags - semicolon separated" << std::endl;
+  std::cout << "\t-e, --source\t\tcontent source URL" << std::endl;
   std::cout << "\t-n, --name\t\tcustom (version independent) identifier for "
                "the content"
             << std::endl;
@@ -176,6 +178,7 @@ int main(int argc, char** argv)
          {"welcome", required_argument, 0, 'w'},
          {"minchunksize", required_argument, 0, 'm'},
          {"name", required_argument, 0, 'n'},
+         {"source", required_argument, 0, 'e'},
          {"flavour", required_argument, 0, 'o'},
          {"scraper", required_argument, 0, 's'},
          {"redirects", required_argument, 0, 'r'},
@@ -199,7 +202,7 @@ int main(int argc, char** argv)
 
   do {
     c = getopt_long(
-        argc, argv, "hVvijxuw:m:f:t:d:c:l:p:r:", long_options, &option_index);
+        argc, argv, "hVvijxuw:m:f:t:d:c:l:p:r:e:n:", long_options, &option_index);
 
     if (c != -1) {
       switch (c) {
@@ -242,6 +245,9 @@ int main(int argc, char** argv)
           break;
         case 'n':
           name = optarg;
+          break;
+        case 'e':
+          source = optarg;
           break;
         case 'o':
           flavour = optarg;
@@ -333,6 +339,7 @@ int main(int argc, char** argv)
   zimCreator.addMetadata("Title", title);
   zimCreator.addMetadata("Description", description);
   zimCreator.addMetadata("Name", name);
+  zimCreator.addMetadata("Source", source);
   zimCreator.addMetadata("Flavour", flavour);
   zimCreator.addMetadata("Scraper", scraper);
   zimCreator.addMetadata("Tags", tags);
