@@ -202,7 +202,7 @@ int main(int argc, char** argv)
 
   do {
     c = getopt_long(
-        argc, argv, "hVvijxuw:m:f:t:d:c:l:p:r:e:", long_options, &option_index);
+        argc, argv, "hVvijxuw:m:f:t:d:c:l:p:r:e:n:", long_options, &option_index);
 
     if (c != -1) {
       switch (c) {
