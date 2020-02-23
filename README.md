@@ -1,7 +1,8 @@
 zimwriterfs
 ===========
 
-[![Build Status](https://travis-ci.com/openzim/zimwriterfs.svg?branch=master)](https://travis-ci.com/openzim/zimwriterfs)
+
+[![Build Status](https://github.com/openzim/zimwriterfs/workflows/CI/badge.svg?query=branch%3Amaster)](https://github.com/openzim/zimwriterfs/actions?query=branch%3Amaster)
 [![Docker Build Status](https://img.shields.io/docker/build/openzim/zimwriterfs)](https://hub.docker.com/r/openzim/zimwriterfs)
 [![CodeFactor](https://www.codefactor.io/repository/github/openzim/zimwriterfs/badge)](https://www.codefactor.io/repository/github/openzim/zimwriterfs)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
