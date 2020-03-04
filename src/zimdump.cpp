@@ -26,6 +26,7 @@
 #include <stdexcept>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <vector>
 
 #include "arg.h"
 #include "version.h"
@@ -253,32 +254,52 @@ void ZimDumper::dumpFiles(const std::string& directory)
   ::mkdir(directory.c_str(), 0777);
 #endif
 
-  std::set<char> ns;
-  for (zim::File::const_iterator it = pos; it != file.end(); ++it)
+  using pair_type = std::pair<zim::article_index_type, zim::cluster_index_type>;
+
+  std::vector<pair_type> article_list;
+  auto nb_articles = file.getCountArticles();
+  article_list.reserve(nb_articles);
+
+  for(zim::article_index_type i = 0; i < nb_articles; i++)
   {
-    std::string d = directory + '/' + it->getNamespace();
-    if (ns.find(it->getNamespace()) == ns.end())
-#if defined(_WIN32)
-      ::mkdir(d.c_str());
-#else
-      ::mkdir(d.c_str(), 0777);
-#endif
-    std::string t = it->getTitle();
-    std::string::size_type p;
-    while ((p = t.find('/')) != std::string::npos)
-      t.replace(p, 1, "%2f");
-    if ( t.length() > 255 )
-    {
-      std::ostringstream sspostfix, sst;
-      sspostfix << (++truncatedFiles);
-      sst << t.substr(0, 254-sspostfix.tellp()) << "~" << sspostfix.str();
-      t = sst.str();
-    }
-    std::string f = d + '/' + t;
-    std::ofstream out(f.c_str());
-    out << it->getData();
-    if (!out)
-      throw std::runtime_error("error writing file " + f);
+      auto article = file.getArticle(i);
+      article_list.push_back(std::make_pair(i, article.getClusterNumber()));
+  }
+
+  std::sort(article_list.begin(), article_list.end(), [](pair_type i, pair_type j)
+  {
+    return i.second < j.second;
+  }
+  );
+
+  std::set<char> ns;
+  for (auto &elem: article_list)
+  {
+      auto article = file.getArticle(elem.first);
+
+      std::string d = directory + '/' + article.getNamespace();
+      if (ns.find(article.getNamespace()) == ns.end())
+  #if defined(_WIN32)
+        ::mkdir(d.c_str());
+  #else
+        ::mkdir(d.c_str(), 0777);
+  #endif
+      std::string t = article.getTitle();
+      std::string::size_type p;
+      while ((p = t.find('/')) != std::string::npos)
+        t.replace(p, 1, "%2f");
+      if ( t.length() > 255 )
+      {
+        std::ostringstream sspostfix, sst;
+        sspostfix << (++truncatedFiles);
+        sst << t.substr(0, 254-sspostfix.tellp()) << "~" << sspostfix.str();
+        t = sst.str();
+      }
+      std::string f = d + '/' + t;
+      std::ofstream out(f.c_str());
+      out << article.getData();
+      if (!out)
+        throw std::runtime_error("error writing file " + f);
   }
 }
 
