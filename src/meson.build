@@ -11,7 +11,7 @@ if target_machine.system() != 'windows'
 endif
 
 executable('zimdump', 'zimdump.cpp',
-  dependencies: libzim_dep,
+  dependencies: [libzim_dep, dependency('threads')],
   install: true)
 
 executable('zimdiff', 'zimdiff.cpp',

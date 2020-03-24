@@ -30,6 +30,7 @@
 
 #include "arg.h"
 #include "version.h"
+#include "utils.h"
 
 class ZimDumper
 {
@@ -254,52 +255,40 @@ void ZimDumper::dumpFiles(const std::string& directory)
   ::mkdir(directory.c_str(), 0777);
 #endif
 
-  using pair_type = std::pair<zim::article_index_type, zim::cluster_index_type>;
+  ZimThreadPool pool;
 
-  std::vector<pair_type> article_list;
-  auto nb_articles = file.getCountArticles();
-  article_list.reserve(nb_articles);
-
-  for(zim::article_index_type i = 0; i < nb_articles; i++)
+  for (unsigned int i = 0; i < file.getCountArticles(); i++)
   {
-      auto article = file.getArticle(i);
-      article_list.push_back(std::make_pair(i, article.getClusterNumber()));
-  }
+      pool.addWork([this, &truncatedFiles, &directory, i]{
+          auto index = file.getArticleByClusterOrder(i);
 
-  std::sort(article_list.begin(), article_list.end(), [](pair_type i, pair_type j)
-  {
-    return i.second < j.second;
-  }
-  );
+              auto article = file.getArticle(index);
 
-  std::set<char> ns;
-  for (auto &elem: article_list)
-  {
-      auto article = file.getArticle(elem.first);
+              std::string d = directory + '/' + article.getNamespace();
+          #if defined(_WIN32)
+                ::mkdir(d.c_str());
+          #else
+                ::mkdir(d.c_str(), 0777);
+          #endif
+              std::string t = article.getTitle();
+              std::string::size_type p;
+              while ((p = t.find('/')) != std::string::npos)
+                t.replace(p, 1, "%2f");
+              if ( t.length() > 255 )
+              {
+                std::ostringstream sspostfix, sst;
+                sspostfix << (++truncatedFiles);
+                sst << t.substr(0, 254-sspostfix.tellp()) << "~" << sspostfix.str();
+                t = sst.str();
+              }
+              std::string f = d + '/' + t;
+              std::ofstream out(f.c_str());
+              out << article.getData();
+              if (!out)
+                throw std::runtime_error("error writing file " + f);
+      });
 
-      std::string d = directory + '/' + article.getNamespace();
-      if (ns.find(article.getNamespace()) == ns.end())
-  #if defined(_WIN32)
-        ::mkdir(d.c_str());
-  #else
-        ::mkdir(d.c_str(), 0777);
-  #endif
-      std::string t = article.getTitle();
-      std::string::size_type p;
-      while ((p = t.find('/')) != std::string::npos)
-        t.replace(p, 1, "%2f");
-      if ( t.length() > 255 )
-      {
-        std::ostringstream sspostfix, sst;
-        sspostfix << (++truncatedFiles);
-        sst << t.substr(0, 254-sspostfix.tellp()) << "~" << sspostfix.str();
-        t = sst.str();
-      }
-      std::string f = d + '/' + t;
-      std::ofstream out(f.c_str());
-      out << article.getData();
-      if (!out)
-        throw std::runtime_error("error writing file " + f);
+
   }
 }
 
