@@ -5,7 +5,7 @@ Various ZIM command line tools. More information about the ZIM format
 and the [openZIM project](https://openzim.org).
 
 [![latest release](https://img.shields.io/github/v/tag/openzim/zim-tools?label=latest%20release&sort=semver)](https://download.openzim.org/release/zim-tools/)
-[![Build Status](https://travis-ci.com/openzim/zim-tools.svg?branch=master)](https://travis-ci.com/openzim/zim-tools)
+[![Build Status](https://github.com/openzim/zim-tools/workflows/CI/badge.svg?query=branch%3Amaster)](https://github.com/openzim/zim-tools/actions?query=branch%3Amaster)
 [![CodeFactor](https://www.codefactor.io/repository/github/openzim/zim-tools/badge)](https://www.codefactor.io/repository/github/openzim/zim-tools)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
