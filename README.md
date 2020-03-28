@@ -2,6 +2,7 @@ zimwriterfs
 ===========
 
 
+[![latest release](https://img.shields.io/github/v/tag/openzim/zimwriterfs?label=latest%20release&sort=semver)](https://download.openzim.org/release/zimwriterfs/)
 [![Build Status](https://github.com/openzim/zimwriterfs/workflows/CI/badge.svg?query=branch%3Amaster)](https://github.com/openzim/zimwriterfs/actions?query=branch%3Amaster)
 [![Docker Build Status](https://img.shields.io/docker/build/openzim/zimwriterfs)](https://hub.docker.com/r/openzim/zimwriterfs)
 [![CodeFactor](https://www.codefactor.io/repository/github/openzim/zimwriterfs/badge)](https://www.codefactor.io/repository/github/openzim/zimwriterfs)
