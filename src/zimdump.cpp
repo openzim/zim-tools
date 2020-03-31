@@ -260,9 +260,7 @@ void ZimDumper::dumpFiles(const std::string& directory)
   for (unsigned int i = 0; i < file.getCountArticles(); i++)
   {
       pool.addWork([this, &truncatedFiles, &directory, i]{
-          auto index = file.getArticleByClusterOrder(i);
-
-              auto article = file.getArticle(index);
+              auto article = file.getArticleByClusterOrder(i);
 
               std::string d = directory + '/' + article.getNamespace();
           #if defined(_WIN32)
