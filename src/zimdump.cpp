@@ -263,7 +263,7 @@ void ZimDumper::dumpFiles(const std::string& directory)
 #else
       ::mkdir(d.c_str(), 0777);
 #endif
-    std::string t = it->getTitle();
+    std::string t = it->getUrl();
     std::string::size_type p;
     while ((p = t.find('/')) != std::string::npos)
       t.replace(p, 1, "%2f");
