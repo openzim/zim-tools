@@ -160,7 +160,7 @@ public:
         finishZimCreation();
     }
 
-    virtual zim::writer::Url getMainUrl() {
+    virtual zim::writer::Url getMainUrl() const {
       if (!origin.getFileheader().hasMainPage()) {
         return zim::writer::Url();
       }
@@ -168,7 +168,7 @@ public:
       return zim::writer::Url(mainArticle.getNamespace(), mainArticle.getUrl());
     }
 
-    virtual zim::writer::Url getLayoutUrl() {
+    virtual zim::writer::Url getLayoutUrl() const {
       if (!origin.getFileheader().hasLayoutPage()) {
        return zim::writer::Url();
       }
