@@ -172,9 +172,12 @@ int main(int argc, char* argv[])
     start = std::chrono::steady_clock::now();
 
     size = 0;
-    for (unsigned r = 0; r < randomCount; ++r)
-      size += file.getArticle(ns, randomUrls[rand() % randomUrls.size()]).getData().size();
-
+    for (unsigned r = 0; r < randomCount; ++r) {
+      auto randomArticle = file.getArticle(ns, randomUrls[rand() % randomUrls.size()]);
+      if (randomArticle.good()) {
+        size += randomArticle.getData().size();
+      }
+    }
     //for (UrlsType::const_iterator it = randomUrls.begin(); it != randomUrls.end(); ++it)
       //size += file.getArticle(ns, *it).getData().size();
 
