@@ -251,15 +251,15 @@ public:
         return;
     }
 
-    zim::Uuid getUuid()
+    zim::Uuid getUuid() const
     {
         return fileUid;
     }
-    zim::writer::Url getMainPage()
+    zim::writer::Url getMainPage() const
     {
         return mainUrl;
     }
-    zim::writer::Url getLayoutPage()
+    zim::writer::Url getLayoutPage() const
     {
         return layoutUrl;
     }
