@@ -1,3 +1,10 @@
+1.1.0
+=====
+
+ * [CI] Move to github's action ci.
+ * zimdump: Use the url article instead of the title as filename.
+ * zimbench: Fix time measurement.
+
 1.0.5
 =====
 
