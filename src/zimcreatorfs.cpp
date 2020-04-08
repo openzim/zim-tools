@@ -29,7 +29,7 @@
 
 bool isVerbose();
 
-zim::writer::Url ZimCreatorFS::getMainUrl()
+zim::writer::Url ZimCreatorFS::getMainUrl() const
 {
   return zim::writer::Url('A', mainPage);
 }
