@@ -436,7 +436,7 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
                 if (isExternalUrl( link ))
                 {
                     std::ostringstream ss;
-                    ss << link << "is an external dependence in article " << it->getLongUrl();
+                    ss << link << " is an external dependence in article " << it->getLongUrl();
                     reporter.addError(URL_EXTERNAL, ss.str());
                     reporter.setTestResult(URL_EXTERNAL, false);
                     break;
