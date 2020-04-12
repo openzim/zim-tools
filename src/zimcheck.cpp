@@ -109,6 +109,26 @@ class ErrorLogger {
     }
 };
 
+// There is exactly the same code in zimwriterfs
+inline std::string removeLocalTagAndParameters(const std::string& url)
+{
+  std::string retVal = url;
+  std::size_t found;
+
+  /* Remove URL arguments */
+  found = retVal.find("?");
+  if (found != std::string::npos) {
+    retVal = retVal.substr(0, found);
+  }
+
+  /* Remove local tag */
+  found = retVal.find("#");
+  if (found != std::string::npos) {
+    retVal = retVal.substr(0, found);
+  }
+
+  return retVal;
+}
 
 std::vector<std::string> getLinks(const std::string& page, bool withHref = true)           //Returns a vector of the links in a particular page. includes links under 'href' and 'src'
 {
@@ -140,7 +160,7 @@ std::vector<std::string> getLinks(const std::string& page, bool withHref = true)
         // [TODO] Handle escape char
         while(*p != delimiter)
             p++;
-        links.push_back(std::string(linkStart, p));
+        links.push_back(removeLocalTagAndParameters(std::string(linkStart, p)));
         p += 1;
     }
     return links;
