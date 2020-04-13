@@ -110,7 +110,7 @@ void ZimDumper::printNsInfo(char ch)
 
 void ZimDumper::locateArticle(zim::size_type idx)
 {
-  pos = zim::File::const_iterator(&file, idx);
+  pos = zim::File::const_iterator(&file, idx, zim::File::const_iterator::UrlIterator);
 }
 
 void ZimDumper::findArticle(char ns, const char* expr, bool title)
