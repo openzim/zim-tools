@@ -25,6 +25,7 @@
 #include <zim/fileiterator.h>
 #include <stdexcept>
 #include <sys/types.h>
+#include <docopt/docopt.h>
 #include <sys/stat.h>
 #include <iomanip>
 #include <array>
@@ -117,6 +118,12 @@ class ZimDumper
     bool verbose;
 
   public:
+    ZimDumper(const char* fname)
+      : file(fname),
+        pos(file.begin()),
+        verbose(false)
+      { }
+
     ZimDumper(const char* fname, bool titleSort)
       : file(fname),
         pos(titleSort ? file.beginByTitle() : file.begin()),
@@ -473,124 +480,81 @@ void ZimDumper::verifyChecksum()
     std::cout << "no checksum" << std::endl;
 }
 
-int main(int argc, char* argv[])
-{
-  try
-  {
-    zim::Arg<bool> fileinfo(argc, argv, 'F');
-    zim::Arg<char> nsinfo(argc, argv, 'N');
-    zim::Arg<bool> info(argc, argv, 'i');
-    zim::Arg<bool> data(argc, argv, 'd');
-    zim::Arg<bool> page(argc, argv, 'p');
-    zim::Arg<const char*> find(argc, argv, 'f');
-    zim::Arg<const char*> url(argc, argv, 'u');
-    zim::Arg<bool> list(argc, argv, 'l');
-    zim::Arg<bool> tableList(argc, argv, 'L');
-    zim::Arg<zim::size_type> indexOffset(argc, argv, 'o');
-    zim::Arg<bool> extra(argc, argv, 'x');
-    zim::Arg<char> ns(argc, argv, 'n', 'A');  // namespace
-    zim::Arg<const char*> dumpAll(argc, argv, 'D');
-    zim::Arg<bool> verbose(argc, argv, 'v');
-    zim::Arg<bool> titleSort(argc, argv, 't');
-    zim::Arg<bool> verifyChecksum(argc, argv, 'C');
-    zim::Arg<bool> printVersion(argc, argv, 'V');
-#ifndef _WIN32
-    zim::Arg<bool> redirectSymlink(argc, argv, 's');
-#endif
 
-    // version number
-    if (printVersion)
-    {
-      version();
-      return 0;
-    }
 
-    if (argc <= 1)
-    {
-      std::cerr << "usage: " << argv[0] << " [options] zimfile\n"
-                   "\n"
-                   "options:\n"
-                   "  -F        print fileinfo\n"
-                   "  -N ns     print info about namespace\n"
-                   "  -i        print info about articles\n"
-                   "  -d        print data of articles\n"
-                   "  -p        print page\n"
-                   "  -f title  find article\n"
-                   "  -u url    find article by url\n"
-                   "  -t        sort (and find) articles by title instead of url\n"
-                   "  -l        list articles\n"
-                   "  -L        list articles as table\n"
-                   "  -o idx    locate article by index\n"
-                   "  -x        print extra parameters\n"
-                   "  -n ns     specify namespace (default 'A')\n"
-                   "  -D dir    dump all files into directory\n"
+static const char USAGE[] =
+R"(zimdump.
 #ifndef _WIN32
                    "  -s        Use symlink to dump html redirect. Else create html redirect file."
 #endif
-                   "  -v        verbose (print uncompressed length of articles when -i is set)\n"
-                   "                    (print namespaces with counts with -F)\n"
-                   "  -V        print the software version number\n"
-                   "  -Z        dump index data\n"
-                   "  -C        verify checksum\n"
-                   "\n"
-                   "examples:\n"
-                   "  " << argv[0] << " -F wikipedia.zim\n"
-                   "  " << argv[0] << " -l wikipedia.zim\n"
-                   "  " << argv[0] << " -f Auto -i wikipedia.zim\n"
-                   "  " << argv[0] << " -f Auto -d wikipedia.zim\n"
-                   "  " << argv[0] << " -f Auto -l wikipedia.zim\n"
-                   "  " << argv[0] << " -f Auto -l -i -v wikipedia.zim\n"
-                   "  " << argv[0] << " -o 123159 -l -i wikipedia.zim\n"
-                 << std::flush;
-      return -1;
+
+    Usage:
+      zimdump <zim_file> info [--id=<idvalue>|--namespace=<ns>]  [-v]
+      zimdump <zim_file> dumpall --output=<outputdir>
+      zimdump <zim_file> list [--asTable]
+      zimdump <zim_file> dump [--url=<urlvalue>|--title=<titlevalue>|--offset=<offsetvalue>] [--namespace=<ns>]
+      zimdump <zim_file> verifychecksum
+
+
+    Options:
+      --namespace=<ns>  Namespace selection [default: A]
+      --bytitle         Sort articles by title
+      -h --help         Show this screen.
+      --version         Show version.
+      -v --verbose      Verbose output.
+)";
+
+int main(int argc, char* argv[])
+{
+    std::map<std::string, docopt::value> args
+        = docopt::docopt(USAGE,
+                         { argv + 1, argv + argc },
+                         true,
+                         "zimdump 1.0");
+
+        ZimDumper app(args["zim_file"].asString().c_str());
+
+        app.setVerbose(args["--verbose"].asBool());
+
+        if (args["info"].asBool())
+        {
+            if (args["--id"]) {
+                //TODO:
+                std::cout << "NOT IMPLEMENTED" << '\n';
+            }
+            else if (args["--namespace"]) {
+                app.printNsInfo(args["--namespace"].asString().at(0));
+            }
+            else {
+                app.printInfo();
+            }
+        }
+        else if (args["dumpall"].asBool()) {
+            app.dumpFiles(args["--output"].asString());
+        }
+        else if (args["dump"].asBool())
+        {
+            std::cout << "dump article" << std::endl;
+
+            if (args["--url"])
+                app.findArticleByUrl(args["--url"].asString());
+            else if (args["--title"]) {
+                app.findArticle('A', args["--title"].asString().c_str(), true);
+            } else if (args["--offset"]) {
+                app.locateArticle(args["--offset"].asLong());
+            }
+            app.dumpArticle();
+        } else if (args["list"]) {
+
+            app.listArticles(false, args["--asTable"].asBool(), false);
+        }
+        else if(args["verifychecksum"]) {
+            app.verifyChecksum();
+        }
+
+    }catch (std::exception &e)
+    {
+        std::cout << "Exception: " << e.what() << '\n';
     }
-
-    // initalize app
-    ZimDumper app(argv[1], titleSort);
-    app.setVerbose(verbose);
-
-    // global info
-    if (fileinfo)
-      app.printInfo();
-
-    // namespace info
-    if (nsinfo.isSet())
-      app.printNsInfo(nsinfo);
-
-    // locate article
-    if (indexOffset.isSet())
-      app.locateArticle(indexOffset);
-    else if (find.isSet())
-      app.findArticle(ns, find, titleSort);
-    else if (url.isSet())
-      app.findArticleByUrl(std::string(url));
-
-    // dump files
-    if (dumpAll.isSet()) {
-#ifdef _WIN32
-      app.dumpFiles(dumpAll.getValue(), false);
-#else
-      app.dumpFiles(dumpAll.getValue(), redirectSymlink);
-#endif
-    }
-
-    // print requested info
-    if (data)
-      app.dumpArticle();
-    else if (page)
-      app.printPage();
-    else if (list || tableList)
-      app.listArticles(info, tableList, extra);
-    else if (info)
-      app.listArticle(extra);
-
-    if (verifyChecksum)
-      app.verifyChecksum();
-  }
-  catch (const std::exception& e)
-  {
-    std::cerr << e.what() << std::endl;
-    return -2;
-  }
-  return 0;
+    return 0;
 }
