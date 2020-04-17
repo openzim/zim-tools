@@ -234,6 +234,7 @@ int main(int argc, char** argv)
           break;
         case 'i':
           withoutFTIndex = false;
+          break;
         case 'j':
           withoutFTIndex = true;
           break;
