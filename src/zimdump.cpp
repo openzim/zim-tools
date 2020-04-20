@@ -489,10 +489,10 @@ R"(zimdump.
 #endif
 
     Usage:
-      zimdump <zim_file> info [--id=<idvalue>|--namespace=<ns>]  [-v]
+      zimdump <zim_file> info [--id=<idvalue>|--namespaceinfo=<ns>]  [-v]
       zimdump <zim_file> dumpall --output=<outputdir>
-      zimdump <zim_file> list [--asTable]
-      zimdump <zim_file> dump [--url=<urlvalue>|--title=<titlevalue>|--offset=<offsetvalue>] [--namespace=<ns>]
+      zimdump <zim_file> list [--asTable|--metadata] [--extra]
+      zimdump <zim_file> dump [--url=<urlvalue>|--title=<titlevalue>|--offset=<offsetvalue>] [--namespace=<ns>] [--asPage|--asMeta] [--extra]
       zimdump <zim_file> verifychecksum
 
 
@@ -522,8 +522,8 @@ int main(int argc, char* argv[])
                 //TODO:
                 std::cout << "NOT IMPLEMENTED" << '\n';
             }
-            else if (args["--namespace"]) {
-                app.printNsInfo(args["--namespace"].asString().at(0));
+            else if (args["--namespaceinfo"]) {
+                app.printNsInfo(args["--namespaceinfo"].asString().at(0));
             }
             else {
                 app.printInfo();
@@ -543,10 +543,16 @@ int main(int argc, char* argv[])
             } else if (args["--offset"]) {
                 app.locateArticle(args["--offset"].asLong());
             }
-            app.dumpArticle();
+
+            if (args["--asPage"].asBool())
+                app.printPage();
+            else if (args["--asMeta"].asBool())
+                app.listArticle(args["--extra"].asBool());
+            else
+                app.dumpArticle();
         } else if (args["list"]) {
 
-            app.listArticles(false, args["--asTable"].asBool(), false);
+            app.listArticles(args["--metadata"].asBool(), args["--asTable"].asBool(), args["--extra"].asBool());
         }
         else if(args["verifychecksum"]) {
             app.verifyChecksum();
