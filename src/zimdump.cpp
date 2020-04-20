@@ -480,8 +480,6 @@ void ZimDumper::verifyChecksum()
     std::cout << "no checksum" << std::endl;
 }
 
-
-
 static const char USAGE[] =
 R"(zimdump.
 #ifndef _WIN32
@@ -504,6 +502,50 @@ R"(zimdump.
       -v --verbose      Verbose output.
 )";
 
+void subcmdInfo(ZimDumper &app, std::map<std::string, docopt::value> &args)
+{
+    if (args["--namespaceinfo"]) {
+        app.printNsInfo(args["--namespaceinfo"].asString().at(0));
+    }
+    else {
+        app.printInfo();
+    }
+}
+
+void subcmdDumpAll(ZimDumper &app, std::map<std::string, docopt::value> &args)
+{
+    app.dumpFiles(args["--output"].asString());
+}
+
+
+void subcmdDump(ZimDumper &app,  std::map<std::string, docopt::value> &args)
+{
+    if (args["--url"])
+        app.findArticleByUrl(args["--url"].asString());
+    else if (args["--title"]) {
+        app.findArticle('A', args["--title"].asString().c_str(), true);
+    } else if (args["--offset"]) {
+        app.locateArticle(args["--offset"].asLong());
+    }
+
+    if (args["--asPage"].asBool())
+        app.printPage();
+    else if (args["--asMeta"].asBool())
+        app.listArticle(args["--extra"].asBool());
+    else
+        app.dumpArticle();
+}
+
+void subcmdList(ZimDumper &app, std::map<std::string, docopt::value> &args)
+{
+    app.listArticles(args["--metadata"].asBool(), args["--asTable"].asBool(), args["--extra"].asBool());
+}
+
+void subcmdVerify(ZimDumper &app,  std::map<std::string, docopt::value> &args)
+{
+     app.verifyChecksum();
+}
+
 int main(int argc, char* argv[])
 {
     std::map<std::string, docopt::value> args
@@ -512,54 +554,28 @@ int main(int argc, char* argv[])
                          true,
                          "zimdump 1.0");
 
-        ZimDumper app(args["zim_file"].asString().c_str());
+    try {
+        ZimDumper app(args["<zim_file>"].asString().c_str());
 
         app.setVerbose(args["--verbose"].asBool());
 
-        if (args["info"].asBool())
-        {
-            if (args["--id"]) {
-                //TODO:
-                std::cout << "NOT IMPLEMENTED" << '\n';
-            }
-            else if (args["--namespaceinfo"]) {
-                app.printNsInfo(args["--namespaceinfo"].asString().at(0));
-            }
-            else {
-                app.printInfo();
+        std::unordered_map<std::string, std::function<void(ZimDumper&, decltype(args)&)>> dispatchtable = {
+            {"info",            subcmdInfo },
+            {"dumpall",         subcmdDumpAll },
+            {"dump",            subcmdDump },
+            {"list",            subcmdList },
+            {"verifychecksum",  subcmdVerify }
+        };
+
+        // call the appropriate subcommand
+        for (const auto it : dispatchtable) {
+            if (args[it.first.c_str()].asBool()) {
+                (it.second)(app, args);
+                break;
             }
         }
-        else if (args["dumpall"].asBool()) {
-            app.dumpFiles(args["--output"].asString());
-        }
-        else if (args["dump"].asBool())
-        {
-            std::cout << "dump article" << std::endl;
 
-            if (args["--url"])
-                app.findArticleByUrl(args["--url"].asString());
-            else if (args["--title"]) {
-                app.findArticle('A', args["--title"].asString().c_str(), true);
-            } else if (args["--offset"]) {
-                app.locateArticle(args["--offset"].asLong());
-            }
-
-            if (args["--asPage"].asBool())
-                app.printPage();
-            else if (args["--asMeta"].asBool())
-                app.listArticle(args["--extra"].asBool());
-            else
-                app.dumpArticle();
-        } else if (args["list"]) {
-
-            app.listArticles(args["--metadata"].asBool(), args["--asTable"].asBool(), args["--extra"].asBool());
-        }
-        else if(args["verifychecksum"]) {
-            app.verifyChecksum();
-        }
-
-    }catch (std::exception &e)
-    {
+    } catch (std::exception &e) {
         std::cout << "Exception: " << e.what() << '\n';
     }
     return 0;
