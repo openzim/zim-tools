@@ -369,7 +369,7 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
             (it->getNamespace() == 'A' ||
              it->getNamespace() == 'I')) {
           std::ostringstream ss;
-          ss << "Ewntry " << it->getLongUrl() << " is empty";
+          ss << "Entry " << it->getLongUrl() << " is empty";
           reporter.addError(EMPTY, ss.str());
           reporter.setTestResult(EMPTY, false);
         }
