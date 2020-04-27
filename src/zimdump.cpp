@@ -26,9 +26,52 @@
 #include <stdexcept>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <iomanip>
+#include <unistd.h>
+#include <array>
 
 #include "arg.h"
 #include "version.h"
+
+static bool isReservedUrlChar(const char c)
+{
+    constexpr std::array<char, 10> reserved = {';', ',', '/', '?', ':',
+                                               '@', '&', '=', '+', '$' };
+
+    return std::any_of(reserved.begin(), reserved.end(),
+                       [&c] (const char &elem) { return elem == c; } );
+}
+
+static bool needsEscape(const char c, const bool encodeReserved)
+{
+  if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))
+    return false;
+
+  if (isReservedUrlChar(c))
+    return encodeReserved;
+
+  constexpr std::array<char, 9> noNeedEscape = {'-', '_', '.', '!', '~',
+                                                '*', '\'', '(', ')' };
+
+  return not std::any_of(noNeedEscape.begin(), noNeedEscape.end(),
+                         [&c] (const char &elem) { return elem == c; } );
+}
+
+std::string urlEncode(const std::string& value, bool encodeReserved)
+{
+  std::ostringstream os;
+  os << std::hex << std::uppercase;
+  for (std::string::const_iterator it = value.begin();
+       it != value.end();
+       ++it) {
+    if (!needsEscape(*it, encodeReserved)) {
+      os << *it;
+    } else {
+      os << '%' << std::setw(2) << static_cast<unsigned int>(static_cast<unsigned char>(*it));
+    }
+  }
+  return os.str();
+}
 
 class ZimDumper
 {
@@ -400,4 +443,3 @@ int main(int argc, char* argv[])
   }
   return 0;
 }
-
