@@ -102,7 +102,7 @@ class ZimDumper
       { listArticle(*pos, extra); }
     void listArticleT(bool extra)
       { listArticleT(*pos, extra); }
-    void dumpFiles(const std::string& directory);
+    void dumpFiles(const std::string& directory, bool symlinkdump);
     void verifyChecksum();
 };
 
@@ -287,7 +287,7 @@ void ZimDumper::listArticleT(const zim::Article& article, bool extra)
   std::cout << std::endl;
 }
 
-void ZimDumper::dumpFiles(const std::string& directory)
+void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump)
 {
   unsigned int truncatedFiles = 0;
 #if defined(_WIN32)
@@ -322,7 +322,27 @@ void ZimDumper::dumpFiles(const std::string& directory)
     }
     std::string f = d + '/' + url;
     std::ofstream out(f.c_str());
-    out << it->getData();
+    if (it->isRedirect())
+    {
+        auto redirectArticle = it->getRedirectArticle();
+        std::string redirectUrl = redirectArticle.getUrl();
+        if (symlinkdump == false && redirectArticle.getMimeType() == "text/html")
+        {
+            std::ostringstream ss;
+            ss <<  "<meta http-equiv=\"refresh\" content=\"0\"; url=\"";
+            ss << urlEncode(redirectUrl, true);
+            ss << "\" />";
+            out << ss.str();
+        }
+        else
+        {
+            symlink(redirectUrl.c_str(), f.c_str());
+        }
+    }
+    else
+    {
+        out << it->getData();
+    }
     if (!out)
       throw std::runtime_error("error writing file " + f);
   }
@@ -357,6 +377,7 @@ int main(int argc, char* argv[])
     zim::Arg<bool> titleSort(argc, argv, 't');
     zim::Arg<bool> verifyChecksum(argc, argv, 'C');
     zim::Arg<bool> printVersion(argc, argv, 'V');
+    zim::Arg<bool> redirectSymlink(argc, argv, 's');
 
     // version number
     if (printVersion)
@@ -424,7 +445,7 @@ int main(int argc, char* argv[])
 
     // dump files
     if (dumpAll.isSet())
-      app.dumpFiles(dumpAll.getValue());
+      app.dumpFiles(dumpAll.getValue(), redirectSymlink);
 
     // print requested info
     if (data)
