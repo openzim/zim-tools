@@ -301,11 +301,14 @@ void ZimDumper::dumpFiles(const std::string& directory)
   {
     std::string d = directory + '/' + it->getNamespace();
     if (ns.find(it->getNamespace()) == ns.end())
+    {
 #if defined(_WIN32)
       ::mkdir(d.c_str());
 #else
       ::mkdir(d.c_str(), 0777);
 #endif
+        ns.insert(it->getNamespace());
+    }
     std::string url = it->getUrl();
     std::string::size_type p;
     while ((p = url.find('/')) != std::string::npos)
