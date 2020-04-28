@@ -487,12 +487,11 @@ R"(zimdump.
 #endif
 
     Usage:
-      zimdump <zim_file> info [--id=<idvalue>|--namespaceinfo=<ns>]  [-v]
+      zimdump <zim_file> info [--namespaceinfo=<ns>]  [-v]
       zimdump <zim_file> dumpall --output=<outputdir>
       zimdump <zim_file> list [--asTable|--metadata] [--extra]
       zimdump <zim_file> dump [--url=<urlvalue>|--title=<titlevalue>|--offset=<offsetvalue>] [--namespace=<ns>] [--asPage|--asMeta] [--extra]
       zimdump <zim_file> verifychecksum
-
 
     Options:
       --namespace=<ns>  Namespace selection [default: A]
