@@ -118,15 +118,9 @@ class ZimDumper
     bool verbose;
 
   public:
-    ZimDumper(const char* fname)
+    ZimDumper(const std::string& fname)
       : file(fname),
         pos(file.begin()),
-        verbose(false)
-      { }
-
-    ZimDumper(const char* fname, bool titleSort)
-      : file(fname),
-        pos(titleSort ? file.beginByTitle() : file.begin()),
         verbose(false)
       { }
 
@@ -139,15 +133,14 @@ class ZimDumper
     void findArticleByUrl(const std::string& url);
     void dumpArticle();
     void printPage();
-    void listArticles(bool info, bool listTable, bool extra);
+    void listArticles(bool info, bool extra);
     void listArticle(const zim::Article& article, bool extra);
     void listArticleT(const zim::Article& article, bool extra);
     void listArticle(bool extra)
       { listArticle(*pos, extra); }
     void listArticleT(bool extra)
       { listArticleT(*pos, extra); }
-    void dumpFiles(const std::string& directory, bool symlinkdump);
-    void verifyChecksum();
+    void dumpFiles(const std::string& directory, bool symlinkdump, std::function<bool (const char c)> nsfilter);
 };
 
 void ZimDumper::printInfo()
@@ -229,16 +222,14 @@ void ZimDumper::dumpArticle()
   }
 }
 
-void ZimDumper::listArticles(bool info, bool listTable, bool extra)
+void ZimDumper::listArticles(bool info, bool extra)
 {
   for (zim::File::const_iterator it = pos; it != file.end(); ++it)
   {
-    if (listTable)
-      listArticleT(*it, extra);
-    else if (info)
+    if (info)
       listArticle(*it, extra);
     else
-      std::cout << it->getUrl() << '\n';
+        std::cout << it->getUrl() << '\n';
   }
 }
 
@@ -386,7 +377,7 @@ inline void write_to_file(const std::string &base, const std::string& path, cons
 }
 
 
-void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump)
+void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::function<bool (const char c)> nsfilter)
 {
   unsigned int truncatedFiles = 0;
 #if defined(_WIN32)
@@ -401,9 +392,9 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump)
   for (zim::File::const_iterator it = pos; it != file.end(); ++it)
   {
     char filenamespace = it->getNamespace();
-    std::string d = directory + SEPARATOR + filenamespace;
-    std::string base = d + SEPARATOR;
-    if (nscache.find(filenamespace) == nscache.end())
+    if (nsfilter(it->getNamespace()))
+        continue;
+
     {
     #if defined(_WIN32)
         std::wstring wbase = converter.from_bytes(base);
@@ -472,14 +463,6 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump)
   }
 }
 
-void ZimDumper::verifyChecksum()
-{
-  if (file.verify())
-    std::cout << "checksum ok" << std::endl;
-  else
-    std::cout << "no checksum" << std::endl;
-}
-
 static const char USAGE[] =
 R"(zimdump.
 #ifndef _WIN32
@@ -487,18 +470,16 @@ R"(zimdump.
 #endif
 
     Usage:
-      zimdump <zim_file> info [--namespaceinfo=<ns>]  [-v]
-      zimdump <zim_file> dumpall --output=<outputdir>
-      zimdump <zim_file> list [--asTable|--metadata] [--extra]
-      zimdump <zim_file> dump [--url=<urlvalue>|--title=<titlevalue>|--offset=<offsetvalue>] [--namespace=<ns>] [--asPage|--asMeta] [--extra]
-      zimdump <zim_file> verifychecksum
+      zimdump <zim_file> info [--ns=N]
+      zimdump <zim_file> list [--details] [--idx=INDEX|(--url=URL [--ns=N])]
+      zimdump <zim_file> dump --dir=DIR [--ns=N] [--redirect]
+      zimdump <zim_file> dump (--idx=INDEX |(--url=URL [--ns=N]))
 
     Options:
-      --namespace=<ns>  Namespace selection [default: A]
-      --bytitle         Sort articles by title
+      --idx=INDEX       The index of the article to list/dump
+      --ns=N            Namespace selection [default: A]
       -h --help         Show this screen.
       --version         Show version.
-      -v --verbose      Verbose output.
 )";
 
 void subcmdInfo(ZimDumper &app, std::map<std::string, docopt::value> &args)
@@ -511,38 +492,72 @@ void subcmdInfo(ZimDumper &app, std::map<std::string, docopt::value> &args)
     }
 }
 
-void subcmdDumpAll(ZimDumper &app, std::map<std::string, docopt::value> &args)
+void subcmdDumpAll(ZimDumper &app, std::map<std::string, docopt::value> &args, bool redirect, std::function<bool (const char c)> nsfilter)
 {
-    app.dumpFiles(args["--output"].asString());
+#ifdef _WIN32
+    app.dumpFiles(args["--dir"].asString(), false, nsfilter);
+#else
+    app.dumpFiles(args["--dir"].asString(), redirect, nsfilter);
+#endif
 }
 
 
 void subcmdDump(ZimDumper &app,  std::map<std::string, docopt::value> &args)
 {
-    if (args["--url"])
-        app.findArticleByUrl(args["--url"].asString());
-    else if (args["--title"]) {
-        app.findArticle('A', args["--title"].asString().c_str(), true);
-    } else if (args["--offset"]) {
-        app.locateArticle(args["--offset"].asLong());
+    bool redirect = false;
+
+    if (args["--redirect"]) redirect = true;
+
+    if (args["--dir"]) {
+        std::function<bool (const char c)> filter = [](const char /*c*/){return false; };
+        if (args["--ns"])
+        {
+            std::string nspace = args["--ns"].asString();
+            filter = [nspace](const char c){ return nspace.at(0) != c; };
+        }
+        return subcmdDumpAll(app, args, redirect, filter);
     }
 
-    if (args["--asPage"].asBool())
-        app.printPage();
-    else if (args["--asMeta"].asBool())
-        app.listArticle(args["--extra"].asBool());
-    else
-        app.dumpArticle();
+    if (args["--idx"])
+    {
+        app.locateArticle(args["--idx"].asLong());
+    } else if(args["--url"])
+    {
+        std::string nspace = "A";
+        if (args["--ns"])
+            nspace = args["--ns"].asString();
+        app.findArticleByUrl(nspace + "/" + args["--url"].asString());
+    }
+    app.dumpArticle();
 }
 
 void subcmdList(ZimDumper &app, std::map<std::string, docopt::value> &args)
 {
-    app.listArticles(args["--metadata"].asBool(), args["--asTable"].asBool(), args["--extra"].asBool());
-}
+    bool idx = false;
+    bool url = false;
+    bool details = args["--details"].asBool();
 
-void subcmdVerify(ZimDumper &app,  std::map<std::string, docopt::value> &args)
-{
-     app.verifyChecksum();
+    if (args["--idx"]) idx = true;
+    if (args["--url"]) url = true;
+
+    if (idx || url)
+    {
+        if (idx)
+        {
+            app.locateArticle(args["--idx"].asLong());
+        } else if(url)
+        {
+            std::string nspace = "A";
+            if (args["--ns"])
+                nspace = args["--ns"].asString();
+            app.findArticleByUrl(nspace + "/" + args["--url"].asString());
+        }
+        app.listArticle(details);
+    }
+    else
+    {
+        app.listArticles(details, details);
+    }
 }
 
 int main(int argc, char* argv[])
@@ -554,26 +569,23 @@ int main(int argc, char* argv[])
                          "zimdump 1.0");
 
     try {
-        ZimDumper app(args["<zim_file>"].asString().c_str());
+        ZimDumper app(args["<zim_file>"].asString());
 
         app.setVerbose(args["--verbose"].asBool());
 
         std::unordered_map<std::string, std::function<void(ZimDumper&, decltype(args)&)>> dispatchtable = {
             {"info",            subcmdInfo },
-            {"dumpall",         subcmdDumpAll },
             {"dump",            subcmdDump },
-            {"list",            subcmdList },
-            {"verifychecksum",  subcmdVerify }
+            {"list",            subcmdList }
         };
 
-        // call the appropriate subcommand
-        for (const auto it : dispatchtable) {
+        // call the appropriate subcommand handler
+        for (const auto &it : dispatchtable) {
             if (args[it.first.c_str()].asBool()) {
                 (it.second)(app, args);
                 break;
             }
         }
-
     } catch (std::exception &e) {
         std::cout << "Exception: " << e.what() << '\n';
     }

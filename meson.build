@@ -16,8 +16,7 @@ libzim_dep = dependency('libzim', version : '>=6.1.1', static:static_linkage)
 
 compiler = meson.get_compiler('cpp')
 find_library_in_compiler = meson.version().version_compare('>=0.31.0')
-rt_dep = compiler.find_library('rt', required:false)
-docopt_dep = compiler.find_library('docopt', required:false)
+docopt_dep = dependency('docopt', static:static_linkage)
 
 with_writer = target_machine.system() != 'windows'
 
