@@ -26,9 +26,52 @@
 #include <stdexcept>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <iomanip>
+#include <unistd.h>
+#include <array>
 
 #include "arg.h"
 #include "version.h"
+
+static bool isReservedUrlChar(const char c)
+{
+    constexpr std::array<char, 10> reserved = {';', ',', '/', '?', ':',
+                                               '@', '&', '=', '+', '$' };
+
+    return std::any_of(reserved.begin(), reserved.end(),
+                       [&c] (const char &elem) { return elem == c; } );
+}
+
+static bool needsEscape(const char c, const bool encodeReserved)
+{
+  if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))
+    return false;
+
+  if (isReservedUrlChar(c))
+    return encodeReserved;
+
+  constexpr std::array<char, 9> noNeedEscape = {'-', '_', '.', '!', '~',
+                                                '*', '\'', '(', ')' };
+
+  return not std::any_of(noNeedEscape.begin(), noNeedEscape.end(),
+                         [&c] (const char &elem) { return elem == c; } );
+}
+
+std::string urlEncode(const std::string& value, bool encodeReserved)
+{
+  std::ostringstream os;
+  os << std::hex << std::uppercase;
+  for (std::string::const_iterator it = value.begin();
+       it != value.end();
+       ++it) {
+    if (!needsEscape(*it, encodeReserved)) {
+      os << *it;
+    } else {
+      os << '%' << std::setw(2) << static_cast<unsigned int>(static_cast<unsigned char>(*it));
+    }
+  }
+  return os.str();
+}
 
 class ZimDumper
 {
@@ -59,7 +102,7 @@ class ZimDumper
       { listArticle(*pos, extra); }
     void listArticleT(bool extra)
       { listArticleT(*pos, extra); }
-    void dumpFiles(const std::string& directory);
+    void dumpFiles(const std::string& directory, bool symlinkdump);
     void verifyChecksum();
 };
 
@@ -244,7 +287,7 @@ void ZimDumper::listArticleT(const zim::Article& article, bool extra)
   std::cout << std::endl;
 }
 
-void ZimDumper::dumpFiles(const std::string& directory)
+void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump)
 {
   unsigned int truncatedFiles = 0;
 #if defined(_WIN32)
@@ -258,11 +301,14 @@ void ZimDumper::dumpFiles(const std::string& directory)
   {
     std::string d = directory + '/' + it->getNamespace();
     if (ns.find(it->getNamespace()) == ns.end())
+    {
 #if defined(_WIN32)
       ::mkdir(d.c_str());
 #else
       ::mkdir(d.c_str(), 0777);
 #endif
+        ns.insert(it->getNamespace());
+    }
     std::string url = it->getUrl();
     std::string::size_type p;
     while ((p = url.find('/')) != std::string::npos)
@@ -276,7 +322,27 @@ void ZimDumper::dumpFiles(const std::string& directory)
     }
     std::string f = d + '/' + url;
     std::ofstream out(f.c_str());
-    out << it->getData();
+    if (it->isRedirect())
+    {
+        auto redirectArticle = it->getRedirectArticle();
+        std::string redirectUrl = redirectArticle.getUrl();
+        if (symlinkdump == false && redirectArticle.getMimeType() == "text/html")
+        {
+            std::ostringstream ss;
+            ss <<  "<meta http-equiv=\"refresh\" content=\"0\"; url=\"";
+            ss << urlEncode(redirectUrl, true);
+            ss << "\" />";
+            out << ss.str();
+        }
+        else
+        {
+            symlink(redirectUrl.c_str(), f.c_str());
+        }
+    }
+    else
+    {
+        out << it->getData();
+    }
     if (!out)
       throw std::runtime_error("error writing file " + f);
   }
@@ -311,6 +377,7 @@ int main(int argc, char* argv[])
     zim::Arg<bool> titleSort(argc, argv, 't');
     zim::Arg<bool> verifyChecksum(argc, argv, 'C');
     zim::Arg<bool> printVersion(argc, argv, 'V');
+    zim::Arg<bool> redirectSymlink(argc, argv, 's');
 
     // version number
     if (printVersion)
@@ -378,7 +445,7 @@ int main(int argc, char* argv[])
 
     // dump files
     if (dumpAll.isSet())
-      app.dumpFiles(dumpAll.getValue());
+      app.dumpFiles(dumpAll.getValue(), redirectSymlink);
 
     // print requested info
     if (data)
@@ -400,4 +467,3 @@ int main(int argc, char* argv[])
   }
   return 0;
 }
-
