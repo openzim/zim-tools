@@ -36,6 +36,7 @@
 #ifdef _WIN32
 # define SEPARATOR "\\"
 # include <io.h>
+# include <windows.h>
 #else
 # define SEPARATOR "/"
 # include <unistd.h>
