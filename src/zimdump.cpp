@@ -27,11 +27,20 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <iomanip>
-#include <unistd.h>
 #include <array>
 
 #include "arg.h"
 #include "version.h"
+
+#include <fcntl.h>
+#ifdef _WIN32
+# define SEPARATOR "\\"
+# include <io.h>
+#else
+# define SEPARATOR "/"
+# include <unistd.h>
+# include <sys/stat.h>
+#endif
 
 static bool isReservedUrlChar(const char c)
 {
@@ -287,6 +296,26 @@ void ZimDumper::listArticleT(const zim::Article& article, bool extra)
   std::cout << std::endl;
 }
 
+inline void write_to_file(const std::string& path, const char* data, ssize_t size) {
+#ifdef _WIN32
+    auto needed_size = MultiByteToWideChar(CP_UTF8, 0, path.data(), path.size(), NULL, 0);
+    std::wstring wpath(needed_size, 0);
+    MultiByteToWideChar(CP_UTF8, 0, path.data(), path.size(), &wpath[0], needed_size);
+    auto fd = _wopen(wpath.c_str(), _O_WRONLY | _O_CREAT | _O_TRUNC, S_IWRITE);
+#else
+    auto fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC,
+                              S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+#endif
+    if (fd == -1) {
+      throw std::runtime_error("Error opening file " + path);
+    }
+    if (write(fd, data, size) != size) {
+      close(fd);
+      throw std::runtime_error("Error writing to file " + path);
+    }
+    close(fd);
+}
+
 void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump)
 {
   unsigned int truncatedFiles = 0;
@@ -299,7 +328,7 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump)
   std::set<char> ns;
   for (zim::File::const_iterator it = pos; it != file.end(); ++it)
   {
-    std::string d = directory + '/' + it->getNamespace();
+    std::string d = directory + SEPARATOR + it->getNamespace();
     if (ns.find(it->getNamespace()) == ns.end())
     {
 #if defined(_WIN32)
@@ -320,8 +349,7 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump)
       sst << url.substr(0, 254-sspostfix.tellp()) << "~" << sspostfix.str();
       url = sst.str();
     }
-    std::string f = d + '/' + url;
-    std::ofstream out(f.c_str());
+    std::string f = d + SEPARATOR + url;
     if (it->isRedirect())
     {
         auto redirectArticle = it->getRedirectArticle();
@@ -332,19 +360,24 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump)
             ss <<  "<meta http-equiv=\"refresh\" content=\"0\"; url=\"";
             ss << urlEncode(redirectUrl, true);
             ss << "\" />";
-            out << ss.str();
+            auto content = ss.str();
+            write_to_file(f, content.c_str(), content.size());
         }
         else
         {
+#ifdef _WIN32
+            auto blob = redirectArticle.getData();
+            write_to_file(f, blob.data(), blob.size());
+#else
             symlink(redirectUrl.c_str(), f.c_str());
+#endif
         }
     }
     else
     {
-        out << it->getData();
+      auto blob = it->getData();
+      write_to_file(f, blob.data(), blob.size());
     }
-    if (!out)
-      throw std::runtime_error("error writing file " + f);
   }
 }
 
@@ -377,7 +410,9 @@ int main(int argc, char* argv[])
     zim::Arg<bool> titleSort(argc, argv, 't');
     zim::Arg<bool> verifyChecksum(argc, argv, 'C');
     zim::Arg<bool> printVersion(argc, argv, 'V');
+#ifndef _WIN32
     zim::Arg<bool> redirectSymlink(argc, argv, 's');
+#endif
 
     // version number
     if (printVersion)
@@ -405,6 +440,9 @@ int main(int argc, char* argv[])
                    "  -x        print extra parameters\n"
                    "  -n ns     specify namespace (default 'A')\n"
                    "  -D dir    dump all files into directory\n"
+#ifndef _WIN32
+                   "  -s        Use symlink to dump html redirect. Else create html redirect file."
+#endif
                    "  -v        verbose (print uncompressed length of articles when -i is set)\n"
                    "                    (print namespaces with counts with -F)\n"
                    "  -V        print the software version number\n"
@@ -444,8 +482,13 @@ int main(int argc, char* argv[])
       app.findArticleByUrl(std::string(url));
 
     // dump files
-    if (dumpAll.isSet())
+    if (dumpAll.isSet()) {
+#ifdef _WIN32
+      app.dumpFiles(dumpAll.getValue(), false);
+#else
       app.dumpFiles(dumpAll.getValue(), redirectSymlink);
+#endif
+    }
 
     // print requested info
     if (data)

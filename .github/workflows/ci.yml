@@ -39,6 +39,8 @@ jobs:
         target:
           - native_static
           - native_dyn
+          - win32_static
+          - win32_dyn
         include:
           - target: native_static
             image_variant: xenial
@@ -46,6 +48,13 @@ jobs:
           - target: native_dyn
             image_variant: xenial
             lib_postfix: '/x86_64-linux-gnu'
+          - target: win32_static
+            image_variant: f31
+            lib_postfix: '64'
+          - target: win32_dyn
+            image_variant: f31
+            lib_postfix: '64'
+
     env:
       HOME: /home/runner
     runs-on: ubuntu-latest
@@ -78,6 +87,9 @@ jobs:
       run: |
         if [[ "${{matrix.target}}" =~ .*_static ]]; then
           MESON_OPTION="-Dstatic-linkage=true"
+        fi
+        if [[ ! "${{matrix.target}}" =~ native_.* ]]; then
+          MESON_OPTION="$MESON_OPTION --cross-file $HOME/BUILD_${{matrix.target}}/meson_cross_file.txt"
         fi
         cd $HOME/zim-tools
         meson . build ${MESON_OPTION}
