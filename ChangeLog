@@ -1,3 +1,9 @@
+zim-tools 1.2
+=============
+
+ * Fix a lot small issues about CI compilation.
+ * zimdump: Add an option to dump redirection using html redirect or symlink.
+
 zim-tools 1.1.1
 ===============
 
