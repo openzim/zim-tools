@@ -370,7 +370,10 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump)
             auto blob = redirectArticle.getData();
             write_to_file(f, blob.data(), blob.size());
 #else
-            symlink(redirectUrl.c_str(), f.c_str());
+            if (symlink(redirectUrl.c_str(), f.c_str()) != 0) {
+              throw std::runtime_error(
+                std::string("Error creating symlink from ") + redirectUrl + " to " + f);
+            }
 #endif
         }
     }
