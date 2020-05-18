@@ -36,6 +36,7 @@
 #ifdef _WIN32
 # define SEPARATOR "\\"
 # include <io.h>
+# include <windows.h>
 #else
 # define SEPARATOR "/"
 # include <unistd.h>
@@ -44,8 +45,8 @@
 
 static bool isReservedUrlChar(const char c)
 {
-    constexpr std::array<char, 10> reserved = {';', ',', '/', '?', ':',
-                                               '@', '&', '=', '+', '$' };
+    constexpr std::array<char, 10> reserved = {{';', ',', '/', '?', ':',
+                                               '@', '&', '=', '+', '$' }};
 
     return std::any_of(reserved.begin(), reserved.end(),
                        [&c] (const char &elem) { return elem == c; } );
@@ -59,8 +60,8 @@ static bool needsEscape(const char c, const bool encodeReserved)
   if (isReservedUrlChar(c))
     return encodeReserved;
 
-  constexpr std::array<char, 9> noNeedEscape = {'-', '_', '.', '!', '~',
-                                                '*', '\'', '(', ')' };
+  constexpr std::array<char, 9> noNeedEscape = {{'-', '_', '.', '!', '~',
+                                                '*', '\'', '(', ')' }};
 
   return not std::any_of(noNeedEscape.begin(), noNeedEscape.end(),
                          [&c] (const char &elem) { return elem == c; } );
