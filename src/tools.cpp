@@ -583,7 +583,7 @@ std::string computeNewUrl(const std::string& aid, const std::string& baseUrl, co
 {
   std::string filename = computeAbsolutePath(aid, targetUrl);
   std::string targetMimeType
-      = getMimeTypeForFile(removeLocalTagAndParameters(decodeUrl(filename)));
+      = getMimeTypeForFile(decodeUrl(removeLocalTagAndParameters(filename)));
   std::string newUrl
       = "/" + getNamespaceForMimeType(targetMimeType) + "/" + filename;
   return computeRelativePath(baseUrl, newUrl);
