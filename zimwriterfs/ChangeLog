@@ -1,0 +1,84 @@
+zimwriterfs 1.3.10
+==================
+
+ * Fix parsing of option for --withFulltextIndex
+
+zimwriterfs 1.3.9
+=================
+
+ * Udpate to last version of libzim
+ * [CI] Move the ci to github actions
+
+zimwriterfs 1.3.8
+=================
+
+ * Fix a few buggy mimetypes
+ * Fix the support of --name
+ * New --source argument
+
+zimwriterfs 1.3.7
+=================
+
+ * Fix buggy --withoutFulltextIndex option parsing
+ * Rename --withoutFulltextIndex to --withoutFTIndex
+ * Introduce backward compatible --withFulltextIndex
+ * Docker image now using libzim 6.0.0
+
+zimwriterfs 1.3.6
+=================
+
+ * Remove specific script to compile zimwriterfs on macos.
+ * Adapt to new libzim's creator api.
+ * Correctly index redirect title.
+
+zimwriterfs 1.3.5
+=================
+
+ * Fix resources URL rewriting in CSS files
+ * Add --flavour and --scraper optional arguments
+ * Fix favicon redirection creation
+ * Replace --withFullTextIndex by --withoutFullTextIndex
+
+zimwriterfs 1.3.4
+=================
+
+ * Fix wrong mimetype for Webm videos
+
+zimwriterfs 1.3.3
+=================
+
+ * Fix mainPage issue
+ * Do not try to read TSV redirect if not given.
+
+zimwriterfs 1.3.2
+=================
+
+ * Fix usage message.
+ * Update to the new libzim 5.0.0 API.
+
+zimwriterfs 1.3.1
+=================
+
+ * Update Dockerfile and docker's documentation.
+ * Remove unused reference to xapian.
+ * Build without rpath.
+
+zimwriterfs 1.3
+===============
+
+ * Proper support of woff2 font files
+ * Added -V --version command line arguments
+ * Properly handle wrong format of the redirect files.
+ * Do not make zimwriterfs verbose by default.
+
+zimwriterfs 1.2
+===============
+
+ * Revert "Add leading '/' at indexer url.
+ * Move to meson build system.
+ * Addapt to new libzim's writer's API.
+ * Add travic CI.
+ * Add redirect articles after "normal" articles.
+ * Explicitly use icu namespace to allow use of packaged icu lib.
+ * Fix help/log typos.
+ * Better README.

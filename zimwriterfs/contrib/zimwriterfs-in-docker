@@ -1,0 +1,122 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# vim: ai ts=4 sts=4 et sw=4 nu
+
+""" zimwriterfs drop-in replacement for macOS (or Linux) using Docker
+
+    allows you to use zimwriterfs directly without having to compile/install it ;
+    by pulling/running it from its docker image.
+
+    >> just place it in /usr/local/bin/zimwriterfs.
+
+    script will automatically mount (as volumes) and replace (in the command args)
+    the HTML_FOLDER and the parent folder of the requested ZIM file.
+"""
+
+import os
+import sys
+import subprocess
+
+DATA_VOLUME_DST = "/data"
+ZIM_VOLUME_DST = "/zim"
+DEBUG = False
+
+CONTAINER_NAME = 'zimwriterfs'
+IMAGE_NAME = 'openzim/zimwriterfs'
+
+
+def run(arguments):
+    if str is not bytes:  # python3
+        return subprocess.run(arguments).returncode
+    else:
+        return subprocess.call(arguments)
+
+
+def volumes_from(html_folder, zim_file):
+    # make sure targets are expanded
+    html_folder = os.path.expanduser(html_folder)
+    zim_file = os.path.expanduser(zim_file)
+
+    # docker command line parameters format for volume attachment
+    vol = lambda src, dst: ['-v', "{src}:{dst}".format(src=src, dst=dst)]
+
+    # outputing a list of volume-attach-params
+    # and actual zimwriterfs params for html_folder and zim_file
+    d = {'volumes': [],
+         'html_folder_path': None,
+         'zim_file_path': None}
+
+    # html folder volume should be parent of target
+    hvolume, hfolder = os.path.split(html_folder) \
+        if os.path.isabs(html_folder) \
+        else (os.getcwd(), html_folder)
+    d['volumes'].append(vol(hvolume, DATA_VOLUME_DST))
+    d['html_folder_path'] = os.path.join(DATA_VOLUME_DST, hfolder)
+
+    # zim-file volume should be parent of target
+    if os.path.isabs(zim_file):
+        zvolume, zfile = os.path.split(zim_file)
+    else:
+        zparts = [p for p in os.path.split(zim_file)[:-1] if p.strip()]
+        # target parent might be CWD
+        if len(zparts):
+            zvolume = os.path.join(os.getcwd(), os.path.join(*zparts))
+        else:
+            zvolume = os.getcwd()
+        zfile = zim_file
+
+    # either mount a single volume as /data or another one as /zim
+    if hvolume != zvolume:
+        d['volumes'].append(vol(zvolume, ZIM_VOLUME_DST))
+        d['zim_file_path'] = os.path.join(ZIM_VOLUME_DST, zfile)
+    else:
+        d['zim_file_path'] = os.path.join(DATA_VOLUME_DST, zfile)
+
+    return d
+
+
+def stop_container():
+    run(['docker', 'stop', CONTAINER_NAME])
+
+
+def remove_container():
+    run(['docker', 'rm', '-f', CONTAINER_NAME])
+
+
+def stop_and_remove_container():
+    stop_container()
+    remove_container()
+
+
+def start_container(volumes, parameters):
+    run(['docker', 'pull', IMAGE_NAME])
+    command = ['docker', 'run', '--name', CONTAINER_NAME] \
+        + [vol_param for volume in volumes for vol_param in volume] \
+        + [IMAGE_NAME, 'zimwriterfs'] + parameters
+
+    if DEBUG:
+        print(" ".join(command))
+    return run(command)
+
+
+def main(arguments):
+    if len(arguments) >= 7:
+        main_arguments = arguments[:len(arguments) - 2]
+        html_folder = arguments[len(arguments) - 2]
+        zim_file = arguments[len(arguments) - 1]
+
+        voldata = volumes_from(html_folder, zim_file)
+        volumes = voldata['volumes']
+        arguments = main_arguments + [voldata['html_folder_path'],
+                                      voldata['zim_file_path']]
+    else:
+        volumes = []
+
+    stop_and_remove_container()
+    retcode = start_container(volumes, arguments)
+    stop_and_remove_container()
+    sys.exit(retcode)
+
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
