@@ -341,9 +341,9 @@ void write_to_error_directoy(const std::string& base, const std::string relpath,
 inline void write_to_file(const std::string &base, const std::string& path, const char* data, ssize_t size) {
     std::string fullpath = base + path;
 #ifdef _WIN32
-    auto needed_size = MultiByteToWideChar(CP_UTF8, 0, path.data(), path.size(), NULL, 0);
+    auto needed_size = MultiByteToWideChar(CP_UTF8, 0, fullpath.data(), fullpath.size(), NULL, 0);
     std::wstring wpath(needed_size, 0);
-    MultiByteToWideChar(CP_UTF8, 0, path.data(), path.size(), &wpath[0], needed_size);
+    MultiByteToWideChar(CP_UTF8, 0, fullpath.data(), fullpath.size(), &wpath[0], needed_size);
     auto fd = _wopen(wpath.c_str(), _O_WRONLY | _O_CREAT | _O_TRUNC, S_IWRITE);
 #else
     auto fd = open(fullpath.c_str(), O_WRONLY | O_CREAT | O_TRUNC,
