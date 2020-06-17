@@ -1,2 +1,4 @@
 option('static-linkage', type : 'boolean', value : false,
   description : 'Create statically linked binaries.')
+option('magic-install-prefix', type : 'string', value : '',
+  description : 'Prefix where libmagic has been installed')

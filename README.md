@@ -6,8 +6,17 @@ and the [openZIM project](https://openzim.org).
 
 [![latest release](https://img.shields.io/github/v/tag/openzim/zim-tools?label=latest%20release&sort=semver)](https://download.openzim.org/release/zim-tools/)
 [![Build Status](https://github.com/openzim/zim-tools/workflows/CI/badge.svg?query=branch%3Amaster)](https://github.com/openzim/zim-tools/actions?query=branch%3Amaster)
+[![Docker Build Status](https://img.shields.io/docker/build/openzim/zim-tools)](https://hub.docker.com/r/openzim/zim-tools)
 [![CodeFactor](https://www.codefactor.io/repository/github/openzim/zim-tools/badge)](https://www.codefactor.io/repository/github/openzim/zim-tools)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
+`zimwriterfs` is a console tool to create [ZIM](https://openzim.org)
+files from a locally-stored directory containing "self-sufficient"
+HTML content (with pictures, javascript and stylesheets). The result
+will contain all the files of the local directory compressed and
+merged in the ZIM file. Nothing more, nothing less. The generated file
+can be opened with a ZIM reader; [Kiwix](https://kiwix.org) is one
+example, but there are [others](https://openzim.org/wiki/ZIM_Readers).
 
 
 Releases
@@ -29,9 +38,18 @@ with the ZIM libary compilation itself, we recommend to have a look to
 Dependencies
 ------------
 
-The Kiwix library relies on the libzim.
+Most of the utilities form zim-tools programs relies on the libzim:
 
 * [ZIM](https://openzim.org) (package `libzim-dev` on Debian/Ubuntu)
+
+`zimwriterfs` relies on many third parts software libraries. They are
+prerequisites to the Zimwriterfs compilation. Following libraries
+need to be available:
+
+* [Magic](https://www.darwinsys.com/file/) (package  `libmagic-dev` on Debian/Ubuntu)
+* [Z](https://zlib.net/) (package `zlib1g-dev` on Debian/Ubuntu)
+* [Gumbo](https://github.com/google/gumbo-parser) (package `libgumbo-dev` on Debian/Ubuntu)
+* [ICU](http://site.icu-project.org/) (package `libicu-dev` on Debian/Ubuntu)
 
 These dependencies may or may not be packaged by your operating
 system. They may also be packaged but only in an older version. The
@@ -40,7 +58,7 @@ In the worse case, you will have to download and compile a more recent
 version by hand.
 
 If you want to install these dependencies locally, then ensure that
-meson (through pkg-config) will properly find them.
+meson (through `pkg-config`) will properly find them.
 
 Environment
 -------------
@@ -97,6 +115,13 @@ ninja -C build uninstall
 
 Like for the installation, you might need to run the command as user
 `root` (or using `sudo`).
+
+Docker
+------
+
+A Docker image with `zimwriterfs` can be built from the `docker`
+directory. The project maintains an official image available at
+https://hub.docker.com/r/openzim/mwoffliner.
 
 Troubleshooting
 ---------------

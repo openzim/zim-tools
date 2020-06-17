@@ -1,18 +1,3 @@
-project('zimwriterfs', ['c', 'cpp'],
-  version : '1.3.10',
-  license : 'GPL-3.0-or-later',
-  default_options : ['c_std=c11', 'cpp_std=c++11', 'werror=true'])
-
-add_global_arguments('-DVERSION="@0@"'.format(meson.project_version()), language : 'cpp')
-
-compiler = meson.get_compiler('cpp')
-find_library_in_compiler = meson.version().version_compare('>=0.31.0')
-
-static_linkage = get_option('static-linkage')
-if static_linkage
-  add_global_link_arguments('-static-libstdc++', '--static', language:'cpp')
-endif
-
 thread_dep = dependency('threads')
 libzim_dep = dependency('libzim', version : '>=6.1.2', static:static_linkage)
 zlib_dep = dependency('zlib', static:static_linkage)
@@ -52,5 +37,18 @@ else
   endif
 endif
 
-subdir('src')
 
+sources = [
+  'zimwriterfs.cpp',
+  'tools.cpp',
+  'article.cpp',
+  'zimcreatorfs.cpp',
+  'mimetypecounter.cpp'
+]
+
+deps = [thread_dep, libzim_dep, zlib_dep, gumbo_dep, magic_dep]
+
+zimwriterfs = executable('zimwriterfs',
+                         sources,
+                         dependencies : deps,
+                         install : true)

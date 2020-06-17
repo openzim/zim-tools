@@ -27,3 +27,10 @@
 *.exe
 *.out
 *.app
+zimwriterfs
+
+# Temporary and test files
+*.kate-swp
+.*.swp
+*.zim
+pip-selfcheck.json
