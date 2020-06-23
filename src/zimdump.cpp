@@ -444,9 +444,12 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump)
         std::string redirectUrl = redirectArticle.getUrl();
         if (symlinkdump == false && redirectArticle.getMimeType() == "text/html")
         {
+            auto encodedurl = urlEncode(redirectUrl, true);
             std::ostringstream ss;
             ss << ("<meta http-equiv=\"refresh\" content=\"0\"; url=\"" +
-                    urlEncode(redirectUrl, true) + "\" />");
+                    encodedurl + "\" />");
+            ss << ("<script type=\"text/javascript\"> window.location.href = \"" +
+                    encodedurl + "\"</script>");
             auto content = ss.str();
             write_to_file(directory + SEPARATOR, relative_path, content.c_str(), content.size());
         } else {
