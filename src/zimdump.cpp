@@ -29,6 +29,7 @@
 #include <iomanip>
 #include <array>
 #include <vector>
+#include <codecvt>
 
 #include "arg.h"
 #include "version.h"
@@ -45,6 +46,8 @@
 
 #define ERRORSDIR "_errordir/"
 
+std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+
 inline static void createdir(const std::string &path, const std::string &base)
 {
     if (path.size() <= 1)
@@ -58,7 +61,8 @@ inline static void createdir(const std::string &path, const std::string &base)
         {
             std::string fulldir = base + path.substr(0, position);
             #if defined(_WIN32)
-              ::mkdir(fulldir.c_str());
+            std::wstring wfulldir = converter.from_bytes(fulldir);
+            CreateDirectoryW(wfulldir.c_str(), NULL);
             #else
               ::mkdir(fulldir.c_str(), 0777);
             #endif
@@ -319,7 +323,7 @@ void ZimDumper::listArticleT(const zim::Article& article, bool extra)
   }
   std::cout << std::endl;
 }
-void write_to_error_directoy(const std::string& base, const std::string relpath, const char *content, size_t size)
+void write_to_error_directory(const std::string& base, const std::string relpath, const char *content, ssize_t size)
 {
     createdir(ERRORSDIR, base);
     std::string url = relpath;
@@ -328,6 +332,22 @@ void write_to_error_directoy(const std::string& base, const std::string relpath,
     while ((p = url.find('/')) != std::string::npos)
         url.replace(p, 1, "%2f");
 
+#ifdef _WIN32
+    auto fullpath = std::string(base + ERRORSDIR + url);
+    auto needed_size = MultiByteToWideChar(CP_UTF8, 0, fullpath.data(), fullpath.size(), NULL, 0);
+    std::wstring wpath(needed_size, 0);
+    MultiByteToWideChar(CP_UTF8, 0, fullpath.data(), fullpath.size(), &wpath[0], needed_size);
+    auto fd = _wopen(wpath.c_str(), _O_WRONLY | _O_CREAT | _O_TRUNC, S_IWRITE);
+
+    if (fd == -1) {
+        std::cerr << "Error opening file " + fullpath + " cause: " + ::strerror(errno) << std::endl;
+        return ;
+    }
+    if (write(fd, content, size) != size) {
+      close(fd);
+      std::cerr << "Failed writing: " << fullpath << " - " << ::strerror(errno) << std::endl;
+    }
+#else
     std::ofstream stream(base + ERRORSDIR + url);
 
     stream.write(content, size);
@@ -336,6 +356,7 @@ void write_to_error_directoy(const std::string& base, const std::string relpath,
     {
         std::cerr << "Error writing file to errors dir. " << (base + ERRORSDIR + url) << std::endl;
     }
+#endif
 }
 
 inline void write_to_file(const std::string &base, const std::string& path, const char* data, ssize_t size) {
@@ -351,14 +372,12 @@ inline void write_to_file(const std::string &base, const std::string& path, cons
 #endif
     if (fd == -1) {
         std::cerr << "Error opening file " + fullpath + " cause: " + ::strerror(errno) << std::endl;
-        close(fd);
-        write_to_error_directoy(base, path, data, size);
+        write_to_error_directory(base, path, data, size);
         return ;
     }
     if (write(fd, data, size) != size) {
-      close(fd);
       std::cerr << "Failed writing: " << fullpath << " - " << ::strerror(errno) << std::endl;
-      write_to_error_directoy(base, path, data, size);
+      write_to_error_directory(base, path, data, size);
     }
     close(fd);
 }
@@ -368,7 +387,8 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump)
 {
   unsigned int truncatedFiles = 0;
 #if defined(_WIN32)
-  ::mkdir(directory.c_str());
+    std::wstring wdir = converter.from_bytes(directory);
+    CreateDirectoryW(wdir.c_str(), NULL);
 #else
   ::mkdir(directory.c_str(), 0777);
 #endif
@@ -383,7 +403,8 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump)
     if (nscache.find(filenamespace) == nscache.end())
     {
     #if defined(_WIN32)
-      ::mkdir(d.c_str());
+        std::wstring wbase = converter.from_bytes(base);
+        CreateDirectoryW(wbase.c_str(), NULL);
     #else
       ::mkdir(base.c_str(), 0777);
     #endif
