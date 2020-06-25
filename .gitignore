@@ -34,3 +34,4 @@ zimwriterfs
 .*.swp
 *.zim
 pip-selfcheck.json
+build/

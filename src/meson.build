@@ -34,4 +34,6 @@ executable('zimrecreate', 'zimrecreate.cpp',
   dependencies: libzim_dep,
   install: true)
 
-subdir('zimwriterfs')
+if with_writer
+  subdir('zimwriterfs')
+endif
