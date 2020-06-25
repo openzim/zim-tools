@@ -72,7 +72,7 @@ inline static void createdir(const std::string &path, const std::string &base)
 
 static bool isReservedUrlChar(const char c)
 {
-    constexpr std::array<char, 10> reserved = {{';', ',', '/', '?', ':',
+    constexpr std::array<char, 10> reserved = {{';', ',', '?', ':',
                                                '@', '&', '=', '+', '$' }};
 
     return std::any_of(reserved.begin(), reserved.end(),
@@ -87,8 +87,8 @@ static bool needsEscape(const char c, const bool encodeReserved)
   if (isReservedUrlChar(c))
     return encodeReserved;
 
-  constexpr std::array<char, 9> noNeedEscape = {{'-', '_', '.', '!', '~',
-                                                '*', '\'', '(', ')' }};
+  constexpr std::array<char, 10> noNeedEscape = {{'-', '_', '.', '!', '~',
+                                                '*', '\'', '(', ')', '/' }};
 
   return not std::any_of(noNeedEscape.begin(), noNeedEscape.end(),
                          [&c] (const char &elem) { return elem == c; } );
