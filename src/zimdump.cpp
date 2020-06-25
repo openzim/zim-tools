@@ -44,7 +44,7 @@
 #include <unistd.h>
 #endif
 
-#define ERRORSDIR "_errordir/"
+#define ERRORSDIR "_exceptions/"
 
 std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 
@@ -353,6 +353,8 @@ void write_to_error_directory(const std::string& base, const std::string relpath
     if (stream.fail() || stream.bad())
     {
         std::cerr << "Error writing file to errors dir. " << (base + ERRORSDIR + url) << std::endl;
+    }else {
+        std::cerr << "Wrote " << (base + relpath) << " to " << (base + ERRORSDIR + url) << std::endl;
     }
 #endif
 }
@@ -367,12 +369,10 @@ inline void write_to_file(const std::string &base, const std::string& path, cons
                               S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 #endif
     if (fd == -1) {
-        std::cerr << "Error opening file " + fullpath + " cause: " + ::strerror(errno) << std::endl;
         write_to_error_directory(base, path, data, size);
         return ;
     }
     if (write(fd, data, size) != size) {
-      std::cerr << "Failed writing: " << fullpath << " - " << ::strerror(errno) << std::endl;
       write_to_error_directory(base, path, data, size);
     }
     close(fd);
