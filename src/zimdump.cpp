@@ -464,22 +464,36 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
 }
 
 static const char USAGE[] =
-R"(zimdump.
+R"(
 #ifndef _WIN32
                    "  -s        Use symlink to dump html redirect. Else create html redirect file."
 #endif
+Usage:
+  zimdump ls|list [--details] [--idx=INDEX|([--url=URL] [--ns=N])] [--] <file>
+  zimdump dump --dir=DIR [--ns=N] [--redirect] [--] <file>
+  zimdump dump (--idx=INDEX|(--url=URL [--ns=N])) [--] <file>
+  zimdump info [--] [--ns=N] <file>
+  zimdump -h | --help
+  zimdump --version
 
-    Usage:
-      zimdump <zim_file> info [--ns=N]
-      zimdump <zim_file> list [--details] [--idx=INDEX|(--url=URL [--ns=N])]
-      zimdump <zim_file> dump --dir=DIR [--ns=N] [--redirect]
-      zimdump <zim_file> dump (--idx=INDEX |(--url=URL [--ns=N]))
+Selectors:
+  --idx INDEX  The index of the article to list/dump.
+  --url URL    The url of the article to list/dump
+  --ns N       The namespace of the article(s) to list/dump.
+               When used with `--url`, default to `A`.
+               If no `--url` is provided (for  `zimdump dump`) default to no filter.
 
-    Options:
-      --idx=INDEX       The index of the article to list/dump
-      --ns=N            Namespace selection [default: A]
-      -h --help         Show this screen.
-      --version         Show version.
+Options:
+  --details    Show details about the articles. Else, list only the url of the article(s).
+  --dir=DIR    Directory where to dump the article(s) content.
+  -h, --help   Show this help
+  --version    Show zimdump version.
+
+Return value:
+  0 : If no error
+  1 : If no (or more than 1) articles correspond to the selectors.
+  2 : If an error/warning has been issue during the dump.
+      See DIR/dump_errors.log for the listing of the errors.
 )";
 
 void subcmdInfo(ZimDumper &app, std::map<std::string, docopt::value> &args)
