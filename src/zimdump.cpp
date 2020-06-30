@@ -132,7 +132,7 @@ class ZimDumper
     void listArticleT(const zim::Article& article, bool extra);
 
     zim::Article getArticleByUrl(const std::string &url);
-    zim::Article getArticleByTitle(zim::size_type idx);
+    zim::Article getArticle(zim::size_type idx);
 
     void dumpFiles(const std::string& directory, bool symlinkdump, std::function<bool (const char c)> nsfilter);
 };
@@ -142,9 +142,9 @@ zim::Article ZimDumper::getArticleByUrl(const std::string &url)
     return m_file.getArticleByUrl(url);
 }
 
-zim::Article ZimDumper::getArticleByTitle(zim::size_type idx)
+zim::Article ZimDumper::getArticle(zim::size_type idx)
 {
-    return m_file.getArticleByTitle(idx);
+    return m_file.getArticle(idx);
 }
 
 void ZimDumper::printInfo()
@@ -191,7 +191,6 @@ void ZimDumper::printNsInfo(char ch)
                "lower bound idx: " << m_file.getNamespaceBeginOffset(ch) << "\n"
                "upper bound idx: " << m_file.getNamespaceEndOffset(ch) << std::endl;
 }
-
 
 void ZimDumper::dumpArticle(const zim::Article &article)
 {
@@ -371,7 +370,7 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
   std::set<char> nscache;
   {
     char filenamespace = it->getNamespace();
-    if (nsfilter(it->getNamespace()))
+    if (nsfilter(it->getNamespace()) == false)
         continue;
 
     {
@@ -448,7 +447,8 @@ R"(
                    "  -s        Use symlink to dump html redirect. Else create html redirect file."
 #endif
 Usage:
-  zimdump ls|list [--details] [--idx=INDEX|([--url=URL] [--ns=N])] [--] <file>
+  zimdump ls [--details] [--idx=INDEX|([--url=URL] [--ns=N])] [--] <file>
+  zimdump list [--details] [--idx=INDEX|([--url=URL] [--ns=N])] [--] <file>
   zimdump dump --dir=DIR [--ns=N] [--redirect] [--] <file>
   zimdump dump (--idx=INDEX|(--url=URL [--ns=N])) [--] <file>
   zimdump info [--] [--ns=N] <file>
@@ -502,11 +502,11 @@ void subcmdDump(ZimDumper &app,  std::map<std::string, docopt::value> &args)
     if (args["--redirect"]) redirect = true;
 
     if (args["--dir"]) {
-        std::function<bool (const char c)> filter = [](const char /*c*/){return false; };
+        std::function<bool (const char c)> filter = [](const char /*c*/){return true; };
         if (args["--ns"])
         {
             std::string nspace = args["--ns"].asString();
-            filter = [nspace](const char c){ return nspace.at(0) != c; };
+            filter = [nspace](const char c){ return nspace.at(0) == c; };
         }
         return subcmdDumpAll(app, args, redirect, filter);
     }
@@ -514,7 +514,7 @@ void subcmdDump(ZimDumper &app,  std::map<std::string, docopt::value> &args)
     zim::Article article;
     if (args["--idx"])
     {
-        article = app.getArticleByTitle(args["--idx"].asLong());
+        article = app.getArticle(args["--idx"].asLong());
     } else if(args["--url"])
     {
         std::string nspace = "A";
@@ -539,7 +539,7 @@ void subcmdList(ZimDumper &app, std::map<std::string, docopt::value> &args)
         zim::Article article;
         if (idx)
         {
-            article = app.getArticleByTitle(args["--idx"].asLong());
+            article = app.getArticle(args["--idx"].asLong());
         } else if(url)
         {
             std::string nspace = "A";
@@ -570,7 +570,8 @@ int main(int argc, char* argv[])
         std::unordered_map<std::string, std::function<void(ZimDumper&, decltype(args)&)>> dispatchtable = {
             {"info",            subcmdInfo },
             {"dump",            subcmdDump },
-            {"list",            subcmdList }
+            {"list",            subcmdList },
+            {"ls",              subcmdList }
         };
 
         // call the appropriate subcommand handler
