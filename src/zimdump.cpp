@@ -24,10 +24,12 @@
 #include <zim/file.h>
 #include <zim/fileiterator.h>
 #include <stdexcept>
-#include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <iomanip>
 #include <array>
+#include <vector>
+#include <codecvt>
 
 #include "arg.h"
 #include "version.h"
@@ -39,13 +41,38 @@
 # include <windows.h>
 #else
 # define SEPARATOR "/"
-# include <unistd.h>
-# include <sys/stat.h>
+#include <unistd.h>
 #endif
+
+#define ERRORSDIR "_exceptions/"
+
+std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+
+inline static void createdir(const std::string &path, const std::string &base)
+{
+    if (path.size() <= 1)
+        return ;
+
+    std::size_t position = 0;
+    while(position != std::string::npos)
+    {
+        position = path.find('/', position+1);
+        if (position != std::string::npos)
+        {
+            std::string fulldir = base + path.substr(0, position);
+            #if defined(_WIN32)
+            std::wstring wfulldir = converter.from_bytes(fulldir);
+            CreateDirectoryW(wfulldir.c_str(), NULL);
+            #else
+              ::mkdir(fulldir.c_str(), 0777);
+            #endif
+        }
+    }
+}
 
 static bool isReservedUrlChar(const char c)
 {
-    constexpr std::array<char, 10> reserved = {{';', ',', '/', '?', ':',
+    constexpr std::array<char, 10> reserved = {{';', ',', '?', ':',
                                                '@', '&', '=', '+', '$' }};
 
     return std::any_of(reserved.begin(), reserved.end(),
@@ -60,8 +87,8 @@ static bool needsEscape(const char c, const bool encodeReserved)
   if (isReservedUrlChar(c))
     return encodeReserved;
 
-  constexpr std::array<char, 9> noNeedEscape = {{'-', '_', '.', '!', '~',
-                                                '*', '\'', '(', ')' }};
+  constexpr std::array<char, 10> noNeedEscape = {{'-', '_', '.', '!', '~',
+                                                '*', '\'', '(', ')', '/' }};
 
   return not std::any_of(noNeedEscape.begin(), noNeedEscape.end(),
                          [&c] (const char &elem) { return elem == c; } );
@@ -296,91 +323,144 @@ void ZimDumper::listArticleT(const zim::Article& article, bool extra)
   }
   std::cout << std::endl;
 }
+void write_to_error_directory(const std::string& base, const std::string relpath, const char *content, ssize_t size)
+{
+    createdir(ERRORSDIR, base);
+    std::string url = relpath;
 
-inline void write_to_file(const std::string& path, const char* data, ssize_t size) {
+    std::string::size_type p;
+    while ((p = url.find('/')) != std::string::npos)
+        url.replace(p, 1, "%2f");
+
 #ifdef _WIN32
-    auto needed_size = MultiByteToWideChar(CP_UTF8, 0, path.data(), path.size(), NULL, 0);
-    std::wstring wpath(needed_size, 0);
-    MultiByteToWideChar(CP_UTF8, 0, path.data(), path.size(), &wpath[0], needed_size);
+    auto fullpath = std::string(base + ERRORSDIR + url);
+    std::wstring wpath = converter.from_bytes(fullpath);
+    auto fd = _wopen(wpath.c_str(), _O_WRONLY | _O_CREAT | _O_TRUNC, S_IWRITE);
+
+    if (fd == -1) {
+        std::cerr << "Error opening file " + fullpath + " cause: " + ::strerror(errno) << std::endl;
+        return ;
+    }
+    if (write(fd, content, size) != size) {
+      close(fd);
+      std::cerr << "Failed writing: " << fullpath << " - " << ::strerror(errno) << std::endl;
+    }
+#else
+    std::ofstream stream(base + ERRORSDIR + url);
+
+    stream.write(content, size);
+
+    if (stream.fail() || stream.bad())
+    {
+        std::cerr << "Error writing file to errors dir. " << (base + ERRORSDIR + url) << std::endl;
+    }else {
+        std::cerr << "Wrote " << (base + relpath) << " to " << (base + ERRORSDIR + url) << std::endl;
+    }
+#endif
+}
+
+inline void write_to_file(const std::string &base, const std::string& path, const char* data, ssize_t size) {
+    std::string fullpath = base + path;
+#ifdef _WIN32
+    std::wstring wpath = converter.from_bytes(fullpath);
     auto fd = _wopen(wpath.c_str(), _O_WRONLY | _O_CREAT | _O_TRUNC, S_IWRITE);
 #else
-    auto fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC,
+    auto fd = open(fullpath.c_str(), O_WRONLY | O_CREAT | O_TRUNC,
                               S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 #endif
     if (fd == -1) {
-      throw std::runtime_error("Error opening file " + path);
+        write_to_error_directory(base, path, data, size);
+        return ;
     }
     if (write(fd, data, size) != size) {
-      close(fd);
-      throw std::runtime_error("Error writing to file " + path);
+      write_to_error_directory(base, path, data, size);
     }
     close(fd);
 }
+
 
 void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump)
 {
   unsigned int truncatedFiles = 0;
 #if defined(_WIN32)
-  ::mkdir(directory.c_str());
+    std::wstring wdir = converter.from_bytes(directory);
+    CreateDirectoryW(wdir.c_str(), NULL);
 #else
   ::mkdir(directory.c_str(), 0777);
 #endif
 
-  std::set<char> ns;
+  std::vector<std::string> pathcache;
+  std::set<char> nscache;
   for (zim::File::const_iterator it = pos; it != file.end(); ++it)
   {
-    std::string d = directory + SEPARATOR + it->getNamespace();
-    if (ns.find(it->getNamespace()) == ns.end())
+    char filenamespace = it->getNamespace();
+    std::string d = directory + SEPARATOR + filenamespace;
+    std::string base = d + SEPARATOR;
+    if (nscache.find(filenamespace) == nscache.end())
     {
-#if defined(_WIN32)
-      ::mkdir(d.c_str());
-#else
-      ::mkdir(d.c_str(), 0777);
-#endif
-        ns.insert(it->getNamespace());
+    #if defined(_WIN32)
+        std::wstring wbase = converter.from_bytes(base);
+        CreateDirectoryW(wbase.c_str(), NULL);
+    #else
+      ::mkdir(base.c_str(), 0777);
+    #endif
+        nscache.insert(it->getNamespace());
     }
+    std::string t = it->getTitle();
     std::string url = it->getUrl();
-    std::string::size_type p;
-    while ((p = url.find('/')) != std::string::npos)
-      url.replace(p, 1, "%2f");
-    if ( url.length() > 255 )
+
+    auto position = url.find_last_of('/');
+    if (position != std::string::npos)
     {
-      std::ostringstream sspostfix, sst;
-      sspostfix << (++truncatedFiles);
-      sst << url.substr(0, 254-sspostfix.tellp()) << "~" << sspostfix.str();
-      url = sst.str();
+        std::string path = url.substr(0, position);
+        if (find(pathcache.begin(), pathcache.end(), path) == pathcache.end())
+        {
+            createdir(url, base);
+            pathcache.push_back(path);
+        }
     }
-    std::string f = d + SEPARATOR + url;
+
+    if ( t.length() > 255 )
+    {
+        std::ostringstream sspostfix, sst;
+        sspostfix << (++truncatedFiles);
+        sst << url.substr(0, 254-sspostfix.tellp()) << "~" << sspostfix.str();
+        url = sst.str();
+    }
+
+    std::stringstream ss;
+    ss << filenamespace;
+    ss << SEPARATOR + url;
+    std::string relative_path = ss.str();
+    std::string full_path = directory + SEPARATOR + relative_path;
+
     if (it->isRedirect())
     {
         auto redirectArticle = it->getRedirectArticle();
         std::string redirectUrl = redirectArticle.getUrl();
         if (symlinkdump == false && redirectArticle.getMimeType() == "text/html")
         {
+            auto encodedurl = urlEncode(redirectUrl, true);
             std::ostringstream ss;
-            ss <<  "<meta http-equiv=\"refresh\" content=\"0\"; url=\"";
-            ss << urlEncode(redirectUrl, true);
-            ss << "\" />";
+
+            ss << "<!DOCTYPE html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />";
+            ss << "<meta http-equiv=\"refresh\" content=\"0;url=" + encodedurl + "\" /><head><body></body></html>";
             auto content = ss.str();
-            write_to_file(f, content.c_str(), content.size());
-        }
-        else
-        {
+            write_to_file(directory + SEPARATOR, relative_path, content.c_str(), content.size());
+        } else {
 #ifdef _WIN32
             auto blob = redirectArticle.getData();
-            write_to_file(f, blob.data(), blob.size());
+            write_to_file(directory + SEPARATOR, relative_path, blob.data(), blob.size());
 #else
-            if (symlink(redirectUrl.c_str(), f.c_str()) != 0) {
+            if (symlink(redirectUrl.c_str(), full_path.c_str()) != 0) {
               throw std::runtime_error(
-                std::string("Error creating symlink from ") + redirectUrl + " to " + f);
+                std::string("Error creating symlink from ") + redirectUrl + " to " + full_path);
             }
 #endif
         }
-    }
-    else
-    {
+    } else {
       auto blob = it->getData();
-      write_to_file(f, blob.data(), blob.size());
+      write_to_file(directory + SEPARATOR, relative_path, blob.data(), blob.size());
     }
   }
 }
