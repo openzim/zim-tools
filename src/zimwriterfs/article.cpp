@@ -19,6 +19,7 @@
  */
 
 #include "article.h"
+#include "tools.h"
 #include "../tools.h"
 
 #include <iomanip>
