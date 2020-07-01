@@ -31,6 +31,7 @@
 #include <array>
 #include <vector>
 #include <codecvt>
+#include <unordered_map>
 
 #include "arg.h"
 #include "version.h"
@@ -368,8 +369,11 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
 
   std::vector<std::string> pathcache;
   std::set<char> nscache;
+  for (zim::File::const_iterator it = m_file.begin(); it != m_file.end(); ++it)
   {
     char filenamespace = it->getNamespace();
+    std::string d = directory + SEPARATOR + filenamespace;
+    std::string base = d + SEPARATOR;
     if (nsfilter(it->getNamespace()) == false)
         continue;
 
@@ -443,9 +447,7 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
 
 static const char USAGE[] =
 R"(
-#ifndef _WIN32
-                   "  -s        Use symlink to dump html redirect. Else create html redirect file."
-#endif
+
 Usage:
   zimdump ls [--details] [--idx=INDEX|([--url=URL] [--ns=N])] [--] <file>
   zimdump list [--details] [--idx=INDEX|([--url=URL] [--ns=N])] [--] <file>
@@ -465,6 +467,7 @@ Selectors:
 Options:
   --details    Show details about the articles. Else, list only the url of the article(s).
   --dir=DIR    Directory where to dump the article(s) content.
+  --redirect   Use symlink to dump redirect articles. Else create html redirect file
   -h, --help   Show this help
   --version    Show zimdump version.
 
@@ -497,9 +500,7 @@ void subcmdDumpAll(ZimDumper &app, std::map<std::string, docopt::value> &args, b
 
 void subcmdDump(ZimDumper &app,  std::map<std::string, docopt::value> &args)
 {
-    bool redirect = false;
-
-    if (args["--redirect"]) redirect = true;
+    bool redirect = args["--redirect"].asBool();
 
     if (args["--dir"]) {
         std::function<bool (const char c)> filter = [](const char /*c*/){return true; };
