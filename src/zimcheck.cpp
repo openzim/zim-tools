@@ -258,10 +258,9 @@ void displayHelp()
     std::cout<<"\n"
              "zimcheck\n"
              "Written by : Kiran Mathew Koshy\n"
-             "A to check the quality of a ZIM file\n."
+             "A tool to check the quality of a ZIM file\n."
              "To list the details of the error reported, add a flag -D.\n"
-             "Usage:\n"
-             "./zimcheckusage: ./zimcheck [options] zimfile\n"
+             "Usage: zimcheck [options] zimfile\n"
              "options:\n"
              "-A , --all             run all tests. Default if no flags are given.\n"
              "-0 , --empty           Empty content\n"
@@ -278,10 +277,10 @@ void displayHelp()
              "-H , --help            Displays Help\n"
              "-V , --version         Displays software version\n"
              "examples:\n"
-             "./zimcheck -A wikipedia.zim\n"
-             "./zimcheck --checksum --redundant wikipedia.zim\n"
-             "./zimcheck -F -R wikipedia.zim\n"
-             "./zimcheck -M --favicon wikipedia.zim\n";
+             "zimcheck -A wikipedia.zim\n"
+             "zimcheck --checksum --redundant wikipedia.zim\n"
+             "zimcheck -F -R wikipedia.zim\n"
+             "zimcheck -M --favicon wikipedia.zim\n";
     return;
 }
 
