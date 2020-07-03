@@ -326,7 +326,7 @@ public:
 void displayHelp()
 {
     std::cout<<"\nzimpatch"
-      "\nA tool to compute the end_file using a atart_file and a diff_file."
+      "\nA tool to compute the end_file using a start_file and a diff_file."
       "\nUsage: zimpatch [start_file] [diff_file] [output file]"
       "\nOption: -v, --version    print software version\n";
     return;
