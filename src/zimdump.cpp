@@ -135,6 +135,8 @@ class ZimDumper
     zim::Article getArticleByUrl(const std::string &url);
     zim::Article getArticle(zim::size_type idx);
 
+    bool hasNamespace(char ns);
+
     void dumpFiles(const std::string& directory, bool symlinkdump, std::function<bool (const char c)> nsfilter);
 };
 
@@ -146,6 +148,11 @@ zim::Article ZimDumper::getArticleByUrl(const std::string &url)
 zim::Article ZimDumper::getArticle(zim::size_type idx)
 {
     return m_file.getArticle(idx);
+}
+
+bool ZimDumper::hasNamespace(char ns)
+{
+    return m_file.hasNamespace(ns);
 }
 
 void ZimDumper::printInfo()
@@ -455,7 +462,7 @@ Usage:
   zimdump list [--details] [--idx=INDEX|([--url=URL] [--ns=N])] [--] <file>
   zimdump dump --dir=DIR [--ns=N] [--redirect] [--] <file>
   zimdump show (--idx=INDEX|(--url=URL [--ns=N])) [--] <file>
-  zimdump info [--] [--ns=N] <file>
+  zimdump info [--ns=N] [--] <file>
   zimdump -h | --help
   zimdump --version
 
@@ -483,7 +490,11 @@ Return value:
 void subcmdInfo(ZimDumper &app, std::map<std::string, docopt::value> &args)
 {
     if (args["--ns"]) {
-        app.printNsInfo(args["--ns"].asString().at(0));
+        char ns = args["--ns"].asString().at(0);
+        if (app.hasNamespace(ns))
+            app.printNsInfo(ns);
+        else
+            std::cerr << "ns not found. " << std::endl;
     }
     else {
         app.printInfo();
