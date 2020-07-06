@@ -452,7 +452,7 @@ zimdump tool is used to inspect a zim file and also to dump its contents into th
 Usage:
   zimdump list [--details] [--idx=INDEX|([--url=URL] [--ns=N])] [--] <file>
   zimdump dump --dir=DIR [--ns=N] [--redirect] [--] <file>
-  zimdump dump (--idx=INDEX|(--url=URL [--ns=N])) [--] <file>
+  zimdump show (--idx=INDEX|(--url=URL [--ns=N])) [--] <file>
   zimdump info [--] [--ns=N] <file>
   zimdump -h | --help
   zimdump --version
@@ -488,12 +488,12 @@ void subcmdInfo(ZimDumper &app, std::map<std::string, docopt::value> &args)
     }
 }
 
-void subcmdDumpAll(ZimDumper &app, std::map<std::string, docopt::value> &args, bool redirect, std::function<bool (const char c)> nsfilter)
+void subcmdDumpAll(ZimDumper &app, const std::string &outdir, bool redirect, std::function<bool (const char c)> nsfilter)
 {
 #ifdef _WIN32
     app.dumpFiles(args["--dir"].asString(), false, nsfilter);
 #else
-    app.dumpFiles(args["--dir"].asString(), redirect, nsfilter);
+    app.dumpFiles(outdir, redirect, nsfilter);
 #endif
 }
 
@@ -502,16 +502,17 @@ void subcmdDump(ZimDumper &app,  std::map<std::string, docopt::value> &args)
 {
     bool redirect = args["--redirect"].asBool();
 
-    if (args["--dir"]) {
-        std::function<bool (const char c)> filter = [](const char /*c*/){return true; };
-        if (args["--ns"])
-        {
-            std::string nspace = args["--ns"].asString();
-            filter = [nspace](const char c){ return nspace.at(0) == c; };
-        }
-        return subcmdDumpAll(app, args, redirect, filter);
+    std::function<bool (const char c)> filter = [](const char /*c*/){return true; };
+    if (args["--ns"])
+    {
+        std::string nspace = args["--ns"].asString();
+        filter = [nspace](const char c){ return nspace.at(0) == c; };
     }
+    return subcmdDumpAll(app, args["--dir"].asString(), redirect, filter);
+}
 
+void subcmdShow(ZimDumper &app,  std::map<std::string, docopt::value> &args)
+{
     zim::Article article;
     if (args["--idx"])
     {
@@ -559,11 +560,12 @@ void subcmdList(ZimDumper &app, std::map<std::string, docopt::value> &args)
 
 int main(int argc, char* argv[])
 {
+    std::string versionstr("zimdump " + std::string(VERSION));
     std::map<std::string, docopt::value> args
         = docopt::docopt(USAGE,
                          { argv + 1, argv + argc },
                          true,
-                         "zimdump 1.0");
+                         versionstr);
 
     try {
         ZimDumper app(args["<file>"].asString());
@@ -571,7 +573,8 @@ int main(int argc, char* argv[])
         std::unordered_map<std::string, std::function<void(ZimDumper&, decltype(args)&)>> dispatchtable = {
             {"info",            subcmdInfo },
             {"dump",            subcmdDump },
-            {"list",            subcmdList }
+            {"list",            subcmdList },
+            {"show",            subcmdList }
         };
 
         // call the appropriate subcommand handler
