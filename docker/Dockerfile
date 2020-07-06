@@ -1,4 +1,4 @@
-FROM ubuntu:bionic
+FROM ubuntu:focal
 
 # Update system
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
@@ -15,7 +15,7 @@ RUN locale-gen en_US.UTF-8
 
 # Install necessary packages
 RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends git pkg-config libtool automake autoconf make g++ liblzma-dev coreutils meson ninja-build wget zlib1g-dev libicu-dev libgumbo-dev libmagic-dev ca-certificates && \
+    apt-get install -y --no-install-recommends git pkg-config libtool automake autoconf make g++ liblzma-dev coreutils meson ninja-build wget zlib1g-dev libicu-dev libgumbo-dev libmagic-dev ca-certificates xz-utils cmake && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
 
@@ -23,26 +23,26 @@ RUN apt-get update -y && \
 RUN update-ca-certificates
 
 # Install Xapian (wget zlib1g-dev)
-RUN wget https://oligarchy.co.uk/xapian/1.4.14/xapian-core-1.4.14.tar.xz
-RUN tar xvf xapian-core-1.4.14.tar.xz
-RUN cd xapian-core-1.4.14 && ./configure
-RUN cd xapian-core-1.4.14 && make all install
+RUN wget https://oligarchy.co.uk/xapian/1.4.16/xapian-core-1.4.16.tar.xz
+RUN tar xvf xapian-core-1.4.16.tar.xz
+RUN cd xapian-core-1.4.16 && ./configure --prefix=/usr
+RUN cd xapian-core-1.4.16 && make all install
 RUN rm -rf xapian
 
 # Install zimlib (libicu-dev)
 RUN git clone https://github.com/openzim/libzim.git
-RUN cd libzim && git checkout 6.0.2
-RUN cd libzim && meson . build
+RUN cd libzim && git checkout 6.1.7
+RUN cd libzim && meson . build --prefix=/usr
 RUN cd libzim && ninja -C build install
 RUN rm -rf libzim
 
 # Install zimwriterfs (libgumbo-dev libmagic-dev)
-COPY . zimwriterfs
-RUN cd zimwriterfs && meson . build
-RUN cd zimwriterfs && ninja -C build install
-RUN rm -rf zimwriterfs
-RUN ldconfig
-ENV LD_LIBRARY_PATH /usr/local/lib/x86_64-linux-gnu/
+COPY . zim-tools
+RUN ls zim-tools
+RUN export PKG_CONFIG_PATH=/usr/lib64/pkgconfig && cd zim-tools && meson . build --prefix=/usr
+RUN cd zim-tools && ninja -C build install
+RUN rm -rf zim-tools
+ENV LD_LIBRARY_PATH /usr/lib64/
 
 # Boot commands
 CMD zimwriterfs ; /bin/bash
