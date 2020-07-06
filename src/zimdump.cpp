@@ -447,9 +447,9 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
 
 static const char USAGE[] =
 R"(
+zimdump tool is used to inspect a zim file and also to dump its contents into the filesystem.
 
 Usage:
-  zimdump ls [--details] [--idx=INDEX|([--url=URL] [--ns=N])] [--] <file>
   zimdump list [--details] [--idx=INDEX|([--url=URL] [--ns=N])] [--] <file>
   zimdump dump --dir=DIR [--ns=N] [--redirect] [--] <file>
   zimdump dump (--idx=INDEX|(--url=URL [--ns=N])) [--] <file>
@@ -571,8 +571,7 @@ int main(int argc, char* argv[])
         std::unordered_map<std::string, std::function<void(ZimDumper&, decltype(args)&)>> dispatchtable = {
             {"info",            subcmdInfo },
             {"dump",            subcmdDump },
-            {"list",            subcmdList },
-            {"ls",              subcmdList }
+            {"list",            subcmdList }
         };
 
         // call the appropriate subcommand handler
