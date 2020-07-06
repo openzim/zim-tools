@@ -197,6 +197,8 @@ void ZimDumper::dumpArticle(const zim::Article &article)
 {
     if (article.good())
         std::cout << article.getData() << std::flush;
+    else
+        std::cout << "Invalid article." << std::flush;
 }
 
 void ZimDumper::listArticles(bool info, bool extra)
@@ -491,7 +493,7 @@ void subcmdInfo(ZimDumper &app, std::map<std::string, docopt::value> &args)
 void subcmdDumpAll(ZimDumper &app, const std::string &outdir, bool redirect, std::function<bool (const char c)> nsfilter)
 {
 #ifdef _WIN32
-    app.dumpFiles(args["--dir"].asString(), false, nsfilter);
+    app.dumpFiles(outdir, false, nsfilter);
 #else
     app.dumpFiles(outdir, redirect, nsfilter);
 #endif
@@ -524,7 +526,10 @@ void subcmdShow(ZimDumper &app,  std::map<std::string, docopt::value> &args)
             nspace = args["--ns"].asString();
         article = app.getArticleByUrl(nspace + "/" + args["--url"].asString());
     }
-    app.dumpArticle(article);
+    if (article.good())
+        app.dumpArticle(article);
+    else
+        std::cerr << "Article not found" << std::endl;
 }
 
 void subcmdList(ZimDumper &app, std::map<std::string, docopt::value> &args)
