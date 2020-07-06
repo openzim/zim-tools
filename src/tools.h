@@ -18,10 +18,9 @@
  * MA 02110-1301, USA.
  */
 
-#ifndef OPENZIM_ZIMWRITERFS_TOOLS_H
-#define OPENZIM_ZIMWRITERFS_TOOLS_H
+#ifndef OPENZIM_TOOLS_H
+#define OPENZIM_TOOLS_H
 
-#include <gumbo.h>
 #include <map>
 #include <string>
 
@@ -49,11 +48,11 @@ void replaceStringInPlace(std::string& subject,
                           const std::string& replace);
 void stripTitleInvalidChars(std::string& str);
 
-std::string extractRedirectUrlFromHtml(const GumboVector* head_children);
-void getLinks(GumboNode* node, std::map<std::string, bool>& links);
+std::string computeRelativePath(const std::string path,
+                                const std::string absolutePath);
 
 std::string removeAccents(const std::string& text);
 
 void remove_all(const std::string& path);
 
-#endif  // OPENZIM_ZIMWRITERFS_TOOLS_H
+#endif  // OPENZIM_TOOLS_H

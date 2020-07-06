@@ -20,7 +20,7 @@
 
 #include "zimcreatorfs.h"
 #include "article.h"
-#include "tools.h"
+#include "../tools.h"
 
 #include <fstream>
 #include <dirent.h>

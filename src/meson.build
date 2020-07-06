@@ -33,3 +33,7 @@ executable('zimcheck', 'zimcheck.cpp',
 executable('zimrecreate', 'zimrecreate.cpp',
   dependencies: libzim_dep,
   install: true)
+
+if with_writer
+  subdir('zimwriterfs')
+endif
