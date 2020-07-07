@@ -15,7 +15,7 @@ RUN locale-gen en_US.UTF-8
 
 # Install necessary packages
 RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends git pkg-config libtool automake autoconf make g++ liblzma-dev coreutils meson ninja-build wget zlib1g-dev libicu-dev libgumbo-dev libmagic-dev ca-certificates xz-utils cmake && \
+    apt-get install -y --no-install-recommends git pkg-config libtool automake autoconf make g++ liblzma-dev libzstd-dev coreutils meson ninja-build wget zlib1g-dev libicu-dev libgumbo-dev libmagic-dev ca-certificates xz-utils cmake && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
 
