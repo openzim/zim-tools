@@ -56,11 +56,9 @@ inline static void createdir(const std::string &path, const std::string &base)
         return ;
 
     std::size_t position = 0;
-    while(position != std::string::npos)
-    {
+    while(position != std::string::npos) {
         position = path.find('/', position+1);
-        if (position != std::string::npos)
-        {
+        if (position != std::string::npos) {
             std::string fulldir = base + path.substr(0, position);
             #if defined(_WIN32)
             std::wstring wfulldir = converter.from_bytes(fulldir);
@@ -137,7 +135,7 @@ class ZimDumper
 
     bool hasNamespace(char ns);
 
-    int dumpFiles(const std::string& directory, bool symlinkdump, std::function<bool (const char c)> nsfilter);
+    void dumpFiles(const std::string& directory, bool symlinkdump, std::function<bool (const char c)> nsfilter);
 };
 
 zim::Article ZimDumper::getArticleByUrl(const std::string &url)
@@ -158,12 +156,12 @@ bool ZimDumper::hasNamespace(char ns)
 void ZimDumper::printInfo()
 {
   std::cout << "count-articles: " << m_file.getCountArticles() << "\n";
-  if (verbose)
-  {
+  if (verbose) {
     std::string ns = m_file.getNamespaces();
     std::cout << "namespaces: " << ns << '\n';
-    for (std::string::const_iterator it = ns.begin(); it != ns.end(); ++it)
+    for (std::string::const_iterator it = ns.begin(); it != ns.end(); ++it) {
       std::cout << "namespace " << *it << " size: " << m_file.getNamespaceCount(*it) << '\n';
+    }
   }
   std::cout << "uuid: " << m_file.getFileheader().getUuid() << "\n"
                "article count: " << m_file.getFileheader().getArticleCount() << "\n"
@@ -172,23 +170,25 @@ void ZimDumper::printInfo()
                "title idx pos: " << m_file.getFileheader().getTitleIdxPos() << "\n"
                "cluster count: " << m_file.getFileheader().getClusterCount() << "\n"
                "cluster ptr pos: " << m_file.getFileheader().getClusterPtrPos() << "\n";
-  if (m_file.getFileheader().hasChecksum())
+  if (m_file.getFileheader().hasChecksum()) {
     std::cout <<
                "checksum pos: " << m_file.getFileheader().getChecksumPos() << "\n"
                "checksum: " << m_file.getChecksum() << "\n";
-  else
-    std::cout <<
-               "no checksum\n";
+  } else {
+    std::cout <<"no checksum\n";
+  }
 
-  if (m_file.getFileheader().hasMainPage())
+  if (m_file.getFileheader().hasMainPage()) {
     std::cout << "main page: " << m_file.getFileheader().getMainPage() << "\n";
-  else
+  } else {
     std::cout << "main page: " << "-\n";
+  }
 
-  if (m_file.getFileheader().hasLayoutPage())
+  if (m_file.getFileheader().hasLayoutPage()) {
     std::cout << "layout page: " << m_file.getFileheader().getLayoutPage() << "\n";
-  else
+  } else {
     std::cout << "layout page: " << "-\n";
+  }
 
   std::cout.flush();
 }
@@ -202,8 +202,7 @@ void ZimDumper::printNsInfo(char ch)
 
 int ZimDumper::dumpArticle(const zim::Article &article)
 {
-    if (article.good() == false)
-    {
+    if (article.good() == false) {
         std::cout << "Invalid article." << std::flush;
         return -1;
     }
@@ -215,12 +214,12 @@ int ZimDumper::dumpArticle(const zim::Article &article)
 int ZimDumper::listArticles(bool info, bool extra)
 {
     int ret = 0;
-    for (zim::File::const_iterator it = m_file.beginByUrl(); it != m_file.end(); ++it)
-    {
-        if (info)
+    for (zim::File::const_iterator it = m_file.beginByUrl(); it != m_file.end(); ++it) {
+        if (info) {
           ret = listArticle(*it, extra);
-        else
+        } else {
           std::cout << it->getUrl() << '\n';
+        }
      }
     return ret;
 }
@@ -240,33 +239,27 @@ int ZimDumper::listArticle(const zim::Article& article, bool extra)
                             : article.isDeleted()    ? "deleted"
                             :                         "article") << "\n";
 
-  if (article.isRedirect())
-  {
+  if (article.isRedirect()) {
     std::cout <<
       "\tredirect index:  " << article.getRedirectIndex() << "\n";
   }
-  else if (article.isLinktarget())
-  {
+  else if (article.isLinktarget()) {
     // nothing else
   }
-  else if (article.isDeleted())
-  {
+  else if (article.isDeleted()) {
     // nothing else
   }
-  else
-  {
+  else {
     std::cout <<
       "\tmime-type:       " << article.getMimeType() << "\n"
       "\tarticle size:    " << article.getArticleSize() << "\n";
   }
 
-  if (extra)
-  {
+  if (extra) {
     std::string parameter = article.getParameter();
     std::cout << "\textra:           ";
     static char hexdigit[] = "0123456789abcdef";
-    for (std::string::const_iterator it = parameter.begin(); it != parameter.end(); ++it)
-    {
+    for (std::string::const_iterator it = parameter.begin(); it != parameter.end(); ++it) {
       unsigned val = static_cast<unsigned>(static_cast<unsigned char>(*it));
       std::cout << hexdigit[val >> 4] << hexdigit[val & 0xf] << ' ';
     }
@@ -286,31 +279,25 @@ void ZimDumper::listArticleT(const zim::Article& article, bool extra)
               : article.isDeleted()    ? 'D'
               :                         'A');
 
-  if (article.isRedirect())
-  {
+  if (article.isRedirect()) {
     std::cout << '\t' << article.getRedirectIndex();
   }
-  else if (article.isLinktarget())
-  {
+  else if (article.isLinktarget()) {
     // nothing else
   }
-  else if (article.isDeleted())
-  {
+  else if (article.isDeleted()) {
     // nothing else
   }
-  else
-  {
+  else {
     std::cout << '\t' << article.getMimeType()
               << '\t' << article.getArticleSize();
   }
 
-  if (extra)
-  {
+  if (extra) {
     std::string parameter = article.getParameter();
     std::cout << '\t';
     static char hexdigit[] = "0123456789abcdef";
-    for (std::string::const_iterator it = parameter.begin(); it != parameter.end(); ++it)
-    {
+    for (std::string::const_iterator it = parameter.begin(); it != parameter.end(); ++it) {
       unsigned val = static_cast<unsigned>(static_cast<unsigned char>(*it));
       std::cout << hexdigit[val >> 4] << hexdigit[val & 0xf] << '\t';
     }
@@ -344,12 +331,11 @@ void write_to_error_directory(const std::string& base, const std::string relpath
 
     stream.write(content, size);
 
-    if (stream.fail() || stream.bad())
-    {
+    if (stream.fail() || stream.bad()) {
         std::cerr << "Error writing file to errors dir. " << (base + ERRORSDIR + url) << std::endl;
         throw std::runtime_error(
           std::string("Error writing file to errors dir. ") + (base + ERRORSDIR + url));
-    }else {
+    } else {
         std::cerr << "Wrote " << (base + relpath) << " to " << (base + ERRORSDIR + url) << std::endl;
     }
 #endif
@@ -375,7 +361,7 @@ inline void write_to_file(const std::string &base, const std::string& path, cons
 }
 
 
-int ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::function<bool (const char c)> nsfilter)
+void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::function<bool (const char c)> nsfilter)
 {
   unsigned int truncatedFiles = 0;
 #if defined(_WIN32)
@@ -387,8 +373,7 @@ int ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::fu
 
   std::vector<std::string> pathcache;
   std::set<char> nscache;
-  for (zim::File::const_iterator it = m_file.begin(); it != m_file.end(); ++it)
-  {
+  for (zim::File::const_iterator it = m_file.begin(); it != m_file.end(); ++it) {
     char filenamespace = it->getNamespace();
     std::string d = directory + SEPARATOR + filenamespace;
     std::string base = d + SEPARATOR;
@@ -408,18 +393,15 @@ int ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::fu
     std::string url = it->getUrl();
 
     auto position = url.find_last_of('/');
-    if (position != std::string::npos)
-    {
+    if (position != std::string::npos) {
         std::string path = url.substr(0, position);
-        if (find(pathcache.begin(), pathcache.end(), path) == pathcache.end())
-        {
+        if (find(pathcache.begin(), pathcache.end(), path) == pathcache.end()) {
             createdir(url, base);
             pathcache.push_back(path);
         }
     }
 
-    if ( t.length() > 255 )
-    {
+    if ( t.length() > 255 ) {
         std::ostringstream sspostfix, sst;
         sspostfix << (++truncatedFiles);
         sst << url.substr(0, 254-sspostfix.tellp()) << "~" << sspostfix.str();
@@ -432,12 +414,10 @@ int ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::fu
     std::string relative_path = ss.str();
     std::string full_path = directory + SEPARATOR + relative_path;
 
-    if (it->isRedirect())
-    {
+    if (it->isRedirect()) {
         auto redirectArticle = it->getRedirectArticle();
         std::string redirectUrl = redirectArticle.getUrl();
-        if (symlinkdump == false && redirectArticle.getMimeType() == "text/html")
-        {
+        if (symlinkdump == false && redirectArticle.getMimeType() == "text/html") {
             auto encodedurl = urlEncode(redirectUrl, true);
             std::ostringstream ss;
 
@@ -461,7 +441,6 @@ int ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::fu
       write_to_file(directory + SEPARATOR, relative_path, blob.data(), blob.size());
     }
   }
-  return 0;
 }
 
 static const char USAGE[] =
@@ -501,9 +480,9 @@ int subcmdInfo(ZimDumper &app, std::map<std::string, docopt::value> &args)
 {
     if (args["--ns"]) {
         char ns = args["--ns"].asString().at(0);
-        if (app.hasNamespace(ns))
+        if (app.hasNamespace(ns)) {
             app.printNsInfo(ns);
-        else {
+         } else {
             std::cerr << "ns not found. " << std::endl;
             return -1;
         }
@@ -517,20 +496,19 @@ int subcmdInfo(ZimDumper &app, std::map<std::string, docopt::value> &args)
 int subcmdDumpAll(ZimDumper &app, const std::string &outdir, bool redirect, std::function<bool (const char c)> nsfilter)
 {
 #ifdef _WIN32
-    return app.dumpFiles(outdir, false, nsfilter);
+    app.dumpFiles(outdir, false, nsfilter);
 #else
-    return app.dumpFiles(outdir, redirect, nsfilter);
+    app.dumpFiles(outdir, redirect, nsfilter);
 #endif
+    return 0;
 }
-
 
 int subcmdDump(ZimDumper &app,  std::map<std::string, docopt::value> &args)
 {
     bool redirect = args["--redirect"].asBool();
 
     std::function<bool (const char c)> filter = [](const char /*c*/){return true; };
-    if (args["--ns"])
-    {
+    if (args["--ns"]) {
         std::string nspace = args["--ns"].asString();
         filter = [nspace](const char c){ return nspace.at(0) == c; };
     }
@@ -540,18 +518,15 @@ int subcmdDump(ZimDumper &app,  std::map<std::string, docopt::value> &args)
 int subcmdShow(ZimDumper &app,  std::map<std::string, docopt::value> &args)
 {
     zim::Article article;
-    if (args["--idx"])
-    {
+    if (args["--idx"]) {
         article = app.getArticle(args["--idx"].asLong());
-    } else if(args["--url"])
-    {
+    } else if(args["--url"]) {
         std::string nspace = "A";
         if (args["--ns"])
             nspace = args["--ns"].asString();
         article = app.getArticleByUrl(nspace + "/" + args["--url"].asString());
     }
-    if (article.good() == false)
-    {
+    if (article.good() == false) {
         std::cerr << "Article not found" << std::endl;
         return -1;
     }
@@ -567,11 +542,9 @@ int subcmdList(ZimDumper &app, std::map<std::string, docopt::value> &args)
     if (args["--idx"]) idx = true;
     if (args["--url"]) url = true;
 
-    if (idx || url)
-    {
+    if (idx || url) {
         zim::Article article;
-        if (idx)
-        {
+        if (idx) {
             article = app.getArticle(args["--idx"].asLong());
         } else if(url)
         {
@@ -580,11 +553,14 @@ int subcmdList(ZimDumper &app, std::map<std::string, docopt::value> &args)
                 nspace = args["--ns"].asString();
             article = app.getArticleByUrl(nspace + "/" + args["--url"].asString());
         }
-
-        return app.listArticle(article, details);
+        if (article.good()) {
+            return app.listArticle(article, details);
+        } else {
+            std::cerr << "Article not found" << std::endl;
+            return -1;
+        }
     }
-    else
-    {
+    else {
         return app.listArticles(details, details);
     }
 }
@@ -606,7 +582,7 @@ int main(int argc, char* argv[])
             {"info",            subcmdInfo },
             {"dump",            subcmdDump },
             {"list",            subcmdList },
-            {"show",            subcmdList }
+            {"show",            subcmdShow }
         };
 
         // call the appropriate subcommand handler
