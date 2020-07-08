@@ -127,9 +127,9 @@ class ZimDumper
 
     void printInfo();
     void printNsInfo(char ch);
-    void dumpArticle(const zim::Article &a);
-    void listArticles(bool info, bool extra);
-    void listArticle(const zim::Article& article, bool extra);
+    int dumpArticle(const zim::Article &a);
+    int listArticles(bool info, bool extra);
+    int listArticle(const zim::Article& article, bool extra);
     void listArticleT(const zim::Article& article, bool extra);
 
     zim::Article getArticleByUrl(const std::string &url);
@@ -137,7 +137,7 @@ class ZimDumper
 
     bool hasNamespace(char ns);
 
-    void dumpFiles(const std::string& directory, bool symlinkdump, std::function<bool (const char c)> nsfilter);
+    int dumpFiles(const std::string& directory, bool symlinkdump, std::function<bool (const char c)> nsfilter);
 };
 
 zim::Article ZimDumper::getArticleByUrl(const std::string &url)
@@ -200,29 +200,35 @@ void ZimDumper::printNsInfo(char ch)
                "upper bound idx: " << m_file.getNamespaceEndOffset(ch) << std::endl;
 }
 
-void ZimDumper::dumpArticle(const zim::Article &article)
-{
-    if (article.good())
-        std::cout << article.getData() << std::flush;
-    else
-        std::cout << "Invalid article." << std::flush;
-}
-
-void ZimDumper::listArticles(bool info, bool extra)
-{
-  for (zim::File::const_iterator it = m_file.beginByUrl(); it != m_file.end(); ++it)
-  {
-    if (info)
-      listArticle(*it, extra);
-    else
-        std::cout << it->getUrl() << '\n';
-  }
-}
-
-void ZimDumper::listArticle(const zim::Article& article, bool extra)
+int ZimDumper::dumpArticle(const zim::Article &article)
 {
     if (article.good() == false)
-        return ;
+    {
+        std::cout << "Invalid article." << std::flush;
+        return -1;
+    }
+
+    std::cout << article.getData() << std::flush;
+    return 0;
+}
+
+int ZimDumper::listArticles(bool info, bool extra)
+{
+    int ret = 0;
+    for (zim::File::const_iterator it = m_file.beginByUrl(); it != m_file.end(); ++it)
+    {
+        if (info)
+          ret = listArticle(*it, extra);
+        else
+          std::cout << it->getUrl() << '\n';
+     }
+    return ret;
+}
+
+int ZimDumper::listArticle(const zim::Article& article, bool extra)
+{
+    if (article.good() == false)
+        return -1;
 
   std::cout <<
       "url: "             << article.getUrl() << "\n"
@@ -266,6 +272,7 @@ void ZimDumper::listArticle(const zim::Article& article, bool extra)
     }
     std::cout << std::endl;
   }
+  return 0;
 }
 
 void ZimDumper::listArticleT(const zim::Article& article, bool extra)
@@ -340,6 +347,8 @@ void write_to_error_directory(const std::string& base, const std::string relpath
     if (stream.fail() || stream.bad())
     {
         std::cerr << "Error writing file to errors dir. " << (base + ERRORSDIR + url) << std::endl;
+        throw std::runtime_error(
+          std::string("Error writing file to errors dir. ") + (base + ERRORSDIR + url));
     }else {
         std::cerr << "Wrote " << (base + relpath) << " to " << (base + ERRORSDIR + url) << std::endl;
     }
@@ -366,7 +375,7 @@ inline void write_to_file(const std::string &base, const std::string& path, cons
 }
 
 
-void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::function<bool (const char c)> nsfilter)
+int ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::function<bool (const char c)> nsfilter)
 {
   unsigned int truncatedFiles = 0;
 #if defined(_WIN32)
@@ -452,6 +461,7 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
       write_to_file(directory + SEPARATOR, relative_path, blob.data(), blob.size());
     }
   }
+  return 0;
 }
 
 static const char USAGE[] =
@@ -487,31 +497,34 @@ Return value:
       See DIR/dump_errors.log for the listing of the errors.
 )";
 
-void subcmdInfo(ZimDumper &app, std::map<std::string, docopt::value> &args)
+int subcmdInfo(ZimDumper &app, std::map<std::string, docopt::value> &args)
 {
     if (args["--ns"]) {
         char ns = args["--ns"].asString().at(0);
         if (app.hasNamespace(ns))
             app.printNsInfo(ns);
-        else
+        else {
             std::cerr << "ns not found. " << std::endl;
+            return -1;
+        }
     }
     else {
         app.printInfo();
     }
+    return 0;
 }
 
-void subcmdDumpAll(ZimDumper &app, const std::string &outdir, bool redirect, std::function<bool (const char c)> nsfilter)
+int subcmdDumpAll(ZimDumper &app, const std::string &outdir, bool redirect, std::function<bool (const char c)> nsfilter)
 {
 #ifdef _WIN32
-    app.dumpFiles(outdir, false, nsfilter);
+    return app.dumpFiles(outdir, false, nsfilter);
 #else
-    app.dumpFiles(outdir, redirect, nsfilter);
+    return app.dumpFiles(outdir, redirect, nsfilter);
 #endif
 }
 
 
-void subcmdDump(ZimDumper &app,  std::map<std::string, docopt::value> &args)
+int subcmdDump(ZimDumper &app,  std::map<std::string, docopt::value> &args)
 {
     bool redirect = args["--redirect"].asBool();
 
@@ -524,7 +537,7 @@ void subcmdDump(ZimDumper &app,  std::map<std::string, docopt::value> &args)
     return subcmdDumpAll(app, args["--dir"].asString(), redirect, filter);
 }
 
-void subcmdShow(ZimDumper &app,  std::map<std::string, docopt::value> &args)
+int subcmdShow(ZimDumper &app,  std::map<std::string, docopt::value> &args)
 {
     zim::Article article;
     if (args["--idx"])
@@ -537,13 +550,15 @@ void subcmdShow(ZimDumper &app,  std::map<std::string, docopt::value> &args)
             nspace = args["--ns"].asString();
         article = app.getArticleByUrl(nspace + "/" + args["--url"].asString());
     }
-    if (article.good())
-        app.dumpArticle(article);
-    else
+    if (article.good() == false)
+    {
         std::cerr << "Article not found" << std::endl;
+        return -1;
+    }
+    return app.dumpArticle(article);
 }
 
-void subcmdList(ZimDumper &app, std::map<std::string, docopt::value> &args)
+int subcmdList(ZimDumper &app, std::map<std::string, docopt::value> &args)
 {
     bool idx = false;
     bool url = false;
@@ -566,16 +581,17 @@ void subcmdList(ZimDumper &app, std::map<std::string, docopt::value> &args)
             article = app.getArticleByUrl(nspace + "/" + args["--url"].asString());
         }
 
-        app.listArticle(article, details);
+        return app.listArticle(article, details);
     }
     else
     {
-        app.listArticles(details, details);
+        return app.listArticles(details, details);
     }
 }
 
 int main(int argc, char* argv[])
 {
+    int ret = 0;
     std::string versionstr("zimdump " + std::string(VERSION));
     std::map<std::string, docopt::value> args
         = docopt::docopt(USAGE,
@@ -586,7 +602,7 @@ int main(int argc, char* argv[])
     try {
         ZimDumper app(args["<file>"].asString());
 
-        std::unordered_map<std::string, std::function<void(ZimDumper&, decltype(args)&)>> dispatchtable = {
+        std::unordered_map<std::string, std::function<int(ZimDumper&, decltype(args)&)>> dispatchtable = {
             {"info",            subcmdInfo },
             {"dump",            subcmdDump },
             {"list",            subcmdList },
@@ -596,12 +612,13 @@ int main(int argc, char* argv[])
         // call the appropriate subcommand handler
         for (const auto &it : dispatchtable) {
             if (args[it.first.c_str()].asBool()) {
-                (it.second)(app, args);
+                ret = (it.second)(app, args);
                 break;
             }
         }
     } catch (std::exception &e) {
         std::cout << "Exception: " << e.what() << '\n';
+        return -1;
     }
-    return 0;
+    return ret;
 }
