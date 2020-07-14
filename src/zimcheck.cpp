@@ -225,7 +225,7 @@ std::string normalize_link(const std::string& input, const std::string& baseUrl)
                 continue;
             }
         }
-        if ( *p == '#' )
+        if ( *p == '#' || *p == '?')
             // This is a beginning of the #anchor inside a page. No need to decode more
             break;
         if ( *p == '%')
@@ -400,7 +400,7 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
             auto links = getLinks(it->getData());
             for(auto olink: links)
             {
-                if (olink.front() == '#')
+                if (olink.front() == '#' || olink.front() == '?')
                     continue;
                 if (isInternalUrl(olink)) {
                     auto link = normalize_link(olink, baseUrl);
