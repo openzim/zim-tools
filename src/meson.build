@@ -34,6 +34,11 @@ executable('zimrecreate', 'zimrecreate.cpp',
   dependencies: libzim_dep,
   install: true)
 
+testzimcheck = executable('testzimcheck', 'testzimcheck.cpp',
+                            dependencies: libzim_dep )
+
+test('testzimcheck', testzimcheck)
+
 if with_writer
   subdir('zimwriterfs')
 endif

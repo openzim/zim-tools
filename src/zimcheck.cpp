@@ -477,6 +477,7 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
     }
 }
 
+#ifndef ZIMCHECK_TEST
 
 int main (int argc, char **argv)
 {
@@ -748,3 +749,5 @@ int main (int argc, char **argv)
 
     return status_code;
 }
+
+#endif
