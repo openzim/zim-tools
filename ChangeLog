@@ -1,7 +1,14 @@
-zim-tools 1.2.2
+zim-tools 2.0.0
 ===============
 
  * zimwriterfs: the tool version 1.3.10 migrated to zim-tools sources tree
+ * zimwriterfs: Better support of webp format
+ * zimdump: Fix directory and redirection handling when dumping zim content of
+   the file system.
+ * zimdump: Improve zimdump commandline argument.
+ * zimcheck: Fix false positive with URL containing '?'
+ * Fix help typo in zimpatch and zimcheck
+ * Fix incoherent licensing.
 
 zim-tools 1.2.1
 ===============

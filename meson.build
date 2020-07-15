@@ -1,5 +1,5 @@
 project('zim-tools', ['c', 'cpp'],
-  version : '1.2.1',
+  version : '2.0.0',
   license : 'GPLv3+',
   default_options : ['c_std=c11', 'cpp_std=c++11', 'werror=true'])
 
@@ -12,7 +12,7 @@ if static_linkage
   add_global_link_arguments('-static-libstdc++', '--static', language:'cpp')
 endif
 
-libzim_dep = dependency('libzim', version : '>=6.1.1', static:static_linkage)
+libzim_dep = dependency('libzim', version : '>=6.1.8', static:static_linkage)
 
 compiler = meson.get_compiler('cpp')
 find_library_in_compiler = meson.version().version_compare('>=0.31.0')
