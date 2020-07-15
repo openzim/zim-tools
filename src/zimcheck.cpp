@@ -33,11 +33,30 @@
 #include <algorithm>
 #include <regex>
 #include <ctime>
+#include <unordered_map>
 
 #include "progress.h"
 #include "version.h"
 
-enum TestType {
+enum StatusCode : int {
+   PASS = 0,
+   FAIL = 1,
+   EXCEPTION = 2
+};
+
+enum class LogTag { ERROR, WARNING };
+
+// Specialization of std::hash needed for our unordered_map. Can be removed in c++14
+namespace std {
+  template <> struct hash<LogTag> {
+    size_t operator() (const LogTag &t) const { return size_t(t); }
+  };
+}
+
+static std::unordered_map<LogTag, std::string> tagToStr{ {LogTag::ERROR,     "ERROR"},
+                                                         {LogTag::WARNING,   "WARNING"}};
+
+enum class TestType {
     CHECKSUM,
     EMPTY,
     METADATA,
@@ -50,34 +69,36 @@ enum TestType {
     OTHER
 };
 
-enum StatusCode : int {
-   PASS = 0,
-   FAIL = 1,
-   EXCEPTION = 2
-};
+// Specialization of std::hash needed for our unordered_map. Can be removed in c++14
+namespace std {
+  template <> struct hash<TestType> {
+    size_t operator() (const TestType &t) const { return size_t(t); }
+  };
+}
 
-static const char *errorString[OTHER+1] = {
-    "Invalid checksum",
-    "Missing metadata entries",
-    "Missing favicon",
-    "Missing mainpage",
-    "Redundant data found",
-    "Invalid internal links found",
-    "Invalid external links found",
-    "Incoherent mimeType found",
-    "Other errors found"
+static std::unordered_map<TestType, std::pair<LogTag, std::string>> errormapping = {
+    { TestType::CHECKSUM,      {LogTag::ERROR, "Invalid checksum"}},
+    { TestType::EMPTY,         {LogTag::ERROR, "Missing metadata entries"}},
+    { TestType::METADATA,      {LogTag::ERROR, "Missing metadata entries"}},
+    { TestType::FAVICON,       {LogTag::ERROR, "Missing favicon"}},
+    { TestType::MAIN_PAGE,     {LogTag::ERROR, "Missing mainpage"}},
+    { TestType::REDUNDANT,     {LogTag::WARNING, "Redundant data found"}},
+    { TestType::URL_INTERNAL,  {LogTag::ERROR, "Invalid internal links found"}},
+    { TestType::URL_EXTERNAL,  {LogTag::ERROR, "Invalid external links found"}},
+    { TestType::MIME,       {LogTag::ERROR, "Incoherent mimeType found"}},
+    { TestType::OTHER,      {LogTag::ERROR, "Other errors found"}}
 };
-
 
 class ErrorLogger {
   private:
-    std::map<TestType, std::vector<std::string>> errors;
-    bool testStatus[OTHER+1];
+    std::unordered_map<TestType, std::vector<std::string>> errors;
+    std::unordered_map<TestType, bool> testStatus;
 
   public:
-    ErrorLogger() {
-        for (int testType=CHECKSUM; testType<=OTHER; ++testType) {
-            testStatus[testType] = true;
+    ErrorLogger()
+    {
+        for (const auto &m : errormapping) {
+            testStatus[m.first] = true;
         }
     }
 
@@ -89,24 +110,20 @@ class ErrorLogger {
         errors[type].push_back(message);
     }
 
-    void report(bool error_details) {
-        for (int testType=CHECKSUM; testType<=OTHER; ++testType) {
-            if (!testStatus[testType]) {
-                std::cout << "[ERROR] " << errorString[testType] << " :" << std::endl;
-                for (auto& msg: errors[(TestType)testType]) {
+    void report(bool error_details) const {
+        for (auto status : testStatus) {
+            if (status.second == false) {
+                auto &p = errormapping[status.first];
+                std::cout << "[" + tagToStr[p.first] + "] " << p.second << " :" << std::endl;
+                for (auto& msg: errors.at(status.first)) {
                     std::cout << "  " << msg << std::endl;
                 }
             }
         }
     }
 
-    bool overalStatus() {
-        for (int testType=CHECKSUM; testType<=OTHER; ++testType) {
-            if (!testStatus[testType]) {
-                return false;
-            }
-        }
-        return true;
+    inline bool overalStatus() const {
+        return std::all_of(testStatus.begin(), testStatus.end(), [](std::pair<TestType, bool> e){ return e.second == true;});
     }
 };
 
@@ -286,7 +303,7 @@ void displayHelp()
 void test_checksum(zim::File& f, ErrorLogger& reporter) {
     std::cout << "[INFO] Verifying Internal Checksum.. " << std::endl;
     bool result = f.verify();
-    reporter.setTestResult(CHECKSUM, result);
+    reporter.setTestResult(TestType::CHECKSUM, result);
     if( result )
         std::cout << "  [INFO] Internal checksum found correct" << std::endl;
     else
@@ -294,7 +311,7 @@ void test_checksum(zim::File& f, ErrorLogger& reporter) {
         std::cout << "  [ERROR] Wrong Checksum in ZIM file" << std::endl;
         std::ostringstream ss;
         ss << "ZIM File Checksum in file: " << f.getChecksum() << std::endl;
-        reporter.addError(CHECKSUM, ss.str());
+        reporter.addError(TestType::CHECKSUM, ss.str());
     }
 }
 
@@ -311,8 +328,8 @@ void test_metadata(const zim::File& f, ErrorLogger& reporter) {
     for (auto &meta : test_meta) {
         auto article = f.getArticle('M', meta);
         if (!article.good()) {
-            reporter.setTestResult(METADATA, false);
-            reporter.addError(METADATA, meta);
+            reporter.setTestResult(TestType::METADATA, false);
+            reporter.addError(TestType::METADATA, meta);
         }
     }
 }
@@ -326,7 +343,7 @@ void test_favicon(const zim::File& f, ErrorLogger& reporter) {
             return;
         }
     }
-    reporter.setTestResult(FAVICON, false);
+    reporter.setTestResult(TestType::FAVICON, false);
 }
 
 void test_mainpage(const zim::File& f, ErrorLogger& reporter) {
@@ -337,11 +354,11 @@ void test_mainpage(const zim::File& f, ErrorLogger& reporter) {
         testok = false;
     else if( fh.getMainPage() > fh.getArticleCount() )
         testok = false;
-    reporter.setTestResult(MAIN_PAGE, testok);
+    reporter.setTestResult(TestType::MAIN_PAGE, testok);
     if (!testok) {
         std::ostringstream ss;
         ss << "Main Page Index stored in File Header: " << fh.getMainPage();
-        reporter.addError(MAIN_PAGE, ss.str());
+        reporter.addError(TestType::MAIN_PAGE, ss.str());
     }
 }
 
@@ -367,8 +384,8 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
              it->getNamespace() == 'I')) {
           std::ostringstream ss;
           ss << "Entry " << it->getLongUrl() << " is empty";
-          reporter.addError(EMPTY, ss.str());
-          reporter.setTestResult(EMPTY, false);
+          reporter.addError(TestType::EMPTY, ss.str());
+          reporter.setTestResult(TestType::EMPTY, false);
         }
 
         if (it->isRedirect() ||
@@ -412,11 +429,11 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
                         {
                             std::ostringstream ss;
                             ss << link << " (" << olink << ") was not found in article " << it->getLongUrl();
-                            reporter.addError(URL_INTERNAL, ss.str());
+                            reporter.addError(TestType::URL_INTERNAL, ss.str());
                             previousLink = link;
                             previousIndex = index;
                         }
-                        reporter.setTestResult(URL_INTERNAL, false);
+                        reporter.setTestResult(TestType::URL_INTERNAL, false);
                     }
                 }
             }
@@ -434,8 +451,8 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
                 {
                     std::ostringstream ss;
                     ss << link << " is an external dependence in article " << it->getLongUrl();
-                    reporter.addError(URL_EXTERNAL, ss.str());
-                    reporter.setTestResult(URL_EXTERNAL, false);
+                    reporter.addError(TestType::URL_EXTERNAL, ss.str());
+                    reporter.setTestResult(TestType::URL_EXTERNAL, false);
                     break;
                 }
             }
@@ -464,11 +481,11 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
                     if (s1 != s2 )
                         continue;
 
-                    reporter.setTestResult(REDUNDANT, false);
+                    reporter.setTestResult(TestType::REDUNDANT, false);
                     std::ostringstream ss;
                     ss << a1.getTitle() << " (idx " << a1.getIndex() << ") and "
                        << a2.getTitle() << " (idx " << a2.getIndex() << ")";
-                    reporter.addError(REDUNDANT, ss.str());
+                    reporter.addError(TestType::REDUNDANT, ss.str());
                 }
             }
         }
