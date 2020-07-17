@@ -344,10 +344,9 @@ public:
     }
 };
 
-void displayHelp()
+void usage()
 {
-    std::cout<<"\nzimdiff"
-    "\nA tool to obtain the diff_file between two ZIM files, in order to facilitate incremental updates."
+    std::cout<<"\nzimdiff computes a diff_file between two ZIM files, in order to facilitate incremental updates.\n"
     "\nUsage: zimdiff [start_file] [end_file] [output file]"
     "\nOption: -v, --version    print software version\n";
     return;
@@ -358,14 +357,13 @@ int main(int argc, char* argv[])
 
     //Parsing arguments
     //There will be only two arguments, so no detailed parsing is required.
-    std::cout<<"zimdiff\n";
-    for(int i=0;i<argc;i++)
+    for (int i=0;i<argc;i++)
     {
         if(std::string(argv[i])=="-H" ||
            std::string(argv[i])=="--help" ||
            std::string(argv[i])=="-h")
         {
-            displayHelp();
+            usage();
             return 0;
         }
 
@@ -376,9 +374,10 @@ int main(int argc, char* argv[])
             return 0;
         }
     }
-    if(argc<4)
+    if (argc<4)
     {
         std::cout<<"\n[ERROR] Not enough Arguments provided\n";
+        usage();
         return -1;
     }
     std::string filename_1 =argv[1];

@@ -257,10 +257,7 @@ std::string normalize_link(const std::string& input, const std::string& baseUrl)
 void displayHelp()
 {
     std::cout<<"\n"
-             "zimcheck\n"
-             "Written by : Kiran Mathew Koshy\n"
-             "A tool to check the quality of a ZIM file\n."
-             "To list the details of the error reported, add a flag -D.\n"
+             "zimcheck checks the quality of a ZIM file.\n\n"
              "Usage: zimcheck [options] zimfile\n"
              "options:\n"
              "-A , --all             run all tests. Default if no flags are given.\n"

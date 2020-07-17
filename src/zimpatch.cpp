@@ -323,10 +323,9 @@ public:
     }
 };
 
-void displayHelp()
+void usage()
 {
-    std::cout<<"\nzimpatch"
-      "\nA tool to compute the end_file using a start_file and a diff_file."
+    std::cout<<"\nzimpatch computes the end_file using a start_file and a diff_file (made by zimdiff).\n"
       "\nUsage: zimpatch [start_file] [diff_file] [output file]"
       "\nOption: -v, --version    print software version\n";
     return;
@@ -364,7 +363,7 @@ bool checkDiffFile(std::string startFileName, std::string diffFileName)
     additionalMetadata[5]="M/redirectlist";
 
     //Search in the ZIM file if the above articles are present:
-    for(unsigned int i=0;i<additionalMetadata.size();i++)
+    for (unsigned int i=0; i<additionalMetadata.size(); i++)
     {
         if(!diffFile.getArticleByUrl(additionalMetadata[i]).good())        //If the article was not found in the file.
             return false;
@@ -414,7 +413,7 @@ int main(int argc, char* argv[])
            std::string(argv[i])=="--help" ||
            std::string(argv[i])=="-h")
         {
-            displayHelp();
+            usage();
             return 0;
         }
 
@@ -428,7 +427,7 @@ int main(int argc, char* argv[])
     if(argc<4)
     {
         std::cout<<"\n[ERROR] Not enough Arguments provided\n";
-        displayHelp();
+        usage();
         return -1;
     }
 
