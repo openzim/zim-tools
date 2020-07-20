@@ -370,7 +370,6 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
     // So all article with the same hash will be stored in the same list.
     std::map<unsigned int, std::list<zim::article_index_type>> hash_main;
 
-    std::string previousLink;
     int previousIndex = -1;
 
     progress.reset(f.getFileheader().getArticleCount());
@@ -413,28 +412,36 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
             baseUrl.resize( pos==baseUrl.npos ? 0 : pos );
 
             auto links = getLinks(it->getData());
-            for(auto olink: links)
+            std::unordered_map<std::string, std::vector<std::string>> filtered;
+            for (const auto &l : links)
             {
-                if (olink.front() == '#' || olink.front() == '?')
-                    continue;
-                if (isInternalUrl(olink)) {
-                    auto link = normalize_link(olink, baseUrl);
-                    char nm = link[0];
-                    std::string shortUrl(link.substr(2));
-                    auto a = f.getArticle(nm, shortUrl);
-                    if (!a.good())
+                if (l.front() == '#') continue;
+                if (isInternalUrl(l) == false) continue;
+
+                auto normalized = normalize_link(l, baseUrl);
+                filtered[normalized].push_back(l);
+            }
+
+            for(const auto &p: filtered)
+            {
+                std::string link = p.first;
+                char nm = link[0];
+                std::string shortUrl(link.substr(2));
+                auto a = f.getArticle(nm, shortUrl);
+                if (!a.good())
+                {
+                    int index = it->getIndex();
+                    if (previousIndex != index)
                     {
-                        int index = it->getIndex();
-                        if ((previousLink != link) && (previousIndex != index) )
-                        {
-                            std::ostringstream ss;
-                            ss << link << " (" << olink << ") was not found in article " << it->getLongUrl();
-                            reporter.addError(TestType::URL_INTERNAL, ss.str());
-                            previousLink = link;
-                            previousIndex = index;
-                        }
-                        reporter.setTestResult(TestType::URL_INTERNAL, false);
+                        std::ostringstream ss;
+                        ss << "The following links:\n";
+                        for (const auto &olink : p.second)
+                            ss << "- " << olink << '\n';
+                        ss << "(" << link << ") were not found in article " << it->getLongUrl();
+                        reporter.addError(TestType::URL_INTERNAL, ss.str());
+                        previousIndex = index;
                     }
+                    reporter.setTestResult(TestType::URL_INTERNAL, false);
                 }
             }
         }
