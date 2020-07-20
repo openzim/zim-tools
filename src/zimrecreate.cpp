@@ -177,10 +177,9 @@ public:
     }
 };
 
-void displayHelp()
+void usage()
 {
-    std::cout<<"\nzimrecreate"
-    "\nA tool to recreate a ZIM files from a existing ZIM."
+    std::cout<<"\nzimrecreate recreates a ZIM file from a existing ZIM.\n"
     "\nUsage: zimrecreate [origin_file] [output file]"
     "\nOption: -v, --version    print software version\n";
     return;
@@ -198,7 +197,7 @@ int main(int argc, char* argv[])
            std::string(argv[i])=="--help" ||
            std::string(argv[i])=="-h")
         {
-            displayHelp();
+            usage();
             return 0;
         }
 
@@ -212,6 +211,7 @@ int main(int argc, char* argv[])
     if(argc<3)
     {
         std::cout<<"\n[ERROR] Not enough Arguments provided\n";
+        usage();
         return -1;
     }
     std::string originFilename =argv[1];

@@ -99,7 +99,7 @@ class ZimSplitter
            auto size_to_copy = std::min<zim::offset_type>(size, BUFFER_SIZE);
            ifile.read(batch_buffer, size_to_copy);
            if (!ifile) {
-               throw std::runtime_error("Error while reading zim file"); 
+               throw std::runtime_error("Error while reading zim file");
            }
            ofile.write(batch_buffer, size_to_copy);
            if (!ofile) {
@@ -131,7 +131,7 @@ class ZimSplitter
        if (out_size+lastPartSize > partSize) {
            new_file();
        }
-       copy_out(lastPartSize);       
+       copy_out(lastPartSize);
     }
 
     bool check() {
@@ -177,7 +177,8 @@ int main(int argc, char* argv[])
 
     if (argc <= 1)
     {
-      std::cerr << "usage: " << argv[0] << " [options] zimfile\n"
+      std::cerr << "\nzimsplit splits smartly a ZIM file in smaller parts.\n\n"
+        "usage: " << argv[0] << " [options] zimfile\n"
         "\n"
         "options:\n"
         "  -o            prefix of output file parts\n"

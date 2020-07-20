@@ -45,12 +45,12 @@ int main(int argc, char* argv[])
 
     if (argc <= 2)
     {
-      std::cerr << "usage: " << argv[0] << " [-x indexfile] zimfile searchstring\n"
-                   "\n"
-                   "options\n"
-                   "  -x indexfile   specify indexfile\n"
-                   "  -v             print software version\n"
-                << std::endl;
+      std::cerr << "\nzimsearch allows to search content in a ZIM file.\n\n"
+        "usage: " << argv[0] << " [-x indexfile] zimfile searchstring\n"
+        "\n"
+        "options\n"
+        "  -x indexfile   specify indexfile\n"
+        "  -v             print software version\n" << std::endl;
       return 1;
     }
 
