@@ -62,3 +62,4 @@ if with_writer
 endif
 
 subdir('src')
+subdir('test')
