@@ -20,6 +20,8 @@
 #ifndef _ZIM_TOOL_VERSION_H_
 #define _ZIM_TOOL_VERSION_H_
 
+#include <iostream>
+
 #ifndef VERSION
   #define VERSION "undefined"
 #endif
