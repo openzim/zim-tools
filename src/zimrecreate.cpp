@@ -22,9 +22,8 @@
 #include <vector>
 #include <zim/writer/creator.h>
 #include <zim/blob.h>
-#include <zim/article.h>
-#include <zim/file.h>
-#include <zim/fileiterator.h>
+#include <zim/item.h>
+#include <zim/archive.h>
 #include <list>
 #include <algorithm>
 #include <sstream>
@@ -33,51 +32,46 @@
 
 class Article : public zim::writer::Article         //Article class that will be passed to the zimwriter. Contains a zim::Article class, so it is easier to add a
 {
-    zim::Article Ar;
+    zim::Entry entry;
 public:
-    explicit Article(const zim::Article a):
-      Ar(a)
+    explicit Article(const zim::Entry e):
+      entry(e)
     {}
 
     virtual zim::writer::Url getUrl() const
     {
-        return zim::writer::Url(Ar.getNamespace(), Ar.getUrl());
+        return zim::writer::Url(entry.getPath());
     }
 
     virtual std::string getTitle() const
     {
-        return Ar.getTitle();
+        return entry.getTitle();
     }
 
     virtual bool isRedirect() const
     {
-        return Ar.isRedirect();
+        return entry.isRedirect();
     }
 
     virtual std::string getMimeType() const
     {
         if (isRedirect()) { return ""; }
-        return Ar.getMimeType();
+        return entry.getItem().getMimetype();
     }
 
     virtual zim::writer::Url getRedirectUrl() const {
-      auto redirectArticle = Ar.getRedirectArticle();
-      return zim::writer::Url(redirectArticle.getNamespace(), redirectArticle.getUrl());
-    }
-
-    virtual std::string getParameter() const
-    {
-        return Ar.getParameter();
+      auto redirectEntry = entry.getRedirectEntry();
+      return zim::writer::Url(redirectEntry.getPath());
     }
 
     zim::Blob getData() const
     {
-        return Ar.getData();
+        return entry.getItem().getData();
     }
 
     zim::size_type getSize() const
     {
-        return Ar.getArticleSize();
+        return entry.getItem().getSize();
     }
 
     std::string getFilename() const
@@ -99,30 +93,30 @@ public:
     }
 };
 
-using pair_type = std::pair<zim::article_index_type, zim::cluster_index_type>;
+using pair_type = std::pair<zim::entry_index_type, zim::cluster_index_type>;
 
 class ComparatorByCluster {
   public:
-    ComparatorByCluster(const zim::File& origin):
+    ComparatorByCluster(const zim::Archive& origin):
       origin(origin) {
     }
 
     bool operator() (pair_type i, pair_type j) {
       return i.second < j.second;
     }
-  const zim::File& origin;
+  const zim::Archive& origin;
 };
 
 
 class ZimRecreator : public zim::writer::Creator
 {
-    zim::File origin;
+    zim::Archive origin;
 
 public:
     explicit ZimRecreator(std::string originFilename="") :
-      zim::writer::Creator(true)
+      zim::writer::Creator(true),
+      origin(originFilename)
     {
-        origin = zim::File(originFilename);
         // [TODO] Use the correct language
         setIndexing(true, "eng");
         setMinChunkSize(2048);
@@ -130,50 +124,31 @@ public:
 
     virtual void create(const std::string& fname)
     {
-        std::cout << "generate list of articles" << std::endl;
-        std::vector<pair_type> article_list;
-        auto nb_articles = origin.getCountArticles();
-        article_list.reserve(nb_articles);
-        for(zim::article_index_type i=0; i<nb_articles; i++) {
-            auto article = origin.getArticle(i);
-            article_list.push_back(std::make_pair(i, article.getClusterNumber()));
-            if ((i % 10000) == 0)
-              std::cout << i << "/" << nb_articles << std::endl;
-        }
-        std::cout << "sorting articles" << std::endl;
-        {
-          ComparatorByCluster comparator(origin);
-          std::sort(article_list.begin(), article_list.end(), comparator);
-        }
         std::cout << "starting zim creation" << std::endl;
         startZimCreation(fname);
-        for(auto& pair: article_list)
+        for(auto& entry:origin.iterEfficient())
         {
-          auto article = origin.getArticle(pair.first);
-          if (article.getNamespace() == 'Z' || article.getNamespace() == 'X') {
+          auto path = entry.getPath();
+          if (path[0] == 'Z' || path[0] == 'X') {
             // Index is recreated by zimCreator. Do not add it
             continue;
           }
-          auto tempArticle = std::make_shared<Article>(article);
+          auto tempArticle = std::make_shared<Article>(entry);
           addArticle(tempArticle);
         }
         finishZimCreation();
     }
 
     virtual zim::writer::Url getMainUrl() const {
-      if (!origin.getFileheader().hasMainPage()) {
+      try {
+        return zim::writer::Url(origin.getMainEntry().getPath());
+      } catch(...) {
         return zim::writer::Url();
       }
-      auto mainArticle = origin.getArticle(origin.getFileheader().getMainPage());
-      return zim::writer::Url(mainArticle.getNamespace(), mainArticle.getUrl());
     }
 
     virtual zim::writer::Url getLayoutUrl() const {
-      if (!origin.getFileheader().hasLayoutPage()) {
-       return zim::writer::Url();
-      }
-      auto layoutArticle = origin.getArticle(origin.getFileheader().getLayoutPage());
-      return zim::writer::Url(layoutArticle.getNamespace(), layoutArticle.getUrl());
+      return zim::writer::Url();
     }
 };
 

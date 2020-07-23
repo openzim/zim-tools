@@ -20,7 +20,8 @@
 #include <fstream>
 #include <stdexcept>
 
-#include <zim/file.h>
+#define ZIM_PRIVATE
+#include <zim/archive.h>
 
 #include "arg.h"
 #include "version.h"
@@ -30,7 +31,7 @@
 class ZimSplitter
 {
   private:
-    zim::File file;
+    zim::Archive archive;
     const std::string prefix;
     size_t partSize;
 
@@ -44,7 +45,7 @@ class ZimSplitter
 
   public:
     ZimSplitter(const std::string& fname, const std::string& out_prefix, size_t partSize)
-      : file(fname),
+      : archive(fname),
         prefix(out_prefix),
         partSize(partSize),
         first_index(0),
@@ -90,10 +91,6 @@ class ZimSplitter
         out_size = 0;
     }
 
-    void write_first_part() {
-       copy_out(file.getClusterOffset(0));
-    }
-
     void copy_out(zim::offset_type size) {
         while (size > 0) {
            auto size_to_copy = std::min<zim::offset_type>(size, BUFFER_SIZE);
@@ -111,50 +108,61 @@ class ZimSplitter
     }
 
     void run() {
-       new_file();
-       write_first_part();
+        new_file();
 
-       auto nbClusters = file.getFileheader().getClusterCount();
-       for(unsigned int cluster_nb=0;cluster_nb<nbClusters-1; cluster_nb++) {
-           auto clusterOffset = file.getClusterOffset(cluster_nb);
-           auto clusterEnd = file.getClusterOffset(cluster_nb+1);
-           auto clusterSize = clusterEnd-clusterOffset;
-           if ( out_size+clusterSize > partSize ) {
-               new_file();
-           }
-           copy_out(clusterSize);
-       }
+        std::vector<zim::offset_type> offsets;
+        auto nbClusters = archive.getClusterCount();
+        for(zim::offset_type i=0;i<nbClusters;i++) {
+            offsets.push_back(archive.getClusterOffset(i));
+        }
+        offsets.push_back(archive.getFilesize());
+        std::sort(offsets.begin(), offsets.end());
 
-       auto lastClusterOffset = file.getClusterOffset(nbClusters-1);
-       auto lastPartSize = file.getFilesize() - lastClusterOffset;
-
-       if (out_size+lastPartSize > partSize) {
-           new_file();
-       }
-       copy_out(lastPartSize);       
+        zim::offset_type last(0);
+        for(auto offset:offsets) {
+            auto currentSize = offset-last;
+            if (currentSize > partSize) {
+                // One part is bigger than what we want :/
+                // Still have to write it.
+                if (out_size) {
+                    new_file();
+                }
+                copy_out(currentSize);
+                new_file();
+            } else {
+                if (out_size+currentSize > partSize) {
+                    // It would be too much to write thu current part in the current file.
+                    new_file();
+                }
+                copy_out(currentSize);
+            }
+            last = offset;
+        }
     }
 
     bool check() {
-       bool error = false;
-       auto nbClusters = file.getFileheader().getClusterCount();
-       for(unsigned int cluster_nb=0;cluster_nb<nbClusters-1; cluster_nb++) {
-           auto clusterOffset = file.getClusterOffset(cluster_nb);
-           auto clusterEnd = file.getClusterOffset(cluster_nb+1);
-           auto clusterSize = clusterEnd-clusterOffset;
-           if (clusterSize > partSize) {
-               // The cluster size is to big, even to fit in a new file part.
-               std::cout << "Cluster " << cluster_nb << " is to big to fit in one part." << std::endl;
-               error = true;
-           }
-       }
+        bool error = false;
 
-       auto lastClusterOffset = file.getClusterOffset(nbClusters-1);
-       auto lastPartSize = file.getFilesize() - lastClusterOffset;
+        std::vector<zim::offset_type> offsets;
+        auto nbClusters = archive.getClusterCount();
+        for(zim::offset_type i=0;i<nbClusters;i++) {
+            offsets.push_back(archive.getClusterOffset(i));
+        }
+        offsets.push_back(archive.getFilesize());
+        std::sort(offsets.begin(), offsets.end());
 
-       if (lastPartSize > partSize) {
-           std::cout << "Last cluster and checksum are too big to fit in one part." << std::endl;
-           error = true;
-       }
+        zim::offset_type last(0);
+        for(auto offset:offsets) {
+            auto currentSize = offset-last;
+            if (currentSize > partSize) {
+                // One part is bigger than what we want :/
+                // Still have to write it.
+                std::cout << "The part (probably a cluster) is to big to fit in one part." << std::endl;
+                std::cout << "    size is " << currentSize << "(" << offset << "-" << last << ")." << std::endl;
+                error = true;
+            }
+            last = offset;
+        }
        return error;
     }
 };
