@@ -1,0 +1,22 @@
+.TH ZIMSPLIT "1" "July 2020" "zim-tools" "User Commands"
+.SH NAME
+zimsplit \- split a ZIM file into smaller parts
+.SH SYNOPSIS
+\fBzimsplit\fR [options] zimfile\fR
+.SH DESCRIPTION
+.TP
+zimfile
+ZIM file to split
+.TP
+\fB\-o\fR PREFIX
+Prefix of output file parts
+.TP
+\fB\-s\fR SIZE
+Size of each file parts
+.TP
+\fB\-\-force\fR
+create ZIM parts even if it is impossible to have all part size smaller than requested
+.TP
+\fB\-v\fR, \fB\-\-version\fR
+print software version
+

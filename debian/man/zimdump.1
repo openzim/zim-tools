@@ -1,0 +1,67 @@
+.TH ZIMDUMP "1" "July 2020" "zim-tools" "User Commands"
+.SH NAME
+zimdump \- dump a ZIM file
+.SH SYNOPSIS
+\fBzimdump\fR [options] zimfile\fR
+.SH DESCRIPTION
+.TP
+zimfile
+The ZIM file to dump
+.TP
+\fB\-F\fR
+print fileinfo
+.TP
+\fB\-N\fR NS
+print info about namespace
+.TP
+\fB\-i\fR
+print info about articles
+.TP
+\fB\-d\fR
+print data of articles
+.TP
+\fB\-p\fR
+print page
+.TP
+\fB\-f\fR TITLE
+find article
+.TP
+\fB\-u\fR URL
+find article by url
+.TP
+\fB\-t\fR
+sort (and find) articles by title instead of url
+.TP
+\fB\-l\fR
+list articles
+.TP
+\fB\-L\fR
+list articles as table
+.TP
+\fB\-o\fR INDEX
+locate article by index
+.TP
+\fB\-x\fR
+print extra parameters
+.TP
+\fB\-n\fR NS
+specify namespace (default 'A')
+.TP
+\fB\-D\fR DIR
+dump all files into directory
+.TP
+\fB\-s\fR
+Use symlink to dump html redirect. Else create HTML redirect file.
+.TP
+\fB\-v\fR
+verbose (print uncompressed length of articles when \fB\-i\fR is set, print namespaces with counts with \fB\-F\fR)
+.TP
+\fB\-V\fR
+print the software version number
+.TP
+\fB\-Z\fR
+dump index data
+.TP
+\fB\-C\fR
+verify checksum
+
