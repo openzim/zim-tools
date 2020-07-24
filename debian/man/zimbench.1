@@ -1,0 +1,19 @@
+.TH ZIMBENCH "1" "July 2020" "zim-tools" "User Commands"
+.SH NAME
+zimbench \- benchmark a ZIM file
+.SH SYNOPSIS
+\fBzimbench\fR [options] zimfile\fR
+.SH DESCRIPTION
+.TP
+zimfile
+ZIM file to benchmark
+.TP
+\fB\-n\fR NUMBER
+number of linear accessed articles (default: 1000)
+.TP
+\fB\-r\fR RANDOM
+number of random accessed articles (default: same as \fB\-n\fR)
+.TP
+\fB\-d\fR DISTINCT
+number of distinct articles used for random access (default: same as \fB\-r\fR)
+

@@ -1,0 +1,33 @@
+Source: zim-tools
+Section: utils
+Priority: optional
+Maintainer: Kiwix team <kiwix@kiwix.org>
+Build-Depends: debhelper-compat (= 13),
+ meson,
+ pkg-config,
+ libzim-dev (>= 6.1.8),
+ libmagic-dev,
+ zlib1g-dev,
+ libgumbo-dev,
+ libicu-dev,
+ libdocopt-dev,
+ cmake
+Standards-Version: 4.5.0
+Homepage: https://github.com/openzim/zim-tools
+Rules-Requires-Root: no
+
+Package: zim-tools
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Conflicts: zimwriterfs (<= 1.3.10-2)
+Replaces: zimwriterfs (<= 1.3.10-2)
+Description: various ZIM command-line tools
+ ZIM tools is a collection of various command-line utilities for
+ interacting and working with the ZIM file format.
+
+Package: zimwriterfs
+Architecture: all
+Section: oldlibs
+Depends: zim-tools (>= 2.0.0), ${misc:Depends}
+Description: creates ZIM files from a directory - transitional package
+ This is a transitional package and can safely be removed.
