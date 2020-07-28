@@ -159,7 +159,7 @@ void usage()
   std::cout << std::endl;
 
   std::cout << "Documentation:" << std::endl;
-  std::cout << "\tzimwriterfs source code: https://github.com/openzim/zimwriterfs"
+  std::cout << "\tzimwriterfs source code: https://github.com/openzim/zim-tools"
             << std::endl;
   std::cout << "\tZIM format: https://openzim.org" << std::endl;
   std::cout << std::endl;
