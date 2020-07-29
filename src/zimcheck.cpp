@@ -78,7 +78,7 @@ namespace std {
 
 static std::unordered_map<TestType, std::pair<LogTag, std::string>> errormapping = {
     { TestType::CHECKSUM,      {LogTag::ERROR, "Invalid checksum"}},
-    { TestType::EMPTY,         {LogTag::ERROR, "Missing metadata entries"}},
+    { TestType::EMPTY,         {LogTag::ERROR, "Empty articles"}},
     { TestType::METADATA,      {LogTag::ERROR, "Missing metadata entries"}},
     { TestType::FAVICON,       {LogTag::ERROR, "Missing favicon"}},
     { TestType::MAIN_PAGE,     {LogTag::ERROR, "Missing mainpage"}},
@@ -114,7 +114,7 @@ class ErrorLogger {
         for (auto status : testStatus) {
             if (status.second == false) {
                 auto &p = errormapping[status.first];
-                std::cout << "[" + tagToStr[p.first] + "] " << p.second << " :" << std::endl;
+                std::cout << "[" + tagToStr[p.first] + "] " << p.second << ":" << std::endl;
                 for (auto& msg: errors.at(status.first)) {
                     std::cout << "  " << msg << std::endl;
                 }
@@ -321,7 +321,7 @@ void displayHelp()
 
 
 void test_checksum(zim::File& f, ErrorLogger& reporter) {
-    std::cout << "[INFO] Verifying Internal Checksum.. " << std::endl;
+    std::cout << "[INFO] Verifying Internal Checksum..." << std::endl;
     bool result = f.verify();
     reporter.setTestResult(TestType::CHECKSUM, result);
     if( result )
@@ -337,7 +337,7 @@ void test_checksum(zim::File& f, ErrorLogger& reporter) {
 
 
 void test_metadata(const zim::File& f, ErrorLogger& reporter) {
-    std::cout << "[INFO] Searching for metadata entries.." << std::endl;
+    std::cout << "[INFO] Searching for metadata entries..." << std::endl;
     static const char* const test_meta[] = {
         "Title",
         "Creator",
@@ -355,7 +355,7 @@ void test_metadata(const zim::File& f, ErrorLogger& reporter) {
 }
 
 void test_favicon(const zim::File& f, ErrorLogger& reporter) {
-    std::cout << "[INFO] Searching for Favicon.." << std::endl;
+    std::cout << "[INFO] Searching for Favicon..." << std::endl;
     static const char* const favicon_paths[] = {"-/favicon.png", "I/favicon.png", "I/favicon", "-/favicon"};
     for (auto &path: favicon_paths) {
         auto article = f.getArticleByUrl(path);
@@ -367,7 +367,7 @@ void test_favicon(const zim::File& f, ErrorLogger& reporter) {
 }
 
 void test_mainpage(const zim::File& f, ErrorLogger& reporter) {
-    std::cout << "[INFO] Searching for main page.." << std::endl;
+    std::cout << "[INFO] Searching for main page..." << std::endl;
     zim::Fileheader fh=f.getFileheader();
     bool testok = true;
     if( !fh.hasMainPage() )
@@ -385,7 +385,7 @@ void test_mainpage(const zim::File& f, ErrorLogger& reporter) {
 
 void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progress,
                    bool redundant_data, bool url_check, bool url_check_external, bool empty_check) {
-    std::cout << "[INFO] Verifying Articles' content.. " << std::endl;
+    std::cout << "[INFO] Verifying Articles' content..." << std::endl;
     // Article are store in a map<hash, list<index>>.
     // So all article with the same hash will be stored in the same list.
     std::map<unsigned int, std::list<zim::article_index_type>> hash_main;
@@ -496,8 +496,8 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
 
     if (redundant_data)
     {
-        std::cout << "[INFO] Searching for redundant articles.." << std::endl;
-        std::cout << "  Verifying Similar Articles for redundancies.." << std::endl;
+        std::cout << "[INFO] Searching for redundant articles..." << std::endl;
+        std::cout << "  Verifying Similar Articles for redundancies..." << std::endl;
         std::ostringstream output_details;
         progress.reset(hash_main.size());
         for(auto &it: hash_main)
