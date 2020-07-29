@@ -78,7 +78,7 @@ namespace std {
 
 static std::unordered_map<TestType, std::pair<LogTag, std::string>> errormapping = {
     { TestType::CHECKSUM,      {LogTag::ERROR, "Invalid checksum"}},
-    { TestType::EMPTY,         {LogTag::ERROR, "Missing metadata entries"}},
+    { TestType::EMPTY,         {LogTag::ERROR, "Empty articles"}},
     { TestType::METADATA,      {LogTag::ERROR, "Missing metadata entries"}},
     { TestType::FAVICON,       {LogTag::ERROR, "Missing favicon"}},
     { TestType::MAIN_PAGE,     {LogTag::ERROR, "Missing mainpage"}},
