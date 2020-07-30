@@ -92,8 +92,23 @@ jobs:
           MESON_OPTION="$MESON_OPTION --cross-file $HOME/BUILD_${{matrix.target}}/meson_cross_file.txt"
         fi
         cd $HOME/zim-tools
-        meson . build ${MESON_OPTION}
+        meson . build ${MESON_OPTION} -Db_coverage=true
         cd build
         ninja
       env:
         PKG_CONFIG_PATH: "/home/runner/BUILD_${{matrix.target}}/INSTALL/lib/pkgconfig:/home/runner/BUILD_${{matrix.target}}/INSTALL/lib${{matrix.lib_postfix}}/pkgconfig"
+    - name: Test
+      shell: bash
+      run: |
+       cd $HOME/zim-tools/build
+       meson test --verbose
+       ninja coverage
+    - name: Publish coverage
+      shell: bash
+      run: |
+        cd $HOME/zim-tools
+        curl https://codecov.io/bash -o codecov.sh
+        bash codecov.sh -n "${OS_NAME}_${{matrix.target}}" -Z
+        rm codecov.sh
+      env:
+        CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
