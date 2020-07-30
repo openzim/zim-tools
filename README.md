@@ -39,12 +39,15 @@ with the ZIM libary compilation itself, we recommend to have a look to
 Dependencies
 ------------
 
-Most of the utilities form zim-tools programs relies on the libzim:
+Most of the utilities that form the zim-tools programs rely on libzim:
 
 * [ZIM](https://openzim.org) (package `libzim-dev` on Debian/Ubuntu)
 
-`zimwriterfs` relies on many third parts software libraries. They are
-prerequisites to the Zimwriterfs compilation. Following libraries
+`zimdump` additionally requires:
+* [docopt.cpp](https://github.com/docopt/docopt.cpp) (package `libdocopt-dev` on Debian/Ubuntu)
+
+`zimwriterfs` relies on many third-party software libraries. They are
+prerequisites to compiling zimwriterfs. The following libraries
 need to be available:
 
 * [Magic](https://www.darwinsys.com/file/) (package  `libmagic-dev` on Debian/Ubuntu)
@@ -55,7 +58,7 @@ need to be available:
 These dependencies may or may not be packaged by your operating
 system. They may also be packaged but only in an older version. The
 compilation script will tell you if one of them is missing or too old.
-In the worse case, you will have to download and compile a more recent
+In the worst case, you will have to download and compile a more recent
 version by hand.
 
 If you want to install these dependencies locally, then ensure that
