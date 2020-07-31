@@ -72,8 +72,9 @@ void FileArticle::readData() const
   dataRead = true;
 }
 
-FileArticle::FileArticle(const std::string& path, const bool detectRedirects)
-    : dataRead(false)
+FileArticle::FileArticle(const std::string& path, bool uniqueNs, const bool detectRedirects)
+    : dataRead(false) ,
+      uniqueNs(uniqueNs)
 {
   invalid = false;
 
@@ -83,7 +84,7 @@ FileArticle::FileArticle(const std::string& path, const bool detectRedirects)
   mimeType = getMimeTypeForFile(url);
 
   /* namespace */
-  ns = getNamespaceForMimeType(mimeType)[0];
+  ns = getNamespaceForMimeType(mimeType, uniqueNs)[0];
 
   /* HTML specific code */
   if ( mimeType.find("text/html") != std::string::npos
@@ -190,7 +191,7 @@ void FileArticle::parseAndAdaptHtml(bool detectRedirects)
         && target.substr(0, 5) != "data:") {
       replaceStringInPlace(data,
                            "\"" + target + "\"",
-                           "\"" + computeNewUrl(url, longUrl, target) + "\"");
+                           "\"" + computeNewUrl(url, longUrl, target, uniqueNs) + "\"");
     }
   }
   gumbo_destroy_output(&kGumboDefaultOptions, output);
@@ -260,7 +261,7 @@ void FileArticle::adaptCss() {
         replaceStringInPlaceOnce(
             data,
             startDelimiter + url + endDelimiter,
-            startDelimiter + computeNewUrl(this->url, longUrl, path) + endDelimiter);
+            startDelimiter + computeNewUrl(this->url, longUrl, path, uniqueNs) + endDelimiter);
       }
     }
   }

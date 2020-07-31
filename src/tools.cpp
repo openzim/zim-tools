@@ -42,8 +42,6 @@
 #endif
 
 
-extern bool uniqueNamespace;
-
 
 unsigned int getFileSize(const std::string& path)
 {
@@ -272,7 +270,7 @@ void stripTitleInvalidChars(std::string& str)
   replaceStringInPlace(str, "\u202C", "");
 }
 
-std::string getNamespaceForMimeType(const std::string& mimeType)
+std::string getNamespaceForMimeType(const std::string& mimeType, bool uniqueNamespace)
 {
   if (uniqueNamespace || mimeType.find("text") == 0 || mimeType.empty()) {
     if (uniqueNamespace || mimeType.find("text/html") == 0

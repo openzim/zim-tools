@@ -323,12 +323,12 @@ inline std::string removeLocalTagAndParameters(const std::string& url)
   return retVal;
 }
 
-std::string computeNewUrl(const std::string& aid, const std::string& baseUrl, const std::string& targetUrl)
+std::string computeNewUrl(const std::string& aid, const std::string& baseUrl, const std::string& targetUrl, const bool uniqueNs)
 {
   std::string filename = computeAbsolutePath(aid, targetUrl);
   std::string targetMimeType
       = getMimeTypeForFile(decodeUrl(removeLocalTagAndParameters(filename)));
   std::string newUrl
-      = "/" + getNamespaceForMimeType(targetMimeType) + "/" + filename;
+      = "/" + getNamespaceForMimeType(targetMimeType, uniqueNs) + "/" + filename;
   return computeRelativePath(baseUrl, newUrl);
 }

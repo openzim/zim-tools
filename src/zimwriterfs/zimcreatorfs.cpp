@@ -148,7 +148,7 @@ void ZimCreatorFS::addMetadata(const std::string& metadata, const std::string& c
 
 void ZimCreatorFS::addArticle(const std::string& path)
 {
-  auto farticle = std::make_shared<FileArticle>(path);
+  auto farticle = std::make_shared<FileArticle>(path, uniqueNamespace);
   if (farticle->isInvalid()) {
     return;
   }
