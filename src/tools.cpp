@@ -32,15 +32,11 @@
 #include <memory>
 #include <unistd.h>
 
-#include <unicode/translit.h>
-#include <unicode/ucnv.h>
-
 #ifdef _WIN32
 #define SEPARATOR "\\"
 #else
 #define SEPARATOR "/"
 #endif
-
 
 
 unsigned int getFileSize(const std::string& path)
@@ -128,13 +124,17 @@ std::string decodeUrl(const std::string& originalUrl)
   std::string::size_type pos = 0;
   while ((pos = url.find('%', pos)) != std::string::npos
          && pos + 2 < url.length()) {
+    if (!isxdigit(url[pos+1]) || !isxdigit(url[pos+2])) {
+      ++pos;
+      continue;
+    }
     url.replace(pos, 3, 1, charFromHex(url.substr(pos + 1, 2)));
     ++pos;
   }
   return url;
 }
 
-std::string removeLastPathElement(const std::string& path,
+static std::string removeLastPathElement(const std::string& path,
                                   const bool removePreSeparator,
                                   const bool removePostSeparator)
 {
@@ -152,7 +152,7 @@ std::string removeLastPathElement(const std::string& path,
 }
 
 /* Split string in a token array */
-std::vector<std::string> split(const std::string& str,
+static std::vector<std::string> split(const std::string& str,
                                const std::string& delims = " *-")
 {
   std::string::size_type lastPos = str.find_first_not_of(delims, 0);
@@ -168,18 +168,13 @@ std::vector<std::string> split(const std::string& str,
   return tokens;
 }
 
-std::vector<std::string> split(const char* lhs, const char* rhs)
+static std::vector<std::string> split(const char* lhs, const char* rhs)
 {
   const std::string m1(lhs), m2(rhs);
   return split(m1, m2);
 }
 
-std::vector<std::string> split(const char* lhs, const std::string& rhs)
-{
-  return split(lhs, rhs.c_str());
-}
-
-std::vector<std::string> split(const std::string& lhs, const char* rhs)
+static std::vector<std::string> split(const std::string& lhs, const char* rhs)
 {
   return split(lhs.c_str(), rhs);
 }
@@ -214,6 +209,9 @@ std::string computeAbsolutePath(const std::string& path,
 std::string computeRelativePath(const std::string path,
                                 const std::string absolutePath)
 {
+  if (path.empty())
+    return "";
+
   std::vector<std::string> pathParts = split(path, "/");
   std::vector<std::string> absolutePathParts = split(absolutePath, "/");
 
@@ -254,6 +252,9 @@ void replaceStringInPlace(std::string& subject,
                           const std::string& search,
                           const std::string& replace)
 {
+  if (search.empty())
+    return;
+
   size_t pos = 0;
   while ((pos = subject.find(search, pos)) != std::string::npos) {
     subject.replace(pos, search.length(), replace);
@@ -292,20 +293,6 @@ std::string getNamespaceForMimeType(const std::string& mimeType, bool uniqueName
       return "I";
     }
   }
-}
-
-
-std::string removeAccents(const std::string& text)
-{
-  ucnv_setDefaultName("UTF-8");
-  static UErrorCode status = U_ZERO_ERROR;
-  static std::unique_ptr<icu::Transliterator> removeAccentsTrans(icu::Transliterator::createInstance(
-      "Lower; NFD; [:M:] remove; NFC", UTRANS_FORWARD, status));
-  icu::UnicodeString ustring(text.c_str());
-  removeAccentsTrans->transliterate(ustring);
-  std::string unaccentedText;
-  ustring.toUTF8String(unaccentedText);
-  return unaccentedText;
 }
 
 void remove_all(const std::string& path)
