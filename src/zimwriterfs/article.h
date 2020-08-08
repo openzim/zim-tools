@@ -122,6 +122,7 @@ class FileArticle : public Article
   mutable std::string data;
   mutable bool dataRead;
   bool invalid;
+  bool uniqueNs;
   std::string _getFilename() const;
   void readData() const;
   void parseAndAdaptHtml(bool detectRedirects);
@@ -129,6 +130,7 @@ class FileArticle : public Article
 
  public:
   explicit FileArticle(const std::string& path,
+                       bool uniqueNs,
                        const bool detectRedirects = true);
   virtual zim::Blob getData() const;
   virtual bool isLinktarget() const { return false; }

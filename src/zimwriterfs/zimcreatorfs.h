@@ -38,9 +38,10 @@ class IHandler
 class ZimCreatorFS : public zim::writer::Creator
 {
  public:
-  ZimCreatorFS(std::string mainPage, bool verbose)
+  ZimCreatorFS(std::string mainPage, bool verbose, bool uniqueNamespace)
     : zim::writer::Creator(verbose),
-      mainPage(mainPage) {}
+      mainPage(mainPage),
+      uniqueNamespace(uniqueNamespace){}
   virtual ~ZimCreatorFS() = default;
   virtual zim::writer::Url getMainUrl() const;
   virtual void add_customHandler(IHandler* handler);
@@ -55,6 +56,7 @@ class ZimCreatorFS : public zim::writer::Creator
  private:
   std::vector<IHandler*> articleHandlers;
   std::string mainPage;
+  bool uniqueNamespace;
 };
 
 #endif  // OPENZIM_ZIMWRITERFS_ARTICLESOURCE_H

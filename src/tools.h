@@ -25,7 +25,7 @@
 #include <string>
 
 std::string getMimeTypeForFile(const std::string& filename);
-std::string getNamespaceForMimeType(const std::string& mimeType);
+std::string getNamespaceForMimeType(const std::string& mimeType, bool uniqueNamespace);
 std::string getFileContent(const std::string& path);
 unsigned int getFileSize(const std::string& path);
 std::string decodeUrl(const std::string& encodedUrl);
@@ -35,7 +35,7 @@ bool fileExists(const std::string& path);
 std::string removeLastPathElement(const std::string& path,
                                   const bool removePreSeparator,
                                   const bool removePostSeparator);
-std::string computeNewUrl(const std::string& aid, const std::string& baseUrl, const std::string& targetUrl);
+std::string computeNewUrl(const std::string& aid, const std::string& baseUrl, const std::string& targetUrl, const bool uniqueNs);
 
 std::string base64_encode(unsigned char const* bytes_to_encode,
                           unsigned int in_len);
@@ -55,4 +55,4 @@ std::string removeAccents(const std::string& text);
 
 void remove_all(const std::string& path);
 
-#endif  // OPENZIM_TOOLS_H
+#endif  // OPENZIM_TOOLS_H

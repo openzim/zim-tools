@@ -328,7 +328,7 @@ int main(int argc, char** argv)
     tags += ";_ftindex"; // For backward compatibility
   }
 
-  ZimCreatorFS zimCreator(welcome, isVerbose());
+  ZimCreatorFS zimCreator(welcome, isVerbose(), uniqueNamespace);
 
   zimCreator.setMinChunkSize(minChunkSize);
   zimCreator.setIndexing(!withoutFTIndex, language);
