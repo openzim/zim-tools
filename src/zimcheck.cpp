@@ -331,10 +331,7 @@ void test_checksum(zim::File& f, ErrorLogger& reporter) {
     std::cout << "[INFO] Verifying Internal Checksum..." << std::endl;
     bool result = f.verify();
     reporter.setTestResult(TestType::CHECKSUM, result);
-    if( result )
-        std::cout << "  [INFO] Internal checksum found correct" << std::endl;
-    else
-    {
+    if (!result) {
         std::cout << "  [ERROR] Wrong Checksum in ZIM file" << std::endl;
         std::ostringstream ss;
         ss << "ZIM File Checksum in file: " << f.getChecksum() << std::endl;
