@@ -295,10 +295,16 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
 
             auto links = generic_getLinks(it->getData());
             std::unordered_map<std::string, std::vector<std::string>> filtered;
+            int nremptylinks = 0;
             for (const auto &l : links)
             {
                 if (l.front() == '#' || l.front() == '?') continue;
                 if (isInternalUrl(l) == false) continue;
+                if (l.empty())
+                {
+                    nremptylinks++;
+                    continue;
+                }
 
                 if (isOutofBounds(l, baseUrl))
                 {
@@ -310,6 +316,14 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
 
                 auto normalized = normalize_link(l, baseUrl);
                 filtered[normalized].push_back(l);
+            }
+
+            if (nremptylinks)
+            {
+                std::ostringstream ss;
+                ss << "Found " << nremptylinks << " empty links in article: " << it->getLongUrl();
+                reporter.addError(TestType::URL_INTERNAL, ss.str());
+                reporter.setTestResult(TestType::URL_INTERNAL, false);
             }
 
             for(const auto &p: filtered)
