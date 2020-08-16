@@ -23,6 +23,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 std::string getMimeTypeForFile(const std::string& filename);
 std::string getNamespaceForMimeType(const std::string& mimeType, bool uniqueNamespace);
@@ -50,5 +51,20 @@ std::string computeRelativePath(const std::string path,
                                 const std::string absolutePath);
 
 void remove_all(const std::string& path);
+
+//Returns a vector of the links in a particular page. includes links under 'href' and 'src'
+std::vector<std::string> generic_getLinks(const std::string& page, bool withHref = true);
+
+// checks if a relative path is out of bounds (relative to base)
+bool isOutofBounds(const std::string& input, const std::string& base);
+
+//Adler32 Hash Function. Used to hash the BLOB data obtained from each article, for redundancy checks.
+//Please note that the adler32 hash function has a high number of collisions, and that the hash match is not taken as final.
+int adler32(std::string buf);
+
+//Removes extra spaces from URLs. Usually done by the browser, so web authors sometimes tend to ignore it.
+//Converts the %20 to space.Essential for comparing URLs.
+std::string normalize_link(const std::string& input, const std::string& baseUrl);
+
 
 #endif  // OPENZIM_TOOLS_H
