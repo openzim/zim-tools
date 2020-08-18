@@ -32,9 +32,7 @@ std::string decodeUrl(const std::string& encodedUrl);
 std::string computeAbsolutePath(const std::string& path,
                                 const std::string& relativePath);
 bool fileExists(const std::string& path);
-std::string removeLastPathElement(const std::string& path,
-                                  const bool removePreSeparator,
-                                  const bool removePostSeparator);
+
 std::string computeNewUrl(const std::string& aid, const std::string& baseUrl, const std::string& targetUrl, const bool uniqueNs);
 
 std::string base64_encode(unsigned char const* bytes_to_encode,
@@ -51,8 +49,6 @@ void stripTitleInvalidChars(std::string& str);
 std::string computeRelativePath(const std::string path,
                                 const std::string absolutePath);
 
-std::string removeAccents(const std::string& text);
-
 void remove_all(const std::string& path);
 
-#endif  // OPENZIM_TOOLS_H
+#endif  // OPENZIM_TOOLS_H

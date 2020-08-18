@@ -32,7 +32,6 @@
 #include "article.h"
 #include "zimcreatorfs.h"
 #include "mimetypecounter.h"
-#include "queue.h"
 #include "../tools.h"
 
 /* Check for version number */
