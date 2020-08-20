@@ -24,6 +24,10 @@
 #include <map>
 #include <string>
 
+#include <zim/writer/contentProvider.h>
+#include <zim/writer/item.h>
+#include <zim/item.h>
+
 std::string getMimeTypeForFile(const std::string& filename);
 std::string getNamespaceForMimeType(const std::string& mimeType);
 std::string getFileContent(const std::string& path);
@@ -54,5 +58,62 @@ std::string computeRelativePath(const std::string path,
 std::string removeAccents(const std::string& text);
 
 void remove_all(const std::string& path);
+
+// Few helper class to help copy a item from a archive to another one.
+class ItemProvider : public zim::writer::ContentProvider
+{
+    zim::Item item;
+    bool feeded;
+  public:
+    ItemProvider(zim::Item item)
+      : item(item),
+        feeded(false)
+    {}
+
+    zim::size_type getSize() const {
+      return item.getSize();
+    }
+
+    zim::Blob feed() {
+      if (feeded) {
+        return zim::Blob();
+      }
+      feeded = true;
+      return item.getData();
+    }
+};
+
+
+class CopyItem : public zim::writer::Item         //Article class that will be passed to the zimwriter. Contains a zim::Article class, so it is easier to add a
+{
+    //article from an existing ZIM file.
+    zim::Item item;
+
+  public:
+    explicit CopyItem(const zim::Item item):
+      item(item)
+    {}
+
+    virtual std::string getPath() const
+    {
+        return item.getPath();
+    }
+
+    virtual std::string getTitle() const
+    {
+        return item.getTitle();
+    }
+
+    virtual std::string getMimeType() const
+    {
+        return item.getMimetype();
+    }
+
+    std::unique_ptr<zim::writer::ContentProvider> getContentProvider() const
+    {
+       return std::unique_ptr<zim::writer::ContentProvider>(new ItemProvider(item));
+    }
+};
+
 
 #endif  // OPENZIM_TOOLS_H
