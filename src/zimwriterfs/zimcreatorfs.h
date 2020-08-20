@@ -23,38 +23,37 @@
 
 #include <queue>
 #include <string>
-#include "article.h"
 
 #include <zim/writer/creator.h>
 
 class IHandler
 {
  public:
-  virtual void handleArticle(std::shared_ptr<zim::writer::Article> article) = 0;
-  virtual std::shared_ptr<zim::writer::Article> getMetaArticle() = 0;
+  virtual void handleItem(std::shared_ptr<zim::writer::Item> item) = 0;
+  virtual std::string getName() const = 0;
+  virtual std::string getData() const = 0;
   virtual ~IHandler() = default;
 };
 
 class ZimCreatorFS : public zim::writer::Creator
 {
  public:
-  ZimCreatorFS(std::string mainPage, bool verbose)
-    : zim::writer::Creator(verbose),
-      mainPage(mainPage) {}
-  virtual ~ZimCreatorFS() = default;
-  virtual zim::writer::Url getMainUrl() const;
-  virtual void add_customHandler(IHandler* handler);
-  virtual void add_redirectArticles_from_file(const std::string& path);
-  virtual void visitDirectory(const std::string& path);
+  ZimCreatorFS(const std::string& rootDir, bool detectRedirects)
+    : rootDir(rootDir),
+      detectRedirects(detectRedirects)
+  {}
+  void add_customHandler(IHandler* handler);
+  void add_redirectArticles_from_file(const std::string& path);
+  void visitDirectory(const std::string& path);
 
-  virtual void addMetadata(const std::string& metadata, const std::string& content);
-  virtual void addArticle(const std::string& path);
-  virtual void addArticle(std::shared_ptr<zim::writer::Article> article);
-  virtual void finishZimCreation();
+  void addFile(const std::string& path);
+  void addItem(std::shared_ptr<zim::writer::Item> item);
+  void finishZimCreation();
 
  private:
-  std::vector<IHandler*> articleHandlers;
-  std::string mainPage;
+  std::vector<IHandler*> itemHandlers;
+  std::string rootDir;
+  bool detectRedirects;
 };
 
 #endif  // OPENZIM_ZIMWRITERFS_ARTICLESOURCE_H

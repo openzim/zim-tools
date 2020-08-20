@@ -26,6 +26,8 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
+#include <algorithm>
 
 #include <zlib.h>
 #include <magic.h>
@@ -328,3 +330,184 @@ std::string computeNewUrl(const std::string& aid, const std::string& baseUrl, co
       = "/" + getNamespaceForMimeType(targetMimeType) + "/" + filename;
   return computeRelativePath(baseUrl, newUrl);
 }
+
+struct GumboOutputDestructor {
+  GumboOutputDestructor(GumboOutput* output) : output(output) {}
+  ~GumboOutputDestructor() { gumbo_destroy_output(&kGumboDefaultOptions, output); }
+  GumboOutput* output;
+};
+
+std::string parseAndAdaptHtml(std::string& data, std::string& title, char ns, const std::string& url, bool detectRedirects)
+{
+  GumboOutput* output = gumbo_parse(data.c_str());
+  GumboOutputDestructor outputDestructor(output);
+  GumboNode* root = output->root;
+
+  /* Search the content of the <title> tag in the HTML */
+  if (root->type == GUMBO_NODE_ELEMENT
+      && root->v.element.children.length >= 2) {
+    const GumboVector* root_children = &root->v.element.children;
+    GumboNode* head = NULL;
+    for (unsigned int i = 0; i < root_children->length; ++i) {
+      GumboNode* child = (GumboNode*)(root_children->data[i]);
+      if (child->type == GUMBO_NODE_ELEMENT
+          && child->v.element.tag == GUMBO_TAG_HEAD) {
+        head = child;
+        break;
+      }
+    }
+
+    if (head != NULL) {
+      GumboVector* head_children = &head->v.element.children;
+      for (unsigned int i = 0; i < head_children->length; ++i) {
+        GumboNode* child = (GumboNode*)(head_children->data[i]);
+        if (child->type == GUMBO_NODE_ELEMENT
+            && child->v.element.tag == GUMBO_TAG_TITLE) {
+          if (child->v.element.children.length == 1) {
+            GumboNode* title_text
+                = (GumboNode*)(child->v.element.children.data[0]);
+            if (title_text->type == GUMBO_NODE_TEXT) {
+              title = title_text->v.text.text;
+              stripTitleInvalidChars(title);
+            }
+          }
+        }
+      }
+
+      /* Detect if this is a redirection (if no redirects TSV file specified)
+       */
+      std::string targetUrl;
+      try {
+        targetUrl = detectRedirects
+                        ? extractRedirectUrlFromHtml(head_children)
+                        : "";
+      } catch (std::string& error) {
+        std::cerr << error << std::endl;
+      }
+      if (!targetUrl.empty()) {
+        auto redirectUrl = computeAbsolutePath(url, decodeUrl(targetUrl));
+        if (!fileExists(directoryPath + "/" + redirectUrl)) {
+          throw std::runtime_error("Target path doesn't exists");
+        }
+        return redirectUrl;
+      }
+
+      /* If no title, then compute one from the filename */
+      if (title.empty()) {
+        auto found = url.rfind("/");
+        if (found != std::string::npos) {
+          title = url.substr(found + 1);
+          found = title.rfind(".");
+          if (found != std::string::npos) {
+            title = title.substr(0, found);
+          }
+        } else {
+          title = url;
+        }
+        std::replace(title.begin(), title.end(), '_', ' ');
+      }
+    }
+  }
+
+  /* Update links in the html to let them still be valid */
+  std::map<std::string, bool> links;
+  getLinks(root, links);
+  std::string longUrl = std::string("/") + ns + "/" + url;
+
+  /* If a link appearch to be duplicated in the HTML, it will
+     occurs only one time in the links variable */
+  for (auto& linkPair: links) {
+    auto target = linkPair.first;
+    if (!target.empty() && target[0] != '#' && target[0] != '?'
+        && target.substr(0, 5) != "data:") {
+      replaceStringInPlace(data,
+                           "\"" + target + "\"",
+                           "\"" + computeNewUrl(url, longUrl, target) + "\"");
+    }
+  }
+  return "";
+}
+
+void adaptCss(std::string& data, char ns, const std::string& url) {
+  /* Rewrite url() values in the CSS */
+  size_t startPos = 0;
+  size_t endPos = 0;
+  std::string targetUrl;
+  std::string longUrl = std::string("/") + ns + "/" + url;
+
+  while ((startPos = data.find("url(", endPos))
+         && startPos != std::string::npos) {
+
+    /* URL delimiters */
+    endPos = data.find(")", startPos);
+    startPos = startPos + (data[startPos + 4] == '\''
+                                   || data[startPos + 4] == '"'
+                               ? 5
+                               : 4);
+    endPos = endPos - (data[endPos - 1] == '\''
+                               || data[endPos - 1] == '"'
+                           ? 1
+                           : 0);
+    targetUrl = data.substr(startPos, endPos - startPos);
+    std::string startDelimiter = data.substr(startPos - 1, 1);
+    std::string endDelimiter = data.substr(endPos, 1);
+
+    if (targetUrl.substr(0, 5) != "data:") {
+
+      /* Deal with URL with arguments (using '? ') */
+      std::string path = targetUrl;
+      size_t markPos = targetUrl.find("?");
+      if (markPos != std::string::npos) {
+        path = targetUrl.substr(0, markPos);
+      }
+
+      /* Embeded fonts need to be inline because Kiwix is
+         otherwise not able to load same because of the
+         same-origin security */
+      std::string mimeType = getMimeTypeForFile(path);
+      if (mimeType == "application/font-ttf"
+          || mimeType == "application/font-woff"
+          || mimeType == "application/font-woff2"
+          || mimeType == "application/vnd.ms-opentype"
+          || mimeType == "application/vnd.ms-fontobject") {
+        try {
+          std::string fontContent = getFileContent(
+              directoryPath + "/" + computeAbsolutePath(url, path));
+          replaceStringInPlaceOnce(
+              data,
+              startDelimiter + targetUrl + endDelimiter,
+              startDelimiter + "data:" + mimeType + ";base64,"
+                  + base64_encode(reinterpret_cast<const unsigned char*>(
+                                      fontContent.c_str()),
+                                  fontContent.length())
+                  + endDelimiter);
+        } catch (...) {
+        }
+      } else {
+        /* Deal with URL with arguments (using '? ') */
+        if (markPos != std::string::npos) {
+          endDelimiter = targetUrl.substr(markPos, 1);
+        }
+
+        replaceStringInPlaceOnce(
+            data,
+            startDelimiter + targetUrl + endDelimiter,
+            startDelimiter + computeNewUrl(url, longUrl, path) + endDelimiter);
+      }
+    }
+  }
+}
+
+std::string generateDate()
+{
+  time_t t = time(0);
+  struct tm* now = localtime(&t);
+  std::stringstream stream;
+  stream << (now->tm_year + 1900) << '-' << std::setw(2) << std::setfill('0')
+         << (now->tm_mon + 1) << '-' << std::setw(2) << std::setfill('0')
+         << now->tm_mday;
+  return stream.str();
+}
+
+
+

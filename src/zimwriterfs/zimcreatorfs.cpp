@@ -19,8 +19,8 @@
  */
 
 #include "zimcreatorfs.h"
-#include "article.h"
 #include "../tools.h"
+#include "tools.h"
 
 #include <fstream>
 #include <dirent.h>
@@ -28,11 +28,6 @@
 #include <regex>
 
 bool isVerbose();
-
-zim::writer::Url ZimCreatorFS::getMainUrl() const
-{
-  return zim::writer::Url('A', mainPage);
-}
 
 void ZimCreatorFS::add_redirectArticles_from_file(const std::string& path)
 {
@@ -52,12 +47,10 @@ void ZimCreatorFS::add_redirectArticles_from_file(const std::string& path)
       exit(1);
     }
 
-    auto redirectArticle = std::make_shared<RedirectArticle>(
-      matches[1].str()[0],
-      matches[2].str(),
-      matches[3].str(),
-      matches[4].str());
-    addArticle(redirectArticle);
+    auto path = matches[1].str() + "/" +  matches[2].str();
+    auto title = matches[3].str();
+    auto redirectUrl = matches[4].str();
+    addRedirection(path, title, redirectUrl);
     ++line_number;
   }
   in_stream.close();
@@ -92,7 +85,7 @@ void ZimCreatorFS::visitDirectory(const std::string& path)
       case DT_REG:
       case DT_LNK:
         {
-          addArticle(fullEntryName);
+          addFile(fullEntryName);
         }
         break;
       case DT_DIR:
@@ -118,7 +111,7 @@ void ZimCreatorFS::visitDirectory(const std::string& path)
         struct stat s;
         if (stat(fullEntryName.c_str(), &s) == 0) {
           if (S_ISREG(s.st_mode)) {
-            addArticle(fullEntryName);
+            addFile(fullEntryName);
           } else if (S_ISDIR(s.st_mode)) {
             visitDirectory(fullEntryName);
           } else {
@@ -140,38 +133,53 @@ void ZimCreatorFS::visitDirectory(const std::string& path)
   closedir(directory);
 }
 
-void ZimCreatorFS::addMetadata(const std::string& metadata, const std::string& content)
+void ZimCreatorFS::addFile(const std::string& path)
 {
-  auto article = std::make_shared<SimpleMetadataArticle>(metadata, content);
-  addArticle(article);
-}
+  auto url = path.substr(rootDir.size()+1);
+  auto mimetype = getMimeTypeForFile(url);
+  auto ns = getNamespaceForMimeType(mimetype);
+  auto itemPath = ns + "/" + url;
+  auto title = std::string{};
 
-void ZimCreatorFS::addArticle(const std::string& path)
-{
-  auto farticle = std::make_shared<FileArticle>(path);
-  if (farticle->isInvalid()) {
-    return;
+  std::unique_ptr<zim::writer::Item> item;
+  if ( mimetype.find("text/html") != std::string::npos
+    || mimetype.find("text/css") != std::string::npos) {
+    auto content = getFileContent(path);
+
+    if (mimetype.find("text/html") != std::string::npos) {
+      auto redirectUrl = parseAndAdaptHtml(content, title, ns[0], url, detectRedirects);
+      if (!redirectUrl.empty()) {
+        // This is a redirect.
+        addRedirection(itemPath, title, redirectUrl);
+        return;
+      }
+    } else {
+      adaptCss(content, ns[0], url);
+    }
+    item.reset(new zim::writer::StringItem(itemPath, mimetype, title, content));
+  } else {
+    item.reset(new zim::writer::FileItem(itemPath, mimetype, title, path));
   }
-  addArticle(farticle);
+  addItem(std::move(item));
 }
 
-void ZimCreatorFS::addArticle(std::shared_ptr<zim::writer::Article> article)
+void ZimCreatorFS::addItem(std::shared_ptr<zim::writer::Item> item)
 {
-  Creator::addArticle(article);
-  for (auto& handler: articleHandlers) {
-      handler->handleArticle(article);
+  Creator::addItem(item);
+  for (auto& handler: itemHandlers) {
+      handler->handleItem(item);
   }
 }
 
 void ZimCreatorFS::finishZimCreation()
 {
-  for(auto& handler: articleHandlers) {
-    Creator::addArticle(handler->getMetaArticle());
+  for(auto& handler: itemHandlers) {
+    Creator::addMetadata(handler->getName(), handler->getData());
   }
   Creator::finishZimCreation();
 }
 
 void ZimCreatorFS::add_customHandler(IHandler* handler)
 {
-  articleHandlers.push_back(handler);
+  itemHandlers.push_back(handler);
 }

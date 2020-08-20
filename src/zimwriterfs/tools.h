@@ -28,4 +28,9 @@
 std::string extractRedirectUrlFromHtml(const GumboVector* head_children);
 void getLinks(GumboNode* node, std::map<std::string, bool>& links);
 
+std::string generateDate();
+std::string parseAndAdaptHtml(std::string& data, std::string& title, char ns, const std::string& url, bool detectRedirects);
+void adaptCss(std::string& data, char ns, const std::string& url);
+
+
 #endif  // OPENZIM_ZIMWRITERFS_TOOLS_H

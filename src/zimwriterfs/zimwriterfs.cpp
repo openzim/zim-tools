@@ -29,11 +29,11 @@
 #include <cstdio>
 #include <queue>
 
-#include "article.h"
 #include "zimcreatorfs.h"
 #include "mimetypecounter.h"
 #include "queue.h"
 #include "../tools.h"
+#include "tools.h"
 
 /* Check for version number */
 #ifndef VERSION
@@ -328,10 +328,11 @@ int main(int argc, char** argv)
     tags += ";_ftindex"; // For backward compatibility
   }
 
-  ZimCreatorFS zimCreator(welcome, isVerbose());
+  ZimCreatorFS zimCreator(directoryPath, true);
+  zimCreator.configVerbose(isVerbose())
+            .configMinClusterSize(minChunkSize)
+            .configIndexing(!withoutFTIndex, language);
 
-  zimCreator.setMinChunkSize(minChunkSize);
-  zimCreator.setIndexing(!withoutFTIndex, language);
   zimCreator.startZimCreation(zimPath);
 
   zimCreator.addMetadata("Language", language);
@@ -344,8 +345,10 @@ int main(int argc, char** argv)
   zimCreator.addMetadata("Flavour", flavour);
   zimCreator.addMetadata("Scraper", scraper);
   zimCreator.addMetadata("Tags", tags);
-  zimCreator.addArticle(std::make_shared<MetadataDateArticle>());
-  zimCreator.addArticle(std::make_shared<MetadataFaviconArticle>(zim::writer::Url('I', favicon)));
+  zimCreator.addMetadata("Date", generateDate());
+
+  zimCreator.setMainPath("A/"+welcome);
+  zimCreator.setFaviconPath("I/"+favicon);
 
   /* Init */
   magic = magic_open(MAGIC_MIME);
