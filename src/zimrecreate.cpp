@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Kiran Mathew Koshy
+ * Copyright (C) 2019-2020 Matthieu Gautier <mgautier@kymeria.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU  General Public License as published by
@@ -28,129 +28,44 @@
 #include <algorithm>
 #include <sstream>
 
+#include "tools.h"
 #include "version.h"
 
-class Article : public zim::writer::Article         //Article class that will be passed to the zimwriter. Contains a zim::Article class, so it is easier to add a
+
+void create(const std::string& originFilename, const std::string& outFilename, bool zstdFlag)
 {
-    zim::Entry entry;
-public:
-    explicit Article(const zim::Entry e):
-      entry(e)
-    {}
+  zim::Archive origin(originFilename);
+  zim::writer::Creator zimCreator;
+  zimCreator.configVerbose(true)
+            // [TODO] Use the correct language
+            .configIndexing(true, "eng")
+            .configMinClusterSize(2048)
+            .configCompression(zstdFlag ? zim::zimcompZstd : zim::zimcompLzma);
 
-    virtual zim::writer::Url getUrl() const
-    {
-        return zim::writer::Url(entry.getPath());
+  std::cout << "starting zim creation" << std::endl;
+  zimCreator.startZimCreation(outFilename);
+
+  try {
+    zimCreator.setMainPath(origin.getMainEntry().getPath());
+  } catch(...) {}
+
+  for(auto& entry:origin.iterEfficient())
+  {
+    auto path = entry.getPath();
+    if (path[0] == 'Z' || path[0] == 'X') {
+      // Index is recreated by zimCreator. Do not add it
+    continue;
+    }
+    if (entry.isRedirect()) {
+      zimCreator.addRedirection(entry.getPath(), entry.getTitle(), entry.getRedirectEntry().getPath());
+    } else {
+      auto tmpItem = std::shared_ptr<zim::writer::Item>(new CopyItem(entry.getItem()));
+      zimCreator.addItem(tmpItem);
     }
 
-    virtual std::string getTitle() const
-    {
-        return entry.getTitle();
-    }
-
-    virtual bool isRedirect() const
-    {
-        return entry.isRedirect();
-    }
-
-    virtual std::string getMimeType() const
-    {
-        if (isRedirect()) { return ""; }
-        return entry.getItem().getMimetype();
-    }
-
-    virtual zim::writer::Url getRedirectUrl() const {
-      auto redirectEntry = entry.getRedirectEntry();
-      return zim::writer::Url(redirectEntry.getPath());
-    }
-
-    zim::Blob getData() const
-    {
-        return entry.getItem().getData();
-    }
-
-    zim::size_type getSize() const
-    {
-        return entry.getItem().getSize();
-    }
-
-    std::string getFilename() const
-    {
-        return "";
-    }
-
-    bool shouldCompress() const
-    {
-        return getMimeType().find("text") == 0
-            || getMimeType() == "application/javascript"
-            || getMimeType() == "application/json"
-            || getMimeType() == "image/svg+xml";
-    }
-
-    bool shouldIndex() const
-    {
-        return getMimeType().find("text/html") == 0;
-    }
-};
-
-using pair_type = std::pair<zim::entry_index_type, zim::cluster_index_type>;
-
-class ComparatorByCluster {
-  public:
-    ComparatorByCluster(const zim::Archive& origin):
-      origin(origin) {
-    }
-
-    bool operator() (pair_type i, pair_type j) {
-      return i.second < j.second;
-    }
-  const zim::Archive& origin;
-};
-
-
-class ZimRecreator : public zim::writer::Creator
-{
-    zim::Archive origin;
-
-public:
-  explicit ZimRecreator(std::string originFilename="", bool zstd = false) :
-    zim::writer::Creator(true, zstd ? zim::zimcompZstd : zim::zimcompLzma),
-    origin(originFilename)
-    {
-        // [TODO] Use the correct language
-        setIndexing(true, "eng");
-        setMinChunkSize(2048);
-    }
-
-    virtual void create(const std::string& fname)
-    {
-        std::cout << "starting zim creation" << std::endl;
-        startZimCreation(fname);
-        for(auto& entry:origin.iterEfficient())
-        {
-          auto path = entry.getPath();
-          if (path[0] == 'Z' || path[0] == 'X') {
-            // Index is recreated by zimCreator. Do not add it
-            continue;
-          }
-          auto tempArticle = std::make_shared<Article>(entry);
-          addArticle(tempArticle);
-        }
-        finishZimCreation();
-    }
-
-    virtual zim::writer::Url getMainUrl() const {
-      try {
-        return zim::writer::Url(origin.getMainEntry().getPath());
-      } catch(...) {
-        return zim::writer::Url();
-      }
-    }
-
-    virtual zim::writer::Url getLayoutUrl() const {
-      return zim::writer::Url();
-    }
-};
+  }
+  zimCreator.finishZimCreation();
+}
 
 void usage()
 {
@@ -202,9 +117,7 @@ int main(int argc, char* argv[])
     std::string outputFilename =argv[2];
     try
     {
-        ZimRecreator c(originFilename, zstdFlag);
-        //Create the actual file.
-        c.create(outputFilename);
+        create(originFilename, outputFilename, zstdFlag);
     }
     catch (const std::exception& e)
     {
