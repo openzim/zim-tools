@@ -311,6 +311,7 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
                     std::ostringstream ss;
                     ss << l << " is out of bounds. Article: " << it->getLongUrl();
                     reporter.addError(TestType::URL_INTERNAL, ss.str());
+                    reporter.setTestResult(TestType::URL_INTERNAL, false);
                     continue;
                 }
 
