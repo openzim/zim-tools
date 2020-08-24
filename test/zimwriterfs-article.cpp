@@ -36,6 +36,10 @@ public:
     magic = magic_open(MAGIC_MIME);
     magic_load(magic, NULL);
   }
+
+  ~ArticleTest() {
+      magic_close(magic);
+  }
 };
 
 TEST(ArticleTest, Metadata)

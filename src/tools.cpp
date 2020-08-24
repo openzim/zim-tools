@@ -31,6 +31,7 @@
 #include <vector>
 #include <memory>
 #include <unistd.h>
+#include <algorithm>
 
 #ifdef _WIN32
 #define SEPARATOR "\\"
@@ -316,4 +317,143 @@ void remove_all(const std::string& path)
   else {
     remove(path.c_str());
   }
+}
+
+std::vector<std::string> generic_getLinks(const std::string& page, bool withHref)
+{
+    const char* p = page.c_str();
+    const char* linkStart;
+    std::vector<std::string> links;
+
+    while (*p) {
+        if (withHref && strncmp(p, " href", 5) == 0) {
+            p += 5;
+        } else if (strncmp(p, " src", 4) == 0) {
+            p += 4;
+        } else {
+            p += 1;
+            continue;
+        }
+
+        while (*p == ' ')
+            p += 1 ;
+        if (*(p++) != '=')
+            continue;
+        while (*p == ' ')
+            p += 1;
+        char delimiter = *p++;
+        if (delimiter != '\'' && delimiter != '"')
+            continue;
+
+        linkStart = p;
+        // [TODO] Handle escape char
+        while(*p != delimiter)
+            p++;
+        links.push_back(std::string(linkStart, p));
+        p += 1;
+    }
+    return links;
+}
+
+bool isOutofBounds(const std::string& input, const std::string& base)
+{
+    if (input.empty()) return false;
+
+    int nr = 0;
+    if (input.back() != '/')
+           nr = 1;
+
+    //count nr of substrings ../
+    int nrsteps = 0;
+    std::string::size_type pos = 0;
+    while((pos = input.find("../", pos)) != std::string::npos) {
+        nrsteps++;
+        pos += 3;
+    }
+
+    return nrsteps > (nr + std::count(base.cbegin(), base.cend(), '/'));
+}
+
+int adler32(std::string buf)
+{
+    unsigned int s1 = 1;
+    unsigned int s2 = 0;
+    unsigned int sz=buf.size();
+    for (size_t n = 0; n <sz; n++)
+    {
+        s1 = (s1 + buf[n]) % 65521;
+        s2 = (s2 + s1) % 65521;
+    }
+    return (s2 << 16) | s1;
+}
+
+std::string normalize_link(const std::string& input, const std::string& baseUrl)
+{
+    std::string output;
+    output.reserve(baseUrl.size() + input.size() + 1);
+
+    bool in_query = false;
+    bool check_rel = false;
+    const char* p = input.c_str();
+    if ( *(p) == '/') {
+      // This is an absolute url.
+      p++;
+    } else {
+      //This is a relative url, use base url
+      output = baseUrl;
+      if (output.back() != '/')
+          output += '/';
+      check_rel = true;
+    }
+
+    //URL Decoding.
+    while (*p)
+    {
+        if ( !in_query && check_rel ) {
+            if (strncmp(p, "../", 3) == 0) {
+                // We must go "up"
+                // Remove the '/' at the end of output.
+                output.resize(output.size()-1);
+                // Remove the last part.
+                auto pos = output.find_last_of('/');
+                output.resize(pos==output.npos?0:pos);
+                // Move after the "..".
+                p += 2;
+                check_rel = false;
+                continue;
+            }
+            if (strncmp(p, "./", 2) == 0) {
+                // We must simply skip this part
+                // Simply move after the ".".
+                p += 2;
+                check_rel = false;
+                continue;
+            }
+        }
+        if ( *p == '#' || *p == '?')
+            // This is a beginning of the #anchor inside a page. No need to decode more
+            break;
+        if ( *p == '%')
+        {
+            char ch;
+            sscanf(p+1, "%2hhx", &ch);
+            output += ch;
+            p += 3;
+            continue;
+        }
+        if ( *p == '?' ) {
+            // We are in the query, so don't try to interprete '/' as path separator
+            in_query = true;
+        }
+        if ( *p == '/') {
+            check_rel = true;
+            if (output.empty()) {
+                // Do not add '/' at beginning of output
+                p++;
+                continue;
+            }
+        }
+        output += *(p++);
+    }
+    return output;
 }
