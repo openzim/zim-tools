@@ -85,6 +85,7 @@ class SimpleMetadataArticle : public MetadataArticle
   }
 };
 
+/// This class creates a redirect entry to image/png favicon
 class MetadataFaviconArticle : public MetadataArticle
 {
  private:
@@ -129,17 +130,22 @@ class FileArticle : public Article
   void adaptCss();
 
  public:
-  explicit FileArticle(const std::string& path,
+  //! Must be initialized with full file path
+  explicit FileArticle(const std::string& full_path,
                        bool uniqueNs,
-                       const bool detectRedirects = true);
+                       const bool detect_html_redirects = true);
   virtual zim::Blob getData() const;
   virtual bool isLinktarget() const { return false; }
   virtual bool isDeleted() const { return false; }
   virtual zim::size_type getSize() const;
+
+  //! Returns full filename; or empty string if content already read from the file
   virtual std::string getFilename() const;
+
   virtual bool isInvalid() const;
 };
 
+/// Redirect entry from user-supplied file
 class RedirectArticle : public Article
 {
  public:

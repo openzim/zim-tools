@@ -53,10 +53,10 @@ void ZimCreatorFS::add_redirectArticles_from_file(const std::string& path)
     }
 
     auto redirectArticle = std::make_shared<RedirectArticle>(
-      matches[1].str()[0],
-      matches[2].str(),
-      matches[3].str(),
-      matches[4].str());
+      matches[1].str()[0],  // ns
+      matches[2].str(),     // URL
+      matches[3].str(),     // title
+      matches[4].str());    // redirect URL
     addArticle(redirectArticle);
     ++line_number;
   }
@@ -140,9 +140,9 @@ void ZimCreatorFS::visitDirectory(const std::string& path)
   closedir(directory);
 }
 
-void ZimCreatorFS::addMetadata(const std::string& metadata, const std::string& content)
+void ZimCreatorFS::addMetadata(const std::string& title, const std::string& content)
 {
-  auto article = std::make_shared<SimpleMetadataArticle>(metadata, content);
+  auto article = std::make_shared<SimpleMetadataArticle>(title, content);
   addArticle(article);
 }
 

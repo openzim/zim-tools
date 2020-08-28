@@ -1,8 +1,9 @@
 gtest_dep = dependency('gtest', main:true, fallback:['gtest', 'gtest_main_dep'], required:false)
 
 tests = [
+    'tools-test',
     'zimwriterfs-article',
-    'tools-test'
+    'zimwriterfs-zimcreatorfs'
 ]
 
 zimwriter_srcs = [  '../src/zimwriterfs/article.cpp',

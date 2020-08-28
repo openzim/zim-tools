@@ -72,13 +72,13 @@ void FileArticle::readData() const
   dataRead = true;
 }
 
-FileArticle::FileArticle(const std::string& path, bool uniqueNs, const bool detectRedirects)
+FileArticle::FileArticle(const std::string& full_path, bool uniqueNs, const bool detect_html_redirects)
     : dataRead(false) ,
       uniqueNs(uniqueNs)
 {
   invalid = false;
 
-  url = path.substr(directoryPath.size() + 1);
+  url = full_path.substr(directoryPath.size() + 1);
 
   /* mime-type */
   mimeType = getMimeTypeForFile(url);
@@ -93,7 +93,7 @@ FileArticle::FileArticle(const std::string& path, bool uniqueNs, const bool dete
   }
 
   if ( mimeType.find("text/html") != std::string::npos ) {
-    parseAndAdaptHtml(detectRedirects);
+    parseAndAdaptHtml(detect_html_redirects);
   } else if (mimeType.find("text/css") != std::string::npos) {
     adaptCss();
   }

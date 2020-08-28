@@ -52,7 +52,7 @@ std::string source;
 std::string description;
 std::string welcome;
 std::string favicon;
-std::string directoryPath;
+std::string directoryPath;  ///< html directory without trailing slash
 std::string redirectsPath;
 std::string zimPath;
 
@@ -297,6 +297,8 @@ int main(int argc, char** argv)
   }
 
   /* Check arguments */
+
+  // delete / from the end of filename
   if (directoryPath[directoryPath.length() - 1] == '/') {
     directoryPath = directoryPath.substr(0, directoryPath.length() - 1);
   }
