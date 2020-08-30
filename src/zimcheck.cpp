@@ -92,7 +92,7 @@ static std::unordered_map<TestType, std::pair<LogTag, std::string>> errormapping
 
 class ErrorLogger {
   private:
-    std::unordered_map<TestType, std::vector<std::string>> errors;
+    std::unordered_map<TestType, std::vector<std::string>> reportMsgs;
     std::unordered_map<TestType, bool> testStatus;
 
   public:
@@ -107,24 +107,29 @@ class ErrorLogger {
         testStatus[type] = status;
     }
 
-    void addError(TestType type, const std::string& message) {
-        errors[type].push_back(message);
+    void addReportMsg(TestType type, const std::string& message) {
+        reportMsgs[type].push_back(message);
     }
 
     void report(bool error_details) const {
-        for (auto status : testStatus) {
-            if (status.second == false) {
-                auto &p = errormapping[status.first];
+        for (auto testmsg : reportMsgs) {
+                auto &p = errormapping[testmsg.first];
                 std::cout << "[" + tagToStr[p.first] + "] " << p.second << ":" << std::endl;
-                for (auto& msg: errors.at(status.first)) {
+                for (auto& msg: testmsg.second) {
                     std::cout << "  " << msg << std::endl;
                 }
-            }
         }
     }
 
     inline bool overalStatus() const {
-        return std::all_of(testStatus.begin(), testStatus.end(), [](std::pair<TestType, bool> e){ return e.second == true;});
+        return std::all_of(testStatus.begin(), testStatus.end(),
+                           [](std::pair<TestType, bool> e){
+                                    if (errormapping[e.first].first == LogTag::ERROR)
+                                    {
+                                        return e.second; //return the test status result
+                                    }
+                                    return true;
+                            });
     }
 };
 
@@ -193,7 +198,7 @@ void test_checksum(zim::File& f, ErrorLogger& reporter) {
         std::cout << "  [ERROR] Wrong Checksum in ZIM file" << std::endl;
         std::ostringstream ss;
         ss << "ZIM File Checksum in file: " << f.getChecksum() << std::endl;
-        reporter.addError(TestType::CHECKSUM, ss.str());
+        reporter.addReportMsg(TestType::CHECKSUM, ss.str());
     }
 }
 
@@ -211,7 +216,7 @@ void test_metadata(const zim::File& f, ErrorLogger& reporter) {
         auto article = f.getArticle('M', meta);
         if (!article.good()) {
             reporter.setTestResult(TestType::METADATA, false);
-            reporter.addError(TestType::METADATA, meta);
+            reporter.addReportMsg(TestType::METADATA, meta);
         }
     }
 }
@@ -240,7 +245,7 @@ void test_mainpage(const zim::File& f, ErrorLogger& reporter) {
     if (!testok) {
         std::ostringstream ss;
         ss << "Main Page Index stored in File Header: " << fh.getMainPage();
-        reporter.addError(TestType::MAIN_PAGE, ss.str());
+        reporter.addReportMsg(TestType::MAIN_PAGE, ss.str());
     }
 }
 
@@ -265,7 +270,7 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
              it->getNamespace() == 'I')) {
           std::ostringstream ss;
           ss << "Entry " << it->getLongUrl() << " is empty";
-          reporter.addError(TestType::EMPTY, ss.str());
+          reporter.addReportMsg(TestType::EMPTY, ss.str());
           reporter.setTestResult(TestType::EMPTY, false);
         }
 
@@ -310,7 +315,7 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
                 {
                     std::ostringstream ss;
                     ss << l << " is out of bounds. Article: " << it->getLongUrl();
-                    reporter.addError(TestType::URL_INTERNAL, ss.str());
+                    reporter.addReportMsg(TestType::URL_INTERNAL, ss.str());
                     reporter.setTestResult(TestType::URL_INTERNAL, false);
                     continue;
                 }
@@ -323,7 +328,7 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
             {
                 std::ostringstream ss;
                 ss << "Found " << nremptylinks << " empty links in article: " << it->getLongUrl();
-                reporter.addError(TestType::URL_INTERNAL, ss.str());
+                reporter.addReportMsg(TestType::URL_INTERNAL, ss.str());
                 reporter.setTestResult(TestType::URL_INTERNAL, false);
             }
 
@@ -343,7 +348,7 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
                         for (const auto &olink : p.second)
                             ss << "- " << olink << '\n';
                         ss << "(" << link << ") were not found in article " << it->getLongUrl();
-                        reporter.addError(TestType::URL_INTERNAL, ss.str());
+                        reporter.addReportMsg(TestType::URL_INTERNAL, ss.str());
                         previousIndex = index;
                     }
                     reporter.setTestResult(TestType::URL_INTERNAL, false);
@@ -363,7 +368,7 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
                 {
                     std::ostringstream ss;
                     ss << link << " is an external dependence in article " << it->getLongUrl();
-                    reporter.addError(TestType::URL_EXTERNAL, ss.str());
+                    reporter.addReportMsg(TestType::URL_EXTERNAL, ss.str());
                     reporter.setTestResult(TestType::URL_EXTERNAL, false);
                     break;
                 }
@@ -397,7 +402,7 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
                     std::ostringstream ss;
                     ss << a1.getTitle() << " (idx " << a1.getIndex() << ") and "
                        << a2.getTitle() << " (idx " << a2.getIndex() << ")";
-                    reporter.addError(TestType::REDUNDANT, ss.str());
+                    reporter.addReportMsg(TestType::REDUNDANT, ss.str());
                 }
             }
         }
