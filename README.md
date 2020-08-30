@@ -19,6 +19,7 @@ merged in the ZIM file. Nothing more, nothing less. The generated file
 can be opened with a ZIM reader; [Kiwix](https://kiwix.org) is one
 example, but there are [others](https://openzim.org/wiki/ZIM_Readers).
 
+[![Packaging status](https://repology.org/badge/vertical-allrepos/zim-tools.svg)](https://repology.org/project/zim-tools/versions)
 
 Releases
 ----------
