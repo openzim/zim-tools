@@ -27,6 +27,8 @@
 
 extern std::string favicon;
 
+class ZimCreatorFS;
+
 class Article : public zim::writer::Article
 {
  protected:
@@ -120,10 +122,10 @@ class MetadataDateArticle : public MetadataArticle
 class FileArticle : public Article
 {
  private:
+  const ZimCreatorFS *creator;
   mutable std::string data;
   mutable bool dataRead;
   bool invalid;
-  bool uniqueNs;
   std::string _getFilename() const;
   void readData() const;
   void parseAndAdaptHtml(bool detectRedirects);
@@ -131,8 +133,8 @@ class FileArticle : public Article
 
  public:
   //! Must be initialized with full file path
-  explicit FileArticle(const std::string& full_path,
-                       bool uniqueNs,
+  explicit FileArticle(const ZimCreatorFS *creator,
+                       const std::string& full_path,
                        const bool detect_html_redirects = true);
   virtual zim::Blob getData() const;
   virtual bool isLinktarget() const { return false; }
@@ -149,7 +151,8 @@ class FileArticle : public Article
 class RedirectArticle : public Article
 {
  public:
-  explicit RedirectArticle(char ns,
+  explicit RedirectArticle(const ZimCreatorFS *creator,
+                           char ns,
                            const std::string& url,
                            const std::string& title,
                            const zim::writer::Url& redirectUrl);
@@ -159,6 +162,8 @@ class RedirectArticle : public Article
   virtual bool isDeleted() const { return false; }
   virtual zim::size_type getSize() const { return 0; }
   virtual std::string getFilename() const  { return ""; }
+private:
+  const ZimCreatorFS *creator;
 };
 
 #endif  // OPENZIM_ZIMWRITERFS_ARTICLE_H

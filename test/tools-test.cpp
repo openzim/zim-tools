@@ -4,7 +4,6 @@
 #include <magic.h>
 #include <unordered_map>
 
-std::string directoryPath;
 magic_t magic;
 bool inflateHtmlFlag = false;
 bool isVerbose() { return false; }

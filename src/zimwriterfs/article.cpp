@@ -18,15 +18,15 @@
  * MA 02110-1301, USA.
  */
 
-#include "article.h"
-#include "tools.h"
-#include "../tools.h"
-
 #include <iomanip>
 #include <sstream>
 #include <fstream>
 
-extern std::string directoryPath;
+#include "article.h"
+#include "tools.h"
+#include "../tools.h"
+#include "zimcreatorfs.h"
+
 
 zim::writer::Url Article::getUrl() const
 {
@@ -72,19 +72,19 @@ void FileArticle::readData() const
   dataRead = true;
 }
 
-FileArticle::FileArticle(const std::string& full_path, bool uniqueNs, const bool detect_html_redirects)
-    : dataRead(false) ,
-      uniqueNs(uniqueNs)
+FileArticle::FileArticle(const ZimCreatorFS *_creator, const std::string& full_path, const bool detect_html_redirects)
+    : creator(_creator)
+      , dataRead(false)
 {
   invalid = false;
 
-  url = full_path.substr(directoryPath.size() + 1);
+  url = full_path.substr(creator->basedir().size() + 1);
 
   /* mime-type */
-  mimeType = getMimeTypeForFile(url);
+  mimeType = getMimeTypeForFile(creator->basedir(), url);
 
   /* namespace */
-  ns = getNamespaceForMimeType(mimeType, uniqueNs)[0];
+  ns = getNamespaceForMimeType(mimeType, creator->uniqNamespace())[0];
 
   /* HTML specific code */
   if ( mimeType.find("text/html") != std::string::npos
@@ -152,7 +152,7 @@ void FileArticle::parseAndAdaptHtml(bool detectRedirects)
       }
       if (!targetUrl.empty()) {
         auto redirectUrl = computeAbsolutePath(url, decodeUrl(targetUrl));
-        if (!fileExists(directoryPath + "/" + redirectUrl)) {
+        if (!fileExists(creator->basedir() + "/" + redirectUrl)) {
           redirectUrl.clear();
           invalid = true;
         } else {
@@ -191,7 +191,7 @@ void FileArticle::parseAndAdaptHtml(bool detectRedirects)
         && target.substr(0, 5) != "data:") {
       replaceStringInPlace(data,
                            "\"" + target + "\"",
-                           "\"" + computeNewUrl(url, longUrl, target, uniqueNs) + "\"");
+                           "\"" + creator->computeNewUrl(url, longUrl, target) + "\"");
     }
   }
   gumbo_destroy_output(&kGumboDefaultOptions, output);
@@ -233,7 +233,7 @@ void FileArticle::adaptCss() {
       /* Embeded fonts need to be inline because Kiwix is
          otherwise not able to load same because of the
          same-origin security */
-      std::string mimeType = getMimeTypeForFile(path);
+      std::string mimeType = getMimeTypeForFile(creator->basedir(), path);
       if (mimeType == "application/font-ttf"
           || mimeType == "application/font-woff"
           || mimeType == "application/font-woff2"
@@ -241,7 +241,7 @@ void FileArticle::adaptCss() {
           || mimeType == "application/vnd.ms-fontobject") {
         try {
           std::string fontContent = getFileContent(
-              directoryPath + "/" + computeAbsolutePath(this->url, path));
+              creator->basedir() + "/" + computeAbsolutePath(this->url, path));
           replaceStringInPlaceOnce(
               data,
               startDelimiter + url + endDelimiter,
@@ -261,7 +261,7 @@ void FileArticle::adaptCss() {
         replaceStringInPlaceOnce(
             data,
             startDelimiter + url + endDelimiter,
-            startDelimiter + computeNewUrl(this->url, longUrl, path, uniqueNs) + endDelimiter);
+            startDelimiter + creator->computeNewUrl(this->url, longUrl, path) + endDelimiter);
       }
     }
   }
@@ -277,7 +277,7 @@ zim::Blob FileArticle::getData() const
 
 std::string FileArticle::_getFilename() const
 {
-  return directoryPath + "/" + url;
+  return creator->basedir() + "/" + url;
 }
 
 std::string FileArticle::getFilename() const
@@ -299,16 +299,18 @@ zim::size_type FileArticle::getSize() const
   return in.tellg();
 }
 
-RedirectArticle::RedirectArticle(char ns,
+RedirectArticle::RedirectArticle(const ZimCreatorFS *_creator,
+                                 char ns,
                                  const std::string& url,
                                  const std::string& title,
                                  const zim::writer::Url& redirectUrl)
+  : creator(_creator)
 {
   this->ns = ns;
   this->url = url;
   this->title = title;
   this->redirectUrl = redirectUrl;
-  mimeType = getMimeTypeForFile(redirectUrl.getUrl());
+  mimeType = getMimeTypeForFile(creator->basedir(), redirectUrl.getUrl());
 }
 
 SimpleMetadataArticle::SimpleMetadataArticle(const std::string& id,

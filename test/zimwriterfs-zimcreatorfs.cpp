@@ -30,7 +30,6 @@
 
 
 // stub from zimwriterfs.cpp
-std::string directoryPath;
 bool inflateHtmlFlag = false;
 bool isVerbose() { return false; }
 magic_t magic;
@@ -68,18 +67,15 @@ TEST(ZimCreatorFSTest, MinimalZim)
 {
   LibMagicInit libmagic;
 
+  std::string directoryPath = "data/minimal-content";
+  ZimCreatorFS zimCreator(directoryPath, "index.html", false, false);
+
   TempFile out("minimal.zim");
-  ZimCreatorFS zimCreator("index.html", false, false);
 
   zimCreator.startZimCreation(out.path());
-
-  // it's necessary to setup global variable 'directoryPath'
-  // for class Article, determining 'url' as filename without 'directoryPath'
-  directoryPath = "data/minimal-content";
-
   zimCreator.visitDirectory(directoryPath);
 
-  std::shared_ptr<zim::writer::Article> redirect_article(new RedirectArticle('A', "index.html", "Start page", zim::writer::Url("A/hello.html")));
+  std::shared_ptr<zim::writer::Article> redirect_article(new RedirectArticle(&zimCreator, 'A', "index.html", "Start page", zim::writer::Url("A/hello.html")));
   zimCreator.addArticle(redirect_article);
 
   zimCreator.finishZimCreation();

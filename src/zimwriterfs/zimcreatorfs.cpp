@@ -53,6 +53,7 @@ void ZimCreatorFS::add_redirectArticles_from_file(const std::string& path)
     }
 
     auto redirectArticle = std::make_shared<RedirectArticle>(
+      this,
       matches[1].str()[0],  // ns
       matches[2].str(),     // URL
       matches[3].str(),     // title
@@ -148,7 +149,7 @@ void ZimCreatorFS::addMetadata(const std::string& title, const std::string& cont
 
 void ZimCreatorFS::addArticle(const std::string& path)
 {
-  auto farticle = std::make_shared<FileArticle>(path, uniqueNamespace);
+  auto farticle = std::make_shared<FileArticle>(this, path);
   if (farticle->isInvalid()) {
     return;
   }
@@ -174,4 +175,34 @@ void ZimCreatorFS::finishZimCreation()
 void ZimCreatorFS::add_customHandler(IHandler* handler)
 {
   articleHandlers.push_back(handler);
+}
+
+inline std::string removeLocalTagAndParameters(const std::string& url)
+{
+  std::string retVal = url;
+  std::size_t found;
+
+  /* Remove URL arguments */
+  found = retVal.find("?");
+  if (found != std::string::npos) {
+    retVal = retVal.substr(0, found);
+  }
+
+  /* Remove local tag */
+  found = retVal.find("#");
+  if (found != std::string::npos) {
+    retVal = retVal.substr(0, found);
+  }
+
+  return retVal;
+}
+
+std::string ZimCreatorFS::computeNewUrl(const std::string& aid, const std::string& baseUrl, const std::string& targetUrl) const
+{
+  std::string filename = computeAbsolutePath(aid, targetUrl);
+  std::string targetMimeType
+      = getMimeTypeForFile(directoryPath, decodeUrl(removeLocalTagAndParameters(filename)));
+  std::string newUrl
+      = "/" + getNamespaceForMimeType(targetMimeType, uniqNamespace()) + "/" + filename;
+  return computeRelativePath(baseUrl, newUrl);
 }

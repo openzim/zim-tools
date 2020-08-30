@@ -52,7 +52,6 @@ std::string source;
 std::string description;
 std::string welcome;
 std::string favicon;
-std::string directoryPath;  ///< html directory without trailing slash
 std::string redirectsPath;
 std::string zimPath;
 
@@ -168,6 +167,7 @@ void usage()
 int main(int argc, char** argv)
 {
   int minChunkSize = 2048;
+  std::string directoryPath;
 
   /* Argument parsing */
   static struct option long_options[]
@@ -329,7 +329,7 @@ int main(int argc, char** argv)
     tags += ";_ftindex"; // For backward compatibility
   }
 
-  ZimCreatorFS zimCreator(welcome, isVerbose(), uniqueNamespace);
+  ZimCreatorFS zimCreator(directoryPath, welcome, isVerbose(), uniqueNamespace);
 
   zimCreator.setMinChunkSize(minChunkSize);
   zimCreator.setIndexing(!withoutFTIndex, language);

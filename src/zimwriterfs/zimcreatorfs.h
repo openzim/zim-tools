@@ -38,11 +38,13 @@ class IHandler
 class ZimCreatorFS : public zim::writer::Creator
 {
  public:
-  ZimCreatorFS(std::string mainPage, bool verbose, bool uniqueNamespace)
+  ZimCreatorFS(std::string _directoryPath, std::string mainPage, bool verbose, bool uniqueNamespace)
     : zim::writer::Creator(verbose),
+      directoryPath(_directoryPath),
       mainPage(mainPage),
       uniqueNamespace(uniqueNamespace){}
   virtual ~ZimCreatorFS() = default;
+
   virtual zim::writer::Url getMainUrl() const;
   virtual void add_customHandler(IHandler* handler);
   virtual void add_redirectArticles_from_file(const std::string& path);
@@ -53,8 +55,13 @@ class ZimCreatorFS : public zim::writer::Creator
   virtual void addArticle(std::shared_ptr<zim::writer::Article> article);
   virtual void finishZimCreation();
 
+  std::string computeNewUrl(const std::string& aid, const std::string& baseUrl, const std::string& targetUrl) const;
+  const std::string & basedir() const { return directoryPath; }
+  bool uniqNamespace() const { return uniqueNamespace; }
+
  private:
   std::vector<IHandler*> articleHandlers;
+  std::string directoryPath;  ///< html dir without trailing slash
   std::string mainPage;
   bool uniqueNamespace;
 };

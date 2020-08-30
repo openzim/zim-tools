@@ -19,11 +19,11 @@
 #include <magic.h>
 
 #include "../src/zimwriterfs/article.h"
+#include "../src/zimwriterfs/zimcreatorfs.h"
 #include "gtest/gtest.h"
 #include "../src/tools.h"
 
 // stub from zimwriterfs.cpp
-std::string directoryPath;  // html dir without trailing slash
 bool isVerbose() { return false; }
 bool inflateHtmlFlag = false;
 magic_t magic;
@@ -91,12 +91,14 @@ TEST(ArticleTest, MetadataDate)
 
 TEST(ArticleTest, FileArticlePng)
 {
-  directoryPath = "data/minimal-content";
+  std::string directoryPath = "data/minimal-content";
+  ZimCreatorFS creator(directoryPath, "mainPage", false, false);
+
   std::string fn = "favicon.png";
   unsigned int size = getFileSize(directoryPath + "/" + fn);
   std::string data = getFileContent(directoryPath + "/" + fn);
 
-  FileArticle article(directoryPath + "/" + fn, false);
+  FileArticle article(&creator, directoryPath + "/" + fn, false);
 
   // test zim::writer::Article interface
   EXPECT_EQ(article.getUrl(), zim::writer::Url('I', fn));
@@ -121,12 +123,14 @@ TEST(ArticleTest, FileArticlePng)
 
 TEST(ArticleTest, FileArticleHTML)
 {
-  directoryPath = "data/minimal-content";
+  std::string directoryPath = "data/minimal-content";
+  ZimCreatorFS creator(directoryPath, "mainPage", false, false);
+
   std::string fn = "hello.html";
   unsigned int size = getFileSize(directoryPath + "/" + fn);
   std::string data = getFileContent(directoryPath + "/" + fn);
 
-  FileArticle article(directoryPath + "/" + fn, false);
+  FileArticle article(&creator, directoryPath + "/" + fn, false);
 
   // see FileArticle::getFilename() and the constructor
   // because HTML content are read right away, getFilename() always returns empty string
@@ -149,7 +153,10 @@ TEST(ArticleTest, FileArticleHTML)
 
 TEST(ArticleTest, RedirectArticle)
 {
-  RedirectArticle article('A', "index.html", "Start page", zim::writer::Url("A/home.html"));
+  std::string directoryPath = "data/minimal-content";
+  ZimCreatorFS creator(directoryPath, "mainPage", false, false);
+
+  RedirectArticle article(&creator, 'A', "index.html", "Start page", zim::writer::Url("A/home.html"));
 
   // test zim::writer::Article interface
   EXPECT_EQ(article.getUrl(), zim::writer::Url('A', "index.html"));
