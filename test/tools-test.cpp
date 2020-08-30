@@ -176,6 +176,7 @@ TEST(tools, isOutofBounds)
     ASSERT_FALSE(isOutofBounds("../", "/a/b"));
     ASSERT_FALSE(isOutofBounds("../", "/a"));
     ASSERT_TRUE(isOutofBounds("../../", "/a"));
+    ASSERT_TRUE(isOutofBounds("../../../-/s/css_modules/ext.cite.ux-enhancements.css", "A/Blood_/"));
 }
 
 TEST(tools, normalize_link)

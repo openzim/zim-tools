@@ -355,13 +355,16 @@ std::vector<std::string> generic_getLinks(const std::string& page, bool withHref
     return links;
 }
 
-bool isOutofBounds(const std::string& input, const std::string& base)
+bool isOutofBounds(const std::string& input, std::string base)
 {
     if (input.empty()) return false;
 
+    if (base.back() != '/')
+        base.push_back('/');
+
     int nr = 0;
-    if (input.back() != '/')
-           nr = 1;
+    if (base.front() != '/')
+        nr++;
 
     //count nr of substrings ../
     int nrsteps = 0;
@@ -371,7 +374,7 @@ bool isOutofBounds(const std::string& input, const std::string& base)
         pos += 3;
     }
 
-    return nrsteps > (nr + std::count(base.cbegin(), base.cend(), '/'));
+    return nrsteps >= (nr + std::count(base.cbegin(), base.cend(), '/'));
 }
 
 int adler32(std::string buf)
