@@ -4,6 +4,7 @@ ZIM tools
 Various ZIM command line tools. More information about the ZIM format
 and the [openZIM project](https://openzim.org).
 
+[![latest release](https://img.shields.io/github/v/tag/openzim/zim-tools?label=latest%20release&sort=semver)](https://download.openzim.org/release/zim-tools/)
 [![Build Status](https://github.com/openzim/zim-tools/workflows/CI/badge.svg?query=branch%3Amaster)](https://github.com/openzim/zim-tools/actions?query=branch%3Amaster)
 [![Docker Build Status](https://img.shields.io/docker/build/openzim/zim-tools)](https://hub.docker.com/r/openzim/zim-tools)
 [![codecov](https://codecov.io/gh/openzim/zim-tools/branch/master/graph/badge.svg)](https://codecov.io/gh/openzim/zim-tools)
@@ -18,16 +19,7 @@ merged in the ZIM file. Nothing more, nothing less. The generated file
 can be opened with a ZIM reader; [Kiwix](https://kiwix.org) is one
 example, but there are [others](https://openzim.org/wiki/ZIM_Readers).
 
-Distribution
-------------
-
-#### Official
-
-[![latest release](https://img.shields.io/github/v/tag/openzim/zim-tools?label=latest%20release&sort=semver)](https://download.openzim.org/release/zim-tools/)
-
-#### Contribution
-
-[![Arch Linux package](https://img.shields.io/archlinux/v/community/x86_64/zim-tools)](https://www.archlinux.org/packages/community/x86_64/zim-tools/)
+[![Packaging status](https://repology.org/badge/vertical-allrepos/zim-tools.svg)](https://repology.org/project/zim-tools/versions)
 
 Releases
 ----------
