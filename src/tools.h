@@ -56,7 +56,7 @@ void remove_all(const std::string& path);
 std::vector<std::string> generic_getLinks(const std::string& page, bool withHref = true);
 
 // checks if a relative path is out of bounds (relative to base)
-bool isOutofBounds(const std::string& input, const std::string& base);
+bool isOutofBounds(const std::string& input, std::string base);
 
 //Adler32 Hash Function. Used to hash the BLOB data obtained from each article, for redundancy checks.
 //Please note that the adler32 hash function has a high number of collisions, and that the hash match is not taken as final.
