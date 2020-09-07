@@ -27,6 +27,8 @@
 
 extern std::string favicon;
 
+class ZimCreatorFS;
+
 class Article : public zim::writer::Article
 {
  protected:
@@ -85,6 +87,7 @@ class SimpleMetadataArticle : public MetadataArticle
   }
 };
 
+/// This class creates a redirect entry to image/png favicon
 class MetadataFaviconArticle : public MetadataArticle
 {
  private:
@@ -119,31 +122,37 @@ class MetadataDateArticle : public MetadataArticle
 class FileArticle : public Article
 {
  private:
+  const ZimCreatorFS *creator;
   mutable std::string data;
   mutable bool dataRead;
   bool invalid;
-  bool uniqueNs;
   std::string _getFilename() const;
   void readData() const;
   void parseAndAdaptHtml(bool detectRedirects);
   void adaptCss();
 
  public:
-  explicit FileArticle(const std::string& path,
-                       bool uniqueNs,
-                       const bool detectRedirects = true);
+  //! Must be initialized with full file path
+  explicit FileArticle(const ZimCreatorFS *creator,
+                       const std::string& full_path,
+                       const bool detect_html_redirects = true);
   virtual zim::Blob getData() const;
   virtual bool isLinktarget() const { return false; }
   virtual bool isDeleted() const { return false; }
   virtual zim::size_type getSize() const;
+
+  //! Returns full filename; or empty string if content already read from the file
   virtual std::string getFilename() const;
+
   virtual bool isInvalid() const;
 };
 
+/// Redirect entry from user-supplied file
 class RedirectArticle : public Article
 {
  public:
-  explicit RedirectArticle(char ns,
+  explicit RedirectArticle(const ZimCreatorFS *creator,
+                           char ns,
                            const std::string& url,
                            const std::string& title,
                            const zim::writer::Url& redirectUrl);
@@ -153,6 +162,8 @@ class RedirectArticle : public Article
   virtual bool isDeleted() const { return false; }
   virtual zim::size_type getSize() const { return 0; }
   virtual std::string getFilename() const  { return ""; }
+private:
+  const ZimCreatorFS *creator;
 };
 
 #endif  // OPENZIM_ZIMWRITERFS_ARTICLE_H

@@ -114,7 +114,6 @@ static std::map<std::string, std::string> extMimeTypes = _create_extMimeTypes();
 
 static std::map<std::string, std::string> fileMimeTypes;
 
-extern std::string directoryPath;
 extern bool inflateHtmlFlag;
 
 extern magic_t magic;
@@ -269,7 +268,7 @@ void getLinks(GumboNode* node, std::map<std::string, bool>& links)
   }
 }
 
-std::string getMimeTypeForFile(const std::string& filename)
+std::string getMimeTypeForFile(const std::string &directoryPath, const std::string& filename)
 {
   std::string mimeType;
 
@@ -301,34 +300,4 @@ std::string getMimeTypeForFile(const std::string& filename)
   } else {
     return mimeType;
   }
-}
-
-inline std::string removeLocalTagAndParameters(const std::string& url)
-{
-  std::string retVal = url;
-  std::size_t found;
-
-  /* Remove URL arguments */
-  found = retVal.find("?");
-  if (found != std::string::npos) {
-    retVal = retVal.substr(0, found);
-  }
-
-  /* Remove local tag */
-  found = retVal.find("#");
-  if (found != std::string::npos) {
-    retVal = retVal.substr(0, found);
-  }
-
-  return retVal;
-}
-
-std::string computeNewUrl(const std::string& aid, const std::string& baseUrl, const std::string& targetUrl, const bool uniqueNs)
-{
-  std::string filename = computeAbsolutePath(aid, targetUrl);
-  std::string targetMimeType
-      = getMimeTypeForFile(decodeUrl(removeLocalTagAndParameters(filename)));
-  std::string newUrl
-      = "/" + getNamespaceForMimeType(targetMimeType, uniqueNs) + "/" + filename;
-  return computeRelativePath(baseUrl, newUrl);
 }

@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 
-std::string getMimeTypeForFile(const std::string& filename);
+std::string getMimeTypeForFile(const std::string& basedir, const std::string& filename);
 std::string getNamespaceForMimeType(const std::string& mimeType, bool uniqueNamespace);
 std::string getFileContent(const std::string& path);
 unsigned int getFileSize(const std::string& path);
@@ -33,8 +33,6 @@ std::string decodeUrl(const std::string& encodedUrl);
 std::string computeAbsolutePath(const std::string& path,
                                 const std::string& relativePath);
 bool fileExists(const std::string& path);
-
-std::string computeNewUrl(const std::string& aid, const std::string& baseUrl, const std::string& targetUrl, const bool uniqueNs);
 
 std::string base64_encode(unsigned char const* bytes_to_encode,
                           unsigned int in_len);
@@ -67,4 +65,4 @@ int adler32(std::string buf);
 std::string normalize_link(const std::string& input, const std::string& baseUrl);
 
 
-#endif  // OPENZIM_TOOLS_H
+#endif  // OPENZIM_TOOLS_H
