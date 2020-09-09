@@ -26,8 +26,29 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <regex>
+#include <unistd.h>
+#include <limits.h>
+#include <cassert>
 
 bool isVerbose();
+
+ZimCreatorFS::ZimCreatorFS(std::string _directoryPath, std::string mainPage,
+                           bool verbose, bool uniqueNamespace, bool zstd)
+  : zim::writer::Creator(verbose, zstd ? zim::zimcompZstd : zim::zimcompLzma),
+    directoryPath(_directoryPath),
+    mainPage(mainPage),
+    uniqueNamespace(uniqueNamespace)
+{
+  char buf[PATH_MAX];
+
+  if (realpath(directoryPath.c_str(), buf) != buf) {
+    throw std::invalid_argument(
+          Formatter() << "Unable to canonicalize HTML directory path "
+                      << directoryPath << ": " << strerror(errno));
+  }
+
+  canonical_basedir = buf;
+}
 
 zim::writer::Url ZimCreatorFS::getMainUrl() const
 {
@@ -91,10 +112,10 @@ void ZimCreatorFS::visitDirectory(const std::string& path)
 
     switch (entry->d_type) {
       case DT_REG:
+        addArticle(fullEntryName);
+        break;
       case DT_LNK:
-        {
-          addArticle(fullEntryName);
-        }
+        processSymlink(path, fullEntryName);
         break;
       case DT_DIR:
         visitDirectory(fullEntryName);
@@ -162,6 +183,49 @@ void ZimCreatorFS::addArticle(std::shared_ptr<zim::writer::Article> article)
   for (auto& handler: articleHandlers) {
       handler->handleArticle(article);
   }
+}
+
+void ZimCreatorFS::processSymlink(const std::string& curdir, const std::string& symlink_path)
+{
+  /* #102 Links can be 3 different types:
+   *  - dandling (not pointing to a valid file)
+   *  - pointing to file but outside of 'directoryPath'
+   *  - looped symlinks
+   */
+  char resolved[PATH_MAX];
+  if (realpath(symlink_path.c_str(), resolved) != resolved) {
+    // looping symlinks also fall here: Too many levels of symbolic links
+    // It also handles dangling symlink: No such file or directory
+    std::cerr << "Unable to resolve symlink " << symlink_path
+              << ": " << strerror(errno) << std::endl;
+    return;
+  }
+
+  if (isDirectory(resolved)) {
+    std::cerr << "Skip symlink " << symlink_path
+              << ": points to a directory" << std::endl;
+    return;
+  }
+
+  if (strncmp(canonical_basedir.c_str(), resolved, canonical_basedir.size()) != 0
+      || resolved[canonical_basedir.size()] != '/') {
+    std::cerr << "Skip symlink " << symlink_path
+              << ": points outside of HTML directory" << std::endl;
+    return;
+  }
+
+  std::string source_url = symlink_path.substr(directoryPath.size() + 1);
+  std::string source_mimeType = getMimeTypeForFile(directoryPath, source_url);
+  const char source_ns = getNamespaceForMimeType(source_mimeType, uniqNamespace())[0];
+
+  std::string target_url = std::string(resolved).substr(canonical_basedir.size() + 1);
+  std::string target_mimeType = getMimeTypeForFile(directoryPath, target_url);
+  const char target_ns = getNamespaceForMimeType(target_mimeType, uniqNamespace())[0];
+
+  std::shared_ptr<zim::writer::Article> redirect_article(
+        new RedirectArticle(this, source_ns, source_url, "",
+                            zim::writer::Url(target_ns, target_url)));
+  addArticle(redirect_article);
 }
 
 void ZimCreatorFS::finishZimCreation()

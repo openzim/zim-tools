@@ -25,8 +25,6 @@
 #include <zim/writer/creator.h>
 #include <string>
 
-extern std::string favicon;
-
 class ZimCreatorFS;
 
 class Article : public zim::writer::Article

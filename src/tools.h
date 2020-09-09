@@ -24,6 +24,36 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <stdexcept>
+#include <sstream>
+
+/* Formatter for std::exception what() message:
+ * throw std::runtime_error(
+ *   Formatter() << "zimwriterfs: Unable to read" << filename << ": " << strerror(errno));
+ */
+class Formatter
+{
+public:
+    Formatter() {}
+    ~Formatter() {}
+
+    template <typename Type>
+    Formatter & operator << (const Type & value)
+    {
+        stream_ << value;
+        return *this;
+    }
+
+    // std::string str() const         { return stream_.str(); }
+    operator std::string () const   { return stream_.str(); }
+
+private:
+    Formatter(const Formatter &);
+    Formatter & operator = (Formatter &);
+
+    std::stringstream stream_;
+};
+
 
 typedef struct html_link
 {
@@ -39,6 +69,7 @@ std::string decodeUrl(const std::string& encodedUrl);
 std::string computeAbsolutePath(const std::string& path,
                                 const std::string& relativePath);
 bool fileExists(const std::string& path);
+bool isDirectory(const std::string &path);
 
 std::string base64_encode(unsigned char const* bytes_to_encode,
                           unsigned int in_len);

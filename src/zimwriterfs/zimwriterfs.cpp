@@ -39,7 +39,8 @@
   #define VERSION "UNKNOWN"
 #endif
 
-/* Global access strings */
+namespace {
+/* Command line options */
 std::string language;
 std::string creator;
 std::string publisher;
@@ -54,13 +55,20 @@ std::string welcome;
 std::string favicon;
 std::string redirectsPath;
 std::string zimPath;
+std::string directoryPath;
+
+int minChunkSize = 2048;
 
 bool verboseFlag = false;
-pthread_mutex_t verboseMutex;
-bool inflateHtmlFlag = false;
 bool uniqueNamespace = false;
 bool withoutFTIndex = false;
 bool zstdFlag = false;
+}
+
+// Global flags
+bool inflateHtmlFlag = false;
+
+pthread_mutex_t verboseMutex;
 
 magic_t magic;
 
@@ -166,12 +174,9 @@ void usage()
   std::cout << std::endl;
 }
 
-/* Main program entry point */
-int main(int argc, char** argv)
-{
-  int minChunkSize = 2048;
-  std::string directoryPath;
 
+void parse_args(int argc, char** argv)
+{
   /* Argument parsing */
   static struct option long_options[]
       = {{"help", no_argument, 0, 'h'},
@@ -335,7 +340,10 @@ int main(int argc, char** argv)
     tags += "_ftindex:yes";
     tags += ";_ftindex"; // For backward compatibility
   }
+}
 
+void create_zim()
+{
   ZimCreatorFS zimCreator(directoryPath, welcome, isVerbose(), uniqueNamespace, zstdFlag);
 
   zimCreator.setMinChunkSize(minChunkSize);
@@ -355,10 +363,6 @@ int main(int argc, char** argv)
   zimCreator.addArticle(std::make_shared<MetadataDateArticle>());
   zimCreator.addArticle(std::make_shared<MetadataFaviconArticle>(zim::writer::Url('I', favicon)));
 
-  /* Init */
-  magic = magic_open(MAGIC_MIME);
-  magic_load(magic, NULL);
-  pthread_mutex_init(&verboseMutex, NULL);
 
   /* Directory visitor */
   MimetypeCounter mimetypeCounter;
@@ -381,6 +385,25 @@ int main(int argc, char** argv)
     }
   }
   zimCreator.finishZimCreation();
+}
+
+
+/* Main program entry point */
+int main(int argc, char** argv)
+{
+  /* Init */
+  magic = magic_open(MAGIC_MIME);
+  magic_load(magic, NULL);
+  pthread_mutex_init(&verboseMutex, NULL);
+
+  try {
+    parse_args(argc, argv);
+    create_zim();
+  }
+  catch(std::exception &e) {
+    std::cerr << "zimwriterfs: " << e.what() << std::endl;
+    exit(1);
+  }
 
   magic_close(magic);
   /* Destroy mutex */

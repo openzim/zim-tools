@@ -16,6 +16,12 @@ TEST(CommonTools, getFileSize)
   EXPECT_EQ(getFileSize(fn), 2725);
 }
 
+TEST(CommonTools, isDirectory)
+{
+  ASSERT_FALSE(isDirectory("data/minimal-content/favicon.png"));
+  ASSERT_TRUE(isDirectory("data/minimal-content"));
+}
+
 TEST(CommonTools, base64_encode)
 {
   unsigned char data[] = { 0xff, 0x00, 0x7a };
