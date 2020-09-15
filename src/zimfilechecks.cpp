@@ -5,6 +5,7 @@
 #include <map>
 #include <unordered_map>
 #include <list>
+#include <sstream>
 #include <zim/file.h>
 #include <zim/fileiterator.h>
 
