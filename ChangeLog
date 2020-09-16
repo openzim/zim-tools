@@ -1,3 +1,8 @@
+zim-tools 2.1.0
+===============
+
+* zimwriterfs & zimrecreate: write ZIM files using Zstandard compression
+
 zim-tools 2.0.0
 ===============
 
