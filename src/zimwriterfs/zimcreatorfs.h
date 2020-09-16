@@ -38,8 +38,9 @@ class IHandler
 class ZimCreatorFS : public zim::writer::Creator
 {
  public:
-  ZimCreatorFS(std::string _directoryPath, std::string mainPage, bool verbose, bool uniqueNamespace)
-    : zim::writer::Creator(verbose),
+  ZimCreatorFS(std::string _directoryPath, std::string mainPage, bool verbose,
+               bool uniqueNamespace, bool zstd = false)
+    : zim::writer::Creator(verbose, zstd ? zim::zimcompZstd : zim::zimcompLzma),
       directoryPath(_directoryPath),
       mainPage(mainPage),
       uniqueNamespace(uniqueNamespace){}
