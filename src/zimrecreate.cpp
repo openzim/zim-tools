@@ -119,8 +119,8 @@ class ZimRecreator : public zim::writer::Creator
     zim::File origin;
 
 public:
-    explicit ZimRecreator(std::string originFilename="") :
-      zim::writer::Creator(true)
+  explicit ZimRecreator(std::string originFilename="", bool zstd = false) :
+    zim::writer::Creator(true, zstd ? zim::zimcompZstd : zim::zimcompLzma)
     {
         origin = zim::File(originFilename);
         // [TODO] Use the correct language
@@ -179,14 +179,17 @@ public:
 
 void usage()
 {
-    std::cout<<"\nzimrecreate recreates a ZIM file from a existing ZIM.\n"
-    "\nUsage: zimrecreate [origin_file] [output file]"
-    "\nOption: -v, --version    print software version\n";
+    std::cout << "\nzimrecreate recreates a ZIM file from a existing ZIM.\n"
+    "\nUsage: zimrecreate [Options] ORIGIN_FILE OUTPUT_FILE"
+    "\nOptions:\n"
+    "\t-v, --version    print software version\n"
+    "\t-z, --zstd       use Zstandard as ZIM compression (lzma otherwise)\n";
     return;
 }
 
 int main(int argc, char* argv[])
 {
+    bool zstdFlag = false;
 
     //Parsing arguments
     //There will be only two arguments, so no detailed parsing is required.
@@ -207,6 +210,12 @@ int main(int argc, char* argv[])
             version();
             return 0;
         }
+
+        if(std::string(argv[i])=="--zstd" ||
+           std::string(argv[i])=="-z")
+        {
+            zstdFlag = true;
+        }
     }
     if(argc<3)
     {
@@ -218,7 +227,7 @@ int main(int argc, char* argv[])
     std::string outputFilename =argv[2];
     try
     {
-        ZimRecreator c(originFilename);
+        ZimRecreator c(originFilename, zstdFlag);
         //Create the actual file.
         c.create(outputFilename);
     }

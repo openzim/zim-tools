@@ -97,6 +97,15 @@ Meson. If you want statically linked libraries, you can add
 
 Depending of you system, `ninja` may be called `ninja-build`.
 
+Testing
+-------
+
+To run the automated tests:
+```bash
+cd build
+meson test
+```
+
 Installation
 ------------
 

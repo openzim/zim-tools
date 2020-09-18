@@ -60,6 +60,7 @@ pthread_mutex_t verboseMutex;
 bool inflateHtmlFlag = false;
 bool uniqueNamespace = false;
 bool withoutFTIndex = false;
+bool zstdFlag = false;
 
 magic_t magic;
 
@@ -147,6 +148,8 @@ void usage()
             << std::endl;
   std::cout << "\t-s, --scraper\t\tname & version of tool used to produce HTML content"
             << std::endl;
+  std::cout << "\t-z, --zstd\t\tuse Zstandard as ZIM compression (lzma otherwise)"
+            << std::endl;
   std::cout << std::endl;
 
   std::cout << "Example:" << std::endl;
@@ -190,6 +193,7 @@ int main(int argc, char** argv)
          {"description", required_argument, 0, 'd'},
          {"creator", required_argument, 0, 'c'},
          {"publisher", required_argument, 0, 'p'},
+         {"zstd", no_argument, 0, 'z'},
          {"withoutFTIndex", no_argument, 0, 'j'},
 
          // Only for backward compatibility
@@ -201,7 +205,7 @@ int main(int argc, char** argv)
 
   do {
     c = getopt_long(
-        argc, argv, "hVvijxuw:m:f:t:d:c:l:p:r:e:n:", long_options, &option_index);
+        argc, argv, "hVvijxuzw:m:f:t:d:c:l:p:r:e:n:", long_options, &option_index);
 
     if (c != -1) {
       switch (c) {
@@ -270,6 +274,9 @@ int main(int argc, char** argv)
         case 'w':
           welcome = optarg;
           break;
+        case 'z':
+          zstdFlag = true;
+          break;
       }
     }
   } while (c != -1);
@@ -329,7 +336,7 @@ int main(int argc, char** argv)
     tags += ";_ftindex"; // For backward compatibility
   }
 
-  ZimCreatorFS zimCreator(directoryPath, welcome, isVerbose(), uniqueNamespace);
+  ZimCreatorFS zimCreator(directoryPath, welcome, isVerbose(), uniqueNamespace, zstdFlag);
 
   zimCreator.setMinChunkSize(minChunkSize);
   zimCreator.setIndexing(!withoutFTIndex, language);
