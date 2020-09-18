@@ -23,10 +23,10 @@ RUN apt-get update -y && \
 RUN update-ca-certificates
 
 # Install Xapian (wget zlib1g-dev)
-RUN wget https://oligarchy.co.uk/xapian/1.4.16/xapian-core-1.4.16.tar.xz
-RUN tar xvf xapian-core-1.4.16.tar.xz
-RUN cd xapian-core-1.4.16 && ./configure --prefix=/usr
-RUN cd xapian-core-1.4.16 && make all install
+RUN wget https://oligarchy.co.uk/xapian/1.4.17/xapian-core-1.4.17.tar.xz
+RUN tar xvf xapian-core-1.4.17.tar.xz
+RUN cd xapian-core-1.4.17 && ./configure --prefix=/usr
+RUN cd xapian-core-1.4.17 && make all install
 RUN rm -rf xapian
 
 # Install zimlib (libicu-dev)
