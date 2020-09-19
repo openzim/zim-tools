@@ -180,7 +180,7 @@ public:
 void usage()
 {
     std::cout << "\nzimrecreate recreates a ZIM file from a existing ZIM.\n"
-    "\nUsage: zimrecreate [Options] ORIGIN_FILE OUTPUT_FILE"
+    "\nUsage: zimrecreate ORIGIN_FILE OUTPUT_FILE [Options]"
     "\nOptions:\n"
     "\t-v, --version    print software version\n"
     "\t-z, --zstd       use Zstandard as ZIM compression (lzma otherwise)\n";
