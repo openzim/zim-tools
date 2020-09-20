@@ -25,6 +25,12 @@
 #include <string>
 #include <vector>
 
+typedef struct html_link
+{
+    std::string attribute;
+    std::string link;
+} html_link;
+
 std::string getMimeTypeForFile(const std::string& basedir, const std::string& filename);
 std::string getNamespaceForMimeType(const std::string& mimeType, bool uniqueNamespace);
 std::string getFileContent(const std::string& path);
@@ -51,7 +57,7 @@ std::string computeRelativePath(const std::string path,
 void remove_all(const std::string& path);
 
 //Returns a vector of the links in a particular page. includes links under 'href' and 'src'
-std::vector<std::string> generic_getLinks(const std::string& page, bool withHref = true);
+std::vector<html_link> generic_getLinks(const std::string& page);
 
 // checks if a relative path is out of bounds (relative to base)
 bool isOutofBounds(const std::string& input, std::string base);

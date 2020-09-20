@@ -207,19 +207,20 @@ TEST(tools, getLinks)
     std::string page1 = "<link href=\"https://fonts.goos.com/css?family=OpenSans\" rel=\"stylesheet\">";
     auto v1 = generic_getLinks(page1);
 
-    ASSERT_FALSE(v1.empty());
     ASSERT_TRUE(v1.size() == 1);
-    ASSERT_EQ(v1[0], "https://fonts.goos.com/css?family=OpenSans");
+    ASSERT_EQ(v1[0].attribute, "href");
+    ASSERT_EQ(v1[0].link, "https://fonts.goos.com/css?family=OpenSans");
 
     std::string page2 = "<link href=\"https://fonts.goos.com/css?family=OpenSans\" rel=\"stylesheet\">";
-    auto v2 = generic_getLinks(page2, false);
+    auto v2 = generic_getLinks(page2);
 
-    ASSERT_TRUE(v2.empty());
+    ASSERT_TRUE(v2.size() == 1);
+    ASSERT_EQ(v1[0].attribute, "href");
 
     std::string page3 = "<link src=\"https://fonts.goos.com/css?family=OpenSans\" rel=\"stylesheet\">";
     auto v3 = generic_getLinks(page3);
 
-    ASSERT_FALSE(v3.empty());
     ASSERT_TRUE(v3.size() == 1);
-    ASSERT_EQ(v3[0], "https://fonts.goos.com/css?family=OpenSans");
+    ASSERT_EQ(v3[0].attribute, "src");
+    ASSERT_EQ(v3[0].link, "https://fonts.goos.com/css?family=OpenSans");
 }

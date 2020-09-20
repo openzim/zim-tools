@@ -133,12 +133,6 @@ class ErrorLogger {
     }
 };
 
-
-std::vector<std::string> getDependencies(const std::string& page)           //Returns a vector of the links in a particular page. includes links under 'href' and 'src'
-{
-    return generic_getLinks(page, false);
-}
-
 inline bool isDataUrl(const std::string& input_string)
 {
     static std::regex data_url_regex =
@@ -292,36 +286,39 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
         if (it->getMimeType() != "text/html")
             continue;
 
+        std::vector<html_link> links;
+        if (url_check || url_check_external) {
+            links = generic_getLinks(it->getData());
+        }
         if(url_check)
         {
             auto baseUrl = it->getLongUrl();
             auto pos = baseUrl.find_last_of('/');
             baseUrl.resize( pos==baseUrl.npos ? 0 : pos );
 
-            auto links = generic_getLinks(it->getData());
             std::unordered_map<std::string, std::vector<std::string>> filtered;
             int nremptylinks = 0;
             for (const auto &l : links)
             {
-                if (l.front() == '#' || l.front() == '?') continue;
-                if (isInternalUrl(l) == false) continue;
-                if (l.empty())
+                if (l.link.front() == '#' || l.link.front() == '?') continue;
+                if (isInternalUrl(l.link) == false) continue;
+                if (l.link.empty())
                 {
                     nremptylinks++;
                     continue;
                 }
 
-                if (isOutofBounds(l, baseUrl))
+                if (isOutofBounds(l.link, baseUrl))
                 {
                     std::ostringstream ss;
-                    ss << l << " is out of bounds. Article: " << it->getLongUrl();
+                    ss << l.link << " is out of bounds. Article: " << it->getLongUrl();
                     reporter.addReportMsg(TestType::URL_INTERNAL, ss.str());
                     reporter.setTestResult(TestType::URL_INTERNAL, false);
                     continue;
                 }
 
-                auto normalized = normalize_link(l, baseUrl);
-                filtered[normalized].push_back(l);
+                auto normalized = normalize_link(l.link, baseUrl);
+                filtered[normalized].push_back(l.link);
             }
 
             if (nremptylinks)
@@ -361,13 +358,12 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
             if (it->getMimeType() != "text/html")
                 continue;
 
-            auto links = getDependencies(it->getPage());
-            for (auto &link: links)
+            for (auto &l: links)
             {
-                if (isExternalUrl( link ))
+                if (l.attribute == "src" && isExternalUrl(l.link))
                 {
                     std::ostringstream ss;
-                    ss << link << " is an external dependence in article " << it->getLongUrl();
+                    ss << l.link << " is an external dependence in article " << it->getLongUrl();
                     reporter.addReportMsg(TestType::URL_EXTERNAL, ss.str());
                     reporter.setTestResult(TestType::URL_EXTERNAL, false);
                     break;
