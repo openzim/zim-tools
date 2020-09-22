@@ -6,7 +6,7 @@
 
 #include <zim/file.h>
 
-#include "progress.h"
+#include "../progress.h"
 
 enum StatusCode : int {
    PASS = 0,

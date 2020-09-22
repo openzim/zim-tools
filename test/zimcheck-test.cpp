@@ -2,7 +2,7 @@
 
 #include "zim/zim.h"
 #include "zim/file.h"
-#include "../src/zimfilechecks.h"
+#include "../src/zimcheck/checks.h"
 
 
 TEST(zimfilechecks, test_checksum)

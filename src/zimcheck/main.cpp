@@ -35,10 +35,10 @@
 #include <ctime>
 #include <unordered_map>
 
-#include "progress.h"
-#include "version.h"
-#include "tools.h"
-#include "zimfilechecks.h"
+#include "../progress.h"
+#include "../version.h"
+#include "../tools.h"
+#include "checks.h"
 
 void displayHelp()
 {
@@ -68,10 +68,6 @@ void displayHelp()
     return;
 }
 
-        std::vector<html_link> links;
-        if (url_check || url_check_external) {
-            links = generic_getLinks(it->getData());
-        }
 int main (int argc, char **argv)
 {
     // To calculate the total time taken by the program to run.
