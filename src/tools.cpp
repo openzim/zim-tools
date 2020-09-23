@@ -319,16 +319,19 @@ void remove_all(const std::string& path)
   }
 }
 
-std::vector<std::string> generic_getLinks(const std::string& page, bool withHref)
+std::vector<html_link> generic_getLinks(const std::string& page)
 {
     const char* p = page.c_str();
     const char* linkStart;
-    std::vector<std::string> links;
+    std::vector<html_link> links;
+    std::string attr;
 
     while (*p) {
-        if (withHref && strncmp(p, " href", 5) == 0) {
+        if (strncmp(p, " href", 5) == 0) {
+            attr = "href";
             p += 5;
         } else if (strncmp(p, " src", 4) == 0) {
+            attr = "src";
             p += 4;
         } else {
             p += 1;
@@ -349,7 +352,7 @@ std::vector<std::string> generic_getLinks(const std::string& page, bool withHref
         // [TODO] Handle escape char
         while(*p != delimiter)
             p++;
-        links.push_back(std::string(linkStart, p));
+        links.push_back({attr,std::string(linkStart, p)});
         p += 1;
     }
     return links;
