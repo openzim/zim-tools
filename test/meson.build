@@ -3,7 +3,8 @@ gtest_dep = dependency('gtest', main:true, fallback:['gtest', 'gtest_main_dep'],
 tests = [
     'tools-test',
     'zimwriterfs-article',
-    'zimwriterfs-zimcreatorfs'
+    'zimwriterfs-zimcreatorfs',
+    'zimcheck-test'
 ]
 
 zimwriter_srcs = [  '../src/zimwriterfs/article.cpp',
@@ -12,11 +13,16 @@ zimwriter_srcs = [  '../src/zimwriterfs/article.cpp',
                     '../src/zimwriterfs/mimetypecounter.cpp',
                     '../src/tools.cpp']
 
+tests_src_map = { 'zimcheck-test' : ['../src/zimcheck/checks.cpp', '../src/tools.cpp'],
+                  'zimwriterfs-article' : zimwriter_srcs,
+                  'tools-test' : zimwriter_srcs,
+                  'zimwriterfs-zimcreatorfs' : zimwriter_srcs }
+
 if gtest_dep.found() and not meson.is_cross_build()
 
     foreach test_name : tests
 
-        test_exe = executable(test_name, [test_name+'.cpp'] + zimwriter_srcs,
+        test_exe = executable(test_name, [test_name+'.cpp'] + tests_src_map[test_name],
                               dependencies : [gtest_dep, libzim_dep, gumbo_dep, magic_dep, zlib_dep],
                               build_rpath : '$ORIGIN')
 

@@ -26,13 +26,11 @@ executable('zimsplit', 'zimsplit.cpp',
   dependencies: libzim_dep,
   install: true)
 
-executable('zimcheck', 'zimcheck.cpp', 'tools.cpp',
-  dependencies: libzim_dep,
-  install: true)
-
 executable('zimrecreate', 'zimrecreate.cpp',
   dependencies: libzim_dep,
   install: true)
+
+subdir('zimcheck')
 
 if with_writer
   subdir('zimwriterfs')
