@@ -66,7 +66,7 @@ TEST(ArticleTest, MetadataFaviconArticle)
   EXPECT_FALSE(article.shouldCompress());
   EXPECT_FALSE(article.shouldIndex());
   EXPECT_EQ(article.getRedirectUrl(), zim::writer::Url('I', fn));
-  ASSERT_EQ(article.getSize(), 0);
+  ASSERT_EQ(article.getSize(), 0u);
   ASSERT_EQ(article.getData(), zim::Blob());
   EXPECT_EQ(article.getFilename(), "");
 }
@@ -171,7 +171,7 @@ TEST(ArticleTest, RedirectArticle)
   EXPECT_TRUE(article.shouldIndex());
 
   EXPECT_EQ(article.getRedirectUrl(), zim::writer::Url('A', "home.html"));
-  ASSERT_EQ(article.getSize(), 0);
+  ASSERT_EQ(article.getSize(), 0u);
   ASSERT_EQ(article.getData(), zim::Blob());
   EXPECT_EQ(article.getFilename(), "");
 }

@@ -82,7 +82,7 @@ TEST(ZimCreatorFSTest, MinimalZim)
 
   // verify the created .zim file with 'zimdump'
   zim::File zimfile(out.path());
-  EXPECT_EQ(zimfile.getCountArticles(), 4);
+  EXPECT_EQ(zimfile.getCountArticles(), 4u);
 
   zim::Article a1 = zimfile.getArticle('A', "index.html");
   EXPECT_TRUE(a1.isRedirect());
@@ -107,7 +107,7 @@ TEST(ZimCreatorFSTest, SymlinkShouldCreateRedirectArticleEntry)
 
   // VERIFY the created .zim file with 'zimdump'
   zim::File zimfile(out.path());
-  EXPECT_EQ(zimfile.getCountArticles(), 4);
+  EXPECT_EQ(zimfile.getCountArticles(), 4u);
 
   zim::Article a1 = zimfile.getArticle('A', "symlink.html");
   EXPECT_TRUE(a1.isRedirect());
