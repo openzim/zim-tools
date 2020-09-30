@@ -13,7 +13,13 @@ TEST(CommonTools, getFileSize)
   std::string fn = "data/minimal-content/favicon.png";
 
   ASSERT_TRUE(fileExists(fn));
-  EXPECT_EQ(getFileSize(fn), 2725);
+  EXPECT_EQ(getFileSize(fn), 2725u);
+}
+
+TEST(CommonTools, isDirectory)
+{
+  ASSERT_FALSE(isDirectory("data/minimal-content/favicon.png"));
+  ASSERT_TRUE(isDirectory("data/minimal-content"));
 }
 
 TEST(CommonTools, base64_encode)
@@ -27,12 +33,12 @@ TEST(CommonTools, decodeUrl)
 {
   std::string src = "%00";
   std::string res = decodeUrl(src);
-  EXPECT_EQ(res.size(), 1);
+  EXPECT_EQ(res.size(), 1u);
   EXPECT_EQ(res[0], '\0');
 
   src = "%ff";
   res = decodeUrl(src);
-  EXPECT_EQ(res.size(), 1);
+  EXPECT_EQ(res.size(), 1u);
   EXPECT_EQ(res[0], '\xff');
 
   std::unordered_map<const char *, const std::string> expectationsMap = {

@@ -39,11 +39,7 @@ class ZimCreatorFS : public zim::writer::Creator
 {
  public:
   ZimCreatorFS(std::string _directoryPath, std::string mainPage, bool verbose,
-               bool uniqueNamespace, bool zstd = false)
-    : zim::writer::Creator(verbose, zstd ? zim::zimcompZstd : zim::zimcompLzma),
-      directoryPath(_directoryPath),
-      mainPage(mainPage),
-      uniqueNamespace(uniqueNamespace){}
+               bool uniqueNamespace, bool zstd = false);
   virtual ~ZimCreatorFS() = default;
 
   virtual zim::writer::Url getMainUrl() const;
@@ -56,6 +52,7 @@ class ZimCreatorFS : public zim::writer::Creator
   virtual void addArticle(std::shared_ptr<zim::writer::Article> article);
   virtual void finishZimCreation();
 
+  void processSymlink(const std::string& curdir, const std::string& symlink_path);
   std::string computeNewUrl(const std::string& aid, const std::string& baseUrl, const std::string& targetUrl) const;
   const std::string & basedir() const { return directoryPath; }
   bool uniqNamespace() const { return uniqueNamespace; }
@@ -64,6 +61,7 @@ class ZimCreatorFS : public zim::writer::Creator
   std::vector<IHandler*> articleHandlers;
   std::string directoryPath;  ///< html dir without trailing slash
   std::string mainPage;
+  std::string canonical_basedir;
   bool uniqueNamespace;
 };
 

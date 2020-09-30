@@ -59,6 +59,13 @@ bool fileExists(const std::string& path)
   return flag;
 }
 
+bool isDirectory(const std::string &path)
+{
+  struct stat filestatus;
+  stat(path.c_str(), &filestatus);
+  return (filestatus.st_mode & S_IFMT) == S_IFDIR;
+}
+
 /* base64 */
 static const std::string base64_chars
     = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
