@@ -22,7 +22,8 @@
 
 #include <zim/file.h>
 
-#include "arg.h"
+#include <docopt/docopt.h>
+
 #include "version.h"
 
 #define BUFFER_SIZE 4096
@@ -159,40 +160,45 @@ class ZimSplitter
     }
 };
 
+static const char USAGE[] = R"(
+    zimsplit splits smartly a ZIM file in smaller parts.
+
+Usage:
+    zimsplit [--prefix=PREFIX] [--size=N] [--force] <file>
+    zimsplit --version
+
+Options:
+    --prefix=PREFIX    Prefix of output file parts
+    --size=N            The file size for each part
+    --force             Create zim parts even if it is impossible to have all part size smaller than requested
+    -h, --help          Show this help message
+    --version           Show zimsplit version.
+)";
+
+
 int main(int argc, char* argv[])
 {
   try
   {
-    zim::Arg<std::string> out_prefix(argc, argv, 'o');
-    zim::Arg<int> part_size(argc, argv, 's');
-    zim::Arg<bool> force(argc, argv, "--force");
-    zim::Arg<bool> printVersion(argc, argv, "--version");
 
-    // version number
-    if (printVersion)
-    {
-      version();
-      return 0;
-    }
+    std::string versionstr("zimsplit " + std::string(VERSION));
+    std::map<std::string, docopt::value> args = docopt::docopt(USAGE,
+                                                            {argv + 1, argv + argc},
+                                                            true,
+                                                            versionstr);
 
-    if (argc <= 1)
-    {
-      std::cerr << "\nzimsplit splits smartly a ZIM file in smaller parts.\n\n"
-        "usage: " << argv[0] << " [options] zimfile\n"
-        "\n"
-        "options:\n"
-        "  -o            prefix of output file parts\n"
-        "  -s            size of each file parts\n"
-        "  --force       create zim parts even if it is impossible to have all part size smaller than requested\n"
-        "  --version     print the software version\n"
-        << std::flush;
-      return -1;
-    }
+    std::string prefix = "";
+    if (args["--prefix"])
+        prefix = args["--prefix"].asString();
+
+    int size = 0;
+    if (args["--size"])
+        size = args["--size"].asLong();
 
     // initalize app
-    ZimSplitter app(argv[1], out_prefix, part_size);
+    ZimSplitter app(args["<file>"].asString(), prefix, size);
 
-    if (!force && app.check()) {
+    if (!args["--force"] && app.check()) {
         std::cout << "Creation of zim parts canceled because of previous errors." << std::endl;
         std::cout << "Use --force option to create zim parts anyway." << std::endl;
         return -1;

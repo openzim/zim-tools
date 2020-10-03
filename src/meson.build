@@ -23,7 +23,7 @@ executable('zimpatch', 'zimpatch.cpp',
   install: true)
 
 executable('zimsplit', 'zimsplit.cpp',
-  dependencies: libzim_dep,
+  dependencies: [libzim_dep, docopt_dep],
   install: true)
 
 executable('zimrecreate', 'zimrecreate.cpp',
