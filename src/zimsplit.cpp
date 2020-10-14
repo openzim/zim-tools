@@ -28,6 +28,8 @@
 
 #define BUFFER_SIZE 4096
 
+static const int DEFAULT_PART_SIZE = 2147483648;
+
 class ZimSplitter
 {
   private:
@@ -164,12 +166,12 @@ static const char USAGE[] = R"(
     zimsplit splits smartly a ZIM file in smaller parts.
 
 Usage:
-    zimsplit [--prefix=PREFIX] [--size=N] [--force] <file>
+    zimsplit [--prefix=PREFIX] [--force] [--size=N] <file>
     zimsplit --version
 
 Options:
-    --prefix=PREFIX    Prefix of output file parts
-    --size=N            The file size for each part
+    --prefix=PREFIX     Prefix of output file parts. Default: <file>
+    --size=N            The file size for each part. Default: 2GB
     --force             Create zim parts even if it is impossible to have all part size smaller than requested
     -h, --help          Show this help message
     --version           Show zimsplit version.
@@ -187,13 +189,13 @@ int main(int argc, char* argv[])
                                                             true,
                                                             versionstr);
 
-    std::string prefix = "";
+    std::string prefix = args["<file>"].asString();
     if (args["--prefix"])
         prefix = args["--prefix"].asString();
 
-    int size = 0;
+    int size =  DEFAULT_PART_SIZE;
     if (args["--size"])
-        size = args["--size"].asLong();
+	size = args["--size"].asLong();
 
     // initalize app
     ZimSplitter app(args["<file>"].asString(), prefix, size);
