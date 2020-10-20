@@ -105,6 +105,7 @@ int main (int argc, char **argv)
         static struct option long_options[] =
         {
             { "all",          no_argument, 0, 'A'},
+            { "progress",     no_argument, 0, 'B'},
             { "empty",        no_argument, 0, '0'},
             { "checksum",     no_argument, 0, 'C'},
             { "metadata",     no_argument, 0, 'M'},
