@@ -144,7 +144,6 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
             auto pos = baseUrl.find_last_of('/');
             baseUrl.resize( pos==baseUrl.npos ? 0 : pos );
 
-            auto links = generic_getLinks(it->getData());
             std::unordered_map<std::string, std::vector<std::string>> filtered;
             int nremptylinks = 0;
             for (const auto &l : links)
