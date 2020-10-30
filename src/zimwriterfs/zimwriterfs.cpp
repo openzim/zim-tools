@@ -22,7 +22,10 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/param.h>
 #include <unistd.h>
+#include <libgen.h>
+#include <limits.h>
 #include <ctime>
 
 #include <magic.h>
@@ -345,6 +348,26 @@ void parse_args(int argc, char** argv)
 void create_zim()
 {
   ZimCreatorFS zimCreator(directoryPath, welcome, isVerbose(), uniqueNamespace, zstdFlag);
+
+  if (zimPath.size() >= (MAXPATHLEN-1)) {
+    throw std::invalid_argument("Target .zim file path is too long");
+  }
+
+  char buf[MAXPATHLEN];
+  strncpy(buf, zimPath.c_str(), sizeof(buf)-1);
+  // dirname() can modify its argument, so need to pass a copy
+  std::string zimdir = dirname(buf);
+
+  if (realpath(zimdir.c_str(), buf) != buf) {
+    throw std::invalid_argument(
+          Formatter() << "Unable to canonicalize target directory of .zim "
+                      << zimdir << ": " << strerror(errno));
+  }
+
+  // Check that the resulting .zim file isn't located under source HTML directory
+  if (std::string(buf).find(zimCreator.canonicalBaseDir()) == 0) {
+    throw std::invalid_argument(".zim file to create cannot be located inside of source HTML directory");
+  }
 
   zimCreator.setMinChunkSize(minChunkSize);
   zimCreator.setIndexing(!withoutFTIndex, language);
