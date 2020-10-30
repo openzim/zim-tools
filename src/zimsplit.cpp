@@ -177,7 +177,6 @@ Options:
     --version           Show zimsplit version.
 )";
 
-
 int main(int argc, char* argv[])
 {
   try
@@ -193,9 +192,9 @@ int main(int argc, char* argv[])
     if (args["--prefix"])
         prefix = args["--prefix"].asString();
 
-    int size =  DEFAULT_PART_SIZE;
+    int size = DEFAULT_PART_SIZE;
     if (args["--size"])
-	size = args["--size"].asLong();
+        size = args["--size"].asLong();
 
     // initalize app
     ZimSplitter app(args["<file>"].asString(), prefix, size);
