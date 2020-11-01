@@ -370,11 +370,58 @@ bool isDataUrl(const std::string& input_string)
 namespace
 {
 
+enum class UriKind : int
+{
+    // Special URIs without authority that are valid in HTML
+    JAVASCRIPT,     // javascript:...
+    MAILTO,         // mailto:user@example.com
+    TEL,            // tel:+0123456789
+    GEO,            // geo:12.34,56.78
+
+    GENERIC_URI,    // Generic URI with scheme and authority: <scheme>://.....
+
+    INVALID         // not a valid URI (though it can be a valid relative
+                    // or absolute URL)
+};
+
+const char* const uriSchemes[] = {
+    "javascript",
+    "mailto",
+    "tel",
+    "geo",
+};
+
+UriKind specialUriSchemeKind(const std::string& s, int n)
+{
+    for ( int i = 0; i <= n ; ++i ) {
+        if ( uriSchemes[i] == s )
+            return UriKind(i);
+    }
+
+    return UriKind::INVALID;
+}
+
 void asciitolower(std::string& s)
 {
     std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c){
         return ('A' <= c && c <= 'Z') ? c - ('Z' - 'z') : c;
     });
+}
+
+UriKind uriKind(const std::string& input_string)
+{
+    const auto k = input_string.find_first_of(":/?#");
+    if ( k == std::string::npos || input_string[k] != ':' )
+        return UriKind::INVALID;
+
+    if ( k + 2 < input_string.size()
+         && input_string[k+1] == '/'
+         && input_string[k+2] == '/' )
+        return UriKind::GENERIC_URI;
+
+    std::string scheme = input_string.substr(0, k);
+    asciitolower(scheme);
+    return specialUriSchemeKind(scheme, int(UriKind::GEO));
 }
 
 } // unnamed namespace
@@ -383,22 +430,7 @@ bool isExternalUrl(const std::string& input_string)
 {
     // A string starting with "<scheme>://" or "geo:" or "tel:"
     // or "javascript:" or "mailto:"
-
-    const auto k = input_string.find_first_of(":/?#");
-    if ( k == std::string::npos || input_string[k] != ':' )
-        return false;
-
-    if ( k + 2 < input_string.size()
-         && input_string[k+1] == '/'
-         && input_string[k+2] == '/' )
-        return true;
-
-    std::string scheme = input_string.substr(0, k);
-    asciitolower(scheme);
-    return scheme == "javascript" ||
-           scheme == "mailto" ||
-           scheme == "tel" ||
-           scheme == "geo";
+    return uriKind(input_string) != UriKind::INVALID;
 }
 
 // Checks if a URL is an internal URL or not. Uses RegExp.
