@@ -384,21 +384,21 @@ bool isExternalUrl(const std::string& input_string)
     // A string starting with "<scheme>://" or "geo:" or "tel:"
     // or "javascript:" or "mailto:"
 
-    const auto colon_pos = input_string.find(':');
-    if ( colon_pos == std::string::npos )
+    const auto k = input_string.find_first_of(":/?#");
+    if ( k == std::string::npos || input_string[k] != ':' )
         return false;
 
-    std::string scheme = input_string.substr(0, colon_pos);
-    asciitolower(scheme);
-
-    if ( scheme == "javascript" ||
-         scheme == "mailto" ||
-         scheme == "tel" ||
-         scheme == "geo" )
+    if ( k + 2 < input_string.size()
+         && input_string[k+1] == '/'
+         && input_string[k+2] == '/' )
         return true;
 
-    return input_string.substr(colon_pos+1, 2) == "//"
-        && scheme.find_first_of("/?#") == std::string::npos;
+    std::string scheme = input_string.substr(0, k);
+    asciitolower(scheme);
+    return scheme == "javascript" ||
+           scheme == "mailto" ||
+           scheme == "tel" ||
+           scheme == "geo";
 }
 
 // Checks if a URL is an internal URL or not. Uses RegExp.
