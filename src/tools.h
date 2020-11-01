@@ -58,6 +58,20 @@ private:
     std::stringstream stream_;
 };
 
+enum class UriKind : int
+{
+    // Special URIs without authority that are valid in HTML
+    JAVASCRIPT,     // javascript:...
+    MAILTO,         // mailto:user@example.com
+    TEL,            // tel:+0123456789
+    GEO,            // geo:12.34,56.78
+    DATA,           // data:image/png;base64,...
+
+    GENERIC_URI,    // Generic URI with scheme and authority: <scheme>://.....
+
+    INVALID         // not a valid URI (though it can be a valid relative
+                    // or absolute URL)
+};
 
 typedef struct html_link
 {
@@ -143,11 +157,22 @@ void stripTitleInvalidChars(std::string& str);
 //Returns a vector of the links in a particular page. includes links under 'href' and 'src'
 std::vector<html_link> generic_getLinks(const std::string& page);
 
-// Checks if a URL is an external url
-bool isExternalUrl(const std::string& input_string);
+// Detects the URI type of the input string. Special URI kinds are considered
+// up to and including the value of the second parameter max_special_kind
+UriKind uriKind(const std::string& input_string, UriKind max_special_kind);
 
-// Checks if a URL is an internal URL or not.
-bool isInternalUrl(const std::string& input_string);
+// Checks if a URL is a string starting with "<scheme>://", "geo:", "tel:",
+// "javascript:" or "mailto:"
+inline bool isExternalUrl(const std::string& input_string)
+{
+    return uriKind(input_string, UriKind::GEO) != UriKind::INVALID;
+}
+
+// Checks if a URL is an internal URL or not. Uses RegExp.
+inline bool isInternalUrl(const std::string& input_string)
+{
+    return uriKind(input_string, UriKind::DATA) == UriKind::INVALID;
+}
 
 // checks if a relative path is out of bounds (relative to base)
 bool isOutofBounds(const std::string& input, std::string base);
