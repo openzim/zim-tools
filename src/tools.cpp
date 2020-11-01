@@ -367,13 +367,38 @@ bool isDataUrl(const std::string& input_string)
     return std::regex_match(input_string, data_url_regex);
 }
 
+namespace
+{
+
+void asciitolower(std::string& s)
+{
+    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c){
+        return ('A' <= c && c <= 'Z') ? c - ('Z' - 'z') : c;
+    });
+}
+
+} // unnamed namespace
+
 bool isExternalUrl(const std::string& input_string)
 {
-    // A string starting with "<scheme>://" or "geo:" or "tel:" or "javascript:" or "mailto:"
-    static std::regex external_url_regex =
-      std::regex("([^:/?#]+:\\/\\/|geo:|tel:|mailto:|javascript:).*",
-                 std::regex_constants::icase);
-    return std::regex_match(input_string, external_url_regex);
+    // A string starting with "<scheme>://" or "geo:" or "tel:"
+    // or "javascript:" or "mailto:"
+
+    const auto colon_pos = input_string.find(':');
+    if ( colon_pos == std::string::npos )
+        return false;
+
+    std::string scheme = input_string.substr(0, colon_pos);
+    asciitolower(scheme);
+
+    if ( scheme == "javascript" ||
+         scheme == "mailto" ||
+         scheme == "tel" ||
+         scheme == "geo" )
+        return true;
+
+    return input_string.substr(colon_pos+1, 2) == "//"
+        && scheme.find_first_of("/?#") == std::string::npos;
 }
 
 // Checks if a URL is an internal URL or not. Uses RegExp.
