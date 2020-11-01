@@ -142,7 +142,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
             for (const auto &l : links)
             {
                 if (l.link.front() == '#' || l.link.front() == '?') continue;
-                if (isInternalUrl(l.link) == false) continue;
+                if (isInternalUrl(l) == false) continue;
                 if (l.link.empty())
                 {
                     nremptylinks++;
@@ -198,7 +198,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
 
             for (auto &l: links)
             {
-                if (l.attribute == "src" && isExternalUrl(l.link))
+                if (l.attribute == "src" && isExternalUrl(l))
                 {
                     std::ostringstream ss;
                     ss << l.link << " is an external dependence in article " << path;

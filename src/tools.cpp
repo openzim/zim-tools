@@ -248,7 +248,8 @@ std::vector<html_link> generic_getLinks(const std::string& page)
         // [TODO] Handle escape char
         while(*p != delimiter)
             p++;
-        links.push_back({attr,std::string(linkStart, p)});
+        const std::string link(linkStart, p);
+        links.push_back({attr, link, uriKind(link, UriKind::DATA)});
         p += 1;
     }
     return links;
