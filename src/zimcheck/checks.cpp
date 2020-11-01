@@ -193,10 +193,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
 
         if (url_check_external)
         {
-            if (item.getMimetype() != "text/html")
-                continue;
-
-            for (auto &l: links)
+            for (const auto &l: links)
             {
                 if (l.attribute == "src" && isExternalUrl(l))
                 {
