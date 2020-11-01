@@ -249,7 +249,7 @@ std::vector<html_link> generic_getLinks(const std::string& page)
         while(*p != delimiter)
             p++;
         const std::string link(linkStart, p);
-        links.push_back({attr, link, uriKind(link, UriKind::DATA)});
+        links.push_back({attr, link, uriKind(link)});
         p += 1;
     }
     return links;
@@ -372,9 +372,9 @@ const char* const uriSchemes[] = {
     "data"
 };
 
-UriKind specialUriSchemeKind(const std::string& s, int n)
+UriKind specialUriSchemeKind(const std::string& s)
 {
-    for ( int i = 0; i <= n ; ++i ) {
+    for ( int i = 0; i <= int(UriKind::DATA) ; ++i ) {
         if ( uriSchemes[i] == s )
             return UriKind(i);
     }
@@ -391,7 +391,7 @@ void asciitolower(std::string& s)
 
 } // unnamed namespace
 
-UriKind uriKind(const std::string& input_string, UriKind max_special_kind)
+UriKind uriKind(const std::string& input_string)
 {
     const auto k = input_string.find_first_of(":/?#");
     if ( k == std::string::npos || input_string[k] != ':' )
@@ -404,6 +404,6 @@ UriKind uriKind(const std::string& input_string, UriKind max_special_kind)
 
     std::string scheme = input_string.substr(0, k);
     asciitolower(scheme);
-    return specialUriSchemeKind(scheme, int(max_special_kind));
+    return specialUriSchemeKind(scheme);
 }
 

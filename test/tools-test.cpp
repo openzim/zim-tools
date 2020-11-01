@@ -124,81 +124,47 @@ TEST(CommonTools, stripTitleInvalidChars)
   EXPECT_EQ(str, "header");
 }
 
-TEST(tools, isExternalUrl)
+TEST(tools, uriKind)
 {
-    EXPECT_TRUE (isExternalUrl("http://example.com"));
-    EXPECT_TRUE (isExternalUrl("https://example.com"));
-    EXPECT_TRUE (isExternalUrl("HttP://example.com"));
-    EXPECT_TRUE (isExternalUrl("HtTps://example.com"));
-    EXPECT_TRUE (isExternalUrl("file:///etc/passwd"));
-    EXPECT_TRUE (isExternalUrl("ftp://download.kiwix.org/zim/"));
-    EXPECT_TRUE (isExternalUrl("mailto:someone@example.com"));
-    EXPECT_TRUE (isExternalUrl("MAILTO:someone@example.com"));
-    EXPECT_TRUE (isExternalUrl("tel:+0123456789"));
-    EXPECT_TRUE (isExternalUrl("TEL:+0123456789"));
-    EXPECT_TRUE (isExternalUrl("geo:12.34,56.78"));
-    EXPECT_TRUE (isExternalUrl("GEO:12.34,56.78"));
-    EXPECT_TRUE (isExternalUrl("javascript:console.log('hello, world!')"));
-    EXPECT_TRUE (isExternalUrl("JAVAscript:console.log('hello, world!')"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("http://example.com"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("https://example.com"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("HttP://example.com"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("HtTps://example.com"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("file:///etc/passwd"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("ftp://download.kiwix.org/zim/"));
 
-    EXPECT_FALSE(isExternalUrl("http:example.com"));
-    EXPECT_FALSE(isExternalUrl("http:/example.com"));
-    EXPECT_FALSE(isExternalUrl("git@github.com:openzim/zim-tools.git"));
-    EXPECT_FALSE(isExternalUrl("/redirect?url=http://example.com"));
-    EXPECT_FALSE(isExternalUrl("redirect?url=http://example.com"));
-    EXPECT_FALSE(isExternalUrl("auth.php#returnurl=https://example.com"));
-    EXPECT_FALSE(isExternalUrl("/api/v1/http://example.com"));
-    EXPECT_FALSE(isExternalUrl("img/file:///etc/passwd"));
-    EXPECT_FALSE(isExternalUrl("ftp:/download.kiwix.org/zim/"));
-    EXPECT_FALSE(isExternalUrl("sendmailto:someone@example.com"));
-    EXPECT_FALSE(isExternalUrl("intel:+0123456789"));
-    EXPECT_FALSE(isExternalUrl("showlocation.cgi?geo:12.34,56.78"));
-    EXPECT_FALSE(isExternalUrl("/xyz/javascript:console.log('hello, world!')"));
+    EXPECT_EQ(UriKind::MAILTO, uriKind("mailto:someone@example.com"));
+    EXPECT_EQ(UriKind::MAILTO, uriKind("MAILTO:someone@example.com"));
 
-    EXPECT_FALSE(isExternalUrl("data:text/plain;charset=UTF-8,the%20data"));
-    EXPECT_FALSE(isExternalUrl("DATA:text/plain;charset=UTF-8,the%20data"));
-    EXPECT_FALSE(isExternalUrl("/api/data:text/plain;charset=UTF-8,qwerty"));
-    EXPECT_FALSE(isExternalUrl("../img/logo.png"));
-    EXPECT_FALSE(isExternalUrl("style.css"));
-}
+    EXPECT_EQ(UriKind::TEL, uriKind("tel:+0123456789"));
+    EXPECT_EQ(UriKind::TEL, uriKind("TEL:+0123456789"));
 
-TEST(tools, isInternalUrl)
-{
-    EXPECT_FALSE(isInternalUrl("http://example.com"));
-    EXPECT_FALSE(isInternalUrl("https://example.com"));
-    EXPECT_FALSE(isInternalUrl("HttP://example.com"));
-    EXPECT_FALSE(isInternalUrl("HtTps://example.com"));
-    EXPECT_FALSE(isInternalUrl("file:///etc/passwd"));
-    EXPECT_FALSE(isInternalUrl("ftp://download.kiwix.org/zim/"));
-    EXPECT_FALSE(isInternalUrl("mailto:someone@example.com"));
-    EXPECT_FALSE(isInternalUrl("MAILTO:someone@example.com"));
-    EXPECT_FALSE(isInternalUrl("tel:+0123456789"));
-    EXPECT_FALSE(isInternalUrl("TEL:+0123456789"));
-    EXPECT_FALSE(isInternalUrl("geo:12.34,56.78"));
-    EXPECT_FALSE(isInternalUrl("GEO:12.34,56.78"));
-    EXPECT_FALSE(isInternalUrl("javascript:console.log('hello, world!')"));
-    EXPECT_FALSE(isInternalUrl("JAVAscript:console.log('hello, world!')"));
+    EXPECT_EQ(UriKind::GEO, uriKind("geo:12.34,56.78"));
+    EXPECT_EQ(UriKind::GEO, uriKind("GEO:12.34,56.78"));
 
-    EXPECT_FALSE(isInternalUrl("data:text/plain;charset=UTF-8,the%20data"));
-    EXPECT_FALSE(isInternalUrl("DATA:text/plain;charset=UTF-8,the%20data"));
+    EXPECT_EQ(UriKind::JAVASCRIPT, uriKind("javascript:console.log('hello!')"));
+    EXPECT_EQ(UriKind::JAVASCRIPT, uriKind("JAVAscript:console.log('hello!')"));
 
-    EXPECT_TRUE (isInternalUrl("http:example.com"));
-    EXPECT_TRUE (isInternalUrl("http:/example.com"));
-    EXPECT_TRUE (isInternalUrl("git@github.com:openzim/zim-tools.git"));
-    EXPECT_TRUE (isInternalUrl("/redirect?url=http://example.com"));
-    EXPECT_TRUE (isInternalUrl("redirect?url=http://example.com"));
-    EXPECT_TRUE (isInternalUrl("auth.php#returnurl=https://example.com"));
-    EXPECT_TRUE (isInternalUrl("/api/v1/http://example.com"));
-    EXPECT_TRUE (isInternalUrl("img/file:///etc/passwd"));
-    EXPECT_TRUE (isInternalUrl("ftp:/download.kiwix.org/zim/"));
-    EXPECT_TRUE (isInternalUrl("sendmailto:someone@example.com"));
-    EXPECT_TRUE (isInternalUrl("intel:+0123456789"));
-    EXPECT_TRUE (isInternalUrl("showlocation.cgi?geo:12.34,56.78"));
-    EXPECT_TRUE (isInternalUrl("/xyz/javascript:console.log('hello, world!')"));
+    EXPECT_EQ(UriKind::DATA, uriKind("data:text/plain;charset=UTF-8,data"));
+    EXPECT_EQ(UriKind::DATA, uriKind("DATA:text/plain;charset=UTF-8,data"));
 
-    EXPECT_TRUE (isInternalUrl("/api/data:text/plain;charset=UTF-8,qwerty"));
-    EXPECT_TRUE (isInternalUrl("../img/logo.png"));
-    EXPECT_TRUE (isInternalUrl("style.css"));
+    EXPECT_EQ(UriKind::INVALID, uriKind("http:example.com"));
+    EXPECT_EQ(UriKind::INVALID, uriKind("http:/example.com"));
+    EXPECT_EQ(UriKind::INVALID, uriKind("git@github.com:openzim/zim-tools.git"));
+    EXPECT_EQ(UriKind::INVALID, uriKind("/redirect?url=http://example.com"));
+    EXPECT_EQ(UriKind::INVALID, uriKind("redirect?url=http://example.com"));
+    EXPECT_EQ(UriKind::INVALID, uriKind("auth.php#returnurl=https://example.com"));
+    EXPECT_EQ(UriKind::INVALID, uriKind("/api/v1/http://example.com"));
+    EXPECT_EQ(UriKind::INVALID, uriKind("img/file:///etc/passwd"));
+    EXPECT_EQ(UriKind::INVALID, uriKind("ftp:/download.kiwix.org/zim/"));
+    EXPECT_EQ(UriKind::INVALID, uriKind("sendmailto:someone@example.com"));
+    EXPECT_EQ(UriKind::INVALID, uriKind("intel:+0123456789"));
+    EXPECT_EQ(UriKind::INVALID, uriKind("showlocation.cgi?geo:12.34,56.78"));
+    EXPECT_EQ(UriKind::INVALID, uriKind("/xyz/javascript:console.log('hello, world!')"));
+
+    EXPECT_EQ(UriKind::INVALID, uriKind("/api/data:text/plain;charset=UTF-8,qwerty"));
+    EXPECT_EQ(UriKind::INVALID, uriKind("../img/logo.png"));
+    EXPECT_EQ(UriKind::INVALID, uriKind("style.css"));
 }
 
 TEST(tools, isOutofBounds)

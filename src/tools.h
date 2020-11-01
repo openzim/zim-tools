@@ -160,7 +160,7 @@ std::vector<html_link> generic_getLinks(const std::string& page);
 
 // Detects the URI type of the input string. Special URI kinds are considered
 // up to and including the value of the second parameter max_special_kind
-UriKind uriKind(const std::string& input_string, UriKind max_special_kind);
+UriKind uriKind(const std::string& input_string);
 
 inline bool isExternalUrl(const html_link& l)
 {
@@ -170,19 +170,6 @@ inline bool isExternalUrl(const html_link& l)
 inline bool isInternalUrl(const html_link& l)
 {
     return l.uriKind == UriKind::INVALID;
-}
-
-// Checks if a URL is a string starting with "<scheme>://", "geo:", "tel:",
-// "javascript:" or "mailto:"
-inline bool isExternalUrl(const std::string& input_string)
-{
-    return uriKind(input_string, UriKind::GEO) != UriKind::INVALID;
-}
-
-// Checks if a URL is an internal URL or not. Uses RegExp.
-inline bool isInternalUrl(const std::string& input_string)
-{
-    return uriKind(input_string, UriKind::DATA) == UriKind::INVALID;
 }
 
 // checks if a relative path is out of bounds (relative to base)
