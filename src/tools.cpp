@@ -32,6 +32,7 @@
 #include <memory>
 #include <unistd.h>
 #include <algorithm>
+#include <regex>
 
 #ifdef _WIN32
 #define SEPARATOR "\\"
@@ -357,4 +358,26 @@ std::string normalize_link(const std::string& input, const std::string& baseUrl)
         output += *(p++);
     }
     return output;
+}
+
+bool isDataUrl(const std::string& input_string)
+{
+    static std::regex data_url_regex =
+      std::regex("data:.+", std::regex_constants::icase);
+    return std::regex_match(input_string, data_url_regex);
+}
+
+bool isExternalUrl(const std::string& input_string)
+{
+    // A string starting with "<scheme>://" or "geo:" or "tel:" or "javascript:" or "mailto:"
+    static std::regex external_url_regex =
+      std::regex("([^:/?#]+:\\/\\/|geo:|tel:|mailto:|javascript:).*",
+                 std::regex_constants::icase);
+    return std::regex_match(input_string, external_url_regex);
+}
+
+// Checks if a URL is an internal URL or not. Uses RegExp.
+bool isInternalUrl(const std::string& input_string)
+{
+    return !isExternalUrl(input_string) && !isDataUrl(input_string);
 }

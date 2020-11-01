@@ -143,6 +143,15 @@ void stripTitleInvalidChars(std::string& str);
 //Returns a vector of the links in a particular page. includes links under 'href' and 'src'
 std::vector<html_link> generic_getLinks(const std::string& page);
 
+// Checks if a URL is an internal data url of the form "data:..."
+bool isDataUrl(const std::string& input_string);
+
+// Checks if a URL is an external url
+bool isExternalUrl(const std::string& input_string);
+
+// Checks if a URL is an internal URL or not.
+bool isInternalUrl(const std::string& input_string);
+
 // checks if a relative path is out of bounds (relative to base)
 bool isOutofBounds(const std::string& input, std::string base);
 

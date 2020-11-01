@@ -124,6 +124,91 @@ TEST(CommonTools, stripTitleInvalidChars)
   EXPECT_EQ(str, "header");
 }
 
+TEST(tools, isDataUrl)
+{
+    EXPECT_TRUE (isDataUrl("data:text/plain;charset=UTF-8,the%20data"));
+    EXPECT_TRUE (isDataUrl("DATA:text/plain;charset=UTF-8,the%20data"));
+
+    EXPECT_FALSE(isDataUrl("/api/data:text/plain;charset=UTF-8,the%20data"));
+}
+
+TEST(tools, isExternalUrl)
+{
+    EXPECT_TRUE (isExternalUrl("http://example.com"));
+    EXPECT_TRUE (isExternalUrl("https://example.com"));
+    EXPECT_TRUE (isExternalUrl("HttP://example.com"));
+    EXPECT_TRUE (isExternalUrl("HtTps://example.com"));
+    EXPECT_TRUE (isExternalUrl("file:///etc/passwd"));
+    EXPECT_TRUE (isExternalUrl("ftp://download.kiwix.org/zim/"));
+    EXPECT_TRUE (isExternalUrl("mailto:someone@example.com"));
+    EXPECT_TRUE (isExternalUrl("MAILTO:someone@example.com"));
+    EXPECT_TRUE (isExternalUrl("tel:+0123456789"));
+    EXPECT_TRUE (isExternalUrl("TEL:+0123456789"));
+    EXPECT_TRUE (isExternalUrl("geo:12.34,56.78"));
+    EXPECT_TRUE (isExternalUrl("GEO:12.34,56.78"));
+    EXPECT_TRUE (isExternalUrl("javascript:console.log('hello, world!')"));
+    EXPECT_TRUE (isExternalUrl("JAVAscript:console.log('hello, world!')"));
+
+    EXPECT_FALSE(isExternalUrl("http:example.com"));
+    EXPECT_FALSE(isExternalUrl("http:/example.com"));
+    EXPECT_FALSE(isExternalUrl("git@github.com:openzim/zim-tools.git"));
+    EXPECT_FALSE(isExternalUrl("/redirect?url=http://example.com"));
+    EXPECT_FALSE(isExternalUrl("redirect?url=http://example.com"));
+    EXPECT_FALSE(isExternalUrl("auth.php#returnurl=https://example.com"));
+    EXPECT_FALSE(isExternalUrl("/api/v1/http://example.com"));
+    EXPECT_FALSE(isExternalUrl("img/file:///etc/passwd"));
+    EXPECT_FALSE(isExternalUrl("ftp:/download.kiwix.org/zim/"));
+    EXPECT_FALSE(isExternalUrl("sendmailto:someone@example.com"));
+    EXPECT_FALSE(isExternalUrl("intel:+0123456789"));
+    EXPECT_FALSE(isExternalUrl("showlocation.cgi?geo:12.34,56.78"));
+    EXPECT_FALSE(isExternalUrl("/xyz/javascript:console.log('hello, world!')"));
+
+    EXPECT_FALSE(isExternalUrl("data:text/plain;charset=UTF-8,the%20data"));
+    EXPECT_FALSE(isExternalUrl("DATA:text/plain;charset=UTF-8,the%20data"));
+    EXPECT_FALSE(isExternalUrl("/api/data:text/plain;charset=UTF-8,qwerty"));
+    EXPECT_FALSE(isExternalUrl("../img/logo.png"));
+    EXPECT_FALSE(isExternalUrl("style.css"));
+}
+
+TEST(tools, isInternalUrl)
+{
+    EXPECT_FALSE(isInternalUrl("http://example.com"));
+    EXPECT_FALSE(isInternalUrl("https://example.com"));
+    EXPECT_FALSE(isInternalUrl("HttP://example.com"));
+    EXPECT_FALSE(isInternalUrl("HtTps://example.com"));
+    EXPECT_FALSE(isInternalUrl("file:///etc/passwd"));
+    EXPECT_FALSE(isInternalUrl("ftp://download.kiwix.org/zim/"));
+    EXPECT_FALSE(isInternalUrl("mailto:someone@example.com"));
+    EXPECT_FALSE(isInternalUrl("MAILTO:someone@example.com"));
+    EXPECT_FALSE(isInternalUrl("tel:+0123456789"));
+    EXPECT_FALSE(isInternalUrl("TEL:+0123456789"));
+    EXPECT_FALSE(isInternalUrl("geo:12.34,56.78"));
+    EXPECT_FALSE(isInternalUrl("GEO:12.34,56.78"));
+    EXPECT_FALSE(isInternalUrl("javascript:console.log('hello, world!')"));
+    EXPECT_FALSE(isInternalUrl("JAVAscript:console.log('hello, world!')"));
+
+    EXPECT_FALSE(isInternalUrl("data:text/plain;charset=UTF-8,the%20data"));
+    EXPECT_FALSE(isInternalUrl("DATA:text/plain;charset=UTF-8,the%20data"));
+
+    EXPECT_TRUE (isInternalUrl("http:example.com"));
+    EXPECT_TRUE (isInternalUrl("http:/example.com"));
+    EXPECT_TRUE (isInternalUrl("git@github.com:openzim/zim-tools.git"));
+    EXPECT_TRUE (isInternalUrl("/redirect?url=http://example.com"));
+    EXPECT_TRUE (isInternalUrl("redirect?url=http://example.com"));
+    EXPECT_TRUE (isInternalUrl("auth.php#returnurl=https://example.com"));
+    EXPECT_TRUE (isInternalUrl("/api/v1/http://example.com"));
+    EXPECT_TRUE (isInternalUrl("img/file:///etc/passwd"));
+    EXPECT_TRUE (isInternalUrl("ftp:/download.kiwix.org/zim/"));
+    EXPECT_TRUE (isInternalUrl("sendmailto:someone@example.com"));
+    EXPECT_TRUE (isInternalUrl("intel:+0123456789"));
+    EXPECT_TRUE (isInternalUrl("showlocation.cgi?geo:12.34,56.78"));
+    EXPECT_TRUE (isInternalUrl("/xyz/javascript:console.log('hello, world!')"));
+
+    EXPECT_TRUE (isInternalUrl("/api/data:text/plain;charset=UTF-8,qwerty"));
+    EXPECT_TRUE (isInternalUrl("../img/logo.png"));
+    EXPECT_TRUE (isInternalUrl("style.css"));
+}
+
 TEST(tools, isOutofBounds)
 {
     ASSERT_FALSE(isOutofBounds("", ""));

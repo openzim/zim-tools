@@ -1,7 +1,6 @@
 #include "checks.h"
 #include "../tools.h"
 
-#include <regex>
 #include <map>
 #include <unordered_map>
 #include <list>
@@ -9,29 +8,6 @@
 #define ZIM_PRIVATE
 #include <zim/archive.h>
 #include <zim/item.h>
-
-inline bool isDataUrl(const std::string& input_string)
-{
-    static std::regex data_url_regex =
-      std::regex("data:.+", std::regex_constants::icase);
-    return std::regex_match(input_string, data_url_regex);
-}
-
-inline bool isExternalUrl(const std::string& input_string)
-{
-    // A string starting with "<scheme>://" or "geo:" or "tel:" or "javascript:" or "mailto:"
-    static std::regex external_url_regex =
-      std::regex("([^:/?#]+:\\/\\/|geo:|tel:|mailto:|javascript:).*",
-                 std::regex_constants::icase);
-    return std::regex_match(input_string, external_url_regex);
-}
-
-// Checks if a URL is an internal URL or not. Uses RegExp.
-inline bool isInternalUrl(const std::string& input_string)
-{
-    return !isExternalUrl(input_string) && !isDataUrl(input_string);
-}
-
 
 void test_checksum(zim::Archive& archive, ErrorLogger& reporter) {
     std::cout << "[INFO] Verifying Internal Checksum..." << std::endl;
