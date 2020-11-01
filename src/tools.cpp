@@ -360,13 +360,6 @@ std::string normalize_link(const std::string& input, const std::string& baseUrl)
     return output;
 }
 
-bool isDataUrl(const std::string& input_string)
-{
-    static std::regex data_url_regex =
-      std::regex("data:.+", std::regex_constants::icase);
-    return std::regex_match(input_string, data_url_regex);
-}
-
 namespace
 {
 
@@ -377,6 +370,7 @@ enum class UriKind : int
     MAILTO,         // mailto:user@example.com
     TEL,            // tel:+0123456789
     GEO,            // geo:12.34,56.78
+    DATA,           // data:image/png;base64,...
 
     GENERIC_URI,    // Generic URI with scheme and authority: <scheme>://.....
 
@@ -389,6 +383,7 @@ const char* const uriSchemes[] = {
     "mailto",
     "tel",
     "geo",
+    "data"
 };
 
 UriKind specialUriSchemeKind(const std::string& s, int n)
@@ -408,7 +403,9 @@ void asciitolower(std::string& s)
     });
 }
 
-UriKind uriKind(const std::string& input_string)
+// Detects the URI type of the input string. Special URI kinds are considered
+// up to and including the value of the second parameter max_special_kind
+UriKind uriKind(const std::string& input_string, UriKind max_special_kind)
 {
     const auto k = input_string.find_first_of(":/?#");
     if ( k == std::string::npos || input_string[k] != ':' )
@@ -421,7 +418,7 @@ UriKind uriKind(const std::string& input_string)
 
     std::string scheme = input_string.substr(0, k);
     asciitolower(scheme);
-    return specialUriSchemeKind(scheme, int(UriKind::GEO));
+    return specialUriSchemeKind(scheme, int(max_special_kind));
 }
 
 } // unnamed namespace
@@ -430,11 +427,11 @@ bool isExternalUrl(const std::string& input_string)
 {
     // A string starting with "<scheme>://" or "geo:" or "tel:"
     // or "javascript:" or "mailto:"
-    return uriKind(input_string) != UriKind::INVALID;
+    return uriKind(input_string, UriKind::GEO) != UriKind::INVALID;
 }
 
 // Checks if a URL is an internal URL or not. Uses RegExp.
 bool isInternalUrl(const std::string& input_string)
 {
-    return !isExternalUrl(input_string) && !isDataUrl(input_string);
+    return uriKind(input_string, UriKind::DATA) == UriKind::INVALID;
 }

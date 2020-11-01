@@ -124,14 +124,6 @@ TEST(CommonTools, stripTitleInvalidChars)
   EXPECT_EQ(str, "header");
 }
 
-TEST(tools, isDataUrl)
-{
-    EXPECT_TRUE (isDataUrl("data:text/plain;charset=UTF-8,the%20data"));
-    EXPECT_TRUE (isDataUrl("DATA:text/plain;charset=UTF-8,the%20data"));
-
-    EXPECT_FALSE(isDataUrl("/api/data:text/plain;charset=UTF-8,the%20data"));
-}
-
 TEST(tools, isExternalUrl)
 {
     EXPECT_TRUE (isExternalUrl("http://example.com"));
