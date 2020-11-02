@@ -180,10 +180,8 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
 
             for(const auto &p: filtered)
             {
-                std::string link = p.first;
-                char nm = link[0];
-                std::string shortUrl(link.substr(2));
-                auto a = f.getArticle(nm, shortUrl);
+                const std::string link = p.first;
+                auto a = f.getArticleByUrl(link);
                 if (!a.good())
                 {
                     int index = it->getIndex();
