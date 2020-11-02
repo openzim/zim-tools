@@ -225,27 +225,31 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
         std::cout << "  Verifying Similar Articles for redundancies..." << std::endl;
         std::ostringstream output_details;
         progress.reset(hash_main.size());
-        for(auto &it: hash_main)
+        for(const auto &it: hash_main)
         {
             progress.report();
             auto l = it.second;
-            // If only one article has this hash, no need to test.
-            if(l.size() <= 1)
-                continue;
-            for (auto current=l.begin(); current!=l.end(); current++) {
-                auto a1 = f.getArticle(*current);
-                std::string s1 = a1.getData();
-                for(auto other=std::next(current); other!=l.end(); other++) {
-                    auto a2 = f.getArticle(*other);
-                    std::string s2 = a2.getData();
-                    if (s1 != s2 )
-                        continue;
+            while ( !l.empty() ) {
+                const auto a1 = f.getArticle(l.front());
+                l.pop_front();
+                if ( !l.empty() ) {
+                    const std::string s1 = a1.getData();
+                    decltype(l) articlesDifferentFromA1;
+                    for(auto other : l) {
+                        auto a2 = f.getArticle(other);
+                        std::string s2 = a2.getData();
+                        if (s1 != s2 ) {
+                            articlesDifferentFromA1.push_back(other);
+                            continue;
+                        }
 
-                    reporter.setTestResult(TestType::REDUNDANT, false);
-                    std::ostringstream ss;
-                    ss << a1.getTitle() << " (idx " << a1.getIndex() << ") and "
-                       << a2.getTitle() << " (idx " << a2.getIndex() << ")";
-                    reporter.addReportMsg(TestType::REDUNDANT, ss.str());
+                        reporter.setTestResult(TestType::REDUNDANT, false);
+                        std::ostringstream ss;
+                        ss << a1.getTitle() << " (idx " << a1.getIndex() << ") and "
+                           << a2.getTitle() << " (idx " << a2.getIndex() << ")";
+                        reporter.addReportMsg(TestType::REDUNDANT, ss.str());
+                    }
+                    l.swap(articlesDifferentFromA1);
                 }
             }
         }
