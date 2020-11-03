@@ -28,25 +28,25 @@
 
 #define BUFFER_SIZE 4096
 
-static const int DEFAULT_PART_SIZE = 2147483648;
+#define DEFAULT_PART_SIZE 2147483648
 
 class ZimSplitter
 {
   private:
     zim::File file;
     const std::string prefix;
-    size_t partSize;
+    zim::size_type partSize;
 
     char first_index, second_index;
 
     std::ifstream ifile;
     std::ofstream ofile;
     std::string part_name;
-    size_t out_size;
+    zim::size_type out_size;
     char* batch_buffer;
 
   public:
-    ZimSplitter(const std::string& fname, const std::string& out_prefix, size_t partSize)
+    ZimSplitter(const std::string& fname, const std::string& out_prefix, zim::size_type partSize)
       : file(fname),
         prefix(out_prefix),
         partSize(partSize),
@@ -97,9 +97,9 @@ class ZimSplitter
        copy_out(file.getClusterOffset(0));
     }
 
-    void copy_out(zim::offset_type size) {
+    void copy_out(zim::size_type size) {
         while (size > 0) {
-           auto size_to_copy = std::min<zim::offset_type>(size, BUFFER_SIZE);
+           auto size_to_copy = std::min<zim::size_type>(size, BUFFER_SIZE);
            ifile.read(batch_buffer, size_to_copy);
            if (!ifile) {
                throw std::runtime_error("Error while reading zim file");
@@ -192,7 +192,7 @@ int main(int argc, char* argv[])
     if (args["--prefix"])
         prefix = args["--prefix"].asString();
 
-    int size = DEFAULT_PART_SIZE;
+    zim::size_type size = DEFAULT_PART_SIZE;
     if (args["--size"])
         size = args["--size"].asLong();
 
