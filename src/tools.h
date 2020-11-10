@@ -95,7 +95,7 @@ bool isOutofBounds(const std::string& input, std::string base);
 
 //Adler32 Hash Function. Used to hash the BLOB data obtained from each article, for redundancy checks.
 //Please note that the adler32 hash function has a high number of collisions, and that the hash match is not taken as final.
-int adler32(std::string buf);
+int adler32(const std::string& buf);
 
 //Removes extra spaces from URLs. Usually done by the browser, so web authors sometimes tend to ignore it.
 //Converts the %20 to space.Essential for comparing URLs.

@@ -387,7 +387,7 @@ bool isOutofBounds(const std::string& input, std::string base)
     return nrsteps >= (nr + std::count(base.cbegin(), base.cend(), '/'));
 }
 
-int adler32(std::string buf)
+int adler32(const std::string& buf)
 {
     unsigned int s1 = 1;
     unsigned int s2 = 0;
