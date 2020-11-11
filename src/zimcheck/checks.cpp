@@ -44,6 +44,17 @@ void test_checksum(zim::File& f, ErrorLogger& reporter) {
     }
 }
 
+void test_integrity(const std::string& filename, ErrorLogger& reporter) {
+    std::cout << "[INFO] Verifying ZIM-file structure integrity..." << std::endl;
+    zim::IntegrityCheckList checks;
+    checks.set(); // enable all checks (including checksum)
+    bool result = zim::validate(filename, checks);
+    reporter.setTestResult(TestType::INTEGRITY, result);
+    if (!result) {
+        std::cout << "  [ERROR] ZIM file's low level structure is invalid" << std::endl;
+    }
+}
+
 
 void test_metadata(const zim::File& f, ErrorLogger& reporter) {
     std::cout << "[INFO] Searching for metadata entries..." << std::endl;

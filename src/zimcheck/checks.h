@@ -28,6 +28,7 @@ static std::unordered_map<LogTag, std::string> tagToStr{ {LogTag::ERROR,     "ER
 
 enum class TestType {
     CHECKSUM,
+    INTEGRITY,
     EMPTY,
     METADATA,
     FAVICON,
@@ -48,6 +49,7 @@ namespace std {
 
 static std::unordered_map<TestType, std::pair<LogTag, std::string>> errormapping = {
     { TestType::CHECKSUM,      {LogTag::ERROR, "Invalid checksum"}},
+    { TestType::INTEGRITY,     {LogTag::ERROR, "Invalid low-level structure"}},
     { TestType::EMPTY,         {LogTag::ERROR, "Empty articles"}},
     { TestType::METADATA,      {LogTag::ERROR, "Missing metadata entries"}},
     { TestType::FAVICON,       {LogTag::ERROR, "Missing favicon"}},
@@ -104,6 +106,7 @@ class ErrorLogger {
 
 
 void test_checksum(zim::File& f, ErrorLogger& reporter);
+void test_integrity(const std::string& filename, ErrorLogger& reporter);
 void test_metadata(const zim::File& f, ErrorLogger& reporter);
 void test_favicon(const zim::File& f, ErrorLogger& reporter);
 void test_mainpage(const zim::File& f, ErrorLogger& reporter);
