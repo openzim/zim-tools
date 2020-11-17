@@ -1,7 +1,28 @@
 zim-tools 2.1.0
 ===============
 
-* zimwriterfs & zimrecreate: write ZIM files using Zstandard compression
+ * Add small description text to help option (@kelson42)
+ * zimcheck: Better error reporting (@MiguelRocha, @kelson42)
+ * zimwriterfs: Update font mimetype (@kelson42)
+ * zimcheck: Fix various crash (@MiguelRocha)
+ * ci: Add building of deb package and publication on ppa (@legoktm)
+ * Add unit tests (@MiguelRocha, @asashnov)
+ * zimcheck: Handle `data:` urls correctly (@kelson42)
+ * zimcheck: Add testof empty links (@MiguelRocha)
+ * readme: Add link to  packages links (repology) (@hashworks)
+ * zimwriterfs & zimrecreate: Add a option to write ZIM files using Zstandard
+   compression (default lzma) (@kelson42)
+ * zimcheck: Performance improvement (@MiguelRocha, @veloman-yunkan)
+ * zimwriterfs: Create zim redirect entry when file is actually a symlink
+   (@asashnov)
+ * zimcheck: Add a progress option (@kelson42)
+ * zimsplit: Use docopt to parse command line option (@MiguelRocha)
+ * zimwriterfs: Add a metadata `M/Scraper` with the name (zimwriterfs) and
+   version of the scraper. (@asashnov)
+ * zimwriterfs: Do not allow to create a zim file inside the HTML source
+   directory (@asashnov)
+ * zimcheck: Add internal integrity check using libzim `validate`
+   (@veloman-yunkan)
 
 zim-tools 2.0.0
 ===============
