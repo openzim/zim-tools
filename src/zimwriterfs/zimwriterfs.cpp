@@ -47,7 +47,7 @@ std::string publisher;
 std::string title;
 std::string tags;
 std::string flavour;
-std::string scraper;
+std::string scraper = "zimwriterfs-" VERSION;
 std::string name;
 std::string source;
 std::string description;
