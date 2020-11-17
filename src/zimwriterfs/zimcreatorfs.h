@@ -56,6 +56,7 @@ class ZimCreatorFS : public zim::writer::Creator
   std::string computeNewUrl(const std::string& aid, const std::string& baseUrl, const std::string& targetUrl) const;
   const std::string & basedir() const { return directoryPath; }
   bool uniqNamespace() const { return uniqueNamespace; }
+  const std::string & canonicalBaseDir() const { return canonical_basedir; }
 
  private:
   std::vector<IHandler*> articleHandlers;
