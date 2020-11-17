@@ -49,6 +49,7 @@ void displayHelp()
              "-A , --all             run all tests. Default if no flags are given.\n"
              "-0 , --empty           Empty content\n"
              "-C , --checksum        Internal CheckSum Test\n"
+             "-I , --integrity       Low-level correctness/integrity checks\n"
              "-M , --metadata        MetaData Entries\n"
              "-F , --favicon         Favicon\n"
              "-P , --main            Main page\n"
@@ -85,6 +86,7 @@ int main (int argc, char **argv)
     bool favicon = false;
     bool main_page = false;
     bool redundant_data = false;
+    bool integrity = false;
     bool url_check = false;
     bool url_check_external = false;
     bool empty_check = false;
@@ -108,6 +110,7 @@ int main (int argc, char **argv)
             { "progress",     no_argument, 0, 'B'},
             { "empty",        no_argument, 0, '0'},
             { "checksum",     no_argument, 0, 'C'},
+            { "integrity",    no_argument, 0, 'I'},
             { "metadata",     no_argument, 0, 'M'},
             { "favicon",      no_argument, 0, 'F'},
             { "main",         no_argument, 0, 'P'},
@@ -121,7 +124,7 @@ int main (int argc, char **argv)
             { 0, 0, 0, 0}
         };
         int option_index = 0;
-        int c = getopt_long (argc, argv, "ACMFPRUXEDHBVacmfpruxedhbv",
+        int c = getopt_long (argc, argv, "ACIMFPRUXEDHBVacimfpruxedhbv",
                              long_options, &option_index);
         //c = getopt (argc, argv, "ACMFPRUXED");
         if(c == -1)
@@ -139,6 +142,11 @@ int main (int argc, char **argv)
         case 'C':
         case 'c':
             checksum = true;
+            no_args = false;
+            break;
+        case 'I':
+        case 'i':
+            integrity = true;
             no_args = false;
             break;
         case 'M':
@@ -221,7 +229,7 @@ int main (int argc, char **argv)
     //If no arguments are given to the program, all the tests are performed.
     if ( run_all || no_args )
     {
-        checksum = metadata = favicon = main_page = redundant_data =
+        checksum = integrity = metadata = favicon = main_page = redundant_data =
           url_check = url_check_external = mime_check = empty_check = true;
     }
 
@@ -244,11 +252,25 @@ int main (int argc, char **argv)
     try
     {
         std::cout << "[INFO] Checking zim file " << filename << std::endl;
+
+        //Test 0: Low-level ZIM-file structure integrity checks
+        if(integrity)
+            test_integrity(filename, error);
+
+        // Does it make sense to do the other checks if the integrity
+        // check fails?
         zim::File f( filename );
 
         //Test 1: Internal Checksum
-        if(checksum)
-            test_checksum(f, error);
+        if(checksum) {
+            if ( integrity ) {
+                std::cout << "[INFO] Avoiding redundant checksum test"
+                          << " (already performed by the integrity check)."
+                          << std::endl;
+            } else {
+                test_checksum(f, error);
+            }
+        }
 
         //Test 2: Metadata Entries:
         //The file is searched for the compulsory metadata entries.
