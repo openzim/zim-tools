@@ -379,7 +379,7 @@ UriKind specialUriSchemeKind(const std::string& s)
             return UriKind(i);
     }
 
-    return UriKind::INVALID;
+    return UriKind::OTHER;
 }
 
 void asciitolower(std::string& s)
@@ -395,7 +395,7 @@ UriKind html_link::detectUriKind(const std::string& input_string)
 {
     const auto k = input_string.find_first_of(":/?#");
     if ( k == std::string::npos || input_string[k] != ':' )
-        return UriKind::INVALID;
+        return UriKind::OTHER;
 
     if ( k + 2 < input_string.size()
          && input_string[k+1] == '/'

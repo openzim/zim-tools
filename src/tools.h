@@ -69,7 +69,7 @@ enum class UriKind : int
 
     GENERIC_URI,    // Generic URI with scheme and authority: <scheme>://.....
 
-    INVALID         // not a valid URI (though it can be a valid relative
+    OTHER           // not a valid URI (though it can be a valid relative
                     // or absolute URL)
 };
 
@@ -88,12 +88,12 @@ public:
 
     bool isExternalUrl() const
     {
-        return uriKind != UriKind::INVALID && uriKind != UriKind::DATA;
+        return uriKind != UriKind::OTHER && uriKind != UriKind::DATA;
     }
 
     bool isInternalUrl() const
     {
-        return uriKind == UriKind::INVALID;
+        return uriKind == UriKind::OTHER;
     }
 
     static UriKind detectUriKind(const std::string& input_string);
