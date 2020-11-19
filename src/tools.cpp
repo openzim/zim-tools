@@ -364,22 +364,18 @@ std::string normalize_link(const std::string& input, const std::string& baseUrl)
 namespace
 {
 
-const char* const uriSchemes[] = {
-    "javascript",
-    "mailto",
-    "tel",
-    "geo",
-    "data"
-};
-
 UriKind specialUriSchemeKind(const std::string& s)
 {
-    for ( int i = 0; i <= int(UriKind::DATA) ; ++i ) {
-        if ( uriSchemes[i] == s )
-            return UriKind(i);
-    }
+    static const std::map<std::string, UriKind> uriSchemes = {
+        { "javascript", UriKind::JAVASCRIPT },
+        { "mailto",     UriKind::MAILTO     },
+        { "tel",        UriKind::TEL        },
+        { "geo",        UriKind::GEO        },
+        { "data",       UriKind::DATA       }
+    };
 
-    return UriKind::OTHER;
+    const auto it = uriSchemes.find(s);
+    return it != uriSchemes.end() ? it->second : UriKind::OTHER;
 }
 
 void asciitolower(std::string& s)
