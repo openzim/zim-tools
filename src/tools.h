@@ -76,9 +76,15 @@ enum class UriKind : int
 class html_link
 {
 public:
-    std::string attribute;
-    std::string link;
-    UriKind     uriKind;
+    const std::string attribute;
+    const std::string link;
+    const UriKind     uriKind;
+
+    html_link(const std::string& _attr, const std::string& _link)
+        : attribute(_attr)
+        , link(_link)
+        , uriKind(detectUriKind(_link))
+    {}
 
     bool isExternalUrl() const
     {
@@ -89,6 +95,8 @@ public:
     {
         return uriKind == UriKind::INVALID;
     }
+
+    static UriKind detectUriKind(const std::string& input_string);
 };
 
 // Few helper class to help copy a item from a archive to another one.
@@ -168,10 +176,6 @@ void stripTitleInvalidChars(std::string& str);
 
 //Returns a vector of the links in a particular page. includes links under 'href' and 'src'
 std::vector<html_link> generic_getLinks(const std::string& page);
-
-// Detects the URI type of the input string. Special URI kinds are considered
-// up to and including the value of the second parameter max_special_kind
-UriKind uriKind(const std::string& input_string);
 
 // checks if a relative path is out of bounds (relative to base)
 bool isOutofBounds(const std::string& input, std::string base);

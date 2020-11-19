@@ -124,6 +124,11 @@ TEST(CommonTools, stripTitleInvalidChars)
   EXPECT_EQ(str, "header");
 }
 
+UriKind uriKind(const std::string& s)
+{
+    return html_link::detectUriKind(s);
+}
+
 TEST(tools, uriKind)
 {
     EXPECT_EQ(UriKind::GENERIC_URI, uriKind("http://example.com"));
