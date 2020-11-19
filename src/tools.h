@@ -73,12 +73,23 @@ enum class UriKind : int
                     // or absolute URL)
 };
 
-typedef struct html_link
+class html_link
 {
+public:
     std::string attribute;
     std::string link;
     UriKind     uriKind;
-} html_link;
+
+    bool isExternalUrl() const
+    {
+        return uriKind != UriKind::INVALID && uriKind != UriKind::DATA;
+    }
+
+    bool isInternalUrl() const
+    {
+        return uriKind == UriKind::INVALID;
+    }
+};
 
 // Few helper class to help copy a item from a archive to another one.
 class ItemProvider : public zim::writer::ContentProvider
@@ -161,16 +172,6 @@ std::vector<html_link> generic_getLinks(const std::string& page);
 // Detects the URI type of the input string. Special URI kinds are considered
 // up to and including the value of the second parameter max_special_kind
 UriKind uriKind(const std::string& input_string);
-
-inline bool isExternalUrl(const html_link& l)
-{
-    return l.uriKind != UriKind::INVALID && l.uriKind != UriKind::DATA;
-}
-
-inline bool isInternalUrl(const html_link& l)
-{
-    return l.uriKind == UriKind::INVALID;
-}
 
 // checks if a relative path is out of bounds (relative to base)
 bool isOutofBounds(const std::string& input, std::string base);
