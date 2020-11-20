@@ -5,13 +5,14 @@ Maintainer: Kiwix team <kiwix@kiwix.org>
 Build-Depends: debhelper-compat (= 13),
  meson,
  pkg-config,
- libzim-dev (>= 6.1.8),
+ libzim-dev (>= 6.3.0),
  libmagic-dev,
  zlib1g-dev,
  libgumbo-dev,
  libicu-dev,
  libdocopt-dev,
- cmake
+ cmake,
+ libgtest-dev
 Standards-Version: 4.5.0
 Homepage: https://github.com/openzim/zim-tools
 Rules-Requires-Root: no
