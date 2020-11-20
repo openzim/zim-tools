@@ -496,6 +496,47 @@ void ArticleChecker::detect_redundant_articles(ProgressBar& progress)
     }
 }
 
+class TaskStream
+{
+public: // functions
+    explicit TaskStream(ArticleChecker* ac)
+        : articleChecker(*ac)
+    {}
+
+    void addTask(zim::Entry entry)
+    {
+        articleChecker.check(entry);
+    }
+
+    void close()
+    {
+    }
+
+private: // data
+    ArticleChecker& articleChecker;
+};
+
+class TaskDispatcher
+{
+public: // functions
+    explicit TaskDispatcher(ArticleChecker* ac)
+        : taskStream(ac)
+    {}
+
+    void addTask(zim::Entry entry)
+    {
+        taskStream.addTask(entry);
+    }
+
+    void close()
+    {
+        taskStream.close();
+    }
+
+private: // data
+    TaskStream taskStream;
+};
+
 } // unnamed namespace
 
 void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressBar progress,
@@ -504,9 +545,11 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
     reporter.infoMsg("[INFO] Verifying Articles' content...");
 
     progress.reset(archive.getEntryCount());
+    TaskDispatcher td(&articleChecker);
     for (auto& entry:archive.iterEfficient()) {
         progress.report();
-        articleChecker.check(entry);
+
+        td.addTask(entry);
     }
 
     if (checks.isEnabled(TestType::REDUNDANT))
