@@ -511,6 +511,7 @@ public: // functions
 
     ~TaskStream()
     {
+        noMoreTasks();
         thread.join();
     }
 
@@ -587,21 +588,21 @@ class TaskDispatcher
 {
 public: // functions
     explicit TaskDispatcher(ArticleChecker* ac)
-        : taskStream(ac)
+        : taskStream(new TaskStream(ac))
     {}
 
     void addTask(zim::Entry entry)
     {
-        taskStream.addTask(entry);
+        taskStream->addTask(entry);
     }
 
-    void noMoreTasks()
+    void waitForAllTasksToComplete()
     {
-        taskStream.noMoreTasks();
+        taskStream.reset();
     }
 
 private: // data
-    TaskStream taskStream;
+    std::unique_ptr<TaskStream> taskStream;
 };
 
 } // unnamed namespace
@@ -618,7 +619,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
 
         td.addTask(entry);
     }
-    td.noMoreTasks();
+    td.waitForAllTasksToComplete();
 
     if (checks.isEnabled(TestType::REDUNDANT))
     {
