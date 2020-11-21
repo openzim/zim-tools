@@ -336,7 +336,7 @@ void parse_args(int argc, char** argv)
   }
 
   if (fileExists(zimPath)) {
-    std::cerr << "zimwriterfs: Error: destination .zim file already exists."
+    std::cerr << "zimwriterfs: Error: destination .zim file '" << zimPath << "' already exists."
               << std::endl;
     exit(1);
   }
