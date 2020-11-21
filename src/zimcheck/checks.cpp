@@ -1,10 +1,16 @@
 #include "checks.h"
 #include "../tools.h"
 
+#include <cassert>
 #include <map>
 #include <unordered_map>
 #include <list>
 #include <sstream>
+#include <atomic>
+#include <condition_variable>
+#include <mutex>
+#include <thread>
+#include <queue>
 #define ZIM_PRIVATE
 #include <zim/archive.h>
 #include <zim/item.h>
@@ -498,19 +504,83 @@ class TaskStream
 public: // functions
     explicit TaskStream(ArticleChecker* ac)
         : articleChecker(*ac)
-    {}
+        , expectingMoreTasks(true)
+    {
+        thread = std::thread([this]() { this->processTasks(); });
+    }
+
+    ~TaskStream()
+    {
+        thread.join();
+    }
 
     void addTask(zim::Entry entry)
     {
-        articleChecker.check(entry);
+        assert(expectingMoreTasks);
+        std::lock_guard<std::mutex> lock(mutex);
+        taskQueue.push(entry);
+        unblock();
     }
 
-    void close()
+    void noMoreTasks()
     {
+        std::lock_guard<std::mutex> lock(mutex);
+        expectingMoreTasks = false;
+        unblock();
+    }
+
+private: // types
+    typedef std::shared_ptr<zim::Entry> Task;
+
+private: // functions
+    void processTasks()
+    {
+        while ( true )
+        {
+            const auto t = getNextTask();
+            if ( !t )
+                break;
+            articleChecker.check(*t);
+        }
+    }
+
+    bool blocked() const
+    {
+        return expectingMoreTasks && taskQueue.empty();
+    }
+
+    void waitUntilUnblocked(std::unique_lock<std::mutex>& lock)
+    {
+        cv.wait(lock);
+    }
+
+    void unblock()
+    {
+        cv.notify_one();
+    }
+
+    Task getNextTask()
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        if ( blocked() )
+            waitUntilUnblocked(lock);
+
+        Task t;
+        if ( !taskQueue.empty() )
+        {
+            t = std::make_shared<zim::Entry>(taskQueue.front());
+            taskQueue.pop();
+        }
+        return t;
     }
 
 private: // data
     ArticleChecker& articleChecker;
+    std::queue<zim::Entry> taskQueue;
+    std::mutex mutex;
+    std::thread thread;
+    std::condition_variable cv;
+    std::atomic<bool> expectingMoreTasks;
 };
 
 class TaskDispatcher
@@ -525,9 +595,9 @@ public: // functions
         taskStream.addTask(entry);
     }
 
-    void close()
+    void noMoreTasks()
     {
-        taskStream.close();
+        taskStream.noMoreTasks();
     }
 
 private: // data
@@ -548,6 +618,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
 
         td.addTask(entry);
     }
+    td.noMoreTasks();
 
     if (checks.isEnabled(TestType::REDUNDANT))
     {
