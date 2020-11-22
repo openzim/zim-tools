@@ -72,4 +72,4 @@ jobs:
        cd $HOME/zim-tools/build
        meson test --verbose || true
        cd ../test
-       gdb -ex run -ex bt -args ../build/test/zimwriterfs-zimcreatorfs
+       gdb -ex run -ex bt -ex disass -ex up -ex disass -args ../build/test/zimwriterfs-zimcreatorfs
