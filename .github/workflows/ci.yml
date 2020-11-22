@@ -66,13 +66,3 @@ jobs:
       run: |
        cd $HOME/zim-tools/build
        meson test --verbose
-       ninja coverage
-    - name: Publish coverage
-      shell: bash
-      run: |
-        cd $HOME/zim-tools
-        curl https://codecov.io/bash -o codecov.sh
-        bash codecov.sh -n "${OS_NAME}_${{matrix.target}}" -Z
-        rm codecov.sh
-      env:
-        CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
