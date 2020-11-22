@@ -65,4 +65,6 @@ jobs:
       shell: bash
       run: |
        cd $HOME/zim-tools/build
-       meson test --verbose
+       meson test --verbose || true
+       cd ../test
+       gdb -ex run -ex bt -args ../build/test/zimwriterfs-zimcreatorfs
