@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: "kiwix/kiwix-build_ci:${{matrix.image_variant}}-26"
+      options: --user root
     steps:
     - name: Extract branch name
       shell: bash
@@ -44,6 +45,10 @@ jobs:
     - name: Install deps
       shell: bash
       run: |
+        set -x
+        whoami
+        apt update
+        apt-get -y install gdb
         ARCHIVE_NAME=deps2_${OS_NAME}_${{matrix.target}}_zim-tools.tar.xz
         wget -O- http://tmp.kiwix.org/ci/${ARCHIVE_NAME} | tar -xJ -C /home/runner
     - name: Compile
