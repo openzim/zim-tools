@@ -6,8 +6,9 @@
 #include <unordered_map>
 #include <list>
 #include <sstream>
-#include <zim/file.h>
-#include <zim/fileiterator.h>
+#define ZIM_PRIVATE
+#include <zim/archive.h>
+#include <zim/item.h>
 
 inline bool isDataUrl(const std::string& input_string)
 {
@@ -32,20 +33,20 @@ inline bool isInternalUrl(const std::string& input_string)
 }
 
 
-void test_checksum(zim::File& f, ErrorLogger& reporter) {
+void test_checksum(zim::Archive& archive, ErrorLogger& reporter) {
     std::cout << "[INFO] Verifying Internal Checksum..." << std::endl;
-    bool result = f.verify();
+    bool result = archive.check();
     reporter.setTestResult(TestType::CHECKSUM, result);
     if (!result) {
-        std::cout << "  [ERROR] Wrong Checksum in ZIM file" << std::endl;
+        std::cout << "  [ERROR] Wrong Checksum in ZIM archive" << std::endl;
         std::ostringstream ss;
-        ss << "ZIM File Checksum in file: " << f.getChecksum() << std::endl;
+        ss << "ZIM Archive Checksum in archive: " << archive.getChecksum() << std::endl;
         reporter.addReportMsg(TestType::CHECKSUM, ss.str());
     }
 }
 
 void test_integrity(const std::string& filename, ErrorLogger& reporter) {
-    std::cout << "[INFO] Verifying ZIM-file structure integrity..." << std::endl;
+    std::cout << "[INFO] Verifying ZIM-archive structure integrity..." << std::endl;
     zim::IntegrityCheckList checks;
     checks.set(); // enable all checks (including checksum)
     bool result = zim::validate(filename, checks);
@@ -56,7 +57,7 @@ void test_integrity(const std::string& filename, ErrorLogger& reporter) {
 }
 
 
-void test_metadata(const zim::File& f, ErrorLogger& reporter) {
+void test_metadata(const zim::Archive& archive, ErrorLogger& reporter) {
     std::cout << "[INFO] Searching for metadata entries..." << std::endl;
     static const char* const test_meta[] = {
         "Title",
@@ -65,93 +66,98 @@ void test_metadata(const zim::File& f, ErrorLogger& reporter) {
         "Date",
         "Description",
         "Language"};
+    auto existing_metadata = archive.getMetadataKeys();
+    auto begin = existing_metadata.begin();
+    auto end = existing_metadata.end();
     for (auto &meta : test_meta) {
-        auto article = f.getArticle('M', meta);
-        if (!article.good()) {
+        if (std::find(begin, end, meta) == end) {
             reporter.setTestResult(TestType::METADATA, false);
             reporter.addReportMsg(TestType::METADATA, meta);
         }
     }
 }
 
-void test_favicon(const zim::File& f, ErrorLogger& reporter) {
+void test_favicon(const zim::Archive& archive, ErrorLogger& reporter) {
     std::cout << "[INFO] Searching for Favicon..." << std::endl;
     static const char* const favicon_paths[] = {"-/favicon.png", "I/favicon.png", "I/favicon", "-/favicon"};
     for (auto &path: favicon_paths) {
-        auto article = f.getArticleByUrl(path);
-        if (article.good()) {
+        if (archive.hasEntryByPath(path)) {
             return;
         }
     }
     reporter.setTestResult(TestType::FAVICON, false);
 }
 
-void test_mainpage(const zim::File& f, ErrorLogger& reporter) {
+void test_mainpage(const zim::Archive& archive, ErrorLogger& reporter) {
     std::cout << "[INFO] Searching for main page..." << std::endl;
-    zim::Fileheader fh=f.getFileheader();
     bool testok = true;
-    if( !fh.hasMainPage() )
+    try {
+      archive.getMainEntry();
+    } catch(...) {
         testok = false;
-    else if( fh.getMainPage() > fh.getArticleCount() )
-        testok = false;
+    }
     reporter.setTestResult(TestType::MAIN_PAGE, testok);
     if (!testok) {
         std::ostringstream ss;
-        ss << "Main Page Index stored in File Header: " << fh.getMainPage();
+        ss << "Main Page Index stored in Archive Header: " << archive.getMainEntryIndex();
         reporter.addReportMsg(TestType::MAIN_PAGE, ss.str());
     }
 }
 
-void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progress,
+
+void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressBar progress,
                    bool redundant_data, bool url_check, bool url_check_external, bool empty_check) {
     std::cout << "[INFO] Verifying Articles' content..." << std::endl;
     // Article are store in a map<hash, list<index>>.
     // So all article with the same hash will be stored in the same list.
-    std::map<unsigned int, std::list<zim::article_index_type>> hash_main;
+    std::map<unsigned int, std::list<zim::entry_index_type>> hash_main;
 
     int previousIndex = -1;
 
-    progress.reset(f.getFileheader().getArticleCount());
-    for (zim::File::const_iterator it = f.begin(); it != f.end(); ++it)
-    {
+    progress.reset(archive.getEntryCount());
+    for (auto& entry:archive.iterEfficient()) {
         progress.report();
+        auto path = entry.getPath();
+        char ns = archive.hasNewNamespaceScheme() ? 'C' : path[0];
 
-        if (it->getArticleSize() == 0 &&
-            empty_check &&
-            (it->getNamespace() == 'A' ||
-             it->getNamespace() == 'I')) {
-          std::ostringstream ss;
-          ss << "Entry " << it->getLongUrl() << " is empty";
-          reporter.addReportMsg(TestType::EMPTY, ss.str());
-          reporter.setTestResult(TestType::EMPTY, false);
+        if (entry.isRedirect() || ns == 'M') {
+            continue;
         }
 
-        if (it->isRedirect() ||
-            it->isLinktarget() ||
-            it->isDeleted() ||
-            it->getArticleSize() == 0 ||
-            it->getNamespace() == 'M') {
+        if (empty_check && (ns=='A' || ns == 'I')) {
+            auto item = entry.getItem();
+            if (item.getSize() == 0) {
+                std::ostringstream ss;
+                ss << "Entry " << path << " is empty";
+                reporter.addReportMsg(TestType::EMPTY, ss.str());
+                reporter.setTestResult(TestType::EMPTY, false);
+            }
+        }
+
+        auto item = entry.getItem();
+
+        if (item.getSize() == 0) {
             continue;
         }
 
         std::string data;
-        if (redundant_data || it->getMimeType() == "text/html")
-            data = it->getData();
+        if (redundant_data || item.getMimetype() == "text/html")
+            data = item.getData();
 
         if(redundant_data)
-            hash_main[adler32(data)].push_back( it->getIndex() );
+            hash_main[adler32(data)].push_back( item.getIndex() );
 
-        if (it->getMimeType() != "text/html")
+        if (item.getMimetype() != "text/html")
             continue;
 
         std::vector<html_link> links;
         if (url_check || url_check_external) {
-            links = generic_getLinks(it->getData());
+            links = generic_getLinks(data);
         }
 
         if(url_check)
         {
-            auto baseUrl = it->getLongUrl();
+            auto baseUrl = path;
             auto pos = baseUrl.find_last_of('/');
             baseUrl.resize( pos==baseUrl.npos ? 0 : pos );
 
@@ -171,7 +177,7 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
                 if (isOutofBounds(l.link, baseUrl))
                 {
                     std::ostringstream ss;
-                    ss << l.link << " is out of bounds. Article: " << it->getLongUrl();
+                    ss << l.link << " is out of bounds. Article: " << path;
                     reporter.addReportMsg(TestType::URL_INTERNAL, ss.str());
                     reporter.setTestResult(TestType::URL_INTERNAL, false);
                     continue;
@@ -184,7 +190,7 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
             if (nremptylinks)
             {
                 std::ostringstream ss;
-                ss << "Found " << nremptylinks << " empty links in article: " << it->getLongUrl();
+                ss << "Found " << nremptylinks << " empty links in article: " << path;
                 reporter.addReportMsg(TestType::URL_INTERNAL, ss.str());
                 reporter.setTestResult(TestType::URL_INTERNAL, false);
             }
@@ -192,17 +198,15 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
             for(const auto &p: filtered)
             {
                 const std::string link = p.first;
-                auto a = f.getArticleByUrl(link);
-                if (!a.good())
-                {
-                    int index = it->getIndex();
+                if (!archive.hasEntryByPath(link)) {
+                    int index = item.getIndex();
                     if (previousIndex != index)
                     {
                         std::ostringstream ss;
                         ss << "The following links:\n";
                         for (const auto &olink : p.second)
                             ss << "- " << olink << '\n';
-                        ss << "(" << link << ") were not found in article " << it->getLongUrl();
+                        ss << "(" << link << ") were not found in article " << path;
                         reporter.addReportMsg(TestType::URL_INTERNAL, ss.str());
                         previousIndex = index;
                     }
@@ -213,7 +217,7 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
 
         if (url_check_external)
         {
-            if (it->getMimeType() != "text/html")
+            if (item.getMimetype() != "text/html")
                 continue;
 
             for (auto &l: links)
@@ -221,7 +225,7 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
                 if (l.attribute == "src" && isExternalUrl(l.link))
                 {
                     std::ostringstream ss;
-                    ss << l.link << " is an external dependence in article " << it->getLongUrl();
+                    ss << l.link << " is an external dependence in article " << path;
                     reporter.addReportMsg(TestType::URL_EXTERNAL, ss.str());
                     reporter.setTestResult(TestType::URL_EXTERNAL, false);
                     break;
@@ -241,26 +245,27 @@ void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progre
             progress.report();
             auto l = it.second;
             while ( !l.empty() ) {
-                const auto a1 = f.getArticle(l.front());
+                const auto e1 = archive.getEntryByPath(l.front());
                 l.pop_front();
                 if ( !l.empty() ) {
-                    const std::string s1 = a1.getData();
-                    decltype(l) articlesDifferentFromA1;
+                    // The way we have constructed `l`, e1 MUST BE an item
+                    const std::string s1 = e1.getItem().getData();
+                    decltype(l) articlesDifferentFromE1;
                     for(auto other : l) {
-                        auto a2 = f.getArticle(other);
-                        std::string s2 = a2.getData();
+                        auto e2 = archive.getEntryByPath(other);
+                        std::string s2 = e2.getItem().getData();
                         if (s1 != s2 ) {
-                            articlesDifferentFromA1.push_back(other);
+                            articlesDifferentFromE1.push_back(other);
                             continue;
                         }
 
                         reporter.setTestResult(TestType::REDUNDANT, false);
                         std::ostringstream ss;
-                        ss << a1.getTitle() << " (idx " << a1.getIndex() << ") and "
-                           << a2.getTitle() << " (idx " << a2.getIndex() << ")";
+                        ss << e1.getTitle() << " (idx " << e1.getIndex() << ") and "
+                           << e2.getTitle() << " (idx " << e2.getIndex() << ")";
                         reporter.addReportMsg(TestType::REDUNDANT, ss.str());
                     }
-                    l.swap(articlesDifferentFromA1);
+                    l.swap(articlesDifferentFromE1);
                 }
             }
         }

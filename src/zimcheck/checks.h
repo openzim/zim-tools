@@ -3,10 +3,14 @@
 
 #include <unordered_map>
 #include <vector>
-
-#include <zim/file.h>
+#include <iostream>
+#include <algorithm>
 
 #include "../progress.h"
+
+namespace zim {
+  class Archive;
+}
 
 enum StatusCode : int {
    PASS = 0,
@@ -105,12 +109,12 @@ class ErrorLogger {
 };
 
 
-void test_checksum(zim::File& f, ErrorLogger& reporter);
+void test_checksum(zim::Archive& archive, ErrorLogger& reporter);
 void test_integrity(const std::string& filename, ErrorLogger& reporter);
-void test_metadata(const zim::File& f, ErrorLogger& reporter);
-void test_favicon(const zim::File& f, ErrorLogger& reporter);
-void test_mainpage(const zim::File& f, ErrorLogger& reporter);
-void test_articles(const zim::File& f, ErrorLogger& reporter, ProgressBar progress,
+void test_metadata(const zim::Archive& archive, ErrorLogger& reporter);
+void test_favicon(const zim::Archive& archive, ErrorLogger& reporter);
+void test_mainpage(const zim::Archive& archive, ErrorLogger& reporter);
+void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressBar progress,
                    bool redundant_data, bool url_check, bool url_check_external, bool empty_check);
 
 #endif

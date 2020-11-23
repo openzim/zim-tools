@@ -23,9 +23,8 @@
 #include <map>
 #include <zim/writer/creator.h>
 #include <zim/blob.h>
-#include <zim/article.h>
-#include <zim/file.h>
-#include <zim/fileiterator.h>
+#include <zim/archive.h>
+#include <zim/item.h>
 #include <zim/uuid.h>
 #include <list>
 #include <limits>
@@ -46,25 +45,13 @@ std::string NumberToString(int number)
 class Article: public zim::writer::Article
 {
     //article from an existing ZIM file.
-    std::string _id;
-    zim::Article Ar;
+    zim::Entry entry;
     bool isRd;
     zim::writer::Url redirectUrl;
 
 public:
-    Article():
-      _id(""),
-      isRd(false)
-    {}
-
-    explicit Article(const std::string& id):
-      _id(id),
-      isRd(false)
-    {}
-
-    explicit Article(const zim::Article a,int id):
-      _id(NumberToString(id)),
-       Ar(a),
+    explicit Article(zim::Entry h):
+       entry(h),
        isRd(false)
     {}
 
@@ -72,17 +59,16 @@ public:
     {
         redirectUrl=u;
         isRd=true;
-        return;
     }
 
     virtual zim::writer::Url getUrl() const
     {
-        return zim::writer::Url(Ar.getNamespace(), Ar.getUrl());
+        return zim::writer::Url(entry.getPath());
     }
 
     virtual std::string getTitle() const
     {
-        return Ar.getTitle();
+        return entry.getTitle();
     }
 
     virtual bool isRedirect() const
@@ -92,7 +78,7 @@ public:
 
     virtual std::string getMimeType() const
     {
-        return Ar.getMimeType();
+        return entry.getItem().getMimetype();
     }
 
     virtual zim::writer::Url getRedirectUrl() const
@@ -100,19 +86,14 @@ public:
         return redirectUrl;
     }
 
-    virtual std::string getParameter() const
-    {
-        return Ar.getParameter();
-    }
-
     zim::Blob getData() const
     {
-        return Ar.getData();
+        return entry.getItem().getData();
     }
 
     virtual zim::size_type getSize() const
     {
-        return Ar.getArticleSize();
+        return entry.getItem().getSize();
     }
 
     virtual std::string getFilename() const
@@ -136,8 +117,8 @@ public:
 
 class ZimCreatorPatch : public zim::writer::Creator
 {
-    zim::File start_file;
-    zim::File diff_file;
+    zim::Archive start_archive;
+    zim::Archive diff_archive;
     zim::Uuid fileUid;
     zim::writer::Url mainUrl;
     zim::writer::Url layoutUrl;
@@ -164,10 +145,10 @@ class ZimCreatorPatch : public zim::writer::Creator
 
 public:
     explicit ZimCreatorPatch(std::string start_filename="",std::string diff_filename="")
+      : start_archive(start_filename),
+        diff_archive(diff_filename)
     {
-        start_file=zim::File(start_filename);
-        diff_file=zim::File(diff_filename);
-        std::string id=diff_file.getArticleByUrl("M/endfileuid").getPage();
+        std::string id=diff_archive.getMetadata("endfileuid");
         std::string temp="";
         unsigned int k=0;
         char tempArray[16];
@@ -186,23 +167,22 @@ public:
             }
         }
         fileUid=zim::Uuid(tempArray);
-        std::string tempString=diff_file.getArticleByUrl("M/mainaurl").getPage();
-        if(diff_file.getArticleByUrl(tempString).good()
-         ||start_file.getArticleByUrl(tempString).good())
+        std::string tempString=diff_archive.getMetadata("mainaurl");
+        if(diff_archive.hasEntryByPath(tempString) || start_archive.hasEntryByPath(tempString))
         {
             mainUrl=zim::writer::Url(tempString);
         }
 
-        tempString=diff_file.getArticleByUrl("M/layoutaurl").getPage();
-        if(diff_file.getArticleByUrl(tempString).good()
-         ||start_file.getArticleByUrl(tempString).good())
+        tempString=diff_archive.getMetadata("layoutaurl");
+        if(diff_archive.hasEntryByPath(tempString)
+         ||start_archive.hasEntryByPath(tempString))
         {
             layoutUrl=zim::writer::Url(tempString);
         }
 
         std::string tmp="";
         std::vector<std::string> rdlist;
-        tempString=diff_file.getArticleByUrl("M/redirectlist").getPage();
+        tempString=diff_archive.getMetadata("redirectlist");
         for(unsigned int i=0;i<tempString.size();i++)
         {
             if(tempString[i]!='\n')
@@ -220,8 +200,7 @@ public:
             redirectList[rdlist[i]] = rdlist[i+1];
         }
 
-        zim::Article a = diff_file.getArticleByUrl("M/dlist");
-        std::string dllist=a.getPage();
+        std::string dllist = diff_archive.getMetadata("dlist");
         tmp="";
         //Computing list of deleted articles and storing them in a vector.
         for(unsigned int i=0; i<dllist.size(); i++)
@@ -237,7 +216,7 @@ public:
 
         //Process dlist.
         std::cout<<"\nProcessing Delete list..\n"<<std::flush;
-        dlist.resize(start_file.getFileheader().getArticleCount()+diff_file.getFileheader().getArticleCount());
+        dlist.resize(start_archive.getEntryCount()+diff_archive.getEntryCount());
         for(unsigned int i=0;i<dlist.size();i++)
         {
             dlist[i]=0;
@@ -245,7 +224,7 @@ public:
         for(unsigned int i=0;i<delete_list.size();i++)
         {
             //Deleted articles will always be present in the start_file only.
-            dlist[start_file.getArticleByUrl(delete_list[i]).getIndex()]=1;
+            dlist[start_archive.getEntryByPath(delete_list[i]).getIndex()]=1;
         }
         delete_list.clear();
         return;
@@ -270,25 +249,23 @@ public:
 
         //Add all articles in File_1 that have not ben deleted.
         std::string url="";
-        for (unsigned int index = 0; index < start_file.getFileheader().getArticleCount(); index++)
+        for (unsigned int index = 0; index < start_archive.getEntryCount(); index++)
         {
-            int id=index;
-            zim::Article tmpAr=start_file.getArticle(index);
-            if(dlist[id]==1)
+            auto entry=start_archive.getEntryByPath(index);
+            if(dlist[index]==1)
             {
                 continue;
             }
 
-            auto tempArticle = std::make_shared<Article>(tmpAr,id);
+            auto tempArticle = std::make_shared<Article>(entry);
             //If the article is also present in file_2
-            if(diff_file.getArticleByUrl(tmpAr.getLongUrl()).good())
-            {
-                tmpAr=diff_file.getArticleByUrl(tmpAr.getLongUrl());
-                tempArticle= std::make_shared<Article>(tmpAr,start_file.getFileheader().getArticleCount()+diff_file.getArticleByUrl(tmpAr.getLongUrl()).getIndex());
-                id=tmpAr.getIndex()+start_file.getFileheader().getArticleCount();
-            }
             try {
-                tempArticle->setRedirectUrl(zim::writer::Url(redirectList.at(tmpAr.getLongUrl())));
+                entry = diff_archive.getEntryByPath(entry.getPath());
+                tempArticle= std::make_shared<Article>(entry);
+            } catch(...) {}
+            //[FIXME] Handle redirection
+            try {
+                tempArticle->setRedirectUrl(zim::writer::Url(redirectList.at(entry.getPath())));
             } catch (...) {}
             //std::cout<<"\nArticle: "<<tempArticle->getNamespace()<<"/"<<tempArticle->getUrl();
             //std::cout<<"\nIndex: "<<tempArticle->getIdx();
@@ -297,20 +274,19 @@ public:
         }
 
         //Now adding new articles in file_2
-        for (unsigned int index =0; index<+diff_file.getFileheader().getArticleCount(); index++)
+        for (unsigned int index =0; index<+diff_archive.getEntryCount(); index++)
         {
-            int id=start_file.getFileheader().getArticleCount()+index;
-            zim::Article tmpAr=diff_file.getArticle(index);
+            auto entry=diff_archive.getEntryByPath(index);
             //If the article is already in file_1, it has been added.
-            if(start_file.getArticleByUrl(tmpAr.getLongUrl()).good()||isAdditionalMetadata(tmpAr.getLongUrl()))
+            if(start_archive.hasEntryByPath(entry.getPath())||isAdditionalMetadata(entry.getPath()))
             {
                 continue;
             }
 
-            auto tempArticle = std::make_shared<Article>(tmpAr,id);
+            auto tempArticle = std::make_shared<Article>(entry);
             //std::cout<<"\nID: "<<id;
             try {
-                tempArticle->setRedirectUrl(zim::writer::Url(redirectList.at(tmpAr.getLongUrl())));
+                tempArticle->setRedirectUrl(zim::writer::Url(redirectList.at(entry.getPath())));
             } catch (...) {}
             //std::cout<<"\nArticle: "<<tempArticle->getNamespace()<<"/"<<tempArticle->getUrl();
             //std::cout<<"\nIndex: "<<tempArticle->getIdx();
@@ -351,8 +327,8 @@ bool isAdditionalMetadata(std::string url)
 
 bool checkDiffFile(std::string startFileName, std::string diffFileName)
 {
-    zim::File startFile(startFileName);
-    zim::File diffFile(diffFileName);
+    zim::Archive startArchive(startFileName);
+    zim::Archive diffArchive(diffFileName);
     std::vector<std::string >additionalMetadata;
     additionalMetadata.resize(6);
     additionalMetadata[0]="M/dlist";
@@ -365,13 +341,13 @@ bool checkDiffFile(std::string startFileName, std::string diffFileName)
     //Search in the ZIM file if the above articles are present:
     for (unsigned int i=0; i<additionalMetadata.size(); i++)
     {
-        if(!diffFile.getArticleByUrl(additionalMetadata[i]).good())        //If the article was not found in the file.
+        if(!diffArchive.hasEntryByPath(additionalMetadata[i]))        //If the article was not found in the file.
             return false;
     }
 
     //Check the UID of startFile and the value stored in startfileuid
-    const char *startfileUID1=startFile.getFileheader().getUuid().data;
-    std::string startFileUID2=diffFile.getArticleByUrl(additionalMetadata[1]).getPage();
+    const char *startfileUID1=startArchive.getUuid().data;
+    std::string startFileUID2=diffArchive.getEntryByPath(additionalMetadata[1]).getItem().getData();
     std::string temp="";
     unsigned int k=0;
     char tempArray[16];
