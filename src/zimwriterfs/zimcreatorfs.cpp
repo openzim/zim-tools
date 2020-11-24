@@ -270,3 +270,167 @@ std::string ZimCreatorFS::computeNewUrl(const std::string& aid, const std::strin
       = "/" + getNamespaceForMimeType(targetMimeType, uniqNamespace()) + "/" + filename;
   return computeRelativePath(baseUrl, newUrl);
 }
+
+void ZimCreatorFS::parseAndAdaptHtml(bool detectRedirects)
+{
+  GumboOutput* output = gumbo_parse(data.c_str());
+  GumboNode* root = output->root;
+
+  /* Search the content of the <title> tag in the HTML */
+  if (root->type == GUMBO_NODE_ELEMENT
+      && root->v.element.children.length >= 2) {
+    const GumboVector* root_children = &root->v.element.children;
+    GumboNode* head = NULL;
+    for (unsigned int i = 0; i < root_children->length; ++i) {
+      GumboNode* child = (GumboNode*)(root_children->data[i]);
+      if (child->type == GUMBO_NODE_ELEMENT
+          && child->v.element.tag == GUMBO_TAG_HEAD) {
+        head = child;
+        break;
+      }
+    }
+
+    if (head != NULL) {
+      GumboVector* head_children = &head->v.element.children;
+      for (unsigned int i = 0; i < head_children->length; ++i) {
+        GumboNode* child = (GumboNode*)(head_children->data[i]);
+        if (child->type == GUMBO_NODE_ELEMENT
+            && child->v.element.tag == GUMBO_TAG_TITLE) {
+          if (child->v.element.children.length == 1) {
+            GumboNode* title_text
+                = (GumboNode*)(child->v.element.children.data[0]);
+            if (title_text->type == GUMBO_NODE_TEXT) {
+              title = title_text->v.text.text;
+              stripTitleInvalidChars(title);
+            }
+          }
+        }
+      }
+
+      /* Detect if this is a redirection (if no redirects TSV file specified)
+       */
+      std::string targetUrl;
+      try {
+        targetUrl = detectRedirects
+                        ? extractRedirectUrlFromHtml(head_children)
+                        : "";
+      } catch (std::string& error) {
+        std::cerr << error << std::endl;
+      }
+      if (!targetUrl.empty()) {
+        auto redirectUrl = computeAbsolutePath(url, decodeUrl(targetUrl));
+        if (!fileExists(creator->basedir() + "/" + redirectUrl)) {
+          redirectUrl.clear();
+          invalid = true;
+        } else {
+          this->redirectUrl = zim::writer::Url(redirectUrl);
+        }
+      }
+
+      /* If no title, then compute one from the filename */
+      if (title.empty()) {
+        auto path = _getFilename();
+        auto found = path.rfind("/");
+        if (found != std::string::npos) {
+          title = path.substr(found + 1);
+          found = title.rfind(".");
+          if (found != std::string::npos) {
+            title = title.substr(0, found);
+          }
+        } else {
+          title = path;
+        }
+        std::replace(title.begin(), title.end(), '_', ' ');
+      }
+    }
+  }
+
+  /* Update links in the html to let them still be valid */
+  std::map<std::string, bool> links;
+  getLinks(root, links);
+  std::string longUrl = std::string("/") + ns + "/" + url;
+
+  /* If a link appearch to be duplicated in the HTML, it will
+     occurs only one time in the links variable */
+  for (auto& linkPair: links) {
+    auto target = linkPair.first;
+    if (!target.empty() && target[0] != '#' && target[0] != '?'
+        && target.substr(0, 5) != "data:") {
+      replaceStringInPlace(data,
+                           "\"" + target + "\"",
+                           "\"" + creator->computeNewUrl(url, longUrl, target) + "\"");
+    }
+  }
+  gumbo_destroy_output(&kGumboDefaultOptions, output);
+}
+
+void ZimCreatorFS::adaptCss()
+{
+  /* Rewrite url() values in the CSS */
+  size_t startPos = 0;
+  size_t endPos = 0;
+  std::string url;
+  std::string longUrl = std::string("/") + ns + "/" + this->url;
+
+  while ((startPos = data.find("url(", endPos))
+         && startPos != std::string::npos) {
+
+    /* URL delimiters */
+    endPos = data.find(")", startPos);
+    startPos = startPos + (data[startPos + 4] == '\''
+                                   || data[startPos + 4] == '"'
+                               ? 5
+                               : 4);
+    endPos = endPos - (data[endPos - 1] == '\''
+                               || data[endPos - 1] == '"'
+                           ? 1
+                           : 0);
+    url = data.substr(startPos, endPos - startPos);
+    std::string startDelimiter = data.substr(startPos - 1, 1);
+    std::string endDelimiter = data.substr(endPos, 1);
+
+    if (url.substr(0, 5) != "data:") {
+
+      /* Deal with URL with arguments (using '? ') */
+      std::string path = url;
+      size_t markPos = url.find("?");
+      if (markPos != std::string::npos) {
+        path = url.substr(0, markPos);
+      }
+
+      /* Embeded fonts need to be inline because Kiwix is
+         otherwise not able to load same because of the
+         same-origin security */
+      std::string mimeType = getMimeTypeForFile(creator->basedir(), path);
+      if (mimeType == "application/font-ttf"
+          || mimeType == "application/font-woff"
+          || mimeType == "application/font-woff2"
+          || mimeType == "application/vnd.ms-opentype"
+          || mimeType == "application/vnd.ms-fontobject") {
+        try {
+          std::string fontContent = getFileContent(
+              creator->basedir() + "/" + computeAbsolutePath(this->url, path));
+          replaceStringInPlaceOnce(
+              data,
+              startDelimiter + url + endDelimiter,
+              startDelimiter + "data:" + mimeType + ";base64,"
+                  + base64_encode(reinterpret_cast<const unsigned char*>(
+                                      fontContent.c_str()),
+                                  fontContent.length())
+                  + endDelimiter);
+        } catch (...) {
+        }
+      } else {
+        /* Deal with URL with arguments (using '? ') */
+        if (markPos != std::string::npos) {
+          endDelimiter = url.substr(markPos, 1);
+        }
+
+        replaceStringInPlaceOnce(
+            data,
+            startDelimiter + url + endDelimiter,
+            startDelimiter + creator->computeNewUrl(this->url, longUrl, path) + endDelimiter);
+      }
+    }
+  }
+}

@@ -126,8 +126,6 @@ class FileArticle : public Article
   bool invalid;
   std::string _getFilename() const;
   void readData() const;
-  void parseAndAdaptHtml(bool detectRedirects);
-  void adaptCss();
 
  public:
   //! Must be initialized with full file path
