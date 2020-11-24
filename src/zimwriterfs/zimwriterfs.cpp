@@ -32,7 +32,6 @@
 #include <cstdio>
 #include <queue>
 
-#include "article.h"
 #include "zimcreatorfs.h"
 #include "mimetypecounter.h"
 #include "../tools.h"

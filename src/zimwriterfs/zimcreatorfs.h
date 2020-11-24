@@ -23,7 +23,6 @@
 
 #include <queue>
 #include <string>
-#include "article.h"
 
 #include <zim/writer/creator.h>
 
@@ -47,8 +46,8 @@ class ZimCreatorFS : public zim::writer::Creator
   virtual void add_redirectArticles_from_file(const std::string& path);
   virtual void visitDirectory(const std::string& path);
 
-  virtual void addArticle(const std::string& path);
-  virtual void addArticle(std::shared_ptr<zim::writer::Article> article);
+  virtual void addFile(const std::string& path);
+  virtual void addItem(std::shared_ptr<zim::writer::Item> item);
   virtual void finishZimCreation();
 
   void processSymlink(const std::string& curdir, const std::string& symlink_path);
@@ -56,8 +55,8 @@ class ZimCreatorFS : public zim::writer::Creator
   const std::string & basedir() const { return directoryPath; }
   bool uniqNamespace() const { return uniqueNamespace; }
   const std::string & canonicalBaseDir() const { return canonical_basedir; }
-  void parseAndAdaptHtml(bool detectRedirects);
-  void adaptCss();
+  std::string parseAndAdaptHtml(std::string& data, std::string& title, char ns, const std::string& url);
+  void adaptCss(std::string& data, char ns, const std::string& url);
 
  private:
   std::vector<IHandler*> articleHandlers;
