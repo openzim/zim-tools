@@ -63,7 +63,6 @@ std::string directoryPath;
 int minChunkSize = 2048;
 
 bool verboseFlag = false;
-bool uniqueNamespace = false;
 bool withoutFTIndex = false;
 bool zstdFlag = false;
 }
@@ -140,12 +139,8 @@ void usage()
   std::cout << "\t-x, --inflateHtml\ttry to inflate HTML files before packing "
                "(*.html, *.htm, ...)"
             << std::endl;
-  std::cout << "\t-u, --uniqueNamespace\tput everything in the same namespace "
-               "'A'. Might be necessary to avoid problems with "
-               "dynamic/javascript data loading."
-            << std::endl;
   std::cout << "\t-r, --redirects\t\tpath to a TSV file containing a list of "
-               "redirects (namespace url title target_url)."
+               "redirects (url title target_url)."
             << std::endl;
   std::cout
       << "\t-j, --withoutFTIndex\tdon't create and add a fulltext index of the content to the ZIM."
@@ -193,7 +188,6 @@ void parse_args(int argc, char** argv)
          {"scraper", required_argument, 0, 's'},
          {"redirects", required_argument, 0, 'r'},
          {"inflateHtml", no_argument, 0, 'x'},
-         {"uniqueNamespace", no_argument, 0, 'u'},
          {"favicon", required_argument, 0, 'f'},
          {"language", required_argument, 0, 'l'},
          {"title", required_argument, 0, 't'},
@@ -276,9 +270,6 @@ void parse_args(int argc, char** argv)
         case 't':
           title = optarg;
           break;
-        case 'u':
-          uniqueNamespace = true;
-          break;
         case 'w':
           welcome = optarg;
           break;
@@ -353,7 +344,7 @@ void parse_args(int argc, char** argv)
 
 void create_zim()
 {
-  ZimCreatorFS zimCreator(directoryPath, uniqueNamespace);
+  ZimCreatorFS zimCreator(directoryPath);
   zimCreator.configVerbose(isVerbose())
             .configMinClusterSize(minChunkSize)
             .configIndexing(!withoutFTIndex, language)
@@ -392,8 +383,8 @@ void create_zim()
   zimCreator.addMetadata("Tags", tags);
   zimCreator.addMetadata("Date", generateDate());
 
-  zimCreator.setMainPath("A/"+welcome);
-  zimCreator.setFaviconPath("I/favicon");
+  zimCreator.setMainPath(welcome);
+  zimCreator.setFaviconPath(favicon);
 
   /* Directory visitor */
   MimetypeCounter mimetypeCounter;

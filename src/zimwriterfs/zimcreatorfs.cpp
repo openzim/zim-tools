@@ -32,9 +32,8 @@
 
 bool isVerbose();
 
-ZimCreatorFS::ZimCreatorFS(std::string _directoryPath, bool uniqueNamespace)
-  : directoryPath(_directoryPath),
-    uniqueNamespace(uniqueNamespace)
+ZimCreatorFS::ZimCreatorFS(std::string _directoryPath)
+  : directoryPath(_directoryPath)
 {
   char buf[PATH_MAX];
 
@@ -55,7 +54,7 @@ void ZimCreatorFS::add_redirectArticles_from_file(const std::string& path)
   in_stream.open(path.c_str());
   int line_number = 1;
   while (std::getline(in_stream, line)) {
-    std::regex line_regex("(.)\\t(.+)\\t(.+)\\t(.+)");
+    std::regex line_regex("(.+)\\t(.+)\\t(.+)");
     std::smatch matches;
     if (!std::regex_search(line, matches, line_regex) || matches.size() != 5) {
       std::cerr << "zimwriterfs: line #" << line_number
@@ -65,9 +64,9 @@ void ZimCreatorFS::add_redirectArticles_from_file(const std::string& path)
       exit(1);
     }
 
-    auto path = matches[1].str() + "/" + matches[2].str();
-    auto title = matches[3].str();
-    auto redirectUrl = matches[4].str();
+    auto path = matches[1].str();
+    auto title = matches[2].str();
+    auto redirectUrl = matches[3].str();
     addRedirection(path, title, redirectUrl);
     ++line_number;
   }
@@ -155,8 +154,6 @@ void ZimCreatorFS::addFile(const std::string& path)
 {
   auto url = path.substr(directoryPath.size()+1);
   auto mimetype = getMimeTypeForFile(directoryPath, url);
-  auto ns = getNamespaceForMimeType(mimetype, uniqueNamespace);
-  auto itemPath = ns + "/" + url;
   auto title = std::string{};
 
   std::unique_ptr<zim::writer::Item> item;
@@ -165,18 +162,18 @@ void ZimCreatorFS::addFile(const std::string& path)
     auto content = getFileContent(path);
 
     if (mimetype.find("text/html") != std::string::npos) {
-      auto redirectUrl = parseAndAdaptHtml(content, title, ns[0], url);
+      auto redirectUrl = parseAndAdaptHtml(content, title, url);
       if (!redirectUrl.empty()) {
         // This is a redirect.
-        addRedirection(itemPath, title, redirectUrl);
+        addRedirection(url, title, redirectUrl);
         return;
       }
     } else {
-      adaptCss(content, ns[0], url);
+      adaptCss(content, url);
     }
-    item.reset(new zim::writer::StringItem(itemPath, mimetype, title, content));
+    item.reset(new zim::writer::StringItem(url, mimetype, title, content));
   } else {
-    item.reset(new zim::writer::FileItem(itemPath, mimetype, title, path));
+    item.reset(new zim::writer::FileItem(url, mimetype, title, path));
   }
   addItem(std::move(item));
 }
@@ -219,16 +216,8 @@ void ZimCreatorFS::processSymlink(const std::string& curdir, const std::string& 
   }
 
   std::string source_url = symlink_path.substr(directoryPath.size() + 1);
-  std::string source_mimeType = getMimeTypeForFile(directoryPath, source_url);
-  const char source_ns = getNamespaceForMimeType(source_mimeType, uniqNamespace())[0];
-
   std::string target_url = std::string(resolved).substr(canonical_basedir.size() + 1);
-  std::string target_mimeType = getMimeTypeForFile(directoryPath, target_url);
-  const char target_ns = getNamespaceForMimeType(target_mimeType, uniqNamespace())[0];
-
-  std::string source_path = source_ns + "/" + source_url;
-  std::string target_path = target_ns + "/" + target_url;
-  addRedirection(source_path, "", target_path);
+  addRedirection(source_url, "", target_url);
 }
 
 void ZimCreatorFS::finishZimCreation()
@@ -280,7 +269,7 @@ struct GumboOutputDestructor {
   GumboOutput* output;
 };
 
-std::string ZimCreatorFS::parseAndAdaptHtml(std::string& data, std::string& title, char ns, const std::string& url)
+std::string ZimCreatorFS::parseAndAdaptHtml(std::string& data, std::string& title, const std::string& url)
 {
   GumboOutput* output = gumbo_parse(data.c_str());
   GumboOutputDestructor outputDestructor(output);
@@ -349,32 +338,14 @@ std::string ZimCreatorFS::parseAndAdaptHtml(std::string& data, std::string& titl
       }
     }
   }
-
-  /* Update links in the html to let them still be valid */
-  std::map<std::string, bool> links;
-  getLinks(root, links);
-  std::string longUrl = std::string("/") + ns + "/" + url;
-
-  /* If a link appearch to be duplicated in the HTML, it will
-     occurs only one time in the links variable */
-  for (auto& linkPair: links) {
-    auto target = linkPair.first;
-    if (!target.empty() && target[0] != '#' && target[0] != '?'
-        && target.substr(0, 5) != "data:") {
-      replaceStringInPlace(data,
-                           "\"" + target + "\"",
-                           "\"" + computeNewUrl(url, longUrl, target) + "\"");
-    }
-  }
   return "";
 }
 
-void ZimCreatorFS::adaptCss(std::string& data, char ns, const std::string& url) {
+void ZimCreatorFS::adaptCss(std::string& data, const std::string& url) {
   /* Rewrite url() values in the CSS */
   size_t startPos = 0;
   size_t endPos = 0;
   std::string targetUrl;
-  std::string longUrl = std::string("/") + ns + "/" + url;
 
   while ((startPos = data.find("url(", endPos))
          && startPos != std::string::npos) {
@@ -393,47 +364,38 @@ void ZimCreatorFS::adaptCss(std::string& data, char ns, const std::string& url) 
     std::string startDelimiter = data.substr(startPos - 1, 1);
     std::string endDelimiter = data.substr(endPos, 1);
 
-    if (targetUrl.substr(0, 5) != "data:") {
+    if (targetUrl.substr(0, 5) == "data:") {
+      continue;
+    }
 
-      /* Deal with URL with arguments (using '? ') */
-      std::string path = targetUrl;
-      size_t markPos = targetUrl.find("?");
-      if (markPos != std::string::npos) {
-        path = targetUrl.substr(0, markPos);
-      }
+    /* Deal with URL with arguments (using '? ') */
+    std::string path = targetUrl;
+    size_t markPos = targetUrl.find("?");
+    if (markPos != std::string::npos) {
+      path = targetUrl.substr(0, markPos);
+    }
 
-      /* Embeded fonts need to be inline because Kiwix is
-         otherwise not able to load same because of the
-         same-origin security */
-      std::string mimeType = getMimeTypeForFile(directoryPath, path);
-      if (mimeType == "application/font-ttf"
-          || mimeType == "application/font-woff"
-          || mimeType == "application/font-woff2"
-          || mimeType == "application/vnd.ms-opentype"
-          || mimeType == "application/vnd.ms-fontobject") {
-        try {
-          std::string fontContent = getFileContent(
-              directoryPath + "/" + computeAbsolutePath(url, path));
-          replaceStringInPlaceOnce(
-              data,
-              startDelimiter + targetUrl + endDelimiter,
-              startDelimiter + "data:" + mimeType + ";base64,"
-                  + base64_encode(reinterpret_cast<const unsigned char*>(
-                                      fontContent.c_str()),
-                                  fontContent.length())
-                  + endDelimiter);
-        } catch (...) {
-        }
-      } else {
-        /* Deal with URL with arguments (using '? ') */
-        if (markPos != std::string::npos) {
-          endDelimiter = targetUrl.substr(markPos, 1);
-        }
-
+    /* Embeded fonts need to be inline because Kiwix is
+       otherwise not able to load same because of the
+       same-origin security */
+    std::string mimeType = getMimeTypeForFile(directoryPath, path);
+    if (mimeType == "application/font-ttf"
+        || mimeType == "application/font-woff"
+        || mimeType == "application/font-woff2"
+        || mimeType == "application/vnd.ms-opentype"
+        || mimeType == "application/vnd.ms-fontobject") {
+      try {
+        std::string fontContent = getFileContent(
+            directoryPath + "/" + computeAbsolutePath(url, path));
         replaceStringInPlaceOnce(
             data,
             startDelimiter + targetUrl + endDelimiter,
-            startDelimiter + computeNewUrl(url, longUrl, path) + endDelimiter);
+            startDelimiter + "data:" + mimeType + ";base64,"
+                + base64_encode(reinterpret_cast<const unsigned char*>(
+                                    fontContent.c_str()),
+                                fontContent.length())
+                + endDelimiter);
+      } catch (...) {
       }
     }
   }

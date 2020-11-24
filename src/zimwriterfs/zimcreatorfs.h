@@ -38,7 +38,7 @@ class IHandler
 class ZimCreatorFS : public zim::writer::Creator
 {
  public:
-  ZimCreatorFS(std::string _directoryPath, bool uniqueNamespace);
+  ZimCreatorFS(std::string _directoryPath);
   virtual ~ZimCreatorFS() = default;
 
   virtual void add_customHandler(IHandler* handler);
@@ -52,16 +52,14 @@ class ZimCreatorFS : public zim::writer::Creator
   void processSymlink(const std::string& curdir, const std::string& symlink_path);
   std::string computeNewUrl(const std::string& aid, const std::string& baseUrl, const std::string& targetUrl) const;
   const std::string & basedir() const { return directoryPath; }
-  bool uniqNamespace() const { return uniqueNamespace; }
   const std::string & canonicalBaseDir() const { return canonical_basedir; }
-  std::string parseAndAdaptHtml(std::string& data, std::string& title, char ns, const std::string& url);
-  void adaptCss(std::string& data, char ns, const std::string& url);
+  std::string parseAndAdaptHtml(std::string& data, std::string& title, const std::string& url);
+  void adaptCss(std::string& data, const std::string& url);
 
  private:
   std::vector<IHandler*> itemHandlers;
   std::string directoryPath;  ///< html dir without trailing slash
   std::string canonical_basedir;
-  bool uniqueNamespace;
 };
 
 #endif  // OPENZIM_ZIMWRITERFS_ARTICLESOURCE_H
