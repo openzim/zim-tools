@@ -136,16 +136,3 @@ zim::size_type FileArticle::getSize() const
   return in.tellg();
 }
 
-RedirectArticle::RedirectArticle(const ZimCreatorFS *_creator,
-                                 char ns,
-                                 const std::string& url,
-                                 const std::string& title,
-                                 const zim::writer::Url& redirectUrl)
-  : creator(_creator)
-{
-  this->ns = ns;
-  this->url = url;
-  this->title = title;
-  this->redirectUrl = redirectUrl;
-  mimeType = getMimeTypeForFile(creator->basedir(), redirectUrl.getUrl());
-}

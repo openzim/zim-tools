@@ -73,13 +73,10 @@ void ZimCreatorFS::add_redirectArticles_from_file(const std::string& path)
       exit(1);
     }
 
-    auto redirectArticle = std::make_shared<RedirectArticle>(
-      this,
-      matches[1].str()[0],  // ns
-      matches[2].str(),     // URL
-      matches[3].str(),     // title
-      matches[4].str());    // redirect URL
-    addArticle(redirectArticle);
+    auto path = matches[1].str() + "/" + matches[2].str();
+    auto title = matches[3].str();
+    auto redirectUrl = matches[4].str();
+    addRedirection(path, title, redirectUrl);
     ++line_number;
   }
   in_stream.close();
@@ -216,10 +213,9 @@ void ZimCreatorFS::processSymlink(const std::string& curdir, const std::string& 
   std::string target_mimeType = getMimeTypeForFile(directoryPath, target_url);
   const char target_ns = getNamespaceForMimeType(target_mimeType, uniqNamespace())[0];
 
-  std::shared_ptr<zim::writer::Article> redirect_article(
-        new RedirectArticle(this, source_ns, source_url, "",
-                            zim::writer::Url(target_ns, target_url)));
-  addArticle(redirect_article);
+  std::string source_path = source_ns + "/" + source_url;
+  std::string target_path = target_ns + "/" + target_url;
+  addRedirection(source_path, "", target_path);
 }
 
 void ZimCreatorFS::finishZimCreation()

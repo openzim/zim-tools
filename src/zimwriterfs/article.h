@@ -73,23 +73,4 @@ class FileArticle : public Article
   virtual bool isInvalid() const;
 };
 
-/// Redirect entry from user-supplied file
-class RedirectArticle : public Article
-{
- public:
-  explicit RedirectArticle(const ZimCreatorFS *creator,
-                           char ns,
-                           const std::string& url,
-                           const std::string& title,
-                           const zim::writer::Url& redirectUrl);
-  virtual zim::Blob getData() const { return zim::Blob(); }
-  virtual bool isRedirect() const { return true; }
-  virtual bool isLinktarget() const { return false; }
-  virtual bool isDeleted() const { return false; }
-  virtual zim::size_type getSize() const { return 0; }
-  virtual std::string getFilename() const  { return ""; }
-private:
-  const ZimCreatorFS *creator;
-};
-
 #endif  // OPENZIM_ZIMWRITERFS_ARTICLE_H
