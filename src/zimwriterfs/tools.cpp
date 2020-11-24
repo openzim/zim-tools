@@ -26,6 +26,7 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 
 #include <zlib.h>
 #include <magic.h>
@@ -267,6 +268,18 @@ void getLinks(GumboNode* node, std::map<std::string, bool>& links)
     getLinks(static_cast<GumboNode*>(children->data[i]), links);
   }
 }
+
+std::string generateDate()
+{
+  time_t t = time(0);
+  struct tm* now = localtime(&t);
+  std::stringstream stream;
+  stream << (now->tm_year + 1900) << '-' << std::setw(2) << std::setfill('0')
+         << (now->tm_mon + 1) << '-' << std::setw(2) << std::setfill('0')
+         << now->tm_mday;
+  return stream.str();
+}
+
 
 std::string getMimeTypeForFile(const std::string &directoryPath, const std::string& filename)
 {

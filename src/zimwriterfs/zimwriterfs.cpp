@@ -389,9 +389,9 @@ void create_zim()
   zimCreator.addMetadata("Flavour", flavour);
   zimCreator.addMetadata("Scraper", scraper);
   zimCreator.addMetadata("Tags", tags);
-  zimCreator.addArticle(std::make_shared<MetadataDateArticle>());
-  zimCreator.addArticle(std::make_shared<MetadataFaviconArticle>(zim::writer::Url('I', favicon)));
+  zimCreator.addMetadata("Date", generateDate());
 
+  zimCreator.setFaviconPath("I/favicon");
 
   /* Directory visitor */
   MimetypeCounter mimetypeCounter;

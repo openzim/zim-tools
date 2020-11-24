@@ -162,12 +162,6 @@ void ZimCreatorFS::visitDirectory(const std::string& path)
   closedir(directory);
 }
 
-void ZimCreatorFS::addMetadata(const std::string& title, const std::string& content)
-{
-  auto article = std::make_shared<SimpleMetadataArticle>(title, content);
-  addArticle(article);
-}
-
 void ZimCreatorFS::addArticle(const std::string& path)
 {
   auto farticle = std::make_shared<FileArticle>(this, path);

@@ -47,7 +47,6 @@ class ZimCreatorFS : public zim::writer::Creator
   virtual void add_redirectArticles_from_file(const std::string& path);
   virtual void visitDirectory(const std::string& path);
 
-  virtual void addMetadata(const std::string& metadata, const std::string& content);
   virtual void addArticle(const std::string& path);
   virtual void addArticle(std::shared_ptr<zim::writer::Article> article);
   virtual void finishZimCreation();
