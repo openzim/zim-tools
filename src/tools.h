@@ -122,9 +122,7 @@ class CopyItem : public zim::writer::Item         //Article class that will be p
 };
 
 std::string getMimeTypeForFile(const std::string& basedir, const std::string& filename);
-std::string getNamespaceForMimeType(const std::string& mimeType, bool uniqueNamespace);
 std::string getFileContent(const std::string& path);
-unsigned int getFileSize(const std::string& path);
 std::string decodeUrl(const std::string& encodedUrl);
 std::string computeAbsolutePath(const std::string& path,
                                 const std::string& relativePath);
@@ -141,11 +139,6 @@ void replaceStringInPlace(std::string& subject,
                           const std::string& search,
                           const std::string& replace);
 void stripTitleInvalidChars(std::string& str);
-
-std::string computeRelativePath(const std::string path,
-                                const std::string absolutePath);
-
-void remove_all(const std::string& path);
 
 //Returns a vector of the links in a particular page. includes links under 'href' and 'src'
 std::vector<html_link> generic_getLinks(const std::string& page);

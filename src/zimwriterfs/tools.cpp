@@ -27,6 +27,7 @@
 #include <fstream>
 #include <iostream>
 #include <iomanip>
+#include <map>
 
 #include <zlib.h>
 #include <magic.h>
@@ -196,18 +197,6 @@ std::string getFileContent(const std::string& path)
   throw(errno);
 }
 
-static bool isLocalUrl(const std::string url)
-{
-  if (url.find(":") != std::string::npos) {
-    return (!(url.find("://") != std::string::npos || url.find("//") == 0
-              || url.find("tel:") == 0
-              || url.find("geo:") == 0
-              || url.find("javascript:") == 0
-              || url.find("mailto:") == 0));
-  }
-  return true;
-}
-
 std::string extractRedirectUrlFromHtml(const GumboVector* head_children)
 {
   std::string url;
@@ -242,31 +231,6 @@ std::string extractRedirectUrlFromHtml(const GumboVector* head_children)
   }
 
   return url;
-}
-
-void getLinks(GumboNode* node, std::map<std::string, bool>& links)
-{
-  if (node->type != GUMBO_NODE_ELEMENT) {
-    return;
-  }
-
-  GumboAttribute* attribute = NULL;
-  attribute = gumbo_get_attribute(&node->v.element.attributes, "href");
-  if (attribute == NULL) {
-    attribute = gumbo_get_attribute(&node->v.element.attributes, "src");
-  }
-  if (attribute == NULL) {
-    attribute = gumbo_get_attribute(&node->v.element.attributes, "poster");
-  }
-
-  if (attribute != NULL && isLocalUrl(attribute->value)) {
-    links[attribute->value] = true;
-  }
-
-  GumboVector* children = &node->v.element.children;
-  for (unsigned int i = 0; i < children->length; ++i) {
-    getLinks(static_cast<GumboNode*>(children->data[i]), links);
-  }
 }
 
 std::string generateDate()

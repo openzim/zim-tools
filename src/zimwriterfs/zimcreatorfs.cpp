@@ -253,16 +253,6 @@ inline std::string removeLocalTagAndParameters(const std::string& url)
   return retVal;
 }
 
-std::string ZimCreatorFS::computeNewUrl(const std::string& aid, const std::string& baseUrl, const std::string& targetUrl) const
-{
-  std::string filename = computeAbsolutePath(aid, targetUrl);
-  std::string targetMimeType
-      = getMimeTypeForFile(directoryPath, decodeUrl(removeLocalTagAndParameters(filename)));
-  std::string newUrl
-      = "/" + getNamespaceForMimeType(targetMimeType, uniqNamespace()) + "/" + filename;
-  return computeRelativePath(baseUrl, newUrl);
-}
-
 struct GumboOutputDestructor {
   GumboOutputDestructor(GumboOutput* output) : output(output) {}
   ~GumboOutputDestructor() { gumbo_destroy_output(&kGumboDefaultOptions, output); }

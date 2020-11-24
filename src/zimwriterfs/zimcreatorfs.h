@@ -21,7 +21,7 @@
 #ifndef OPENZIM_ZIMWRITERFS_ZIMCREATORFS_H
 #define OPENZIM_ZIMWRITERFS_ZIMCREATORFS_H
 
-#include <queue>
+#include <vector>
 #include <string>
 
 #include <zim/writer/creator.h>
@@ -50,7 +50,6 @@ class ZimCreatorFS : public zim::writer::Creator
   virtual void finishZimCreation();
 
   void processSymlink(const std::string& curdir, const std::string& symlink_path);
-  std::string computeNewUrl(const std::string& aid, const std::string& baseUrl, const std::string& targetUrl) const;
   const std::string & basedir() const { return directoryPath; }
   const std::string & canonicalBaseDir() const { return canonical_basedir; }
   std::string parseAndAdaptHtml(std::string& data, std::string& title, const std::string& url);

@@ -22,11 +22,9 @@
 #define OPENZIM_ZIMWRITERFS_TOOLS_H
 
 #include <gumbo.h>
-#include <map>
 #include <string>
 
 std::string extractRedirectUrlFromHtml(const GumboVector* head_children);
-void getLinks(GumboNode* node, std::map<std::string, bool>& links);
 
 std::string generateDate();
 
