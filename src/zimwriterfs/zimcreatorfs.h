@@ -29,8 +29,9 @@
 class IHandler
 {
  public:
-  virtual void handleArticle(std::shared_ptr<zim::writer::Article> article) = 0;
-  virtual std::shared_ptr<zim::writer::Article> getMetaArticle() = 0;
+  virtual void handleItem(std::shared_ptr<zim::writer::Item> item) = 0;
+  virtual std::string getName() const = 0;
+  virtual std::string getData() const = 0;
   virtual ~IHandler() = default;
 };
 
@@ -59,7 +60,7 @@ class ZimCreatorFS : public zim::writer::Creator
   void adaptCss(std::string& data, char ns, const std::string& url);
 
  private:
-  std::vector<IHandler*> articleHandlers;
+  std::vector<IHandler*> itemHandlers;
   std::string directoryPath;  ///< html dir without trailing slash
   std::string mainPage;
   std::string canonical_basedir;

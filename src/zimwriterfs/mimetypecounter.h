@@ -21,39 +21,18 @@
 #ifndef OPENZIM_ZIMWRITERFS_MIMETYPECOUNTER_H
 #define OPENZIM_ZIMWRITERFS_MIMETYPECOUNTER_H
 
-#include "article.h"
 #include "zimcreatorfs.h"
 #include <map>
-
-class MimetypeCounter;
-
-class MetadataCounterArticle : public MetadataArticle
-{
- private:
-  MimetypeCounter* counter;
-  mutable std::string data;
-  void genData() const;
-
- public:
-  MetadataCounterArticle(MimetypeCounter* counter);
-  virtual zim::Blob getData() const;
-  virtual zim::size_type getSize() const;
-  virtual zim::writer::Url getRedirectUrl() const { return zim::writer::Url(); }
-};
 
 class MimetypeCounter : public IHandler
 {
  public:
-  void handleArticle(std::shared_ptr<zim::writer::Article> article);
-  std::shared_ptr<zim::writer::Article> getMetaArticle()
-  {
-    return std::make_shared<MetadataCounterArticle>(this);
-  }
+  void handleItem(std::shared_ptr<zim::writer::Item> item);
+  std::string getName() const { return "Counter"; }
+  std::string getData() const;
 
  private:
   std::map<std::string, unsigned int> counters;
-
-  friend class MetadataCounterArticle;
 };
 
 #endif  // OPENZIM_ZIMWRITERFS_MIMETYPECOUNTER_H

@@ -191,9 +191,9 @@ void ZimCreatorFS::addFile(const std::string& path)
 
 void ZimCreatorFS::addItem(std::shared_ptr<zim::writer::Item> item)
 {
- Creator::addArticle(item);
- for (auto& handler: articleHandlers) {
-     handler->handleArticle(item);
+ Creator::addItem(item);
+ for (auto& handler: itemHandlers) {
+     handler->handleItem(item);
   }
 }
 
@@ -241,15 +241,15 @@ void ZimCreatorFS::processSymlink(const std::string& curdir, const std::string& 
 
 void ZimCreatorFS::finishZimCreation()
 {
-  for(auto& handler: articleHandlers) {
-    Creator::addArticle(handler->getMetaArticle());
+  for(auto& handler: itemHandlers) {
+    Creator::addMetadata(handler->getName(), handler->getData());
   }
   Creator::finishZimCreation();
 }
 
 void ZimCreatorFS::add_customHandler(IHandler* handler)
 {
-  articleHandlers.push_back(handler);
+  itemHandlers.push_back(handler);
 }
 
 inline std::string removeLocalTagAndParameters(const std::string& url)
