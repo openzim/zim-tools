@@ -35,6 +35,7 @@
 #include "zimcreatorfs.h"
 #include "mimetypecounter.h"
 #include "../tools.h"
+#include "tools.h"
 
 /* Check for version number */
 #ifndef VERSION
@@ -352,8 +353,11 @@ void parse_args(int argc, char** argv)
 
 void create_zim()
 {
-  ZimCreatorFS zimCreator(directoryPath, welcome, isVerbose(), uniqueNamespace, zstdFlag);
-
+  ZimCreatorFS zimCreator(directoryPath, uniqueNamespace);
+  zimCreator.configVerbose(isVerbose())
+            .configMinClusterSize(minChunkSize)
+            .configIndexing(!withoutFTIndex, language)
+            .configCompression(zstdFlag ? zim::zimcompZstd : zim::zimcompLzma);
   if (zimPath.size() >= (MAXPATHLEN-1)) {
     throw std::invalid_argument("Target .zim file path is too long");
   }
@@ -374,8 +378,6 @@ void create_zim()
     throw std::invalid_argument(".zim file to create cannot be located inside of source HTML directory");
   }
 
-  zimCreator.setMinChunkSize(minChunkSize);
-  zimCreator.setIndexing(!withoutFTIndex, language);
   zimCreator.startZimCreation(zimPath);
 
   zimCreator.addMetadata("Language", language);
@@ -390,6 +392,7 @@ void create_zim()
   zimCreator.addMetadata("Tags", tags);
   zimCreator.addMetadata("Date", generateDate());
 
+  zimCreator.setMainPath("A/"+welcome);
   zimCreator.setFaviconPath("I/favicon");
 
   /* Directory visitor */

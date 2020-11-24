@@ -32,11 +32,8 @@
 
 bool isVerbose();
 
-ZimCreatorFS::ZimCreatorFS(std::string _directoryPath, std::string mainPage,
-                           bool verbose, bool uniqueNamespace, bool zstd)
-  : zim::writer::Creator(verbose, zstd ? zim::zimcompZstd : zim::zimcompLzma),
-    directoryPath(_directoryPath),
-    mainPage(mainPage),
+ZimCreatorFS::ZimCreatorFS(std::string _directoryPath, bool uniqueNamespace)
+  : directoryPath(_directoryPath),
     uniqueNamespace(uniqueNamespace)
 {
   char buf[PATH_MAX];
@@ -48,11 +45,6 @@ ZimCreatorFS::ZimCreatorFS(std::string _directoryPath, std::string mainPage,
   }
 
   canonical_basedir = buf;
-}
-
-zim::writer::Url ZimCreatorFS::getMainUrl() const
-{
-  return zim::writer::Url('A', mainPage);
 }
 
 void ZimCreatorFS::add_redirectArticles_from_file(const std::string& path)
