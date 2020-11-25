@@ -156,7 +156,7 @@ void ZimCreatorFS::addFile(const std::string& path)
   auto mimetype = getMimeTypeForFile(directoryPath, url);
   auto title = std::string{};
 
-  std::unique_ptr<zim::writer::Item> item;
+  std::shared_ptr<zim::writer::Item> item;
   if ( mimetype.find("text/html") != std::string::npos
     || mimetype.find("text/css") != std::string::npos) {
     auto content = getFileContent(path);
@@ -171,11 +171,11 @@ void ZimCreatorFS::addFile(const std::string& path)
     } else {
       adaptCss(content, url);
     }
-    item.reset(new zim::writer::StringItem(url, mimetype, title, content));
+    item = zim::writer::StringItem::create(url, mimetype, title, content);
   } else {
-    item.reset(new zim::writer::FileItem(url, mimetype, title, path));
+    item = std::make_shared<zim::writer::FileItem>(url, mimetype, title, path);
   }
-  addItem(std::move(item));
+  addItem(item);
 }
 
 void ZimCreatorFS::addItem(std::shared_ptr<zim::writer::Item> item)
