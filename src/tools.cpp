@@ -157,9 +157,11 @@ std::string computeAbsolutePath(const std::string& path,
                                 const std::string& relativePath)
 {
   /* Remove leaf part of the path if not already a directory */
-  std::string absolutePath = path[path.length() - 1] == '/'
-                                 ? path
-                                 : removeLastPathElement(path, false, false);
+  std::string absolutePath = path.length()
+                               ? (path[path.length() - 1] == '/'
+                                  ? path
+                                  : removeLastPathElement(path, false, false))
+                               : path;
 
   /* Go through relative path */
   std::vector<std::string> relativePathElements;
@@ -255,7 +257,7 @@ bool isOutofBounds(const std::string& input, std::string base)
 {
     if (input.empty()) return false;
 
-    if (base.back() != '/')
+    if (!base.length() || base.back() != '/')
         base.push_back('/');
 
     int nr = 0;
