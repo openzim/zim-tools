@@ -2,19 +2,16 @@ gtest_dep = dependency('gtest', main:true, fallback:['gtest', 'gtest_main_dep'],
 
 tests = [
     'tools-test',
-    'zimwriterfs-article',
     'zimwriterfs-zimcreatorfs',
     'zimcheck-test'
 ]
 
-zimwriter_srcs = [  '../src/zimwriterfs/article.cpp',
-                    '../src/zimwriterfs/tools.cpp',
+zimwriter_srcs = [  '../src/zimwriterfs/tools.cpp',
                     '../src/zimwriterfs/zimcreatorfs.cpp',
                     '../src/zimwriterfs/mimetypecounter.cpp',
                     '../src/tools.cpp']
 
 tests_src_map = { 'zimcheck-test' : ['../src/zimcheck/checks.cpp', '../src/tools.cpp'],
-                  'zimwriterfs-article' : zimwriter_srcs,
                   'tools-test' : zimwriter_srcs,
                   'zimwriterfs-zimcreatorfs' : zimwriter_srcs }
 

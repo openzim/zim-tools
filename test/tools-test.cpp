@@ -8,14 +8,6 @@ magic_t magic;
 bool inflateHtmlFlag = false;
 bool isVerbose() { return false; }
 
-TEST(CommonTools, getFileSize)
-{
-  std::string fn = "data/minimal-content/favicon.png";
-
-  ASSERT_TRUE(fileExists(fn));
-  EXPECT_EQ(getFileSize(fn), 2725u);
-}
-
 TEST(CommonTools, isDirectory)
 {
   ASSERT_FALSE(isDirectory("data/minimal-content/favicon.png"));
@@ -81,32 +73,6 @@ TEST(CommonTools, computeAbsolutePath)
   EXPECT_EQ(str, "/home/alex/oz/zim-tools/test/minimal-content/hello.html");
 }
 
-TEST(CommonTools, computeRelativePath)
-{
-  std::string str;
-
-  str = computeRelativePath("", "");
-  EXPECT_EQ(str, "");
-
-  str = computeRelativePath("a", "a");
-  EXPECT_EQ(str, "");
-
-  str = computeRelativePath("aa/b", "aa/c");
-  EXPECT_EQ(str, "c");
-
-  str = computeRelativePath("b", "ab");
-  EXPECT_EQ(str, "ab");
-
-  str = computeRelativePath("a", "a/b");
-  EXPECT_EQ(str, "b");
-
-  str = computeRelativePath("a/b", "a/b");
-  EXPECT_EQ(str, "");
-
-  str = computeRelativePath("old/article1.html", "new/article1.html");
-  EXPECT_EQ(str, "../new/article1.html");
-}
-
 TEST(CommonTools, replaceStringInPlaceOnce)
 {
   std::string str;
@@ -156,21 +122,6 @@ TEST(CommonTools, stripTitleInvalidChars)
   str = "\u202Aheader\u202A";
   stripTitleInvalidChars(str);
   EXPECT_EQ(str, "header");
-}
-
-TEST(CommonTools, getNamespaceForMimeType)
-{
-  // with uniq namespace
-  EXPECT_EQ(getNamespaceForMimeType("text/html", true), "A");
-  EXPECT_EQ(getNamespaceForMimeType("text/xml", true), "A");
-  EXPECT_EQ(getNamespaceForMimeType("image/png", true), "A");
-  EXPECT_EQ(getNamespaceForMimeType("application/json", true), "A");
-
-  // without uniq namespace
-  EXPECT_EQ(getNamespaceForMimeType("text/html", false), "A");
-  EXPECT_EQ(getNamespaceForMimeType("text/xml", false), "-");
-  EXPECT_EQ(getNamespaceForMimeType("image/png", false), "I");
-  EXPECT_EQ(getNamespaceForMimeType("application/json", false), "-");
 }
 
 TEST(tools, isOutofBounds)
