@@ -335,6 +335,12 @@ void parse_args(int argc, char** argv)
     exit(1);
   }
 
+  if (fileExists(zimPath)) {
+    std::cerr << "zimwriterfs: Error: destination .zim file '" << zimPath << "' already exists."
+              << std::endl;
+    exit(1);
+  }
+
   /* System tags */
   tags += tags.empty() ? "" : ";";
   if (withoutFTIndex) {
