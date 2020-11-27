@@ -8,13 +8,16 @@ add_global_arguments(['-Werror', '-Wall'], language:'cpp')
 add_global_arguments('-DVERSION="@0@"'.format(meson.project_version()), language : 'cpp')
 
 static_linkage = get_option('static-linkage')
+compiler = meson.get_compiler('cpp')
 if static_linkage
   add_global_link_arguments('-static-libstdc++', '--static', language:'cpp')
+  if compiler.get_id() == 'gcc' and build_machine.system() == 'linux'
+    add_global_link_arguments('-Wl,--whole-archive', '-lpthread', '-Wl,--no-whole-archive', language:'cpp')
+  endif
 endif
 
 libzim_dep = dependency('libzim', version : '>=6.3.0', static:static_linkage)
 
-compiler = meson.get_compiler('cpp')
 find_library_in_compiler = meson.version().version_compare('>=0.31.0')
 rt_dep = dependency('rt', required:false)
 docopt_dep = dependency('docopt', static:static_linkage)
