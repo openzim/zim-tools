@@ -75,7 +75,8 @@ void create(const std::string& filename_1, const std::string& filename_2, const 
   //StartFileUID
   //contains the UID of the start_file.
   std::string startFileUID;
-  const char *s=archive_1.getUuid().data;
+  const auto uuid1 = archive_1.getUuid();
+  const char *s=uuid1.data;
   for(int i=0;i<16;i++)
   {
     startFileUID+=NumberToString((int)s[i]);
@@ -86,7 +87,8 @@ void create(const std::string& filename_1, const std::string& filename_2, const 
   //EndFileUID
   //contains the UID of the end_file.
   std::string endFileUID;
-  s=archive_2.getUuid().data;
+  const auto uuid2 = archive_2.getUuid();
+  s=uuid2.data;
   for(int i=0;i<16;i++)
   {
     endFileUID+=NumberToString((int)s[i]);

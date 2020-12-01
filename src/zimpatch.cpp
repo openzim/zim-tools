@@ -223,7 +223,8 @@ bool checkDiffFile(std::string startFileName, std::string diffFileName)
     }
 
     //Check the UID of startFile and the value stored in startfileuid
-    const char *startfileUID1=startArchive.getUuid().data;
+    const auto startUuid = startArchive.getUuid();
+    const char *startfileUID1=startUuid.data;
     std::string startFileUID2=diffArchive.getEntryByPath(additionalMetadata[1]).getItem().getData();
     std::string temp="";
     unsigned int k=0;
