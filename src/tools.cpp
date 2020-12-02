@@ -40,13 +40,6 @@
 #endif
 
 
-unsigned int getFileSize(const std::string& path)
-{
-  struct stat filestatus;
-  stat(path.c_str(), &filestatus);
-  return filestatus.st_size;
-}
-
 bool fileExists(const std::string& path)
 {
   bool flag = false;
@@ -159,42 +152,16 @@ static std::string removeLastPathElement(const std::string& path,
   return newPath;
 }
 
-/* Split string in a token array */
-static std::vector<std::string> split(const std::string& str,
-                               const std::string& delims = " *-")
-{
-  std::string::size_type lastPos = str.find_first_not_of(delims, 0);
-  std::string::size_type pos = str.find_first_of(delims, lastPos);
-  std::vector<std::string> tokens;
-
-  while (std::string::npos != pos || std::string::npos != lastPos) {
-    tokens.push_back(str.substr(lastPos, pos - lastPos));
-    lastPos = str.find_first_not_of(delims, pos);
-    pos = str.find_first_of(delims, lastPos);
-  }
-
-  return tokens;
-}
-
-static std::vector<std::string> split(const char* lhs, const char* rhs)
-{
-  const std::string m1(lhs), m2(rhs);
-  return split(m1, m2);
-}
-
-static std::vector<std::string> split(const std::string& lhs, const char* rhs)
-{
-  return split(lhs.c_str(), rhs);
-}
-
 /* Warning: the relative path must be with slashes */
 std::string computeAbsolutePath(const std::string& path,
                                 const std::string& relativePath)
 {
   /* Remove leaf part of the path if not already a directory */
-  std::string absolutePath = path[path.length() - 1] == '/'
-                                 ? path
-                                 : removeLastPathElement(path, false, false);
+  std::string absolutePath = path.length()
+                               ? (path[path.length() - 1] == '/'
+                                  ? path
+                                  : removeLastPathElement(path, false, false))
+                               : path;
 
   /* Go through relative path */
   std::vector<std::string> relativePathElements;
@@ -211,38 +178,6 @@ std::string computeAbsolutePath(const std::string& path,
 
   /* Remove wront trailing / */
   return absolutePath.substr(0, absolutePath.length() - 1);
-}
-
-/* Warning: the relative path must be with slashes */
-std::string computeRelativePath(const std::string path,
-                                const std::string absolutePath)
-{
-  if (path.empty())
-    return "";
-
-  std::vector<std::string> pathParts = split(path, "/");
-  std::vector<std::string> absolutePathParts = split(absolutePath, "/");
-
-  unsigned int commonCount = 0;
-  while (commonCount < pathParts.size()
-         && commonCount < absolutePathParts.size()
-         && pathParts[commonCount] == absolutePathParts[commonCount]) {
-    if (!pathParts[commonCount].empty()) {
-      commonCount++;
-    }
-  }
-
-  std::string relativePath;
-  for (unsigned int i = commonCount; i < pathParts.size() - 1; i++) {
-    relativePath += "../";
-  }
-
-  for (unsigned int i = commonCount; i < absolutePathParts.size(); i++) {
-    relativePath += absolutePathParts[i];
-    relativePath += i + 1 < absolutePathParts.size() ? "/" : "";
-  }
-
-  return relativePath;
 }
 
 
@@ -277,53 +212,6 @@ void stripTitleInvalidChars(std::string& str)
   /* Remove unicode orientation invisible characters */
   replaceStringInPlace(str, "\u202A", "");
   replaceStringInPlace(str, "\u202C", "");
-}
-
-std::string getNamespaceForMimeType(const std::string& mimeType, bool uniqueNamespace)
-{
-  if (uniqueNamespace || mimeType.find("text") == 0 || mimeType.empty()) {
-    if (uniqueNamespace || mimeType.find("text/html") == 0
-        || mimeType.empty()) {
-      return "A";
-    } else {
-      return "-";
-    }
-  } else {
-    if (mimeType == "application/font-ttf"
-        || mimeType == "application/font-woff"
-        || mimeType == "application/font-woff2"
-        || mimeType == "application/vnd.ms-opentype"
-        || mimeType == "application/vnd.ms-fontobject"
-        || mimeType == "application/javascript"
-        || mimeType == "application/json") {
-      return "-";
-    } else {
-      return "I";
-    }
-  }
-}
-
-void remove_all(const std::string& path)
-{
-  DIR* dir;
-
-  /* It's a directory, remove all its entries first */
-  if ((dir = opendir(path.c_str())) != NULL) {
-    struct dirent* ent;
-    while ((ent = readdir(dir)) != NULL) {
-      if (strcmp(ent->d_name, ".") and strcmp(ent->d_name, "..")) {
-        std::string childPath = path + SEPARATOR + ent->d_name;
-        remove_all(childPath);
-      }
-    }
-    closedir(dir);
-    rmdir(path.c_str());
-  }
-
-  /* It's a file */
-  else {
-    remove(path.c_str());
-  }
 }
 
 std::vector<html_link> generic_getLinks(const std::string& page)
@@ -369,7 +257,7 @@ bool isOutofBounds(const std::string& input, std::string base)
 {
     if (input.empty()) return false;
 
-    if (base.back() != '/')
+    if (!base.length() || base.back() != '/')
         base.push_back('/');
 
     int nr = 0;

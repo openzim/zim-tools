@@ -21,9 +21,8 @@
  */
 
 #include <unistd.h>
-#include <zim/file.h>
+#include <zim/archive.h>
 #include <getopt.h>
-#include <zim/fileiterator.h>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -259,7 +258,7 @@ int main (int argc, char **argv)
 
         // Does it make sense to do the other checks if the integrity
         // check fails?
-        zim::File f( filename );
+        zim::Archive archive( filename );
 
         //Test 1: Internal Checksum
         if(checksum) {
@@ -268,23 +267,23 @@ int main (int argc, char **argv)
                           << " (already performed by the integrity check)."
                           << std::endl;
             } else {
-                test_checksum(f, error);
+                test_checksum(archive, error);
             }
         }
 
         //Test 2: Metadata Entries:
         //The file is searched for the compulsory metadata entries.
         if(metadata)
-            test_metadata(f, error);
+            test_metadata(archive, error);
 
         //Test 3: Test for Favicon.
         if(favicon)
-            test_favicon(f, error);
+            test_favicon(archive, error);
 
 
         //Test 4: Main Page Entry
         if(main_page)
-            test_mainpage(f, error);
+            test_mainpage(archive, error);
 
         /* Now we want to avoid to loop on the tests but on the article.
          *
@@ -309,7 +308,7 @@ int main (int argc, char **argv)
          */
 
         if ( redundant_data || url_check || url_check_external || empty_check )
-          test_articles(f, error, progress, redundant_data, url_check, url_check_external, empty_check);
+          test_articles(archive, error, progress, redundant_data, url_check, url_check_external, empty_check);
 
 
         //Test 8: Verifying MIME Types

@@ -25,9 +25,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include <zim/file.h>
-#include <zim/fileiterator.h>
-#include <zim/article.h>
+#include <zim/archive.h>
+#include <zim/entry.h>
+#include <zim/item.h>
 #include <zim/blob.h>
 
 #include <getopt.h>
@@ -113,7 +113,7 @@ int main(int argc, char* argv[])
     srand(time(0));
 
     std::cout << "open file " << filename << std::endl;
-    zim::File file(filename);
+    zim::Archive archive(filename);
 
     // collect urls
     typedef std::set<std::string> UrlsType;
@@ -122,11 +122,14 @@ int main(int argc, char* argv[])
     RandomUrlsType randomUrls;
 
     std::cout << "collect linear urls" << std::endl;
-    for (zim::File::const_iterator it = file.begin(); it != file.end() && urls.size() < count; ++it)
+    for (auto& entry: archive.iterByPath())
     {
-      std::cout << "check url " << it->getUrl() << '\t' << urls.size() << " found" << std::endl;
-      if (!it->isRedirect())
-        urls.insert(it->getUrl());
+      if (urls.size() >= count) {
+        break;
+      }
+      std::cout << "check url " << entry.getPath() << '\t' << urls.size() << " found" << std::endl;
+      if (!entry.isRedirect())
+        urls.insert(entry.getPath());
     }
 
     std::cout << urls.size() << " urls collected" << std::endl;
@@ -134,16 +137,15 @@ int main(int argc, char* argv[])
     std::cout << "collect random urls" << std::endl;
     while (randomUrls.size() < distinctCount)
     {
-      zim::File::const_iterator it = file.find(ns, randomUrl());
-      if (!it->isRedirect())
-        randomUrls.push_back(it->getUrl());
+      auto entry = archive.getEntryByPath(randomUrl());
+      if (!entry.isRedirect())
+        randomUrls.push_back(entry.getPath());
     }
 
     std::cout << randomUrls.size() << " random urls collected" << std::endl;
 
     // reopen file
-    file = zim::File();
-    file = zim::File(filename);
+    archive = zim::Archive(filename);
 
     // linear read
     std::cout << "linear:" << std::flush;
@@ -151,10 +153,10 @@ int main(int argc, char* argv[])
 
     unsigned size = 0;
     for (UrlsType::const_iterator it = urls.begin(); it != urls.end(); ++it) {
-      auto article = file.getArticle(ns, *it);
-      if (article.good()) {
-        size += file.getArticle(ns, *it).getData().size();
-      } else {
+      try {
+        auto entry = archive.getEntryByPath(*it);
+        size += entry.getItem(true).getData().size();
+      } catch(...) {
         std::cerr << "Impossible to get article '" << *it << "' in namespace " << ns << std::endl;
       }
     }
@@ -164,8 +166,7 @@ int main(int argc, char* argv[])
     std::cout << "\tsize=" << size << "\tt=" << diff.count() << "s\t" << (static_cast<double>(urls.size()) / diff.count()) << " articles/s" << std::endl;
 
     // reopen file
-    file = zim::File();
-    file = zim::File(filename);
+    archive = zim::Archive(filename);
 
     // random access
     std::cout << "random:" << std::flush;
@@ -174,10 +175,10 @@ int main(int argc, char* argv[])
 
     size = 0;
     for (unsigned r = 0; r < randomCount; ++r) {
-      auto randomArticle = file.getArticle(ns, randomUrls[rand() % randomUrls.size()]);
-      if (randomArticle.good()) {
-        size += randomArticle.getData().size();
-      }
+      try {
+        auto entry = archive.getEntryByPath(randomUrls[rand() % randomUrls.size()]);
+        size += entry.getItem(true).getData().size();
+      } catch(...) {}
     }
     //for (UrlsType::const_iterator it = randomUrls.begin(); it != randomUrls.end(); ++it)
       //size += file.getArticle(ns, *it).getData().size();

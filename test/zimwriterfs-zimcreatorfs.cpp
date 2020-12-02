@@ -19,13 +19,11 @@
 #include <iostream>
 #include <magic.h>
 
-#include <zim/file.h>
-#include <zim/fileiterator.h>
+#include <zim/archive.h>
 
 #include "gtest/gtest.h"
 
 #include "../src/zimwriterfs/zimcreatorfs.h"
-#include "../src/zimwriterfs/article.h"
 #include "../src/tools.h"
 
 
@@ -68,35 +66,36 @@ TEST(ZimCreatorFSTest, MinimalZim)
   LibMagicInit libmagic;
 
   std::string directoryPath = "data/minimal-content";
-  ZimCreatorFS zimCreator(directoryPath, "index.html", false, false);
+  ZimCreatorFS zimCreator(directoryPath);
+  zimCreator.setMainPath("index.html");
 
   TempFile out("minimal.zim");
 
   zimCreator.startZimCreation(out.path());
   zimCreator.visitDirectory(directoryPath);
 
-  std::shared_ptr<zim::writer::Article> redirect_article(new RedirectArticle(&zimCreator, 'A', "index.html", "Start page", zim::writer::Url("A/hello.html")));
-  zimCreator.addArticle(redirect_article);
+  zimCreator.addRedirection("index.html", "Start page", "hello.html");
 
   zimCreator.finishZimCreation();
 
   // verify the created .zim file with 'zimdump'
-  zim::File zimfile(out.path());
-  EXPECT_EQ(zimfile.getCountArticles(), 4u);
+  zim::Archive archive(out.path());
+  EXPECT_EQ(archive.getEntryCount(), 3u);
 
-  zim::Article a1 = zimfile.getArticle('A', "index.html");
-  EXPECT_TRUE(a1.isRedirect());
+  auto e1 = archive.getEntryByPath("index.html");
+  EXPECT_TRUE(e1.isRedirect());
 
-  zim::Article a2 = a1.getRedirectArticle();
-  EXPECT_EQ(a2.getTitle(), "HTML title tag content");
+  auto e2 = e1.getRedirectEntry();
+  EXPECT_EQ(e2.getTitle(), "HTML title tag content");
 }
 
-TEST(ZimCreatorFSTest, SymlinkShouldCreateRedirectArticleEntry)
+TEST(ZimCreatorFSTest, SymlinkShouldCreateRedirectEntry)
 {
   LibMagicInit libmagic;
 
   std::string directoryPath = "data/with-symlink";
-  ZimCreatorFS zimCreator(directoryPath, "hello.html", false, false);
+  ZimCreatorFS zimCreator(directoryPath);
+  zimCreator.setMainPath("hello.html");
 
   TempFile out("with-symlink.zim");
 
@@ -106,28 +105,25 @@ TEST(ZimCreatorFSTest, SymlinkShouldCreateRedirectArticleEntry)
 
 
   // VERIFY the created .zim file with 'zimdump'
-  zim::File zimfile(out.path());
-  EXPECT_EQ(zimfile.getCountArticles(), 4u);
+  zim::Archive archive(out.path());
+  EXPECT_EQ(archive.getEntryCount(), 3u);
 
-  zim::Article a1 = zimfile.getArticle('A', "symlink.html");
-  EXPECT_TRUE(a1.isRedirect());
+  auto e1 = archive.getEntryByPath("symlink.html");
+  EXPECT_TRUE(e1.isRedirect());
 
-  zim::Article a2 = a1.getRedirectArticle();
-  EXPECT_EQ(a2.getTitle(), "Another HTML file");
+  auto e2 = e1.getRedirectEntry();
+  EXPECT_EQ(e2.getTitle(), "Another HTML file");
 
-  zim::Article a3 = zimfile.getArticle('A', "symlink-outside.html");
-  EXPECT_FALSE(a3.good());
+  EXPECT_FALSE(archive.hasEntryByPath("symlink-outside.html"));
 
-  zim::Article a4 = zimfile.getArticle('A', "symlink-not-existing.html");
-  EXPECT_FALSE(a4.good());
+  EXPECT_FALSE(archive.hasEntryByPath("symlink-not-existing.html"));
 
-  zim::Article a5 = zimfile.getArticle('A', "symlink-self.html");
-  EXPECT_FALSE(a5.good());
+  EXPECT_FALSE(archive.hasEntryByPath("symlink-self.html"));
 }
 
 TEST(ZimCreatorFSTest, ThrowsErrorIfDirectoryNotExist)
 {
   EXPECT_THROW({
-    ZimCreatorFS zimCreator("Non-existing-dir", "index.html", false, false);
+    ZimCreatorFS zimCreator("Non-existing-dir");
   }, std::invalid_argument );
 }

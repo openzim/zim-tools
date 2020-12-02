@@ -19,8 +19,8 @@
  */
 
 #include "zimcreatorfs.h"
-#include "article.h"
 #include "../tools.h"
+#include "tools.h"
 
 #include <fstream>
 #include <dirent.h>
@@ -32,12 +32,8 @@
 
 bool isVerbose();
 
-ZimCreatorFS::ZimCreatorFS(std::string _directoryPath, std::string mainPage,
-                           bool verbose, bool uniqueNamespace, bool zstd)
-  : zim::writer::Creator(verbose, zstd ? zim::zimcompZstd : zim::zimcompLzma),
-    directoryPath(_directoryPath),
-    mainPage(mainPage),
-    uniqueNamespace(uniqueNamespace)
+ZimCreatorFS::ZimCreatorFS(std::string _directoryPath)
+  : directoryPath(_directoryPath)
 {
   char buf[PATH_MAX];
 
@@ -50,11 +46,6 @@ ZimCreatorFS::ZimCreatorFS(std::string _directoryPath, std::string mainPage,
   canonical_basedir = buf;
 }
 
-zim::writer::Url ZimCreatorFS::getMainUrl() const
-{
-  return zim::writer::Url('A', mainPage);
-}
-
 void ZimCreatorFS::add_redirectArticles_from_file(const std::string& path)
 {
   std::ifstream in_stream;
@@ -63,7 +54,7 @@ void ZimCreatorFS::add_redirectArticles_from_file(const std::string& path)
   in_stream.open(path.c_str());
   int line_number = 1;
   while (std::getline(in_stream, line)) {
-    std::regex line_regex("(.)\\t(.+)\\t(.+)\\t(.+)");
+    std::regex line_regex("(.+)\\t(.+)\\t(.+)");
     std::smatch matches;
     if (!std::regex_search(line, matches, line_regex) || matches.size() != 5) {
       std::cerr << "zimwriterfs: line #" << line_number
@@ -73,13 +64,10 @@ void ZimCreatorFS::add_redirectArticles_from_file(const std::string& path)
       exit(1);
     }
 
-    auto redirectArticle = std::make_shared<RedirectArticle>(
-      this,
-      matches[1].str()[0],  // ns
-      matches[2].str(),     // URL
-      matches[3].str(),     // title
-      matches[4].str());    // redirect URL
-    addArticle(redirectArticle);
+    auto path = matches[1].str();
+    auto title = matches[2].str();
+    auto redirectUrl = matches[3].str();
+    addRedirection(path, title, redirectUrl);
     ++line_number;
   }
   in_stream.close();
@@ -112,7 +100,7 @@ void ZimCreatorFS::visitDirectory(const std::string& path)
 
     switch (entry->d_type) {
       case DT_REG:
-        addArticle(fullEntryName);
+        addFile(fullEntryName);
         break;
       case DT_LNK:
         processSymlink(path, fullEntryName);
@@ -140,7 +128,7 @@ void ZimCreatorFS::visitDirectory(const std::string& path)
         struct stat s;
         if (stat(fullEntryName.c_str(), &s) == 0) {
           if (S_ISREG(s.st_mode)) {
-            addArticle(fullEntryName);
+            addFile(fullEntryName);
           } else if (S_ISDIR(s.st_mode)) {
             visitDirectory(fullEntryName);
           } else {
@@ -162,26 +150,39 @@ void ZimCreatorFS::visitDirectory(const std::string& path)
   closedir(directory);
 }
 
-void ZimCreatorFS::addMetadata(const std::string& title, const std::string& content)
+void ZimCreatorFS::addFile(const std::string& path)
 {
-  auto article = std::make_shared<SimpleMetadataArticle>(title, content);
-  addArticle(article);
-}
+  auto url = path.substr(directoryPath.size()+1);
+  auto mimetype = getMimeTypeForFile(directoryPath, url);
+  auto title = std::string{};
 
-void ZimCreatorFS::addArticle(const std::string& path)
-{
-  auto farticle = std::make_shared<FileArticle>(this, path);
-  if (farticle->isInvalid()) {
-    return;
+  std::shared_ptr<zim::writer::Item> item;
+  if ( mimetype.find("text/html") != std::string::npos
+    || mimetype.find("text/css") != std::string::npos) {
+    auto content = getFileContent(path);
+
+    if (mimetype.find("text/html") != std::string::npos) {
+      auto redirectUrl = parseAndAdaptHtml(content, title, url);
+      if (!redirectUrl.empty()) {
+        // This is a redirect.
+        addRedirection(url, title, redirectUrl);
+        return;
+      }
+    } else {
+      adaptCss(content, url);
+    }
+    item = zim::writer::StringItem::create(url, mimetype, title, content);
+  } else {
+    item = std::make_shared<zim::writer::FileItem>(url, mimetype, title, path);
   }
-  addArticle(farticle);
+  addItem(item);
 }
 
-void ZimCreatorFS::addArticle(std::shared_ptr<zim::writer::Article> article)
+void ZimCreatorFS::addItem(std::shared_ptr<zim::writer::Item> item)
 {
-  Creator::addArticle(article);
-  for (auto& handler: articleHandlers) {
-      handler->handleArticle(article);
+ Creator::addItem(item);
+ for (auto& handler: itemHandlers) {
+     handler->handleItem(item);
   }
 }
 
@@ -215,30 +216,21 @@ void ZimCreatorFS::processSymlink(const std::string& curdir, const std::string& 
   }
 
   std::string source_url = symlink_path.substr(directoryPath.size() + 1);
-  std::string source_mimeType = getMimeTypeForFile(directoryPath, source_url);
-  const char source_ns = getNamespaceForMimeType(source_mimeType, uniqNamespace())[0];
-
   std::string target_url = std::string(resolved).substr(canonical_basedir.size() + 1);
-  std::string target_mimeType = getMimeTypeForFile(directoryPath, target_url);
-  const char target_ns = getNamespaceForMimeType(target_mimeType, uniqNamespace())[0];
-
-  std::shared_ptr<zim::writer::Article> redirect_article(
-        new RedirectArticle(this, source_ns, source_url, "",
-                            zim::writer::Url(target_ns, target_url)));
-  addArticle(redirect_article);
+  addRedirection(source_url, "", target_url);
 }
 
 void ZimCreatorFS::finishZimCreation()
 {
-  for(auto& handler: articleHandlers) {
-    Creator::addArticle(handler->getMetaArticle());
+  for(auto& handler: itemHandlers) {
+    Creator::addMetadata(handler->getName(), handler->getData());
   }
   Creator::finishZimCreation();
 }
 
 void ZimCreatorFS::add_customHandler(IHandler* handler)
 {
-  articleHandlers.push_back(handler);
+  itemHandlers.push_back(handler);
 }
 
 inline std::string removeLocalTagAndParameters(const std::string& url)
@@ -261,12 +253,140 @@ inline std::string removeLocalTagAndParameters(const std::string& url)
   return retVal;
 }
 
-std::string ZimCreatorFS::computeNewUrl(const std::string& aid, const std::string& baseUrl, const std::string& targetUrl) const
+struct GumboOutputDestructor {
+  GumboOutputDestructor(GumboOutput* output) : output(output) {}
+  ~GumboOutputDestructor() { gumbo_destroy_output(&kGumboDefaultOptions, output); }
+  GumboOutput* output;
+};
+
+std::string ZimCreatorFS::parseAndAdaptHtml(std::string& data, std::string& title, const std::string& url)
 {
-  std::string filename = computeAbsolutePath(aid, targetUrl);
-  std::string targetMimeType
-      = getMimeTypeForFile(directoryPath, decodeUrl(removeLocalTagAndParameters(filename)));
-  std::string newUrl
-      = "/" + getNamespaceForMimeType(targetMimeType, uniqNamespace()) + "/" + filename;
-  return computeRelativePath(baseUrl, newUrl);
+  GumboOutput* output = gumbo_parse(data.c_str());
+  GumboOutputDestructor outputDestructor(output);
+  GumboNode* root = output->root;
+
+  /* Search the content of the <title> tag in the HTML */
+  if (root->type == GUMBO_NODE_ELEMENT
+      && root->v.element.children.length >= 2) {
+    const GumboVector* root_children = &root->v.element.children;
+    GumboNode* head = NULL;
+    for (unsigned int i = 0; i < root_children->length; ++i) {
+      GumboNode* child = (GumboNode*)(root_children->data[i]);
+      if (child->type == GUMBO_NODE_ELEMENT
+          && child->v.element.tag == GUMBO_TAG_HEAD) {
+        head = child;
+        break;
+      }
+    }
+
+    if (head != NULL) {
+      GumboVector* head_children = &head->v.element.children;
+      for (unsigned int i = 0; i < head_children->length; ++i) {
+        GumboNode* child = (GumboNode*)(head_children->data[i]);
+        if (child->type == GUMBO_NODE_ELEMENT
+            && child->v.element.tag == GUMBO_TAG_TITLE) {
+          if (child->v.element.children.length == 1) {
+            GumboNode* title_text
+                = (GumboNode*)(child->v.element.children.data[0]);
+            if (title_text->type == GUMBO_NODE_TEXT) {
+              title = title_text->v.text.text;
+              stripTitleInvalidChars(title);
+            }
+          }
+        }
+      }
+
+      /* Detect if this is a redirection (if no redirects TSV file specified)
+       */
+      std::string targetUrl;
+      try {
+        targetUrl = extractRedirectUrlFromHtml(head_children);
+      } catch (std::string& error) {
+        std::cerr << error << std::endl;
+      }
+      if (!targetUrl.empty()) {
+        auto redirectUrl = computeAbsolutePath(url, decodeUrl(targetUrl));
+        if (!fileExists(directoryPath + "/" + redirectUrl)) {
+          throw std::runtime_error("Target path doesn't exists");
+        }
+        return redirectUrl;
+      }
+
+      /* If no title, then compute one from the filename */
+      if (title.empty()) {
+        auto found = url.rfind("/");
+        if (found != std::string::npos) {
+          title = url.substr(found + 1);
+          found = title.rfind(".");
+          if (found != std::string::npos) {
+            title = title.substr(0, found);
+          }
+        } else {
+          title = url;
+        }
+        std::replace(title.begin(), title.end(), '_', ' ');
+      }
+    }
+  }
+  return "";
+}
+
+void ZimCreatorFS::adaptCss(std::string& data, const std::string& url) {
+  /* Rewrite url() values in the CSS */
+  size_t startPos = 0;
+  size_t endPos = 0;
+  std::string targetUrl;
+
+  while ((startPos = data.find("url(", endPos))
+         && startPos != std::string::npos) {
+
+    /* URL delimiters */
+    endPos = data.find(")", startPos);
+    startPos = startPos + (data[startPos + 4] == '\''
+                                   || data[startPos + 4] == '"'
+                               ? 5
+                               : 4);
+    endPos = endPos - (data[endPos - 1] == '\''
+                               || data[endPos - 1] == '"'
+                           ? 1
+                           : 0);
+    targetUrl = data.substr(startPos, endPos - startPos);
+    std::string startDelimiter = data.substr(startPos - 1, 1);
+    std::string endDelimiter = data.substr(endPos, 1);
+
+    if (targetUrl.substr(0, 5) == "data:") {
+      continue;
+    }
+
+    /* Deal with URL with arguments (using '? ') */
+    std::string path = targetUrl;
+    size_t markPos = targetUrl.find("?");
+    if (markPos != std::string::npos) {
+      path = targetUrl.substr(0, markPos);
+    }
+
+    /* Embeded fonts need to be inline because Kiwix is
+       otherwise not able to load same because of the
+       same-origin security */
+    std::string mimeType = getMimeTypeForFile(directoryPath, path);
+    if (mimeType == "application/font-ttf"
+        || mimeType == "application/font-woff"
+        || mimeType == "application/font-woff2"
+        || mimeType == "application/vnd.ms-opentype"
+        || mimeType == "application/vnd.ms-fontobject") {
+      try {
+        std::string fontContent = getFileContent(
+            directoryPath + "/" + computeAbsolutePath(url, path));
+        replaceStringInPlaceOnce(
+            data,
+            startDelimiter + targetUrl + endDelimiter,
+            startDelimiter + "data:" + mimeType + ";base64,"
+                + base64_encode(reinterpret_cast<const unsigned char*>(
+                                    fontContent.c_str()),
+                                fontContent.length())
+                + endDelimiter);
+      } catch (...) {
+      }
+    }
+  }
 }

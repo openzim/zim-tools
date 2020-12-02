@@ -22,6 +22,7 @@
 #define _ZIM_TOOL_PROGRESS_H_
 
 #include <chrono>
+#include <iostream>
 
 using TimePoint = std::chrono::system_clock::time_point;
 

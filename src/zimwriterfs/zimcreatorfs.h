@@ -21,49 +21,44 @@
 #ifndef OPENZIM_ZIMWRITERFS_ZIMCREATORFS_H
 #define OPENZIM_ZIMWRITERFS_ZIMCREATORFS_H
 
-#include <queue>
+#include <vector>
 #include <string>
-#include "article.h"
 
 #include <zim/writer/creator.h>
 
 class IHandler
 {
  public:
-  virtual void handleArticle(std::shared_ptr<zim::writer::Article> article) = 0;
-  virtual std::shared_ptr<zim::writer::Article> getMetaArticle() = 0;
+  virtual void handleItem(std::shared_ptr<zim::writer::Item> item) = 0;
+  virtual std::string getName() const = 0;
+  virtual std::string getData() const = 0;
   virtual ~IHandler() = default;
 };
 
 class ZimCreatorFS : public zim::writer::Creator
 {
  public:
-  ZimCreatorFS(std::string _directoryPath, std::string mainPage, bool verbose,
-               bool uniqueNamespace, bool zstd = false);
+  ZimCreatorFS(std::string _directoryPath);
   virtual ~ZimCreatorFS() = default;
 
-  virtual zim::writer::Url getMainUrl() const;
   virtual void add_customHandler(IHandler* handler);
   virtual void add_redirectArticles_from_file(const std::string& path);
   virtual void visitDirectory(const std::string& path);
 
-  virtual void addMetadata(const std::string& metadata, const std::string& content);
-  virtual void addArticle(const std::string& path);
-  virtual void addArticle(std::shared_ptr<zim::writer::Article> article);
+  virtual void addFile(const std::string& path);
+  virtual void addItem(std::shared_ptr<zim::writer::Item> item);
   virtual void finishZimCreation();
 
   void processSymlink(const std::string& curdir, const std::string& symlink_path);
-  std::string computeNewUrl(const std::string& aid, const std::string& baseUrl, const std::string& targetUrl) const;
   const std::string & basedir() const { return directoryPath; }
-  bool uniqNamespace() const { return uniqueNamespace; }
   const std::string & canonicalBaseDir() const { return canonical_basedir; }
+  std::string parseAndAdaptHtml(std::string& data, std::string& title, const std::string& url);
+  void adaptCss(std::string& data, const std::string& url);
 
  private:
-  std::vector<IHandler*> articleHandlers;
+  std::vector<IHandler*> itemHandlers;
   std::string directoryPath;  ///< html dir without trailing slash
-  std::string mainPage;
   std::string canonical_basedir;
-  bool uniqueNamespace;
 };
 
 #endif  // OPENZIM_ZIMWRITERFS_ARTICLESOURCE_H

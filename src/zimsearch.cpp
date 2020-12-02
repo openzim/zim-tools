@@ -19,11 +19,11 @@
 
 #include <iostream>
 #include <zim/search.h>
-#include <zim/file.h>
+#include <zim/archive.h>
 
 #include "version.h"
 
-void zimSearch(zim::Search& search)
+void printSearchResults(zim::Search& search)
 {
     for (zim::Search::iterator it = search.begin(); it != search.end(); ++it)
     {
@@ -61,10 +61,10 @@ int main(int argc, char* argv[])
       s += argv[a];
     }
 
-    zim::File zimfile(argv[1]);
-    zim::Search search = zim::Search(&zimfile);
+    zim::Archive zimarchive(argv[1]);
+    zim::Search search(zimarchive);
     search.set_query(s);
-    zimSearch(search);
+    printSearchResults(search);
   }
   catch (const std::exception& e)
   {
