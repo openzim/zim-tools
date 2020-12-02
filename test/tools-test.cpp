@@ -124,6 +124,54 @@ TEST(CommonTools, stripTitleInvalidChars)
   EXPECT_EQ(str, "header");
 }
 
+UriKind uriKind(const std::string& s)
+{
+    return html_link::detectUriKind(s);
+}
+
+TEST(tools, uriKind)
+{
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("http://example.com"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("https://example.com"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("HttP://example.com"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("HtTps://example.com"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("file:///etc/passwd"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("ftp://download.kiwix.org/zim/"));
+
+    EXPECT_EQ(UriKind::MAILTO, uriKind("mailto:someone@example.com"));
+    EXPECT_EQ(UriKind::MAILTO, uriKind("MAILTO:someone@example.com"));
+
+    EXPECT_EQ(UriKind::TEL, uriKind("tel:+0123456789"));
+    EXPECT_EQ(UriKind::TEL, uriKind("TEL:+0123456789"));
+
+    EXPECT_EQ(UriKind::GEO, uriKind("geo:12.34,56.78"));
+    EXPECT_EQ(UriKind::GEO, uriKind("GEO:12.34,56.78"));
+
+    EXPECT_EQ(UriKind::JAVASCRIPT, uriKind("javascript:console.log('hello!')"));
+    EXPECT_EQ(UriKind::JAVASCRIPT, uriKind("JAVAscript:console.log('hello!')"));
+
+    EXPECT_EQ(UriKind::DATA, uriKind("data:text/plain;charset=UTF-8,data"));
+    EXPECT_EQ(UriKind::DATA, uriKind("DATA:text/plain;charset=UTF-8,data"));
+
+    EXPECT_EQ(UriKind::OTHER, uriKind("http:example.com"));
+    EXPECT_EQ(UriKind::OTHER, uriKind("http:/example.com"));
+    EXPECT_EQ(UriKind::OTHER, uriKind("git@github.com:openzim/zim-tools.git"));
+    EXPECT_EQ(UriKind::OTHER, uriKind("/redirect?url=http://example.com"));
+    EXPECT_EQ(UriKind::OTHER, uriKind("redirect?url=http://example.com"));
+    EXPECT_EQ(UriKind::OTHER, uriKind("auth.php#returnurl=https://example.com"));
+    EXPECT_EQ(UriKind::OTHER, uriKind("/api/v1/http://example.com"));
+    EXPECT_EQ(UriKind::OTHER, uriKind("img/file:///etc/passwd"));
+    EXPECT_EQ(UriKind::OTHER, uriKind("ftp:/download.kiwix.org/zim/"));
+    EXPECT_EQ(UriKind::OTHER, uriKind("sendmailto:someone@example.com"));
+    EXPECT_EQ(UriKind::OTHER, uriKind("intel:+0123456789"));
+    EXPECT_EQ(UriKind::OTHER, uriKind("showlocation.cgi?geo:12.34,56.78"));
+    EXPECT_EQ(UriKind::OTHER, uriKind("/xyz/javascript:console.log('hello, world!')"));
+
+    EXPECT_EQ(UriKind::OTHER, uriKind("/api/data:text/plain;charset=UTF-8,qwerty"));
+    EXPECT_EQ(UriKind::OTHER, uriKind("../img/logo.png"));
+    EXPECT_EQ(UriKind::OTHER, uriKind("style.css"));
+}
+
 TEST(tools, isOutofBounds)
 {
     ASSERT_FALSE(isOutofBounds("", ""));

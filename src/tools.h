@@ -58,12 +58,46 @@ private:
     std::stringstream stream_;
 };
 
-
-typedef struct html_link
+enum class UriKind : int
 {
-    std::string attribute;
-    std::string link;
-} html_link;
+    // Special URIs without authority that are valid in HTML
+    JAVASCRIPT,     // javascript:...
+    MAILTO,         // mailto:user@example.com
+    TEL,            // tel:+0123456789
+    GEO,            // geo:12.34,56.78
+    DATA,           // data:image/png;base64,...
+
+    GENERIC_URI,    // Generic URI with scheme and authority: <scheme>://.....
+
+    OTHER           // not a valid URI (though it can be a valid relative
+                    // or absolute URL)
+};
+
+class html_link
+{
+public:
+    const std::string attribute;
+    const std::string link;
+    const UriKind     uriKind;
+
+    html_link(const std::string& _attr, const std::string& _link)
+        : attribute(_attr)
+        , link(_link)
+        , uriKind(detectUriKind(_link))
+    {}
+
+    bool isExternalUrl() const
+    {
+        return uriKind != UriKind::OTHER && uriKind != UriKind::DATA;
+    }
+
+    bool isInternalUrl() const
+    {
+        return uriKind == UriKind::OTHER;
+    }
+
+    static UriKind detectUriKind(const std::string& input_string);
+};
 
 // Few helper class to help copy a item from a archive to another one.
 class ItemProvider : public zim::writer::ContentProvider

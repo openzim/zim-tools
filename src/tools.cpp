@@ -32,6 +32,7 @@
 #include <memory>
 #include <unistd.h>
 #include <algorithm>
+#include <regex>
 
 #ifdef _WIN32
 #define SEPARATOR "\\"
@@ -247,7 +248,8 @@ std::vector<html_link> generic_getLinks(const std::string& page)
         // [TODO] Handle escape char
         while(*p != delimiter)
             p++;
-        links.push_back({attr,std::string(linkStart, p)});
+        const std::string link(linkStart, p);
+        links.push_back(html_link(attr, link));
         p += 1;
     }
     return links;
@@ -358,3 +360,46 @@ std::string normalize_link(const std::string& input, const std::string& baseUrl)
     }
     return output;
 }
+
+namespace
+{
+
+UriKind specialUriSchemeKind(const std::string& s)
+{
+    static const std::map<std::string, UriKind> uriSchemes = {
+        { "javascript", UriKind::JAVASCRIPT },
+        { "mailto",     UriKind::MAILTO     },
+        { "tel",        UriKind::TEL        },
+        { "geo",        UriKind::GEO        },
+        { "data",       UriKind::DATA       }
+    };
+
+    const auto it = uriSchemes.find(s);
+    return it != uriSchemes.end() ? it->second : UriKind::OTHER;
+}
+
+void asciitolower(std::string& s)
+{
+    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c){
+        return ('A' <= c && c <= 'Z') ? c - ('Z' - 'z') : c;
+    });
+}
+
+} // unnamed namespace
+
+UriKind html_link::detectUriKind(const std::string& input_string)
+{
+    const auto k = input_string.find_first_of(":/?#");
+    if ( k == std::string::npos || input_string[k] != ':' )
+        return UriKind::OTHER;
+
+    if ( k + 2 < input_string.size()
+         && input_string[k+1] == '/'
+         && input_string[k+2] == '/' )
+        return UriKind::GENERIC_URI;
+
+    std::string scheme = input_string.substr(0, k);
+    asciitolower(scheme);
+    return specialUriSchemeKind(scheme);
+}
+
