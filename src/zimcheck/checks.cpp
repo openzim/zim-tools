@@ -584,25 +584,43 @@ private: // data
     std::atomic<bool> expectingMoreTasks;
 };
 
+
+zim::cluster_index_type getClusterIndexOfZimEntry(zim::Entry e)
+{
+    // FIXME
+    // return e.getClusterNumber();
+    return 0;
+}
+
 class TaskDispatcher
 {
 public: // functions
-    explicit TaskDispatcher(ArticleChecker* ac)
-        : taskStream(new TaskStream(ac))
-    {}
+    explicit TaskDispatcher(ArticleChecker* ac, unsigned n)
+        : currentCluster(-1)
+    {
+        while ( n-- )
+            taskStreams.emplace_back(ac);
+    }
 
     void addTask(zim::Entry entry)
     {
-        taskStream->addTask(entry);
+        const auto entryCluster = getClusterIndexOfZimEntry(entry);
+        if ( currentCluster != entryCluster )
+        {
+            taskStreams.splice(taskStreams.end(), taskStreams, taskStreams.begin());
+            currentCluster = entryCluster;
+        }
+        taskStreams.begin()->addTask(entry);
     }
 
     void waitForAllTasksToComplete()
     {
-        taskStream.reset();
+        taskStreams.clear();
     }
 
 private: // data
-    std::unique_ptr<TaskStream> taskStream;
+    std::list<TaskStream> taskStreams;
+    zim::cluster_index_type currentCluster;
 };
 
 } // unnamed namespace
@@ -613,7 +631,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
     reporter.infoMsg("[INFO] Verifying Articles' content...");
 
     progress.reset(archive.getEntryCount());
-    TaskDispatcher td(&articleChecker);
+    TaskDispatcher td(&articleChecker, 4);
     for (auto& entry:archive.iterEfficient()) {
         progress.report();
 
