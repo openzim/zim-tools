@@ -31,6 +31,66 @@
 #include "tools.h"
 #include "version.h"
 
+/**
+ * A PatchItem. This patch html and css content to remove the namespcae from the links.
+ */
+class PatchItem : public zim::writer::Item
+{
+    //article from an existing ZIM file.
+    zim::Item item;
+
+  public:
+    explicit PatchItem(const zim::Item item):
+      item(item)
+    {}
+
+    virtual std::string getPath() const
+    {
+      auto path = item.getPath();
+      if (path.length() > 2 && path[1] == '/') {
+        path = path.substr(2, std::string::npos);
+      }
+      return path;
+    }
+
+    virtual std::string getTitle() const
+    {
+        return item.getTitle();
+    }
+
+    virtual std::string getMimeType() const
+    {
+        return item.getMimetype();
+    }
+
+    std::unique_ptr<zim::writer::ContentProvider> getContentProvider() const
+    {
+        auto mimetype = getMimeType();
+        if ( mimetype.find("text/html") == std::string::npos
+          && mimetype.find("text/css") == std::string::npos) {
+            return std::unique_ptr<zim::writer::ContentProvider>(new ItemProvider(item));
+        }
+
+        std::string content = item.getData();
+        // This is a really poor url rewriting to remove the starting "../<NS>/"
+        // and replace the "../../<NS/" by "../" :
+        // - Performance may be better
+        // - We only fix links in articles in "root" path (`foo.html`) and in one subdirectory (`bar/foo.hmtl`)
+        //   Deeper articles are not fixed (`bar/baz/foo.html`).
+        // - We may change content starting by `'../A/` even if they are not links
+        // - We don't handle links where we go upper in the middle of the link : `../foo/../I/image.png`
+        // - ...
+        // However, this should patch most of the links in our zim files.
+        for (std::string prefix: {"'", "\""}) {
+          for (auto ns : {'A','I','J','-'}) {
+            replaceStringInPlace(content, prefix+"../../"+ns+"/", prefix+"../");
+            replaceStringInPlace(content, prefix+"../"+ns+"/", prefix);
+          }
+        }
+        return std::unique_ptr<zim::writer::ContentProvider>(new zim::writer::StringProvider(content));
+    }
+};
+
 
 void create(const std::string& originFilename, const std::string& outFilename, bool zstdFlag)
 {
@@ -45,21 +105,58 @@ void create(const std::string& originFilename, const std::string& outFilename, b
   std::cout << "starting zim creation" << std::endl;
   zimCreator.startZimCreation(outFilename);
 
+  auto fromNewNamespace = origin.hasNewNamespaceScheme();
+
   try {
-    zimCreator.setMainPath(origin.getMainEntry().getPath());
+    auto mainPath = origin.getMainEntry().getItem(true).getPath();
+    if (!fromNewNamespace) {
+      mainPath = mainPath.substr(2, std::string::npos);
+    }
+    zimCreator.setMainPath(mainPath);
   } catch(...) {}
 
-  for(auto& entry:origin.iterEfficient())
-  {
-    auto path = entry.getPath();
-    if (path[0] == 'Z' || path[0] == 'X') {
-      // Index is recreated by zimCreator. Do not add it
-    continue;
+  try {
+    auto faviconPath = origin.getFaviconEntry().getItem(true).getPath();
+    if (!fromNewNamespace) {
+      faviconPath = faviconPath.substr(2, std::string::npos);
     }
+    zimCreator.setFaviconPath(faviconPath);
+  } catch(...) {}
+
+  for(auto& metakey:origin.getMetadataKeys()) {
+    auto metadata = origin.getMetadata(metakey);
+    auto metaProvider = std::unique_ptr<zim::writer::ContentProvider>(new zim::writer::StringProvider(metadata));
+    zimCreator.addMetadata(metakey, std::move(metaProvider), "text/plain");
+  }
+
+
+  for(auto& entry:origin.iterEfficient()) {
+    if (fromNewNamespace) {
+      //easy, just "copy" the item.
+      if (entry.isRedirect()) {
+        zimCreator.addRedirection(entry.getPath(), entry.getTitle(), entry.getRedirectEntry().getPath());
+      } else {
+        auto tmpItem = std::shared_ptr<zim::writer::Item>(new CopyItem(entry.getItem()));
+        zimCreator.addItem(tmpItem);
+      }
+      continue;
+    }
+
+    // We have to adapt the content to drop the namespace.
+
+    auto path = entry.getPath();
+    if (path[0] == 'Z' || path[0] == 'X' || path[0] == 'M') {
+      // Index is recreated by zimCreator. Do not add it
+      continue;
+    }
+
+    path = path.substr(2, std::string::npos);
     if (entry.isRedirect()) {
-      zimCreator.addRedirection(entry.getPath(), entry.getTitle(), entry.getRedirectEntry().getPath());
+      auto redirectPath = entry.getRedirectEntry().getPath();
+      redirectPath = redirectPath.substr(2, std::string::npos);
+      zimCreator.addRedirection(path, entry.getTitle(), redirectPath);
     } else {
-      auto tmpItem = std::shared_ptr<zim::writer::Item>(new CopyItem(entry.getItem()));
+      auto tmpItem = std::shared_ptr<zim::writer::Item>(new PatchItem(entry.getItem()));
       zimCreator.addItem(tmpItem);
     }
 

@@ -160,8 +160,15 @@ void ZimDumper::printInfo()
   if (m_archive.hasMainEntry()) {
     std::cout << "main page: " << m_archive.getMainEntry().getIndex() << "\n";
   } else {
-    std::cout << "main page: " << "-\n";
+    std::cout << "main page: -\n";
   }
+
+  if (m_archive.hasFaviconEntry()) {
+    std::cout << "favicon: " << m_archive.getFaviconEntry().getIndex() << "\n";
+  } else {
+    std::cout << "favicon: -\n";
+  }
+  std::cout << std::endl;
 
   std::cout.flush();
 }
