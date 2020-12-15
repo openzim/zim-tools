@@ -1,7 +1,11 @@
 
-executable('zimsearch', 'zimsearch.cpp',
-  dependencies: libzim_dep,
-  install: true)
+if with_xapian_support
+  executable('zimsearch', 'zimsearch.cpp',
+    dependencies: libzim_dep,
+    install: true)
+else
+  message('Libzim seems to be compiled without xapian support.\nzimsearch will not be compiled.')
+endif
 
 # [FIXME] There are some problem with clock_gettime and mingw.
 if target_machine.system() != 'windows'
