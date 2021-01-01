@@ -371,7 +371,10 @@ UriKind specialUriSchemeKind(const std::string& s)
         { "mailto",     UriKind::MAILTO     },
         { "tel",        UriKind::TEL        },
         { "geo",        UriKind::GEO        },
-        { "data",       UriKind::DATA       }
+        { "data",       UriKind::DATA       },
+        { "xmpp",       UriKind::XMPP       },
+        { "news",       UriKind::NEWS       },
+        { "urn",        UriKind::URN        }
     };
 
     const auto it = uriSchemes.find(s);

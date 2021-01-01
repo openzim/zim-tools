@@ -66,6 +66,9 @@ enum class UriKind : int
     TEL,            // tel:+0123456789
     GEO,            // geo:12.34,56.78
     DATA,           // data:image/png;base64,...
+    XMPP,           // xmpp:kelson@kiwix.org
+    NEWS,           // news:comp.os.linux.announce
+    URN,            // urn:nbn:de:bsz:24-digibib-bsz3530416370
 
     GENERIC_URI,    // Generic URI with scheme and authority: <scheme>://.....
 
