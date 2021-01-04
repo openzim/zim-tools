@@ -130,3 +130,25 @@ TEST(zimcheck, nooptions_goodzimfile)
       , std::string(zimcheck_output)
     );
 }
+
+TEST(zimcheck, bad_checksum)
+{
+    CapturedStdout zimcheck_output;
+    ASSERT_EQ(1, zimcheck({
+      "zimcheck",
+      "-C",
+      "data/zimfiles/bad_checksum.zim"
+    }));
+
+    ASSERT_EQ(
+      "[INFO] Checking zim file data/zimfiles/bad_checksum.zim" "\n"
+      "[INFO] Verifying Internal Checksum..." "\n"
+      "  [ERROR] Wrong Checksum in ZIM archive" "\n"
+      "[ERROR] Invalid checksum:" "\n"
+      "  ZIM Archive Checksum in archive: 00000000000000000000000000000000" "\n"
+      "" "\n"
+      "[INFO] Overall Test Status: Fail" "\n"
+      "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+      , std::string(zimcheck_output)
+    );
+}

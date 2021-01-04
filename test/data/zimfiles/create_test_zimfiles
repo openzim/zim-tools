@@ -20,7 +20,7 @@ if [ $# -ne 0 ]
 then
   zimfiles=("$@")
 else
-  zimfiles=(good)
+  zimfiles=(good bad_checksum)
 fi
 
 zimwriterfs_required_version=v2.1.1
@@ -43,6 +43,21 @@ make__good__zim()
               -p "N/A" \
               small_zimfile_data \
               good.zim
+}
+
+make__bad_checksum__zim()
+{
+  {
+    local checksum_size=16 i
+    local zimfile_size=$(wc -c<good.zim) &&
+    head -c $((zimfile_size - checksum_size)) good.zim &&
+    for (( i=0; i < checksum_size; ++i ))
+    do
+      printf '\0'
+    done
+  } > bad_checksum.zim \
+  && ! diff -q good.zim bad_checksum.zim &> /dev/null \
+  || die 'The checksum in good.zim is all zeros!!!'
 }
 
 for zimfilename in "${zimfiles[@]}"
