@@ -17,9 +17,11 @@
  * MA 02110-1301, USA.
  */
 
-int zimcheck(int argc, char **argv);
+#include <vector>
+
+int zimcheck (const std::vector<const char*>& args);
 
 int main (int argc, char **argv)
 {
-    return zimcheck(argc, argv);
+    return zimcheck(std::vector<const char*>(argv, argv+argc));
 }

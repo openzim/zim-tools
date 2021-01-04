@@ -65,3 +65,50 @@ TEST(zimfilechecks, test_articles)
 
     ASSERT_TRUE(logger.overallStatus());
 }
+
+class CapturedStdout
+{
+  std::ostringstream buffer;
+  std::streambuf* const sbuf;
+public:
+  CapturedStdout()
+    : sbuf(std::cout.rdbuf())
+  {
+    std::cout.rdbuf(buffer.rdbuf());
+  }
+
+  CapturedStdout(const CapturedStdout&) = delete;
+
+  ~CapturedStdout()
+  {
+    std::cout.rdbuf(sbuf);
+  }
+
+  operator std::string() const { return buffer.str(); }
+};
+
+int zimcheck (const std::vector<const char*>& args);
+
+TEST(zimcheck, nooptions_goodzimfile)
+{
+    CapturedStdout zimcheck_output;
+    ASSERT_EQ(0, zimcheck({
+      "zimcheck",
+      "data/zimfiles/good.zim"
+    }));
+
+    ASSERT_EQ(
+      "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
+      "[INFO] Verifying ZIM-archive structure integrity..." "\n"
+      "[INFO] Avoiding redundant checksum test (already performed by the integrity check)." "\n"
+      "[INFO] Searching for metadata entries..." "\n"
+      "[INFO] Searching for Favicon..." "\n"
+      "[INFO] Searching for main page..." "\n"
+      "[INFO] Verifying Articles' content..." "\n"
+      "[INFO] Searching for redundant articles..." "\n"
+      "  Verifying Similar Articles for redundancies..." "\n"
+      "[INFO] Overall Test Status: Pass" "\n"
+      "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+      , std::string(zimcheck_output)
+    );
+}

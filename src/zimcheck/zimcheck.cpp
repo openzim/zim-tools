@@ -68,8 +68,11 @@ void displayHelp()
     return;
 }
 
-int zimcheck (int argc, char **argv)
+int zimcheck (const std::vector<const char*>& args)
 {
+    const int argc = args.size();
+    const char* const* argv = &args[0];
+
     // To calculate the total time taken by the program to run.
     time_t startTime,endTime;
     double  timeDiffference;
@@ -114,7 +117,7 @@ int zimcheck (int argc, char **argv)
             { 0, 0, 0, 0}
         };
         int option_index = 0;
-        int c = getopt_long (argc, argv, "ACIMFPRUXEDHBVacimfpruxedhbv",
+        int c = getopt_long (argc, const_cast<char**>(argv), "ACIMFPRUXEDHBVacimfpruxedhbv",
                              long_options, &option_index);
         //c = getopt (argc, argv, "ACMFPRUXED");
         if(c == -1)

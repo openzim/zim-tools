@@ -11,7 +11,7 @@ zimwriter_srcs = [  '../src/zimwriterfs/tools.cpp',
                     '../src/zimwriterfs/mimetypecounter.cpp',
                     '../src/tools.cpp']
 
-tests_src_map = { 'zimcheck-test' : ['../src/zimcheck/checks.cpp', '../src/tools.cpp'],
+tests_src_map = { 'zimcheck-test' : ['../src/zimcheck/zimcheck.cpp', '../src/zimcheck/checks.cpp', '../src/tools.cpp'],
                   'tools-test' : zimwriter_srcs,
                   'zimwriterfs-zimcreatorfs' : zimwriter_srcs }
 

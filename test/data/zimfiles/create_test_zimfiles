@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+myname=$(basename "$0")
+
+die()
+{
+  echo >&2 "!!! ERROR: $*"
+  exit 1
+}
+
+get_zimwriterfs_version()
+(
+  set -o pipefail
+  zimwriterfs --version 2>/dev/null|head -1
+)
+
+cd "$(dirname "$0")"
+
+if [ $# -ne 0 ]
+then
+  zimfiles=("$@")
+else
+  zimfiles=(good)
+fi
+
+zimwriterfs_required_version=v2.1.1
+zimwriterfs_version=$(get_zimwriterfs_version) \
+  || die "zimwriterfs not in PATH"
+test "$zimwriterfs_version" == "Version:  $zimwriterfs_required_version" \
+  || die "Need zimwriterfs $zimwriterfs_required_version, have $zimwriterfs_version"
+
+make__good__zim()
+{
+  zimwriterfs --withoutFTIndex \
+              --threads 1 \
+              --no-uuid \
+              -w main.html \
+              -f favicon.png \
+              -l en \
+              -t "Test ZIM file" \
+              -d "N/A" \
+              -c "N/A" \
+              -p "N/A" \
+              small_zimfile_data \
+              good.zim
+}
+
+for zimfilename in "${zimfiles[@]}"
+do
+  rm -f "$zimfilename".zim
+  make__"$zimfilename"__zim \
+  && test -f "$zimfilename".zim \
+  && echo "$zimfilename.zim was successfully created" \
+  || die "Failed to create $zimfilename.zim"
+done
