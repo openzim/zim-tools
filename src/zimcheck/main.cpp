@@ -300,7 +300,7 @@ int main (int argc, char **argv)
          * By looping on the articles first, we have :
          *
          * for (article: articles) {
-         *     data = article->getData() {
+         *     data = article->getData();
          *     for (test: tests) {
          *         ...
          *     }
@@ -336,7 +336,7 @@ int main (int argc, char **argv)
 
         error.report(error_details);
         std::cout << "[INFO] Overall Test Status: ";
-        if( error.overalStatus())
+        if( error.overallStatus())
         {
             std::cout << "Pass" << std::endl;
             status_code = PASS;

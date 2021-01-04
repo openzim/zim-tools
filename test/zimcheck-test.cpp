@@ -11,10 +11,10 @@ TEST(zimfilechecks, test_checksum)
 
     zim::Archive archive(fn);
     ErrorLogger logger;
-    
+
     test_checksum(archive, logger);
 
-    ASSERT_TRUE(logger.overalStatus());
+    ASSERT_TRUE(logger.overallStatus());
 }
 
 TEST(zimfilechecks, test_metadata)
@@ -23,10 +23,10 @@ TEST(zimfilechecks, test_metadata)
 
     zim::Archive archive(fn);
     ErrorLogger logger;
-    
+
     test_metadata(archive, logger);
 
-    ASSERT_TRUE(logger.overalStatus());
+    ASSERT_TRUE(logger.overallStatus());
 }
 
 TEST(zimfilechecks, test_favicon)
@@ -35,10 +35,10 @@ TEST(zimfilechecks, test_favicon)
 
     zim::Archive archive(fn);
     ErrorLogger logger;
-    
+
     test_favicon(archive, logger);
 
-    ASSERT_TRUE(logger.overalStatus());
+    ASSERT_TRUE(logger.overallStatus());
 }
 
 TEST(zimfilechecks, test_mainpage)
@@ -47,10 +47,10 @@ TEST(zimfilechecks, test_mainpage)
 
     zim::Archive archive(fn);
     ErrorLogger logger;
-    
+
     test_mainpage(archive, logger);
 
-    ASSERT_TRUE(logger.overalStatus());
+    ASSERT_TRUE(logger.overallStatus());
 }
 
 TEST(zimfilechecks, test_articles)
@@ -61,8 +61,8 @@ TEST(zimfilechecks, test_articles)
     ErrorLogger logger;
     ProgressBar progress(1);
 
-    
+
     test_articles(archive, logger, progress, true, true, true ,true);
 
-    ASSERT_TRUE(logger.overalStatus());
+    ASSERT_TRUE(logger.overallStatus());
 }

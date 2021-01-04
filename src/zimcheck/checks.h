@@ -96,7 +96,7 @@ class ErrorLogger {
         }
     }
 
-    inline bool overalStatus() const {
+    inline bool overallStatus() const {
         return std::all_of(testStatus.begin(), testStatus.end(),
                            [](std::pair<TestType, bool> e){
                                     if (errormapping[e.first].first == LogTag::ERROR)
