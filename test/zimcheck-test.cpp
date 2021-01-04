@@ -89,6 +89,24 @@ public:
 
 int zimcheck (const std::vector<const char*>& args);
 
+TEST(zimcheck, checksum_goodzimfile)
+{
+    CapturedStdout zimcheck_output;
+    ASSERT_EQ(0, zimcheck({
+      "zimcheck",
+      "-C",
+      "data/zimfiles/good.zim"
+    }));
+
+    ASSERT_EQ(
+      "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
+      "[INFO] Verifying Internal Checksum..." "\n"
+      "[INFO] Overall Test Status: Pass" "\n"
+      "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+      , std::string(zimcheck_output)
+    );
+}
+
 TEST(zimcheck, nooptions_goodzimfile)
 {
     CapturedStdout zimcheck_output;
