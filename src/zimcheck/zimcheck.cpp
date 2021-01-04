@@ -68,7 +68,7 @@ void displayHelp()
     return;
 }
 
-int main (int argc, char **argv)
+int zimcheck (int argc, char **argv)
 {
     // To calculate the total time taken by the program to run.
     time_t startTime,endTime;
