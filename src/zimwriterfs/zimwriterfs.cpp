@@ -60,11 +60,14 @@ std::string redirectsPath;
 std::string zimPath;
 std::string directoryPath;
 
+
+int threads = 4;
 int minChunkSize = 2048;
 
 bool verboseFlag = false;
 bool withoutFTIndex = false;
 bool zstdFlag = false;
+bool noUuid = false;
 }
 
 // Global flags
@@ -136,6 +139,8 @@ void usage()
   std::cout
       << "\t-m, --minChunkSize\tnumber of bytes per ZIM cluster (default: 2048)"
       << std::endl;
+  std::cout << "\t-J, --threads\tcount of threads to utilize (default: 4)"
+      << std::endl;
   std::cout << "\t-x, --inflateHtml\ttry to inflate HTML files before packing "
                "(*.html, *.htm, ...)"
             << std::endl;
@@ -156,6 +161,8 @@ void usage()
             << std::endl;
   std::cout << "\t-z, --zstd\t\tuse Zstandard as ZIM compression (lzma otherwise)"
             << std::endl;
+  // --no-uuid is a dev option, let's keep it secret
+  // std::cout << "\t-U, --no-uuid\t\tdon't generate a random UUID" << std::endl;
   std::cout << std::endl;
 
   std::cout << "Example:" << std::endl;
@@ -197,6 +204,8 @@ void parse_args(int argc, char** argv)
          {"publisher", required_argument, 0, 'p'},
          {"zstd", no_argument, 0, 'z'},
          {"withoutFTIndex", no_argument, 0, 'j'},
+         {"threads", required_argument, 0, 'J'},
+         {"no-uuid", no_argument, 0, 'U'},
 
          // Only for backward compatibility
          {"withFullTextIndex", no_argument, 0, 'i'},
@@ -207,7 +216,7 @@ void parse_args(int argc, char** argv)
 
   do {
     c = getopt_long(
-        argc, argv, "hVvijxuzw:m:f:t:d:c:l:p:r:e:n:", long_options, &option_index);
+        argc, argv, "hVvijxuzw:m:f:t:d:c:l:p:r:e:n:J:U", long_options, &option_index);
 
     if (c != -1) {
       switch (c) {
@@ -275,6 +284,12 @@ void parse_args(int argc, char** argv)
           break;
         case 'z':
           zstdFlag = true;
+          break;
+        case 'J':
+          threads = atoi(optarg);
+          break;
+        case 'U':
+          noUuid = true;
           break;
       }
     }
@@ -346,9 +361,13 @@ void create_zim()
 {
   ZimCreatorFS zimCreator(directoryPath);
   zimCreator.configVerbose(isVerbose())
+            .configNbWorkers(threads)
             .configMinClusterSize(minChunkSize)
             .configIndexing(!withoutFTIndex, language)
             .configCompression(zstdFlag ? zim::zimcompZstd : zim::zimcompLzma);
+  if ( noUuid ) {
+    zimCreator.setUuid(zim::Uuid());
+  }
   if (zimPath.size() >= (MAXPATHLEN-1)) {
     throw std::invalid_argument("Target .zim file path is too long");
   }
