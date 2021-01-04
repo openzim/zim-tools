@@ -95,6 +95,8 @@ int zimcheck (const std::vector<const char*>& args)
     StatusCode status_code = PASS;
 
     //Parsing through arguments using getopt_long(). Both long and short arguments are allowed.
+    optind = 1; // reset getopt_long(), so that zimcheck() works correctly if
+                // called more than once
     while (1)
     {
         static struct option long_options[] =
