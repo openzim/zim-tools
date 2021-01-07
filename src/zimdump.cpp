@@ -60,7 +60,7 @@ inline static void createdir(const std::string &path, const std::string &base)
     while(position != std::string::npos) {
         position = path.find('/', position+1);
         if (position != std::string::npos) {
-            std::string fulldir = base + path.substr(0, position);
+            std::string fulldir = base + SEPARATOR + path.substr(0, position);
             #if defined(_WIN32)
             std::wstring wfulldir = converter.from_bytes(fulldir);
             CreateDirectoryW(wfulldir.c_str(), NULL);
@@ -308,8 +308,8 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
     std::string filename = path;
     auto position = path.find_last_of('/');
     if (position != std::string::npos) {
-        dir = path.substr(0, position);
-        filename = path.substr(position);
+        dir = path.substr(0, position + 1);
+        filename = path.substr(position + 1);
         if (find(pathcache.begin(), pathcache.end(), dir) == pathcache.end()) {
             createdir(dir, directory);
             pathcache.push_back(dir);
@@ -325,7 +325,7 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
     }
 
     std::stringstream ss;
-    ss << dir << SEPARATOR << filename;
+    ss << dir << filename;
     std::string relative_path = ss.str();
     std::string full_path = directory + SEPARATOR + relative_path;
 
