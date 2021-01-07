@@ -53,9 +53,6 @@ std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 
 inline static void createdir(const std::string &path, const std::string &base)
 {
-    if (path.size() <= 1)
-        return ;
-
     std::size_t position = 0;
     while(position != std::string::npos) {
         position = path.find('/', position+1);
@@ -347,7 +344,7 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
 #else
             if (symlink(redirectPath.c_str(), full_path.c_str()) != 0) {
               throw std::runtime_error(
-                std::string("Error creating symlink from ") + redirectPath + " to " + full_path);
+                std::string("Error creating symlink from ") + full_path + " to " + redirectPath);
             }
 #endif
         }
@@ -416,7 +413,14 @@ int subcmdDump(ZimDumper &app,  std::map<std::string, docopt::value> &args)
         std::string nspace = args["--ns"].asString();
         filter = [nspace](const char c){ return nspace.at(0) == c; };
     }
-    return subcmdDumpAll(app, args["--dir"].asString(), redirect, filter);
+    
+    std::string directory = args["--dir"].asString();
+
+    if (*directory.rbegin() == '/'){
+      directory.pop_back();
+    }
+
+    return subcmdDumpAll(app, directory, redirect, filter);
 }
 
 int subcmdShow(ZimDumper &app,  std::map<std::string, docopt::value> &args)
