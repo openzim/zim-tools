@@ -1,8 +1,12 @@
 name: Docker
 
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Specific version to build (overrides on-master and tag-pattern)
+        required: false
+        default: ''
 
 jobs:
   build-and-push:
@@ -11,16 +15,18 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build and push
-        uses: openzim/docker-publish-action@v3
+        uses: openzim/docker-publish-action@v5
         with:
-          image-path: openzim/zim-tools
+          image-name: openzim/zim-tools
           tag-pattern: /^([0-9.]+)$/
           latest-on-tag: true
           restrict-to: openzim/zim-tools
           dockerfile: docker/Dockerfile
           build-args:
-            VERSION: {version}
-          hub-username: ${{ secrets.DOCKERHUB_USERNAME }}
-          hub-password: ${{ secrets.DOCKERHUB_PASSWORD }}
-          ghcr-username: ${{ secrets.GHCR_USERNAME }}
-          ghcr-token: ${{ secrets.GHCR_TOKEN }}
+            VERSION={tag}
+          credentials:
+            DOCKERIO_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+            DOCKERIO_TOKEN=${{ secrets.DOCKERHUB_PASSWORD }}
+            GHCRIO_USERNAME=${{ secrets.GHCR_USERNAME }}
+            GHCRIO_TOKEN=${{ secrets.GHCR_TOKEN }}
+          manual-tag: ${{ github.event.inputs.version }}
