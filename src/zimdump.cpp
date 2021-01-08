@@ -417,12 +417,11 @@ int subcmdDump(ZimDumper &app,  std::map<std::string, docopt::value> &args)
     std::string directory = args["--dir"].asString();
 
     if (directory.empty()) {
-              throw std::runtime_error(
-                std::string("Directory cannot be empty."));
+        throw std::runtime_error("Directory cannot be empty.");
     }
 
     if (directory.back() == '/'){
-      directory.pop_back();
+        directory.pop_back();
     }
 
     return subcmdDumpAll(app, directory, redirect, filter);
