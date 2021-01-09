@@ -53,14 +53,11 @@ std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 
 inline static void createdir(const std::string &path, const std::string &base)
 {
-    if (path.size() <= 1)
-        return ;
-
     std::size_t position = 0;
     while(position != std::string::npos) {
         position = path.find('/', position+1);
         if (position != std::string::npos) {
-            std::string fulldir = base + path.substr(0, position);
+            std::string fulldir = base + SEPARATOR + path.substr(0, position);
             #if defined(_WIN32)
             std::wstring wfulldir = converter.from_bytes(fulldir);
             CreateDirectoryW(wfulldir.c_str(), NULL);
@@ -308,8 +305,8 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
     std::string filename = path;
     auto position = path.find_last_of('/');
     if (position != std::string::npos) {
-        dir = path.substr(0, position);
-        filename = path.substr(position);
+        dir = path.substr(0, position + 1);
+        filename = path.substr(position + 1);
         if (find(pathcache.begin(), pathcache.end(), dir) == pathcache.end()) {
             createdir(dir, directory);
             pathcache.push_back(dir);
@@ -325,7 +322,7 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
     }
 
     std::stringstream ss;
-    ss << dir << SEPARATOR << filename;
+    ss << dir << filename;
     std::string relative_path = ss.str();
     std::string full_path = directory + SEPARATOR + relative_path;
 
@@ -347,7 +344,7 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
 #else
             if (symlink(redirectPath.c_str(), full_path.c_str()) != 0) {
               throw std::runtime_error(
-                std::string("Error creating symlink from ") + redirectPath + " to " + full_path);
+                std::string("Error creating symlink from ") + full_path + " to " + redirectPath);
             }
 #endif
         }
@@ -416,7 +413,18 @@ int subcmdDump(ZimDumper &app,  std::map<std::string, docopt::value> &args)
         std::string nspace = args["--ns"].asString();
         filter = [nspace](const char c){ return nspace.at(0) == c; };
     }
-    return subcmdDumpAll(app, args["--dir"].asString(), redirect, filter);
+    
+    std::string directory = args["--dir"].asString();
+
+    if (directory.empty()) {
+        throw std::runtime_error("Directory cannot be empty.");
+    }
+
+    if (directory.back() == '/'){
+        directory.pop_back();
+    }
+
+    return subcmdDumpAll(app, directory, redirect, filter);
 }
 
 int subcmdShow(ZimDumper &app,  std::map<std::string, docopt::value> &args)
