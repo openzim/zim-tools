@@ -235,8 +235,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
 
                         reporter.setTestResult(TestType::REDUNDANT, false);
                         std::ostringstream ss;
-                        ss << e1.getTitle() << " (idx " << e1.getIndex() << ") and "
-                           << e2.getTitle() << " (idx " << e2.getIndex() << ")";
+                        ss << e1.getPath() << " and " << e2.getPath();
                         reporter.addReportMsg(TestType::REDUNDANT, ss.str());
                     }
                     l.swap(articlesDifferentFromE1);
