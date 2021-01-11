@@ -18,7 +18,6 @@ jobs:
         uses: openzim/docker-publish-action@v5
         with:
           image-name: openzim/zim-tools
-          tag-pattern: /^([0-9.]+)$/
           latest-on-tag: true
           restrict-to: openzim/zim-tools
           dockerfile: docker/Dockerfile
