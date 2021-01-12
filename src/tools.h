@@ -126,6 +126,10 @@ class ItemProvider : public zim::writer::ContentProvider
     }
 };
 
+// Guess if the item is a front article.
+// This is not a exact science, we use the mimetype to infer it.
+bool guess_is_front_article(const std::string& mimetype);
+
 
 class CopyItem : public zim::writer::Item         //Article class that will be passed to the zimwriter. Contains a zim::Article class, so it is easier to add a
 {
@@ -155,6 +159,10 @@ class CopyItem : public zim::writer::Item         //Article class that will be p
     std::unique_ptr<zim::writer::ContentProvider> getContentProvider() const
     {
        return std::unique_ptr<zim::writer::ContentProvider>(new ItemProvider(item));
+    }
+
+    zim::writer::Hints getHints() const {
+      return { { zim::writer::HintKeys::FRONT_ARTICLE, guess_is_front_article(item.getMimetype()) } };
     }
 };
 

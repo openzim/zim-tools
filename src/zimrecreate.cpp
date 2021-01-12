@@ -89,6 +89,10 @@ class PatchItem : public zim::writer::Item
         }
         return std::unique_ptr<zim::writer::ContentProvider>(new zim::writer::StringProvider(content));
     }
+
+  zim::writer::Hints getHints() const {
+    return { { zim::writer::HintKeys::FRONT_ARTICLE, guess_is_front_article(item.getMimetype()) } };
+  }
 };
 
 
@@ -134,7 +138,7 @@ void create(const std::string& originFilename, const std::string& outFilename, b
     if (fromNewNamespace) {
       //easy, just "copy" the item.
       if (entry.isRedirect()) {
-        zimCreator.addRedirection(entry.getPath(), entry.getTitle(), entry.getRedirectEntry().getPath());
+        zimCreator.addRedirection(entry.getPath(), entry.getTitle(), entry.getRedirectEntry().getPath(), {{zim::writer::HintKeys::FRONT_ARTICLE, 1}});
       } else {
         auto tmpItem = std::shared_ptr<zim::writer::Item>(new CopyItem(entry.getItem()));
         zimCreator.addItem(tmpItem);

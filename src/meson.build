@@ -18,11 +18,11 @@ executable('zimdump', 'zimdump.cpp', 'tools.cpp',
   dependencies: [libzim_dep, docopt_dep],
   install: true)
 
-executable('zimdiff', 'zimdiff.cpp',
+executable('zimdiff', ['zimdiff.cpp', 'tools.cpp'],
   dependencies: libzim_dep,
   install: true)
 
-executable('zimpatch', 'zimpatch.cpp',
+executable('zimpatch', ['zimpatch.cpp', 'tools.cpp'],
   dependencies: libzim_dep,
   install: true)
 

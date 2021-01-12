@@ -527,3 +527,8 @@ std::string httpRedirectHtml(const std::string& redirectUrl)
           "</html>";
     return ss.str();
 }
+
+bool guess_is_front_article(const std::string& mimetype) {
+  return ( mimetype.find("text/html") == 0
+        && mimetype.find("raw=true") == std::string::npos);
+}

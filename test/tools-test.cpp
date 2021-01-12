@@ -301,3 +301,12 @@ TEST(tools, httpRedirectHtml)
       "</html>"
     );
 }
+
+TEST(tools, guessFrontArticle)
+{
+  ASSERT_TRUE(guess_is_front_article("text/html"));
+  ASSERT_TRUE(guess_is_front_article("text/html;charset=utf8"));
+  ASSERT_FALSE(guess_is_front_article("plain/text"));
+  ASSERT_FALSE(guess_is_front_article("some-text/html"));
+  ASSERT_FALSE(guess_is_front_article("text/html;raw=true"));
+}
