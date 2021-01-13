@@ -133,9 +133,8 @@ Like for the installation, you might need to run the command as user
 Docker
 ------
 
-A Docker image with `zimwriterfs` can be built from the `docker`
-directory. The project maintains an official image available at
-https://hub.docker.com/r/openzim/mwoffliner.
+A Docker image with `zimwriterfs`, `zimcheck`,`zimdump` and all the other tools can be built from the `docker`
+directory. The project maintains an official image available at https://hub.docker.com/r/openzim/zim-tools.
 
 Troubleshooting
 ---------------
