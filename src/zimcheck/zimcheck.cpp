@@ -96,6 +96,7 @@ int zimcheck (const std::vector<const char*>& args)
     //Parsing through arguments using getopt_long(). Both long and short arguments are allowed.
     optind = 1; // reset getopt_long(), so that zimcheck() works correctly if
                 // called more than once
+    opterr = 0; // silence getopt_long()
     while (1)
     {
         static struct option long_options[] =
@@ -192,18 +193,8 @@ int zimcheck (const std::vector<const char*>& args)
             help=true;
             break;
         case '?':
-            if (optopt == 'c')
-            {
-              std::cerr<<"Option "<<(char)optopt<<" requires an argument.\n";
-              displayHelp();
-            }
-            else if ( isprint (optopt) )
-              std::cerr<<"Unknown option `"<<( char )optopt<<"'.\n";
-            else
-            {
-                std::cerr<<"Unknown option\n";
-                displayHelp();
-            }
+            std::cerr<<"Unknown option `" << argv[optind-1] << "'\n";
+            displayHelp();
             return 1;
         case 'V':
         case 'v':

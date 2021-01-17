@@ -384,6 +384,28 @@ TEST(zimcheck, all_checks_goodzimfile)
     );
 }
 
+TEST(zimcheck, invalid_option)
+{
+    {
+      CapturedStdout zimcheck_output;
+      CapturedStderr zimcheck_stderr;
+      ASSERT_EQ(1, zimcheck({"zimcheck", "-z", GOOD_ZIMFILE}));
+      ASSERT_EQ("Unknown option `-z'\n", std::string(zimcheck_stderr));
+      ASSERT_EQ(zimcheck_help_message, std::string(zimcheck_output));
+    }
+}
+
+TEST(zimcheck, invalid_long_option)
+{
+    {
+      CapturedStdout zimcheck_output;
+      CapturedStderr zimcheck_stderr;
+      ASSERT_EQ(1, zimcheck({"zimcheck", "--oops", GOOD_ZIMFILE}));
+      ASSERT_EQ("Unknown option `--oops'\n", std::string(zimcheck_stderr));
+      ASSERT_EQ(zimcheck_help_message, std::string(zimcheck_output));
+    }
+}
+
 TEST(zimcheck, bad_checksum)
 {
     const std::string expected_output(
