@@ -291,6 +291,24 @@ TEST(zimcheck, favicon_goodzimfile)
     );
 }
 
+TEST(zimcheck, mainpage_goodzimfile)
+{
+    const std::string expected_output(
+        "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
+        "[INFO] Searching for main page..." "\n"
+        "[INFO] Overall Test Status: Pass" "\n"
+        "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+    );
+
+    test_zimcheck_single_option(
+        {"-p", "-P", "--main"},
+        GOOD_ZIMFILE,
+        0,
+        expected_output,
+        EMPTY_STDERR
+    );
+}
+
 const std::string ALL_CHECKS_OUTPUT_ON_GOODZIMFILE(
       "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
       "[INFO] Verifying ZIM-archive structure integrity..." "\n"
@@ -379,6 +397,26 @@ TEST(zimcheck, favicon_poorzimfile)
 
     test_zimcheck_single_option(
         {"-f", "-F", "--favicon"},
+        POOR_ZIMFILE,
+        1,
+        expected_stdout,
+        EMPTY_STDERR
+    );
+}
+
+TEST(zimcheck, mainpage_poorzimfile)
+{
+    const std::string expected_stdout(
+      "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
+      "[INFO] Searching for main page..." "\n"
+      "[ERROR] Missing mainpage:" "\n"
+      "  Main Page Index stored in Archive Header: 4294967295" "\n"
+      "[INFO] Overall Test Status: Fail" "\n"
+      "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+    );
+
+    test_zimcheck_single_option(
+        {"-p", "-P", "--main"},
         POOR_ZIMFILE,
         1,
         expected_stdout,
