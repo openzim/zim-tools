@@ -180,22 +180,34 @@ TEST(zimcheck, nozimfile)
     }
 }
 
+const char GOOD_ZIMFILE[] = "data/zimfiles/good.zim";
+const char POOR_ZIMFILE[] = "data/zimfiles/poor.zim";
+const char BAD_CHECKSUM_ZIMFILE[] = "data/zimfiles/bad_checksum.zim";
+
 TEST(zimcheck, checksum_goodzimfile)
 {
-    CapturedStdout zimcheck_output;
-    ASSERT_EQ(0, zimcheck({
-      "zimcheck",
-      "-C",
-      "data/zimfiles/good.zim"
-    }));
-
-    ASSERT_EQ(
-      "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
-      "[INFO] Verifying Internal Checksum..." "\n"
-      "[INFO] Overall Test Status: Pass" "\n"
-      "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
-      , std::string(zimcheck_output)
+    const std::string expected_output(
+        "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
+        "[INFO] Verifying Internal Checksum..." "\n"
+        "[INFO] Overall Test Status: Pass" "\n"
+        "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
     );
+
+    {
+      CapturedStdout zimcheck_output;
+      ASSERT_EQ(0, zimcheck({"zimcheck", "-c", GOOD_ZIMFILE}));
+      ASSERT_EQ(expected_output, std::string(zimcheck_output));
+    }
+    {
+      CapturedStdout zimcheck_output;
+      ASSERT_EQ(0, zimcheck({"zimcheck", "-C", GOOD_ZIMFILE}));
+      ASSERT_EQ(expected_output, std::string(zimcheck_output));
+    }
+    {
+      CapturedStdout zimcheck_output;
+      ASSERT_EQ(0, zimcheck({"zimcheck", "--checksum", GOOD_ZIMFILE}));
+      ASSERT_EQ(expected_output, std::string(zimcheck_output));
+    }
 }
 
 const std::string ALL_CHECKS_OUTPUT_ON_GOODZIMFILE(
@@ -215,7 +227,7 @@ const std::string ALL_CHECKS_OUTPUT_ON_GOODZIMFILE(
 TEST(zimcheck, nooptions_goodzimfile)
 {
     CapturedStdout zimcheck_output;
-    ASSERT_EQ(0, zimcheck({"zimcheck", "data/zimfiles/good.zim"}));
+    ASSERT_EQ(0, zimcheck({"zimcheck", GOOD_ZIMFILE}));
 
     ASSERT_EQ(ALL_CHECKS_OUTPUT_ON_GOODZIMFILE, std::string(zimcheck_output));
 }
@@ -224,31 +236,24 @@ TEST(zimcheck, all_checks_goodzimfile)
 {
   {
     CapturedStdout zimcheck_output;
-    ASSERT_EQ(0, zimcheck({"zimcheck", "-a", "data/zimfiles/good.zim"}));
+    ASSERT_EQ(0, zimcheck({"zimcheck", "-a", GOOD_ZIMFILE}));
     ASSERT_EQ(ALL_CHECKS_OUTPUT_ON_GOODZIMFILE, std::string(zimcheck_output));
   }
   {
     CapturedStdout zimcheck_output;
-    ASSERT_EQ(0, zimcheck({"zimcheck", "-A", "data/zimfiles/good.zim"}));
+    ASSERT_EQ(0, zimcheck({"zimcheck", "-A", GOOD_ZIMFILE}));
     ASSERT_EQ(ALL_CHECKS_OUTPUT_ON_GOODZIMFILE, std::string(zimcheck_output));
   }
   {
     CapturedStdout zimcheck_output;
-    ASSERT_EQ(0, zimcheck({"zimcheck", "--all", "data/zimfiles/good.zim"}));
+    ASSERT_EQ(0, zimcheck({"zimcheck", "--all", GOOD_ZIMFILE}));
     ASSERT_EQ(ALL_CHECKS_OUTPUT_ON_GOODZIMFILE, std::string(zimcheck_output));
   }
 }
 
 TEST(zimcheck, bad_checksum)
 {
-    CapturedStdout zimcheck_output;
-    ASSERT_EQ(1, zimcheck({
-      "zimcheck",
-      "-C",
-      "data/zimfiles/bad_checksum.zim"
-    }));
-
-    ASSERT_EQ(
+    const std::string expected_output(
       "[INFO] Checking zim file data/zimfiles/bad_checksum.zim" "\n"
       "[INFO] Verifying Internal Checksum..." "\n"
       "  [ERROR] Wrong Checksum in ZIM archive" "\n"
@@ -257,8 +262,23 @@ TEST(zimcheck, bad_checksum)
       "" "\n"
       "[INFO] Overall Test Status: Fail" "\n"
       "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
-      , std::string(zimcheck_output)
     );
+
+    {
+      CapturedStdout zimcheck_output;
+      ASSERT_EQ(1, zimcheck({"zimcheck", "-c", BAD_CHECKSUM_ZIMFILE}));
+      ASSERT_EQ(expected_output, std::string(zimcheck_output));
+    }
+    {
+      CapturedStdout zimcheck_output;
+      ASSERT_EQ(1, zimcheck({"zimcheck", "-C", BAD_CHECKSUM_ZIMFILE}));
+      ASSERT_EQ(expected_output, std::string(zimcheck_output));
+    }
+    {
+      CapturedStdout zimcheck_output;
+      ASSERT_EQ(1, zimcheck({"zimcheck", "--checksum", BAD_CHECKSUM_ZIMFILE}));
+      ASSERT_EQ(expected_output, std::string(zimcheck_output));
+    }
 }
 
 const std::string ALL_CHECKS_OUTPUT_ON_POORZIMFILE(
@@ -296,7 +316,7 @@ const std::string ALL_CHECKS_OUTPUT_ON_POORZIMFILE(
 TEST(zimcheck, nooptions_poorzimfile)
 {
     CapturedStdout zimcheck_output;
-    ASSERT_EQ(1, zimcheck({"zimcheck", "data/zimfiles/poor.zim"}));
+    ASSERT_EQ(1, zimcheck({"zimcheck", POOR_ZIMFILE}));
 
     ASSERT_EQ(ALL_CHECKS_OUTPUT_ON_POORZIMFILE, std::string(zimcheck_output));
 }
@@ -305,17 +325,17 @@ TEST(zimcheck, all_checks_poorzimfile)
 {
   {
     CapturedStdout zimcheck_output;
-    ASSERT_EQ(1, zimcheck({"zimcheck", "-a", "data/zimfiles/poor.zim"}));
+    ASSERT_EQ(1, zimcheck({"zimcheck", "-a", POOR_ZIMFILE}));
     ASSERT_EQ(ALL_CHECKS_OUTPUT_ON_POORZIMFILE, std::string(zimcheck_output));
   }
   {
     CapturedStdout zimcheck_output;
-    ASSERT_EQ(1, zimcheck({"zimcheck", "-A", "data/zimfiles/poor.zim"}));
+    ASSERT_EQ(1, zimcheck({"zimcheck", "-A", POOR_ZIMFILE}));
     ASSERT_EQ(ALL_CHECKS_OUTPUT_ON_POORZIMFILE, std::string(zimcheck_output));
   }
   {
     CapturedStdout zimcheck_output;
-    ASSERT_EQ(1, zimcheck({"zimcheck", "--all", "data/zimfiles/poor.zim"}));
+    ASSERT_EQ(1, zimcheck({"zimcheck", "--all", POOR_ZIMFILE}));
     ASSERT_EQ(ALL_CHECKS_OUTPUT_ON_POORZIMFILE, std::string(zimcheck_output));
   }
 }
