@@ -116,7 +116,6 @@ const std::string zimcheck_help_message(
   "-R , --redundant       Redundant data check\n"
   "-U , --url_internal    URL check - Internal URLs\n"
   "-X , --url_external    URL check - External URLs\n"
-  "-E , --mime            MIME checks\n"
   "-D , --details         Details of error\n"
   "-B , --progress        Print progress report\n"
   "-H , --help            Displays Help\n"

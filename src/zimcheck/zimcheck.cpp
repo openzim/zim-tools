@@ -56,7 +56,6 @@ void displayHelp()
              "-R , --redundant       Redundant data check\n"
              "-U , --url_internal    URL check - Internal URLs\n"
              "-X , --url_external    URL check - External URLs\n"
-             "-E , --mime            MIME checks\n"
              "-D , --details         Details of error\n"
              "-B , --progress        Print progress report\n"
              "-H , --help            Displays Help\n"
@@ -112,7 +111,6 @@ int zimcheck (const std::vector<const char*>& args)
             { "redundant",    no_argument, 0, 'R'},
             { "url_internal", no_argument, 0, 'U'},
             { "url_external", no_argument, 0, 'X'},
-            { "mime",         no_argument, 0, 'E'},
             { "details",      no_argument, 0, 'D'},
             { "help",         no_argument, 0, 'H'},
             { "version",      no_argument, 0, 'V'},
@@ -177,11 +175,6 @@ int zimcheck (const std::vector<const char*>& args)
         case 'X':
         case 'x':
             enabled_tests.enable(TestType::URL_EXTERNAL);
-            no_args = false;
-            break;
-        case 'E':
-        case 'e':
-            enabled_tests.enable(TestType::MIME);
             no_args = false;
             break;
         case 'D':
@@ -299,29 +292,6 @@ int zimcheck (const std::vector<const char*>& args)
              enabled_tests.isEnabled(TestType::EMPTY) )
           test_articles(archive, error, progress, enabled_tests);
 
-
-        //Test 8: Verifying MIME Types
-        //MIME Checks is intended to verify that all the MIME types of all different articles are listed in the file header.
-        //As of now, there is no method in the existing zimlib to get the list of MIME types listed in the file header.
-        //A bug has been reported for the above problem, and once the bug is fixed, it will be used to add MIME checks to the zimcheck tool.
-        /*
-                if(mime_check)
-                {
-                    std::cout<<"\nTest 8: Verifying MIME Types.. \n"<<std::flush;
-                    progress.reset(articleCount);
-                    test_=true;
-                    for (zim::File::const_iterator it = f.begin(); it != f.end(); ++it)
-                    {
-                        progress.report();
-                    }
-                    if(test_)
-                        std::cout<<"\nPass\n";
-                    else
-                    {
-                        std::cout<<"\nFail\n";
-                    }
-                }
-        */
 
         error.report(error_details);
         std::cout << "[INFO] Overall Test Status: ";
