@@ -82,7 +82,7 @@ void test_mainpage(const zim::Archive& archive, ErrorLogger& reporter) {
 
 
 void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressBar progress,
-                   bool redundant_data, bool url_check, bool url_check_external, bool empty_check) {
+                   const EnabledTests checks) {
     std::cout << "[INFO] Verifying Articles' content..." << std::endl;
     // Article are store in a map<hash, list<index>>.
     // So all article with the same hash will be stored in the same list.
@@ -100,7 +100,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
             continue;
         }
 
-        if (empty_check && (ns=='A' || ns == 'I')) {
+        if (checks.isEnabled(TestType::EMPTY) && (ns=='A' || ns == 'I')) {
             auto item = entry.getItem();
             if (item.getSize() == 0) {
                 std::ostringstream ss;
@@ -117,21 +117,22 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
         }
 
         std::string data;
-        if (redundant_data || item.getMimetype() == "text/html")
+        if (checks.isEnabled(TestType::REDUNDANT) || item.getMimetype() == "text/html")
             data = item.getData();
 
-        if(redundant_data)
+        if(checks.isEnabled(TestType::REDUNDANT))
             hash_main[adler32(data)].push_back( item.getIndex() );
 
         if (item.getMimetype() != "text/html")
             continue;
 
         std::vector<html_link> links;
-        if (url_check || url_check_external) {
+        if (checks.isEnabled(TestType::URL_INTERNAL) ||
+            checks.isEnabled(TestType::URL_EXTERNAL)) {
             links = generic_getLinks(data);
         }
 
-        if(url_check)
+        if(checks.isEnabled(TestType::URL_INTERNAL))
         {
             auto baseUrl = path;
             auto pos = baseUrl.find_last_of('/');
@@ -191,7 +192,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
             }
         }
 
-        if (url_check_external)
+        if (checks.isEnabled(TestType::URL_EXTERNAL))
         {
             for (const auto &l: links)
             {
@@ -207,7 +208,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
         }
     }
 
-    if (redundant_data)
+    if (checks.isEnabled(TestType::REDUNDANT))
     {
         std::cout << "[INFO] Searching for redundant articles..." << std::endl;
         std::cout << "  Verifying Similar Articles for redundancies..." << std::endl;

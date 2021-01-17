@@ -80,16 +80,7 @@ int zimcheck (int argc, char **argv)
     // program to execute the different parts of the program.
 
     bool run_all = false;
-    bool checksum = false;
-    bool metadata = false;
-    bool favicon = false;
-    bool main_page = false;
-    bool redundant_data = false;
-    bool integrity = false;
-    bool url_check = false;
-    bool url_check_external = false;
-    bool empty_check = false;
-    bool mime_check = false;
+    EnabledTests enabled_tests;
     bool error_details = false;
     bool no_args = true;
     bool help = false;
@@ -136,21 +127,21 @@ int zimcheck (int argc, char **argv)
             no_args = false;
             break;
         case '0':
-            empty_check = true;
+            enabled_tests.enable(TestType::EMPTY);
             break;
         case 'C':
         case 'c':
-            checksum = true;
+            enabled_tests.enable(TestType::CHECKSUM);
             no_args = false;
             break;
         case 'I':
         case 'i':
-            integrity = true;
+            enabled_tests.enable(TestType::INTEGRITY);
             no_args = false;
             break;
         case 'M':
         case 'm':
-            metadata = true;
+            enabled_tests.enable(TestType::METADATA);
             no_args = false;
             break;
         case 'B':
@@ -159,32 +150,32 @@ int zimcheck (int argc, char **argv)
             break;
         case 'F':
         case 'f':
-            favicon = true;
+            enabled_tests.enable(TestType::FAVICON);
             no_args = false;
             break;
         case 'P':
         case 'p':
-            main_page = true;
+            enabled_tests.enable(TestType::MAIN_PAGE);
             no_args = false;
             break;
         case 'R':
         case 'r':
-            redundant_data = true;
+            enabled_tests.enable(TestType::REDUNDANT);
             no_args = false;
             break;
         case 'U':
         case 'u':
-            url_check = true;
+            enabled_tests.enable(TestType::URL_INTERNAL);
             no_args = false;
             break;
         case 'X':
         case 'x':
-            url_check_external = true;
+            enabled_tests.enable(TestType::URL_EXTERNAL);
             no_args = false;
             break;
         case 'E':
         case 'e':
-            mime_check = true;
+            enabled_tests.enable(TestType::MIME);
             no_args = false;
             break;
         case 'D':
@@ -228,8 +219,7 @@ int zimcheck (int argc, char **argv)
     //If no arguments are given to the program, all the tests are performed.
     if ( run_all || no_args )
     {
-        checksum = integrity = metadata = favicon = main_page = redundant_data =
-          url_check = url_check_external = mime_check = empty_check = true;
+        enabled_tests.enableAll();
     }
 
     //Obtaining filename from argument list
@@ -253,7 +243,7 @@ int zimcheck (int argc, char **argv)
         std::cout << "[INFO] Checking zim file " << filename << std::endl;
 
         //Test 0: Low-level ZIM-file structure integrity checks
-        if(integrity)
+        if(enabled_tests.isEnabled(TestType::INTEGRITY))
             test_integrity(filename, error);
 
         // Does it make sense to do the other checks if the integrity
@@ -261,8 +251,8 @@ int zimcheck (int argc, char **argv)
         zim::Archive archive( filename );
 
         //Test 1: Internal Checksum
-        if(checksum) {
-            if ( integrity ) {
+        if(enabled_tests.isEnabled(TestType::CHECKSUM)) {
+            if ( enabled_tests.isEnabled(TestType::INTEGRITY) ) {
                 std::cout << "[INFO] Avoiding redundant checksum test"
                           << " (already performed by the integrity check)."
                           << std::endl;
@@ -273,16 +263,16 @@ int zimcheck (int argc, char **argv)
 
         //Test 2: Metadata Entries:
         //The file is searched for the compulsory metadata entries.
-        if(metadata)
+        if(enabled_tests.isEnabled(TestType::METADATA))
             test_metadata(archive, error);
 
         //Test 3: Test for Favicon.
-        if(favicon)
+        if(enabled_tests.isEnabled(TestType::FAVICON))
             test_favicon(archive, error);
 
 
         //Test 4: Main Page Entry
-        if(main_page)
+        if(enabled_tests.isEnabled(TestType::MAIN_PAGE))
             test_mainpage(archive, error);
 
         /* Now we want to avoid to loop on the tests but on the article.
@@ -307,8 +297,11 @@ int zimcheck (int argc, char **argv)
          * }
          */
 
-        if ( redundant_data || url_check || url_check_external || empty_check )
-          test_articles(archive, error, progress, redundant_data, url_check, url_check_external, empty_check);
+        if ( enabled_tests.isEnabled(TestType::URL_INTERNAL) ||
+             enabled_tests.isEnabled(TestType::URL_EXTERNAL) ||
+             enabled_tests.isEnabled(TestType::REDUNDANT) ||
+             enabled_tests.isEnabled(TestType::EMPTY) )
+          test_articles(archive, error, progress, enabled_tests);
 
 
         //Test 8: Verifying MIME Types

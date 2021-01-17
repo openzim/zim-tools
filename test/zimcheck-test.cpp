@@ -60,9 +60,8 @@ TEST(zimfilechecks, test_articles)
     zim::Archive archive(fn);
     ErrorLogger logger;
     ProgressBar progress(1);
-
-
-    test_articles(archive, logger, progress, true, true, true ,true);
+    EnabledTests all_checks; all_checks.enableAll();
+    test_articles(archive, logger, progress, all_checks);
 
     ASSERT_TRUE(logger.overallStatus());
 }

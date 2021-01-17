@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 #include <algorithm>
+#include <bitset>
 
 #include "../progress.h"
 
@@ -41,7 +42,9 @@ enum class TestType {
     URL_INTERNAL,
     URL_EXTERNAL,
     MIME,
-    OTHER
+    OTHER,
+
+    COUNT
 };
 
 // Specialization of std::hash needed for our unordered_map. Can be removed in c++14
@@ -63,6 +66,17 @@ static std::unordered_map<TestType, std::pair<LogTag, std::string>> errormapping
     { TestType::URL_EXTERNAL,  {LogTag::ERROR, "Invalid external links found"}},
     { TestType::MIME,       {LogTag::ERROR, "Incoherent mimeType found"}},
     { TestType::OTHER,      {LogTag::ERROR, "Other errors found"}}
+};
+
+class EnabledTests {
+    std::bitset<size_t(TestType::COUNT)> tests;
+
+  public:
+    EnabledTests() {}
+
+    void enableAll() { tests.set(); }
+    void enable(TestType tt) { tests.set(size_t(tt)); }
+    bool isEnabled(TestType tt) const { return tests[size_t(tt)]; }
 };
 
 class ErrorLogger {
@@ -115,6 +129,6 @@ void test_metadata(const zim::Archive& archive, ErrorLogger& reporter);
 void test_favicon(const zim::Archive& archive, ErrorLogger& reporter);
 void test_mainpage(const zim::Archive& archive, ErrorLogger& reporter);
 void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressBar progress,
-                   bool redundant_data, bool url_check, bool url_check_external, bool empty_check);
+                   const EnabledTests enabled_tests);
 
 #endif
