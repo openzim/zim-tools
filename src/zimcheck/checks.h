@@ -82,18 +82,18 @@ class EnabledTests {
 class ErrorLogger {
   private:
     std::unordered_map<TestType, std::vector<std::string>> reportMsgs;
-    std::unordered_map<TestType, bool> testStatus;
+
+    // testStatus[i] corresponds to the status of i'th test
+    std::bitset<size_t(TestType::COUNT)> testStatus;
 
   public:
     ErrorLogger()
     {
-        for (const auto &m : errormapping) {
-            testStatus[m.first] = true;
-        }
+        testStatus.set();
     }
 
     void setTestResult(TestType type, bool status) {
-        testStatus[type] = status;
+        testStatus[size_t(type)] = status;
     }
 
     void addReportMsg(TestType type, const std::string& message) {
@@ -111,14 +111,14 @@ class ErrorLogger {
     }
 
     inline bool overallStatus() const {
-        return std::all_of(testStatus.begin(), testStatus.end(),
-                           [](std::pair<TestType, bool> e){
-                                    if (errormapping[e.first].first == LogTag::ERROR)
-                                    {
-                                        return e.second; //return the test status result
-                                    }
-                                    return true;
-                            });
+        for ( size_t i = 0; i < size_t(TestType::COUNT); ++i ) {
+            if (errormapping[TestType(i)].first == LogTag::ERROR) {
+                if ( testStatus[i] == false ) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 };
 
