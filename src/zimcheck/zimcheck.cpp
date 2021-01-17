@@ -33,6 +33,7 @@
 #include <regex>
 #include <ctime>
 #include <unordered_map>
+#include <cmath>
 
 #include "../progress.h"
 #include "../version.h"
@@ -74,9 +75,7 @@ int zimcheck (const std::vector<const char*>& args)
     const char* const* argv = &args[0];
 
     // To calculate the total time taken by the program to run.
-    time_t startTime,endTime;
-    double  timeDiffference;
-    time( &startTime);
+    const auto starttime = std::chrono::steady_clock::now();
 
     // The boolean values which will be used to store the output from
     // getopt_long().  These boolean values will be then read by the
@@ -344,11 +343,11 @@ int zimcheck (const std::vector<const char*>& args)
             std::cout << "Fail" << std::endl;
             status_code = FAIL;
         }
-        time( &endTime );
 
-        timeDiffference = difftime( endTime , startTime );
-        std::cout << "[INFO] Total time taken by zimcheck: " << timeDiffference << " seconds."<<std::endl;
-
+        const auto endtime = std::chrono::steady_clock::now();
+        const std::chrono::duration<double> runtime(endtime - starttime);
+        const long seconds = lround(runtime.count());
+        std::cout << "[INFO] Total time taken by zimcheck: " << seconds << " seconds." << std::endl;
     }
     catch (const std::exception & e)
     {
