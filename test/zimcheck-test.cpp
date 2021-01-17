@@ -89,6 +89,53 @@ public:
 
 int zimcheck (const std::vector<const char*>& args);
 
+const std::string zimcheck_help_message(
+  "\n"
+  "zimcheck checks the quality of a ZIM file.\n\n"
+  "Usage: zimcheck [options] zimfile\n"
+  "options:\n"
+  "-A , --all             run all tests. Default if no flags are given.\n"
+  "-0 , --empty           Empty content\n"
+  "-C , --checksum        Internal CheckSum Test\n"
+  "-I , --integrity       Low-level correctness/integrity checks\n"
+  "-M , --metadata        MetaData Entries\n"
+  "-F , --favicon         Favicon\n"
+  "-P , --main            Main page\n"
+  "-R , --redundant       Redundant data check\n"
+  "-U , --url_internal    URL check - Internal URLs\n"
+  "-X , --url_external    URL check - External URLs\n"
+  "-E , --mime            MIME checks\n"
+  "-D , --details         Details of error\n"
+  "-B , --progress        Print progress report\n"
+  "-H , --help            Displays Help\n"
+  "-V , --version         Displays software version\n"
+  "examples:\n"
+  "zimcheck -A wikipedia.zim\n"
+  "zimcheck --checksum --redundant wikipedia.zim\n"
+  "zimcheck -F -R wikipedia.zim\n"
+  "zimcheck -M --favicon wikipedia.zim\n"
+);
+
+TEST(zimcheck, help)
+{
+    {
+      CapturedStdout zimcheck_output;
+      ASSERT_EQ(-1, zimcheck({"zimcheck", "-h"}));
+      ASSERT_EQ(zimcheck_help_message, std::string(zimcheck_output));
+    }
+    {
+      CapturedStdout zimcheck_output;
+      ASSERT_EQ(-1, zimcheck({"zimcheck", "-H"}));
+      ASSERT_EQ(zimcheck_help_message, std::string(zimcheck_output));
+    }
+    {
+      CapturedStdout zimcheck_output;
+      ASSERT_EQ(-1, zimcheck({"zimcheck", "--help"}));
+      ASSERT_EQ(zimcheck_help_message, std::string(zimcheck_output));
+    }
+}
+
+
 TEST(zimcheck, checksum_goodzimfile)
 {
     CapturedStdout zimcheck_output;
