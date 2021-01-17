@@ -100,7 +100,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
             continue;
         }
 
-        if (checks.isEnabled(TestType::EMPTY) && (ns=='A' || ns == 'I')) {
+        if (checks.isEnabled(TestType::EMPTY) && (ns == 'C' || ns=='A' || ns == 'I')) {
             auto item = entry.getItem();
             if (item.getSize() == 0) {
                 std::ostringstream ss;
