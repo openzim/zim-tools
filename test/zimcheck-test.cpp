@@ -135,6 +135,26 @@ TEST(zimcheck, help)
     }
 }
 
+TEST(zimcheck, version)
+{
+    const std::string zimcheck_version = "2.1.1";
+
+    {
+      CapturedStdout zimcheck_output;
+      ASSERT_EQ(0, zimcheck({"zimcheck", "-v"}));
+      ASSERT_EQ(zimcheck_version + "\n", std::string(zimcheck_output));
+    }
+    {
+      CapturedStdout zimcheck_output;
+      ASSERT_EQ(0, zimcheck({"zimcheck", "-V"}));
+      ASSERT_EQ(zimcheck_version + "\n", std::string(zimcheck_output));
+    }
+    {
+      CapturedStdout zimcheck_output;
+      ASSERT_EQ(0, zimcheck({"zimcheck", "--version"}));
+      ASSERT_EQ(zimcheck_version + "\n", std::string(zimcheck_output));
+    }
+}
 
 TEST(zimcheck, checksum_goodzimfile)
 {
