@@ -716,3 +716,24 @@ TEST(zimcheck, all_checks_poorzimfile)
         EMPTY_STDERR
     );
 }
+
+TEST(zimcheck, json_bad_checksum)
+{
+    CapturedStdout zimcheck_output;
+    ASSERT_EQ(1, zimcheck({
+      "zimcheck",
+      "--json",
+      "-C",
+      "data/zimfiles/bad_checksum.zim"
+    }));
+
+    ASSERT_EQ(
+      "{"                                                         "\n"
+      "  'zimcheck_version' : '2.2.0',"                           "\n"
+      "  'file_name' : 'data/zimfiles/bad_checksum.zim',"         "\n"
+      "  'file_uuid' : '00000000-0000-0000-0000-000000000000',"   "\n"
+      "  'status' : false"                                        "\n"
+      "}" "\n"
+      , std::string(zimcheck_output)
+    );
+}
