@@ -273,6 +273,24 @@ TEST(zimcheck, metadata_goodzimfile)
     );
 }
 
+TEST(zimcheck, favicon_goodzimfile)
+{
+    const std::string expected_output(
+        "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
+        "[INFO] Searching for Favicon..." "\n"
+        "[INFO] Overall Test Status: Pass" "\n"
+        "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+    );
+
+    test_zimcheck_single_option(
+        {"-f", "-F", "--favicon"},
+        GOOD_ZIMFILE,
+        0,
+        expected_output,
+        EMPTY_STDERR
+    );
+}
+
 const std::string ALL_CHECKS_OUTPUT_ON_GOODZIMFILE(
       "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
       "[INFO] Verifying ZIM-archive structure integrity..." "\n"
@@ -342,6 +360,25 @@ TEST(zimcheck, metadata_poorzimfile)
 
     test_zimcheck_single_option(
         {"-m", "-M", "--metadata"},
+        POOR_ZIMFILE,
+        1,
+        expected_stdout,
+        EMPTY_STDERR
+    );
+}
+
+TEST(zimcheck, favicon_poorzimfile)
+{
+    const std::string expected_stdout(
+      "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
+      "[INFO] Searching for Favicon..." "\n"
+      "[ERROR] Missing favicon:" "\n"
+      "[INFO] Overall Test Status: Fail" "\n"
+      "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+    );
+
+    test_zimcheck_single_option(
+        {"-f", "-F", "--favicon"},
         POOR_ZIMFILE,
         1,
         expected_stdout,
