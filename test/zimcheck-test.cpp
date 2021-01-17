@@ -198,15 +198,7 @@ TEST(zimcheck, checksum_goodzimfile)
     );
 }
 
-TEST(zimcheck, nooptions_goodzimfile)
-{
-    CapturedStdout zimcheck_output;
-    ASSERT_EQ(0, zimcheck({
-      "zimcheck",
-      "data/zimfiles/good.zim"
-    }));
-
-    ASSERT_EQ(
+const std::string ALL_CHECKS_OUTPUT_ON_GOODZIMFILE(
       "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
       "[INFO] Verifying ZIM-archive structure integrity..." "\n"
       "[INFO] Avoiding redundant checksum test (already performed by the integrity check)." "\n"
@@ -218,8 +210,33 @@ TEST(zimcheck, nooptions_goodzimfile)
       "  Verifying Similar Articles for redundancies..." "\n"
       "[INFO] Overall Test Status: Pass" "\n"
       "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
-      , std::string(zimcheck_output)
-    );
+);
+
+TEST(zimcheck, nooptions_goodzimfile)
+{
+    CapturedStdout zimcheck_output;
+    ASSERT_EQ(0, zimcheck({"zimcheck", "data/zimfiles/good.zim"}));
+
+    ASSERT_EQ(ALL_CHECKS_OUTPUT_ON_GOODZIMFILE, std::string(zimcheck_output));
+}
+
+TEST(zimcheck, all_checks_goodzimfile)
+{
+  {
+    CapturedStdout zimcheck_output;
+    ASSERT_EQ(0, zimcheck({"zimcheck", "-a", "data/zimfiles/good.zim"}));
+    ASSERT_EQ(ALL_CHECKS_OUTPUT_ON_GOODZIMFILE, std::string(zimcheck_output));
+  }
+  {
+    CapturedStdout zimcheck_output;
+    ASSERT_EQ(0, zimcheck({"zimcheck", "-A", "data/zimfiles/good.zim"}));
+    ASSERT_EQ(ALL_CHECKS_OUTPUT_ON_GOODZIMFILE, std::string(zimcheck_output));
+  }
+  {
+    CapturedStdout zimcheck_output;
+    ASSERT_EQ(0, zimcheck({"zimcheck", "--all", "data/zimfiles/good.zim"}));
+    ASSERT_EQ(ALL_CHECKS_OUTPUT_ON_GOODZIMFILE, std::string(zimcheck_output));
+  }
 }
 
 TEST(zimcheck, bad_checksum)
@@ -244,15 +261,7 @@ TEST(zimcheck, bad_checksum)
     );
 }
 
-TEST(zimcheck, nooptions_poorzimfile)
-{
-    CapturedStdout zimcheck_output;
-    ASSERT_EQ(1, zimcheck({
-      "zimcheck",
-      "data/zimfiles/poor.zim"
-    }));
-
-    ASSERT_EQ(
+const std::string ALL_CHECKS_OUTPUT_ON_POORZIMFILE(
       "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
       "[INFO] Verifying ZIM-archive structure integrity..." "\n"
       "[INFO] Avoiding redundant checksum test (already performed by the integrity check)." "\n"
@@ -282,6 +291,31 @@ TEST(zimcheck, nooptions_poorzimfile)
       "  http://a.io/pic.png is an external dependence in article external_link.html" "\n"
       "[INFO] Overall Test Status: Fail" "\n"
       "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
-      , std::string(zimcheck_output)
-    );
+);
+
+TEST(zimcheck, nooptions_poorzimfile)
+{
+    CapturedStdout zimcheck_output;
+    ASSERT_EQ(1, zimcheck({"zimcheck", "data/zimfiles/poor.zim"}));
+
+    ASSERT_EQ(ALL_CHECKS_OUTPUT_ON_POORZIMFILE, std::string(zimcheck_output));
+}
+
+TEST(zimcheck, all_checks_poorzimfile)
+{
+  {
+    CapturedStdout zimcheck_output;
+    ASSERT_EQ(1, zimcheck({"zimcheck", "-a", "data/zimfiles/poor.zim"}));
+    ASSERT_EQ(ALL_CHECKS_OUTPUT_ON_POORZIMFILE, std::string(zimcheck_output));
+  }
+  {
+    CapturedStdout zimcheck_output;
+    ASSERT_EQ(1, zimcheck({"zimcheck", "-A", "data/zimfiles/poor.zim"}));
+    ASSERT_EQ(ALL_CHECKS_OUTPUT_ON_POORZIMFILE, std::string(zimcheck_output));
+  }
+  {
+    CapturedStdout zimcheck_output;
+    ASSERT_EQ(1, zimcheck({"zimcheck", "--all", "data/zimfiles/poor.zim"}));
+    ASSERT_EQ(ALL_CHECKS_OUTPUT_ON_POORZIMFILE, std::string(zimcheck_output));
+  }
 }
