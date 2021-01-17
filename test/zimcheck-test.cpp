@@ -331,6 +331,26 @@ TEST(zimcheck, article_content_goodzimfile)
     );
 }
 
+TEST(zimcheck, redundant_articles_goodzimfile)
+{
+    const std::string expected_output(
+        "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
+        "[INFO] Verifying Articles' content..." "\n"
+        "[INFO] Searching for redundant articles..." "\n"
+        "  Verifying Similar Articles for redundancies..." "\n"
+        "[INFO] Overall Test Status: Pass" "\n"
+        "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+    );
+
+    test_zimcheck_single_option(
+        {"-r", "-R", "--redundant"},
+        GOOD_ZIMFILE,
+        0,
+        expected_output,
+        EMPTY_STDERR
+    );
+}
+
 const std::string ALL_CHECKS_OUTPUT_ON_GOODZIMFILE(
       "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
       "[INFO] Verifying ZIM-archive structure integrity..." "\n"
@@ -505,6 +525,28 @@ TEST(zimcheck, external_url_check_poorzimfile)
         {"-x", "-X", "--url_external"},
         POOR_ZIMFILE,
         1,
+        expected_stdout,
+        EMPTY_STDERR
+    );
+}
+
+TEST(zimcheck, redundant_poorzimfile)
+{
+    const std::string expected_stdout(
+      "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
+      "[INFO] Verifying Articles' content..." "\n"
+      "[INFO] Searching for redundant articles..." "\n"
+      "  Verifying Similar Articles for redundancies..." "\n"
+      "[WARNING] Redundant data found:" "\n"
+      "  article1.html and redundant_article.html" "\n"
+      "[INFO] Overall Test Status: Pass" "\n"
+      "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+    );
+
+    test_zimcheck_single_option(
+        {"-r", "-R", "--redundant"},
+        POOR_ZIMFILE,
+        0,
         expected_stdout,
         EMPTY_STDERR
     );
