@@ -118,7 +118,7 @@ int zimcheck (const std::vector<const char*>& args)
             { 0, 0, 0, 0}
         };
         int option_index = 0;
-        int c = getopt_long (argc, const_cast<char**>(argv), "ACIMFPRUXEDHBVacimfpruxedhbv",
+        int c = getopt_long (argc, const_cast<char**>(argv), "ACIMFPRUXEDHBVacimfpruxedhbv0",
                              long_options, &option_index);
         //c = getopt (argc, argv, "ACMFPRUXED");
         if(c == -1)
@@ -132,6 +132,7 @@ int zimcheck (const std::vector<const char*>& args)
             break;
         case '0':
             enabled_tests.enable(TestType::EMPTY);
+            no_args = false;
             break;
         case 'C':
         case 'c':

@@ -309,6 +309,28 @@ TEST(zimcheck, mainpage_goodzimfile)
     );
 }
 
+TEST(zimcheck, article_content_goodzimfile)
+{
+    const std::string expected_output(
+        "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
+        "[INFO] Verifying Articles' content..." "\n"
+        "[INFO] Overall Test Status: Pass" "\n"
+        "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+    );
+
+    test_zimcheck_single_option(
+        {
+          "-0", "--empty",              // Any of these options triggers
+          "-u", "-U", "--url_internal", // checking of the article contents.
+          "-x", "-X", "--url_external"  // For a good ZIM file there is no
+        },                              // difference in the output.
+        GOOD_ZIMFILE,
+        0,
+        expected_output,
+        EMPTY_STDERR
+    );
+}
+
 const std::string ALL_CHECKS_OUTPUT_ON_GOODZIMFILE(
       "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
       "[INFO] Verifying ZIM-archive structure integrity..." "\n"
@@ -417,6 +439,70 @@ TEST(zimcheck, mainpage_poorzimfile)
 
     test_zimcheck_single_option(
         {"-p", "-P", "--main"},
+        POOR_ZIMFILE,
+        1,
+        expected_stdout,
+        EMPTY_STDERR
+    );
+}
+
+TEST(zimcheck, empty_items_poorzimfile)
+{
+    const std::string expected_stdout(
+      "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
+      "[INFO] Verifying Articles' content..." "\n"
+      "[ERROR] Empty articles:" "\n"
+      "  Entry empty.html is empty" "\n"
+      "[INFO] Overall Test Status: Fail" "\n"
+      "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+    );
+
+    test_zimcheck_single_option(
+        {"-0", "--empty"},
+        POOR_ZIMFILE,
+        1,
+        expected_stdout,
+        EMPTY_STDERR
+    );
+}
+
+TEST(zimcheck, internal_url_check_poorzimfile)
+{
+    const std::string expected_stdout(
+      "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
+      "[INFO] Verifying Articles' content..." "\n"
+      "[ERROR] Invalid internal links found:" "\n"
+      "  The following links:" "\n"
+      "- A/non_existent.html" "\n"
+      "(/A/non_existent.html) were not found in article dangling_link.html" "\n"
+      "  Found 1 empty links in article: empty_link.html" "\n"
+      "  ../../oops.html is out of bounds. Article: outofbounds_link.html" "\n"
+      "[INFO] Overall Test Status: Fail" "\n"
+      "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+    );
+
+    test_zimcheck_single_option(
+        {"-u", "-U", "--url_internal"},
+        POOR_ZIMFILE,
+        1,
+        expected_stdout,
+        EMPTY_STDERR
+    );
+}
+
+TEST(zimcheck, external_url_check_poorzimfile)
+{
+    const std::string expected_stdout(
+      "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
+      "[INFO] Verifying Articles' content..." "\n"
+      "[ERROR] Invalid external links found:" "\n"
+      "  http://a.io/pic.png is an external dependence in article external_link.html" "\n"
+      "[INFO] Overall Test Status: Fail" "\n"
+      "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+    );
+
+    test_zimcheck_single_option(
+        {"-x", "-X", "--url_external"},
         POOR_ZIMFILE,
         1,
         expected_stdout,
