@@ -66,25 +66,37 @@ TEST(zimfilechecks, test_articles)
     ASSERT_TRUE(logger.overallStatus());
 }
 
-class CapturedStdout
+class CapturedStdStream
 {
+  std::ostream& stream;
   std::ostringstream buffer;
   std::streambuf* const sbuf;
 public:
-  CapturedStdout()
-    : sbuf(std::cout.rdbuf())
+  explicit CapturedStdStream(std::ostream& os)
+    : stream(os)
+    , sbuf(os.rdbuf())
   {
-    std::cout.rdbuf(buffer.rdbuf());
+    stream.rdbuf(buffer.rdbuf());
   }
 
-  CapturedStdout(const CapturedStdout&) = delete;
+  CapturedStdStream(const CapturedStdStream&) = delete;
 
-  ~CapturedStdout()
+  ~CapturedStdStream()
   {
-    std::cout.rdbuf(sbuf);
+    stream.rdbuf(sbuf);
   }
 
   operator std::string() const { return buffer.str(); }
+};
+
+struct CapturedStdout : CapturedStdStream
+{
+  CapturedStdout() : CapturedStdStream(std::cout) {}
+};
+
+struct CapturedStderr : CapturedStdStream
+{
+  CapturedStderr() : CapturedStdStream(std::cerr) {}
 };
 
 int zimcheck (const std::vector<const char*>& args);
@@ -153,6 +165,18 @@ TEST(zimcheck, version)
       CapturedStdout zimcheck_output;
       ASSERT_EQ(0, zimcheck({"zimcheck", "--version"}));
       ASSERT_EQ(zimcheck_version + "\n", std::string(zimcheck_output));
+    }
+}
+
+TEST(zimcheck, nozimfile)
+{
+    const std::string expected_stderr = "No file provided as argument\n";
+    {
+      CapturedStdout zimcheck_output;
+      CapturedStderr zimcheck_stderr;
+      ASSERT_EQ(-1, zimcheck({"zimcheck"}));
+      ASSERT_EQ(expected_stderr, std::string(zimcheck_stderr));
+      ASSERT_EQ(zimcheck_help_message, std::string(zimcheck_output));
     }
 }
 
