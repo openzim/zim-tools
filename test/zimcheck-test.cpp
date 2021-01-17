@@ -219,6 +219,24 @@ void test_zimcheck_single_option(std::vector<const char*> optionAliases,
     }
 }
 
+TEST(zimcheck, integrity_goodzimfile)
+{
+    const std::string expected_output(
+        "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
+        "[INFO] Verifying ZIM-archive structure integrity..." "\n"
+        "[INFO] Overall Test Status: Pass" "\n"
+        "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+    );
+
+    test_zimcheck_single_option(
+        {"-i", "-I", "--integrity"},
+        GOOD_ZIMFILE,
+        0,
+        expected_output,
+        EMPTY_STDERR
+    );
+}
+
 TEST(zimcheck, checksum_goodzimfile)
 {
     const std::string expected_output(
