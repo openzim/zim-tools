@@ -10,11 +10,11 @@
 #include <zim/item.h>
 
 void test_checksum(zim::Archive& archive, ErrorLogger& reporter) {
-    std::cout << "[INFO] Verifying Internal Checksum..." << std::endl;
+    reporter.infoMsg("[INFO] Verifying Internal Checksum...");
     bool result = archive.check();
     reporter.setTestResult(TestType::CHECKSUM, result);
     if (!result) {
-        std::cout << "  [ERROR] Wrong Checksum in ZIM archive" << std::endl;
+        reporter.infoMsg("  [ERROR] Wrong Checksum in ZIM archive");
         std::ostringstream ss;
         ss << "ZIM Archive Checksum in archive: " << archive.getChecksum() << std::endl;
         reporter.addReportMsg(TestType::CHECKSUM, ss.str());
@@ -22,19 +22,19 @@ void test_checksum(zim::Archive& archive, ErrorLogger& reporter) {
 }
 
 void test_integrity(const std::string& filename, ErrorLogger& reporter) {
-    std::cout << "[INFO] Verifying ZIM-archive structure integrity..." << std::endl;
+    reporter.infoMsg("[INFO] Verifying ZIM-archive structure integrity...");
     zim::IntegrityCheckList checks;
     checks.set(); // enable all checks (including checksum)
     bool result = zim::validate(filename, checks);
     reporter.setTestResult(TestType::INTEGRITY, result);
     if (!result) {
-        std::cout << "  [ERROR] ZIM file's low level structure is invalid" << std::endl;
+        reporter.infoMsg("  [ERROR] ZIM file's low level structure is invalid");
     }
 }
 
 
 void test_metadata(const zim::Archive& archive, ErrorLogger& reporter) {
-    std::cout << "[INFO] Searching for metadata entries..." << std::endl;
+    reporter.infoMsg("[INFO] Searching for metadata entries...");
     static const char* const test_meta[] = {
         "Title",
         "Creator",
@@ -54,7 +54,7 @@ void test_metadata(const zim::Archive& archive, ErrorLogger& reporter) {
 }
 
 void test_favicon(const zim::Archive& archive, ErrorLogger& reporter) {
-    std::cout << "[INFO] Searching for Favicon..." << std::endl;
+    reporter.infoMsg("[INFO] Searching for Favicon...");
     static const char* const favicon_paths[] = {"-/favicon.png", "I/favicon.png", "I/favicon", "-/favicon"};
     for (auto &path: favicon_paths) {
         if (archive.hasEntryByPath(path)) {
@@ -65,7 +65,7 @@ void test_favicon(const zim::Archive& archive, ErrorLogger& reporter) {
 }
 
 void test_mainpage(const zim::Archive& archive, ErrorLogger& reporter) {
-    std::cout << "[INFO] Searching for main page..." << std::endl;
+    reporter.infoMsg("[INFO] Searching for main page...");
     bool testok = true;
     try {
       archive.getMainEntry();
@@ -83,7 +83,7 @@ void test_mainpage(const zim::Archive& archive, ErrorLogger& reporter) {
 
 void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressBar progress,
                    const EnabledTests checks) {
-    std::cout << "[INFO] Verifying Articles' content..." << std::endl;
+    reporter.infoMsg("[INFO] Verifying Articles' content...");
     // Article are store in a map<hash, list<index>>.
     // So all article with the same hash will be stored in the same list.
     std::map<unsigned int, std::list<zim::entry_index_type>> hash_main;
@@ -210,8 +210,8 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
 
     if (checks.isEnabled(TestType::REDUNDANT))
     {
-        std::cout << "[INFO] Searching for redundant articles..." << std::endl;
-        std::cout << "  Verifying Similar Articles for redundancies..." << std::endl;
+        reporter.infoMsg("[INFO] Searching for redundant articles...");
+        reporter.infoMsg("  Verifying Similar Articles for redundancies...");
         std::ostringstream output_details;
         progress.reset(hash_main.size());
         for(const auto &it: hash_main)
@@ -245,8 +245,8 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
     }
 }
 
-void test_redirect_loop(const zim::Archive& archive, ErrorLogger& reporter) {    
-    std::cout << "[INFO] Checking for redirect loops..." << std::endl;
+void test_redirect_loop(const zim::Archive& archive, ErrorLogger& reporter) {
+    reporter.infoMsg("[INFO] Checking for redirect loops...");
 
     int chained_redirection_limit = 50;
 

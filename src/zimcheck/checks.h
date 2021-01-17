@@ -86,11 +86,31 @@ class ErrorLogger {
     // testStatus[i] corresponds to the status of i'th test
     std::bitset<size_t(TestType::COUNT)> testStatus;
 
+    const bool jsonOutputMode;
+
   public:
-    ErrorLogger()
+    explicit ErrorLogger(bool _jsonOutputMode = false)
       : reportMsgs(size_t(TestType::COUNT))
+      , jsonOutputMode(_jsonOutputMode)
     {
         testStatus.set();
+        if ( jsonOutputMode ) {
+          std::cout << "{" << std::endl;
+          std::cout << "\t'zimcheck_version' : '" << VERSION << "'" << std::endl;
+        }
+    }
+
+    ~ErrorLogger()
+    {
+        if ( jsonOutputMode ) {
+          std::cout << "}" << std::endl;
+        }
+    }
+
+    void infoMsg(const std::string& msg) const {
+      if ( !jsonOutputMode ) {
+        std::cout << msg << std::endl;
+      }
     }
 
     void setTestResult(TestType type, bool status) {

@@ -139,6 +139,7 @@ const std::string zimcheck_help_message(
   "-X , --url_external    URL check - External URLs\n"
   "-D , --details         Details of error\n"
   "-B , --progress        Print progress report\n"
+  "-J , --json            Output in JSON format\n"
   "-H , --help            Displays Help\n"
   "-V , --version         Displays software version\n"
   "-L , --redirect_loop   Checks for the existence of redirect loops\n"
@@ -442,6 +443,23 @@ TEST(zimcheck, invalid_long_option)
       ASSERT_EQ("Unknown option `--oops'\n", std::string(zimcheck_stderr));
       ASSERT_EQ(zimcheck_help_message, std::string(zimcheck_output));
     }
+}
+
+TEST(zimcheck, json_goodzimfile)
+{
+    CapturedStdout zimcheck_output;
+    ASSERT_EQ(0, zimcheck({
+      "zimcheck",
+      "--json",
+      "data/zimfiles/good.zim"
+    }));
+
+    ASSERT_EQ(
+      "{" "\n"
+      "\t'zimcheck_version' : '2.2.0'" "\n"
+      "}" "\n"
+      , std::string(zimcheck_output)
+    );
 }
 
 TEST(zimcheck, bad_checksum)
