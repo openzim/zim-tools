@@ -184,6 +184,41 @@ const char GOOD_ZIMFILE[] = "data/zimfiles/good.zim";
 const char POOR_ZIMFILE[] = "data/zimfiles/poor.zim";
 const char BAD_CHECKSUM_ZIMFILE[] = "data/zimfiles/bad_checksum.zim";
 
+using CmdLineImpl = std::vector<const char*>;
+struct CmdLine : CmdLineImpl {
+  CmdLine(const std::initializer_list<value_type>& il)
+    : CmdLineImpl(il)
+  {}
+};
+
+std::ostream& operator<<(std::ostream& out, const CmdLine& c)
+{
+  out << "Test context:\n";
+  for ( const auto& a : c )
+    out << " " << a;
+  out << std::endl;
+  return out;
+}
+
+const char EMPTY_STDERR[] = "";
+
+void test_zimcheck_single_option(std::vector<const char*> optionAliases,
+                                 const char* zimfile,
+                                 int expected_exit_code,
+                                 const std::string& expected_stdout,
+                                 const std::string& expected_stderr)
+{
+    for ( const char* opt : optionAliases )
+    {
+        CapturedStdout zimcheck_output;
+        CapturedStderr zimcheck_stderr;
+        const CmdLine cmdline{"zimcheck", opt, zimfile};
+        ASSERT_EQ(expected_exit_code, zimcheck(cmdline)) << cmdline;
+        ASSERT_EQ(expected_stderr, std::string(zimcheck_stderr)) << cmdline;
+        ASSERT_EQ(expected_stdout, std::string(zimcheck_output)) << cmdline;
+    }
+}
+
 TEST(zimcheck, checksum_goodzimfile)
 {
     const std::string expected_output(
@@ -193,21 +228,13 @@ TEST(zimcheck, checksum_goodzimfile)
         "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
     );
 
-    {
-      CapturedStdout zimcheck_output;
-      ASSERT_EQ(0, zimcheck({"zimcheck", "-c", GOOD_ZIMFILE}));
-      ASSERT_EQ(expected_output, std::string(zimcheck_output));
-    }
-    {
-      CapturedStdout zimcheck_output;
-      ASSERT_EQ(0, zimcheck({"zimcheck", "-C", GOOD_ZIMFILE}));
-      ASSERT_EQ(expected_output, std::string(zimcheck_output));
-    }
-    {
-      CapturedStdout zimcheck_output;
-      ASSERT_EQ(0, zimcheck({"zimcheck", "--checksum", GOOD_ZIMFILE}));
-      ASSERT_EQ(expected_output, std::string(zimcheck_output));
-    }
+    test_zimcheck_single_option(
+        {"-c", "-C", "--checksum"},
+        GOOD_ZIMFILE,
+        0,
+        expected_output,
+        EMPTY_STDERR
+    );
 }
 
 const std::string ALL_CHECKS_OUTPUT_ON_GOODZIMFILE(
@@ -234,21 +261,13 @@ TEST(zimcheck, nooptions_goodzimfile)
 
 TEST(zimcheck, all_checks_goodzimfile)
 {
-  {
-    CapturedStdout zimcheck_output;
-    ASSERT_EQ(0, zimcheck({"zimcheck", "-a", GOOD_ZIMFILE}));
-    ASSERT_EQ(ALL_CHECKS_OUTPUT_ON_GOODZIMFILE, std::string(zimcheck_output));
-  }
-  {
-    CapturedStdout zimcheck_output;
-    ASSERT_EQ(0, zimcheck({"zimcheck", "-A", GOOD_ZIMFILE}));
-    ASSERT_EQ(ALL_CHECKS_OUTPUT_ON_GOODZIMFILE, std::string(zimcheck_output));
-  }
-  {
-    CapturedStdout zimcheck_output;
-    ASSERT_EQ(0, zimcheck({"zimcheck", "--all", GOOD_ZIMFILE}));
-    ASSERT_EQ(ALL_CHECKS_OUTPUT_ON_GOODZIMFILE, std::string(zimcheck_output));
-  }
+    test_zimcheck_single_option(
+        {"-a", "-A", "--all"},
+        GOOD_ZIMFILE,
+        0,
+        ALL_CHECKS_OUTPUT_ON_GOODZIMFILE,
+        EMPTY_STDERR
+    );
 }
 
 TEST(zimcheck, bad_checksum)
@@ -264,21 +283,13 @@ TEST(zimcheck, bad_checksum)
       "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
     );
 
-    {
-      CapturedStdout zimcheck_output;
-      ASSERT_EQ(1, zimcheck({"zimcheck", "-c", BAD_CHECKSUM_ZIMFILE}));
-      ASSERT_EQ(expected_output, std::string(zimcheck_output));
-    }
-    {
-      CapturedStdout zimcheck_output;
-      ASSERT_EQ(1, zimcheck({"zimcheck", "-C", BAD_CHECKSUM_ZIMFILE}));
-      ASSERT_EQ(expected_output, std::string(zimcheck_output));
-    }
-    {
-      CapturedStdout zimcheck_output;
-      ASSERT_EQ(1, zimcheck({"zimcheck", "--checksum", BAD_CHECKSUM_ZIMFILE}));
-      ASSERT_EQ(expected_output, std::string(zimcheck_output));
-    }
+    test_zimcheck_single_option(
+        {"-c", "-C", "--checksum"},
+        BAD_CHECKSUM_ZIMFILE,
+        1,
+        expected_output,
+        EMPTY_STDERR
+    );
 }
 
 const std::string ALL_CHECKS_OUTPUT_ON_POORZIMFILE(
@@ -323,19 +334,11 @@ TEST(zimcheck, nooptions_poorzimfile)
 
 TEST(zimcheck, all_checks_poorzimfile)
 {
-  {
-    CapturedStdout zimcheck_output;
-    ASSERT_EQ(1, zimcheck({"zimcheck", "-a", POOR_ZIMFILE}));
-    ASSERT_EQ(ALL_CHECKS_OUTPUT_ON_POORZIMFILE, std::string(zimcheck_output));
-  }
-  {
-    CapturedStdout zimcheck_output;
-    ASSERT_EQ(1, zimcheck({"zimcheck", "-A", POOR_ZIMFILE}));
-    ASSERT_EQ(ALL_CHECKS_OUTPUT_ON_POORZIMFILE, std::string(zimcheck_output));
-  }
-  {
-    CapturedStdout zimcheck_output;
-    ASSERT_EQ(1, zimcheck({"zimcheck", "--all", POOR_ZIMFILE}));
-    ASSERT_EQ(ALL_CHECKS_OUTPUT_ON_POORZIMFILE, std::string(zimcheck_output));
-  }
+    test_zimcheck_single_option(
+        {"-a", "-A", "--all"},
+        POOR_ZIMFILE,
+        1,
+        ALL_CHECKS_OUTPUT_ON_POORZIMFILE,
+        EMPTY_STDERR
+    );
 }
