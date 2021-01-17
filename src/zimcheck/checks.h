@@ -1,10 +1,8 @@
 #ifndef _ZIM_TOOL_ZIMFILECHECKS_H_
 #define _ZIM_TOOL_ZIMFILECHECKS_H_
 
-#include <unordered_map>
 #include <vector>
 #include <iostream>
-#include <algorithm>
 #include <bitset>
 
 #include "../progress.h"
@@ -21,13 +19,6 @@ enum StatusCode : int {
 
 enum class LogTag { ERROR, WARNING };
 
-// Specialization of std::hash needed for our unordered_map. Can be removed in c++14
-namespace std {
-  template <> struct hash<LogTag> {
-    size_t operator() (const LogTag &t) const { return size_t(t); }
-  };
-}
-
 enum class TestType {
     CHECKSUM,
     INTEGRITY,
@@ -42,13 +33,6 @@ enum class TestType {
 
     COUNT
 };
-
-// Specialization of std::hash needed for our unordered_map. Can be removed in c++14
-namespace std {
-  template <> struct hash<TestType> {
-    size_t operator() (const TestType &t) const { return size_t(t); }
-  };
-}
 
 class EnabledTests {
     std::bitset<size_t(TestType::COUNT)> tests;
