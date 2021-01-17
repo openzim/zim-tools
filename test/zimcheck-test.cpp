@@ -255,6 +255,24 @@ TEST(zimcheck, checksum_goodzimfile)
     );
 }
 
+TEST(zimcheck, metadata_goodzimfile)
+{
+    const std::string expected_output(
+        "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
+        "[INFO] Searching for metadata entries..." "\n"
+        "[INFO] Overall Test Status: Pass" "\n"
+        "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+    );
+
+    test_zimcheck_single_option(
+        {"-m", "-M", "--metadata"},
+        GOOD_ZIMFILE,
+        0,
+        expected_output,
+        EMPTY_STDERR
+    );
+}
+
 const std::string ALL_CHECKS_OUTPUT_ON_GOODZIMFILE(
       "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
       "[INFO] Verifying ZIM-archive structure integrity..." "\n"
@@ -306,6 +324,27 @@ TEST(zimcheck, bad_checksum)
         BAD_CHECKSUM_ZIMFILE,
         1,
         expected_output,
+        EMPTY_STDERR
+    );
+}
+
+TEST(zimcheck, metadata_poorzimfile)
+{
+    const std::string expected_stdout(
+      "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
+      "[INFO] Searching for metadata entries..." "\n"
+      "[ERROR] Missing metadata entries:" "\n"
+      "  Title" "\n"
+      "  Description" "\n"
+      "[INFO] Overall Test Status: Fail" "\n"
+      "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+    );
+
+    test_zimcheck_single_option(
+        {"-m", "-M", "--metadata"},
+        POOR_ZIMFILE,
+        1,
+        expected_stdout,
         EMPTY_STDERR
     );
 }
