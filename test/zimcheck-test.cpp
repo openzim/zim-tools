@@ -152,3 +152,45 @@ TEST(zimcheck, bad_checksum)
       , std::string(zimcheck_output)
     );
 }
+
+TEST(zimcheck, nooptions_poorzimfile)
+{
+    CapturedStdout zimcheck_output;
+    ASSERT_EQ(1, zimcheck({
+      "zimcheck",
+      "data/zimfiles/poor.zim"
+    }));
+
+    ASSERT_EQ(
+      "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
+      "[INFO] Verifying ZIM-archive structure integrity..." "\n"
+      "[INFO] Avoiding redundant checksum test (already performed by the integrity check)." "\n"
+      "[INFO] Searching for metadata entries..." "\n"
+      "[INFO] Searching for Favicon..." "\n"
+      "[INFO] Searching for main page..." "\n"
+      "[INFO] Verifying Articles' content..." "\n"
+      "[INFO] Searching for redundant articles..." "\n"
+      "  Verifying Similar Articles for redundancies..." "\n"
+      "[ERROR] Empty articles:" "\n"
+      "  Entry empty.html is empty" "\n"
+      "[ERROR] Missing metadata entries:" "\n"
+      "  Title" "\n"
+      "  Description" "\n"
+      "[ERROR] Missing favicon:" "\n"
+      "[ERROR] Missing mainpage:" "\n"
+      "  Main Page Index stored in Archive Header: 4294967295" "\n"
+      "[WARNING] Redundant data found:" "\n"
+      "  article1.html and redundant_article.html" "\n"
+      "[ERROR] Invalid internal links found:" "\n"
+      "  The following links:" "\n"
+      "- A/non_existent.html" "\n"
+      "(/A/non_existent.html) were not found in article dangling_link.html" "\n"
+      "  Found 1 empty links in article: empty_link.html" "\n"
+      "  ../../oops.html is out of bounds. Article: outofbounds_link.html" "\n"
+      "[ERROR] Invalid external links found:" "\n"
+      "  http://a.io/pic.png is an external dependence in article external_link.html" "\n"
+      "[INFO] Overall Test Status: Fail" "\n"
+      "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+      , std::string(zimcheck_output)
+    );
+}

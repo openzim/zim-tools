@@ -20,7 +20,7 @@ if [ $# -ne 0 ]
 then
   zimfiles=("$@")
 else
-  zimfiles=(good bad_checksum)
+  zimfiles=(good bad_checksum poor)
 fi
 
 zimwriterfs_required_version=v2.1.1
@@ -59,6 +59,37 @@ make__bad_checksum__zim()
   && ! diff -q good.zim bad_checksum.zim &> /dev/null \
   || die 'The checksum in good.zim is all zeros!!!'
 }
+
+make__poor__zim()
+(
+  local tmpdir=$(mktemp -d)
+  trap "rm -rf '$tmpdir'" EXIT
+  cp -r small_zimfile_data "$tmpdir"
+  (
+    cd "$tmpdir"/small_zimfile_data
+    touch empty.html
+    mv favicon.png image.png
+    sed -i -e 's!favicon.png!image.png!' main.html
+    sed -e 's!A/article1.html!!' main.html > empty_link.html
+    sed -e 's!I/image.png!http://a.io/pic.png!' main.html > external_link.html
+    sed -e 's/article1/non_existent/' main.html > dangling_link.html
+    sed -e 's!A/article1!../../oops!' main.html > outofbounds_link.html
+    cp article1.html redundant_article.html
+  )
+  zimwriterfs --withoutFTIndex \
+              --dont-check-arguments \
+              --threads 1 \
+              --no-uuid \
+              -w "" \
+              -f "" \
+              -l en \
+              -t "" \
+              -d "" \
+              -c "N/A" \
+              -p "N/A" \
+              "$tmpdir"/small_zimfile_data \
+              poor.zim
+)
 
 for zimfilename in "${zimfiles[@]}"
 do
