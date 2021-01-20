@@ -5,6 +5,8 @@
 #include <iostream>
 #include <bitset>
 
+#include <mustache.hpp>
+
 #include "../progress.h"
 
 namespace zim {
@@ -44,6 +46,13 @@ class EnabledTests {
     void enable(TestType tt) { tests.set(size_t(tt)); }
     bool isEnabled(TestType tt) const { return tests[size_t(tt)]; }
 };
+
+enum class MsgId
+{
+  MISSING_METADATA
+};
+
+using MsgParams = kainjow::mustache::object;
 
 class ErrorLogger {
   private:
@@ -117,6 +126,7 @@ class ErrorLogger {
 
     void setTestResult(TestType type, bool status);
     void addReportMsg(TestType type, const std::string& message);
+    void addMsg(MsgId msgid, const MsgParams& msgParams);
     void report(bool error_details) const;
     bool overallStatus() const;
 };

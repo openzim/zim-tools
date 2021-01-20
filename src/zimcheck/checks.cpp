@@ -44,6 +44,18 @@ std::unordered_map<TestType, std::pair<LogTag, std::string>> errormapping = {
     { TestType::REDIRECT,      {LogTag::ERROR, "Redirect loop(s) exist"}},
 };
 
+struct MsgInfo
+{
+  TestType check;
+  std::string msgTemplate;
+};
+
+std::unordered_map<MsgId, MsgInfo> msgTable = {
+  { MsgId::MISSING_METADATA, { TestType::METADATA, "{{metadata_type}}" } }
+};
+
+using kainjow::mustache::mustache;
+
 } // unnamed namespace
 
 ErrorLogger::ErrorLogger(bool _jsonOutputMode)
@@ -75,6 +87,14 @@ void ErrorLogger::setTestResult(TestType type, bool status) {
 
 void ErrorLogger::addReportMsg(TestType type, const std::string& message) {
     reportMsgs[size_t(type)].push_back(message);
+}
+
+void ErrorLogger::addMsg(MsgId msgid, const MsgParams& msgParams)
+{
+  const MsgInfo& m = msgTable.at(msgid);
+  setTestResult(m.check, false);
+  mustache tmpl{m.msgTemplate};
+  addReportMsg(m.check, tmpl.render(msgParams));
 }
 
 void ErrorLogger::report(bool error_details) const {
@@ -142,8 +162,7 @@ void test_metadata(const zim::Archive& archive, ErrorLogger& reporter) {
     auto end = existing_metadata.end();
     for (auto &meta : test_meta) {
         if (std::find(begin, end, meta) == end) {
-            reporter.setTestResult(TestType::METADATA, false);
-            reporter.addReportMsg(TestType::METADATA, meta);
+            reporter.addMsg(MsgId::MISSING_METADATA, {{"metadata_type", meta}});
         }
     }
 }
