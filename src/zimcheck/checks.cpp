@@ -56,7 +56,7 @@ std::unordered_map<MsgId, MsgInfo> msgTable = {
   { MsgId::EMPTY_ENTRY,      { TestType::EMPTY, "Entry {{path}} is empty" } },
   { MsgId::OUTOFBOUNDS_LINK, { TestType::URL_INTERNAL, "{{link}} is out of bounds. Article: {{path}}" } },
   { MsgId::EMPTY_LINKS,      { TestType::URL_INTERNAL, "Found {{count}} empty links in article: {{path}}" } },
-  { MsgId::DANGLING_LINKS,   { TestType::URL_INTERNAL, "The following links:\n{{#links}}- {{link}}\n{{/links}}({{normalized_link}}) were not found in article {{path}}" } },
+  { MsgId::DANGLING_LINKS,   { TestType::URL_INTERNAL, "The following links:\n{{links}}({{normalized_link}}) were not found in article {{path}}" } },
   { MsgId::EXTERNAL_LINK,    { TestType::URL_EXTERNAL, "{{link}} is an external dependence in article {{path}}" } },
   { MsgId::REDUNDANT_ITEMS,  { TestType::REDUNDANT, "{{path1}} and {{path2}}" } },
   { MsgId::MISSING_METADATA, { TestType::METADATA, "{{metadata_type}}" } },
@@ -71,6 +71,29 @@ std::string toStr(T t)
   std::ostringstream ss;
   ss << t;
   return ss.str();
+}
+
+std::string escapeJSONString(const std::string& s)
+{
+  std::string escaped;
+  for (char c : s) {
+    if (c == '\'' || c == '\\') {
+      escaped.push_back('\\');
+      escaped.push_back(c);
+    } else if ( c == '\n' ) {
+      escaped.append("\\n");
+    } else {
+      escaped.push_back(c);
+    }
+  }
+  return escaped;
+}
+
+std::ostream& operator<<(std::ostream& out, const kainjow::mustache::data& d)
+{
+  assert(d.is_string());
+  out << "'" << escapeJSONString(d.string_value()) << "'";
+  return out;
 }
 
 } // unnamed namespace
@@ -117,6 +140,22 @@ std::string ErrorLogger::expand(const MsgIdWithParams& msg)
   return tmpl.render(msg.msgParams);
 }
 
+void ErrorLogger::jsonOutput(const MsgIdWithParams& msg) const {
+  const MsgInfo& m = msgTable.at(msg.msgId);
+  const std::string i = indentation();
+  const std::string i2 = i + i;
+  const std::string i3 = i2 + i;
+  std::cout << i2 << "{\n";
+  std::cout << i3 << "'check' : " << formatForJSON(m.check) << ",\n";
+  std::cout << i3 << "'level' : '" << tagToStr[errormapping[m.check].first] << "',\n";
+  std::cout << i3 << "'code' : " << size_t(msg.msgId) << ",\n"; // XXX
+  std::cout << i3 << "'message' : '" << escapeJSONString(expand(msg)) << "'";
+  for ( const auto& kv : msg.msgParams ) {
+    std::cout << ",\n" << i3 << "'" << kv.first << "' : " << kv.second;
+  }
+  std::cout << "\n" << i2 << "}";
+}
+
 void ErrorLogger::report(bool error_details) const {
     if ( !jsonOutputMode ) {
         for ( size_t i = 0; i < size_t(TestType::COUNT); ++i ) {
@@ -129,6 +168,17 @@ void ErrorLogger::report(bool error_details) const {
                 }
             }
         }
+    } else {
+        std::cout << sep << indentation() << "'logs' : [";
+        const char* msgSep = "\n";
+        for ( size_t i = 0; i < size_t(TestType::COUNT); ++i ) {
+            for (const auto& msg: reportMsgs[i]) {
+                std::cout << msgSep;
+                jsonOutput(msg);
+                msgSep = ",\n";
+            }
+        }
+        std::cout << "\n" << indentation() << "]";
     }
 }
 
@@ -298,10 +348,9 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
                     int index = item.getIndex();
                     if (previousIndex != index)
                     {
-                        typedef kainjow::mustache::data data;
-                        data links(data::type::list);
+                        std::string links;
                         for (const auto &olink : p.second)
-                            links << data{"link", olink};
+                            links += "- " + olink + "\n";
                         reporter.addMsg(MsgId::DANGLING_LINKS, {{"path", path}, {"normalized_link", link}, {"links", links}});
                         previousIndex = index;
                     }

@@ -124,6 +124,7 @@ class ErrorLogger {
     }
 
     static std::string expand(const MsgIdWithParams& msg);
+    void jsonOutput(const MsgIdWithParams& msg) const;
 
   public:
     explicit ErrorLogger(bool _jsonOutputMode = false);
