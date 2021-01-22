@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+
+myname=$(basename "$0")
+
+die()
+{
+  echo >&2 "!!! ERROR: $*"
+  exit 1
+}
+
+get_zimwriterfs_version()
+(
+  set -o pipefail
+  zimwriterfs --version 2>/dev/null|head -1
+)
+
+cd "$(dirname "$0")"
+
+if [ $# -ne 0 ]
+then
+  zimfiles=("$@")
+else
+  zimfiles=(good bad_checksum poor)
+fi
+
+zimwriterfs_required_version=v2.1.1
+zimwriterfs_version=$(get_zimwriterfs_version) \
+  || die "zimwriterfs not in PATH"
+test "$zimwriterfs_version" == "Version:  $zimwriterfs_required_version" \
+  || die "Need zimwriterfs $zimwriterfs_required_version, have $zimwriterfs_version"
+
+make__good__zim()
+{
+  zimwriterfs --withoutFTIndex \
+              --threads 1 \
+              --no-uuid \
+              -w main.html \
+              -f favicon.png \
+              -l en \
+              -t "Test ZIM file" \
+              -d "N/A" \
+              -c "N/A" \
+              -p "N/A" \
+              small_zimfile_data \
+              good.zim
+}
+
+make__bad_checksum__zim()
+{
+  {
+    local checksum_size=16 i
+    local zimfile_size=$(wc -c<good.zim) &&
+    head -c $((zimfile_size - checksum_size)) good.zim &&
+    for (( i=0; i < checksum_size; ++i ))
+    do
+      printf '\0'
+    done
+  } > bad_checksum.zim \
+  && ! diff -q good.zim bad_checksum.zim &> /dev/null \
+  || die 'The checksum in good.zim is all zeros!!!'
+}
+
+make__poor__zim()
+(
+  local tmpdir=$(mktemp -d)
+  trap "rm -rf '$tmpdir'" EXIT
+  cp -r small_zimfile_data "$tmpdir"
+  (
+    cd "$tmpdir"/small_zimfile_data
+    touch empty.html
+    mv favicon.png image.png
+    sed -i -e 's!favicon.png!image.png!' main.html
+    sed -e 's!A/article1.html!!' main.html > empty_link.html
+    sed -e 's!I/image.png!http://a.io/pic.png!' main.html > external_link.html
+    sed -e 's/article1/non_existent/' main.html > dangling_link.html
+    sed -e 's!A/article1!../../oops!' main.html > outofbounds_link.html
+    cp article1.html redundant_article.html
+  )
+  zimwriterfs --withoutFTIndex \
+              --dont-check-arguments \
+              --threads 1 \
+              --no-uuid \
+              -w "" \
+              -f "" \
+              -l en \
+              -t "" \
+              -d "" \
+              -c "N/A" \
+              -p "N/A" \
+              "$tmpdir"/small_zimfile_data \
+              poor.zim
+)
+
+for zimfilename in "${zimfiles[@]}"
+do
+  rm -f "$zimfilename".zim
+  make__"$zimfilename"__zim \
+  && test -f "$zimfilename".zim \
+  && echo "$zimfilename.zim was successfully created" \
+  || die "Failed to create $zimfilename.zim"
+done

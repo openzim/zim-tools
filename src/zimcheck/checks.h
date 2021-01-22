@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 #include <algorithm>
+#include <bitset>
 
 #include "../progress.h"
 
@@ -40,8 +41,9 @@ enum class TestType {
     REDUNDANT,
     URL_INTERNAL,
     URL_EXTERNAL,
-    MIME,
-    OTHER
+    OTHER,
+
+    COUNT
 };
 
 // Specialization of std::hash needed for our unordered_map. Can be removed in c++14
@@ -61,50 +63,65 @@ static std::unordered_map<TestType, std::pair<LogTag, std::string>> errormapping
     { TestType::REDUNDANT,     {LogTag::WARNING, "Redundant data found"}},
     { TestType::URL_INTERNAL,  {LogTag::ERROR, "Invalid internal links found"}},
     { TestType::URL_EXTERNAL,  {LogTag::ERROR, "Invalid external links found"}},
-    { TestType::MIME,       {LogTag::ERROR, "Incoherent mimeType found"}},
     { TestType::OTHER,      {LogTag::ERROR, "Other errors found"}}
+};
+
+class EnabledTests {
+    std::bitset<size_t(TestType::COUNT)> tests;
+
+  public:
+    EnabledTests() {}
+
+    void enableAll() { tests.set(); }
+    void enable(TestType tt) { tests.set(size_t(tt)); }
+    bool isEnabled(TestType tt) const { return tests[size_t(tt)]; }
 };
 
 class ErrorLogger {
   private:
-    std::unordered_map<TestType, std::vector<std::string>> reportMsgs;
-    std::unordered_map<TestType, bool> testStatus;
+    // reportMsgs[i] holds messages for the i'th test/check
+    std::vector<std::vector<std::string>> reportMsgs;
+
+    // testStatus[i] corresponds to the status of i'th test
+    std::bitset<size_t(TestType::COUNT)> testStatus;
 
   public:
     ErrorLogger()
+      : reportMsgs(size_t(TestType::COUNT))
     {
-        for (const auto &m : errormapping) {
-            testStatus[m.first] = true;
-        }
+        testStatus.set();
     }
 
     void setTestResult(TestType type, bool status) {
-        testStatus[type] = status;
+        testStatus[size_t(type)] = status;
     }
 
     void addReportMsg(TestType type, const std::string& message) {
-        reportMsgs[type].push_back(message);
+        reportMsgs[size_t(type)].push_back(message);
     }
 
     void report(bool error_details) const {
-        for (auto testmsg : reportMsgs) {
-                auto &p = errormapping[testmsg.first];
+        for ( size_t i = 0; i < size_t(TestType::COUNT); ++i ) {
+            const auto& testmsg = reportMsgs[i];
+            if ( !testStatus[i] ) {
+                auto &p = errormapping[TestType(i)];
                 std::cout << "[" + tagToStr[p.first] + "] " << p.second << ":" << std::endl;
-                for (auto& msg: testmsg.second) {
+                for (auto& msg: testmsg) {
                     std::cout << "  " << msg << std::endl;
                 }
+            }
         }
     }
 
-    inline bool overalStatus() const {
-        return std::all_of(testStatus.begin(), testStatus.end(),
-                           [](std::pair<TestType, bool> e){
-                                    if (errormapping[e.first].first == LogTag::ERROR)
-                                    {
-                                        return e.second; //return the test status result
-                                    }
-                                    return true;
-                            });
+    inline bool overallStatus() const {
+        for ( size_t i = 0; i < size_t(TestType::COUNT); ++i ) {
+            if (errormapping[TestType(i)].first == LogTag::ERROR) {
+                if ( testStatus[i] == false ) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 };
 
@@ -115,6 +132,6 @@ void test_metadata(const zim::Archive& archive, ErrorLogger& reporter);
 void test_favicon(const zim::Archive& archive, ErrorLogger& reporter);
 void test_mainpage(const zim::Archive& archive, ErrorLogger& reporter);
 void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressBar progress,
-                   bool redundant_data, bool url_check, bool url_check_external, bool empty_check);
+                   const EnabledTests enabled_tests);
 
 #endif

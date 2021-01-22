@@ -60,11 +60,32 @@ std::string redirectsPath;
 std::string zimPath;
 std::string directoryPath;
 
+
+int threads = 4;
 int minChunkSize = 2048;
 
 bool verboseFlag = false;
 bool withoutFTIndex = false;
 bool zstdFlag = false;
+bool noUuid = false;
+bool dontCheckArgs = false;
+
+bool thereAreMissingArguments()
+{
+  if ( directoryPath.empty() || zimPath.empty() )
+    return true;
+
+  if ( dontCheckArgs )
+    return false;
+
+  return creator.empty()
+      || publisher.empty()
+      || description.empty()
+      || language.empty()
+      || welcome.empty()
+      || favicon.empty();
+}
+
 }
 
 // Global flags
@@ -136,6 +157,8 @@ void usage()
   std::cout
       << "\t-m, --minChunkSize\tnumber of bytes per ZIM cluster (default: 2048)"
       << std::endl;
+  std::cout << "\t-J, --threads\tcount of threads to utilize (default: 4)"
+      << std::endl;
   std::cout << "\t-x, --inflateHtml\ttry to inflate HTML files before packing "
                "(*.html, *.htm, ...)"
             << std::endl;
@@ -156,6 +179,9 @@ void usage()
             << std::endl;
   std::cout << "\t-z, --zstd\t\tuse Zstandard as ZIM compression (lzma otherwise)"
             << std::endl;
+  // --no-uuid and --dont-check-arguments are dev options, let's keep them secret
+  // std::cout << "\t-U, --no-uuid\t\tdon't generate a random UUID" << std::endl;
+  // std::cout << "\t-B, --dont-check-arguments\t\tdon't check arguments (and possibly produce a broken ZIM file)" << std::endl;
   std::cout << std::endl;
 
   std::cout << "Example:" << std::endl;
@@ -197,6 +223,9 @@ void parse_args(int argc, char** argv)
          {"publisher", required_argument, 0, 'p'},
          {"zstd", no_argument, 0, 'z'},
          {"withoutFTIndex", no_argument, 0, 'j'},
+         {"threads", required_argument, 0, 'J'},
+         {"no-uuid", no_argument, 0, 'U'},
+         {"dont-check-arguments", no_argument, 0, 'B'},
 
          // Only for backward compatibility
          {"withFullTextIndex", no_argument, 0, 'i'},
@@ -207,7 +236,7 @@ void parse_args(int argc, char** argv)
 
   do {
     c = getopt_long(
-        argc, argv, "hVvijxuzw:m:f:t:d:c:l:p:r:e:n:", long_options, &option_index);
+        argc, argv, "hVvijxuzw:m:f:t:d:c:l:p:r:e:n:J:UB", long_options, &option_index);
 
     if (c != -1) {
       switch (c) {
@@ -276,6 +305,15 @@ void parse_args(int argc, char** argv)
         case 'z':
           zstdFlag = true;
           break;
+        case 'J':
+          threads = atoi(optarg);
+          break;
+        case 'U':
+          noUuid = true;
+          break;
+        case 'B':
+          dontCheckArgs = true;
+          break;
       }
     }
   } while (c != -1);
@@ -290,12 +328,7 @@ void parse_args(int argc, char** argv)
     }
   }
 
-  if (directoryPath.empty() || zimPath.empty() || creator.empty()
-      || publisher.empty()
-      || description.empty()
-      || language.empty()
-      || welcome.empty()
-      || favicon.empty()) {
+  if ( thereAreMissingArguments() ) {
     if (argc > 1)
       std::cerr << "zimwriterfs: too few arguments!" << std::endl;
     usage();
@@ -310,7 +343,7 @@ void parse_args(int argc, char** argv)
   }
 
   /* Check metadata */
-  if (!fileExists(directoryPath + "/" + welcome)) {
+  if (!dontCheckArgs && !fileExists(directoryPath + "/" + welcome)) {
     std::cerr << "zimwriterfs: unable to find welcome page at '"
               << directoryPath << "/" << welcome
               << "'. --welcome path/value must be relative to HTML_DIRECTORY."
@@ -318,7 +351,7 @@ void parse_args(int argc, char** argv)
     exit(1);
   }
 
-  if (!fileExists(directoryPath + "/" + favicon)) {
+  if (!dontCheckArgs && !fileExists(directoryPath + "/" + favicon)) {
     std::cerr << "zimwriterfs: unable to find favicon at " << directoryPath
               << "/" << favicon
               << "'. --favicon path/value must be relative to HTML_DIRECTORY."
@@ -346,9 +379,13 @@ void create_zim()
 {
   ZimCreatorFS zimCreator(directoryPath);
   zimCreator.configVerbose(isVerbose())
+            .configNbWorkers(threads)
             .configMinClusterSize(minChunkSize)
             .configIndexing(!withoutFTIndex, language)
             .configCompression(zstdFlag ? zim::zimcompZstd : zim::zimcompLzma);
+  if ( noUuid ) {
+    zimCreator.setUuid(zim::Uuid());
+  }
   if (zimPath.size() >= (MAXPATHLEN-1)) {
     throw std::invalid_argument("Target .zim file path is too long");
   }
@@ -383,8 +420,13 @@ void create_zim()
   zimCreator.addMetadata("Tags", tags);
   zimCreator.addMetadata("Date", generateDate());
 
-  zimCreator.setMainPath(welcome);
-  zimCreator.setFaviconPath(favicon);
+  if ( !welcome.empty() )  {
+    zimCreator.setMainPath(welcome);
+  }
+
+  if ( !favicon.empty() )  {
+    zimCreator.setFaviconPath(favicon);
+  }
 
   /* Directory visitor */
   MimetypeCounter mimetypeCounter;

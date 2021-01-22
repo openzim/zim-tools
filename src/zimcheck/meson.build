@@ -1,6 +1,10 @@
 
 
-executable('zimcheck', 'main.cpp', 'checks.cpp', '../tools.cpp',
+executable('zimcheck',
+  'main.cpp',
+  'zimcheck.cpp',
+  'checks.cpp',
+  '../tools.cpp',
   dependencies: libzim_dep,
   install: true)
 
