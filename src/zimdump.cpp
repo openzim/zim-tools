@@ -126,6 +126,7 @@ class ZimDumper
     int listEntries(bool info);
     int listEntry(const zim::Entry& entry);
     void listEntryT(const zim::Entry& entr);
+    int listEntriesByNamespace(const std::string ns, bool details);
 
     zim::Entry getEntryByPath(const std::string &path);
     zim::Entry getEntry(zim::size_type idx);
@@ -231,6 +232,20 @@ void ZimDumper::listEntryT(const zim::Entry& entry)
   }
   std::cout << std::endl;
 }
+
+int ZimDumper::listEntriesByNamespace(const std::string ns, bool details)
+{
+    int ret = 0;
+    for (auto& entry:m_archive.findByPath(ns)) {
+        if (details) {
+          ret = listEntry(entry);
+        } else {
+          std::cout << entry.getPath() << '\n';
+        }
+    }
+    return ret;
+}
+
 void write_to_error_directory(const std::string& base, const std::string relpath, const char *content, ssize_t size)
 {
     createdir(ERRORSDIR, base);
@@ -447,6 +462,7 @@ int subcmdList(ZimDumper &app, std::map<std::string, docopt::value> &args)
     bool idx(args["--idx"]);
     bool url(args["--url"]);
     bool details = args["--details"].asBool();
+    bool ns(args["--ns"]);
 
     if (idx || url) {
         try {
@@ -460,8 +476,9 @@ int subcmdList(ZimDumper &app, std::map<std::string, docopt::value> &args)
             std::cerr << "Entry not found" << std::endl;
             return -1;
         }
-    }
-    else {
+    } else if (ns){
+        return app.listEntriesByNamespace(args["--ns"].asString(), details);
+    } else {
         return app.listEntries(details);
     }
 }
