@@ -23,11 +23,8 @@ else
   zimfiles=(good bad_checksum poor)
 fi
 
-zimwriterfs_required_version=v2.1.1
 zimwriterfs_version=$(get_zimwriterfs_version) \
   || die "zimwriterfs not in PATH"
-test "$zimwriterfs_version" == "Version:  $zimwriterfs_required_version" \
-  || die "Need zimwriterfs $zimwriterfs_required_version, have $zimwriterfs_version"
 
 make__good__zim()
 {
