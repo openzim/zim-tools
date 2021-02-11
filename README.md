@@ -4,7 +4,7 @@ ZIM tools
 Various ZIM command line tools. More information about the ZIM format
 and the [openZIM project](https://openzim.org).
 
-[![latest release](https://img.shields.io/github/v/tag/openzim/zim-tools?label=latest%20release&sort=semver)](https://download.openzim.org/release/zim-tools/)
+[![Releases](https://img.shields.io/github/v/tag/openzim/zim-tools?label=latest%20release&sort=semver)](https://download.openzim.org/release/zim-tools/)
 [![Reporitories](https://img.shields.io/repology/repositories/zim-tools?label=repositories)](https://github.com/openzim/zim-tools/wiki/Repology)
 [![Build Status](https://github.com/openzim/zim-tools/workflows/CI/badge.svg?query=branch%3Amaster)](https://github.com/openzim/zim-tools/actions?query=branch%3Amaster)
 [![Docker Build Status](https://img.shields.io/docker/v/openzim/zim-tools?arch=amd64&label=Docker&sort=date)](https://hub.docker.com/r/openzim/zim-tools)
@@ -12,21 +12,24 @@ and the [openZIM project](https://openzim.org).
 [![CodeFactor](https://www.codefactor.io/repository/github/openzim/zim-tools/badge)](https://www.codefactor.io/repository/github/openzim/zim-tools)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-`zimwriterfs` is a console tool to create [ZIM](https://openzim.org)
-files from a locally-stored directory containing "self-sufficient"
-HTML content (with pictures, javascript and stylesheets). The result
-will contain all the files of the local directory compressed and
-merged in the ZIM file. Nothing more, nothing less. The generated file
-can be opened with a ZIM reader; [Kiwix](https://kiwix.org) is one
-example, but there are [others](https://openzim.org/wiki/ZIM_Readers).
+Most famous tools are:
 
-Releases
-----------
+* `zimcheck` verifies that a given [ZIM](https://openzim.org) file is
+  not corrupted. It provides many features to secure that ZIM entries
+  are proper and properly linked.
 
-Tagged source code and prebuilt Linux x86-64 binaries can be found at:
+* `zimdump` inspects or dumps (part of) a [ZIM](https://openzim.org) file.
 
-- https://download.openzim.org/release/zim-tools/ 
+* `zimwriterfs` creates [ZIM](https://openzim.org) files from a
+  locally-stored directory containing "self-sufficient" HTML content
+  (with pictures, javascript and stylesheets). The result will contain
+  all the files of the local directory compressed and merged in the
+  ZIM file. Nothing more, nothing less. The generated file can be
+  opened with a ZIM reader; [Kiwix](https://kiwix.org) is one example,
+  but there are [others](https://openzim.org/wiki/ZIM_Readers).
 
+A few other tools are provided as well but are of less value for most
+of the usages.
 
 Disclaimer
 ----------
@@ -105,6 +108,10 @@ cd build
 meson test
 ```
 
+To compile and run the tests, [Google
+Test](https://github.com/google/googletest) is requested (package
+`googletest` on Ubuntu).
+
 Installation
 ------------
 
@@ -132,8 +139,10 @@ Like for the installation, you might need to run the command as user
 Docker
 ------
 
-A Docker image with `zimwriterfs`, `zimcheck`,`zimdump` and all the other tools can be built from the `docker`
-directory. The project maintains an official image available at https://hub.docker.com/r/openzim/zim-tools.
+A Docker image with `zimwriterfs`, `zimcheck`,`zimdump` and all the
+other tools can be built from the `docker` directory. The project
+maintains an official image available at
+https://hub.docker.com/r/openzim/zim-tools.
 
 Troubleshooting
 ---------------
