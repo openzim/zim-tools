@@ -132,6 +132,9 @@ class ZimDumper
     zim::Entry getEntry(zim::size_type idx);
 
     void dumpFiles(const std::string& directory, bool symlinkdump, std::function<bool (const char c)> nsfilter);
+
+  private:
+    void writeHttpRedirect(const std::string& directory, const std::string& relative_path, const std::string& redirectPath);
 };
 
 zim::Entry ZimDumper::getEntryByPath(const std::string& path)
@@ -302,6 +305,16 @@ inline void write_to_file(const std::string &base, const std::string& path, cons
     close(fd);
 }
 
+void ZimDumper::writeHttpRedirect(const std::string& directory, const std::string& relative_path, const std::string& redirectPath)
+{
+    auto encodedurl = urlEncode(redirectPath, true);
+    std::ostringstream ss;
+
+    ss << "<!DOCTYPE html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />";
+    ss << "<meta http-equiv=\"refresh\" content=\"0;url=" + encodedurl + "\" /><head><body></body></html>";
+    auto content = ss.str();
+    write_to_file(directory + SEPARATOR, relative_path, content.c_str(), content.size());
+}
 
 void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::function<bool (const char c)> nsfilter)
 {
@@ -345,13 +358,7 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
         auto redirectItem = entry.getItem(true);
         std::string redirectPath = redirectItem.getPath();
         if (symlinkdump == false && redirectItem.getMimetype() == "text/html") {
-            auto encodedurl = urlEncode(redirectPath, true);
-            std::ostringstream ss;
-
-            ss << "<!DOCTYPE html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />";
-            ss << "<meta http-equiv=\"refresh\" content=\"0;url=" + encodedurl + "\" /><head><body></body></html>";
-            auto content = ss.str();
-            write_to_file(directory + SEPARATOR, relative_path, content.c_str(), content.size());
+            writeHttpRedirect(directory, relative_path, redirectPath);
         } else {
 #ifdef _WIN32
             auto blob = redirectItem.getData();
@@ -428,7 +435,7 @@ int subcmdDump(ZimDumper &app,  std::map<std::string, docopt::value> &args)
         std::string nspace = args["--ns"].asString();
         filter = [nspace](const char c){ return nspace.at(0) == c; };
     }
-    
+
     std::string directory = args["--dir"].asString();
 
     if (directory.empty()) {
