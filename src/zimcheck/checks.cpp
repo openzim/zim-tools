@@ -23,6 +23,13 @@ namespace std {
   };
 }
 
+// Specialization of std::hash needed for our unordered_map. Can be removed in c++14
+namespace std {
+  template <> struct hash<MsgId> {
+    size_t operator() (const MsgId &msgid) const { return size_t(msgid); }
+  };
+}
+
 namespace
 {
 
