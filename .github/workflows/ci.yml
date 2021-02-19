@@ -100,6 +100,7 @@ jobs:
         ninja
       env:
         PKG_CONFIG_PATH: "/home/runner/BUILD_${{matrix.target}}/INSTALL/lib/pkgconfig:/home/runner/BUILD_${{matrix.target}}/INSTALL/lib${{matrix.lib_postfix}}/pkgconfig"
+        CPPFLAGS: "-I/home/runner/BUILD_${{matrix.target}}/INSTALL/include"
     - name: Test
       shell: bash
       run: |
