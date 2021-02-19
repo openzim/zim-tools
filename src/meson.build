@@ -14,7 +14,7 @@ if target_machine.system() != 'windows'
     install: true)
 endif
 
-executable('zimdump', 'zimdump.cpp',
+executable('zimdump', 'zimdump.cpp', 'tools.cpp',
   dependencies: [libzim_dep, docopt_dep],
   install: true)
 

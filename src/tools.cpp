@@ -153,6 +153,50 @@ static std::string removeLastPathElement(const std::string& path,
   return newPath;
 }
 
+namespace
+{
+
+std::vector<std::string> split(const std::string & str, char delim)
+{
+  std::vector<std::string> result;
+  auto start = str.begin();
+  while ( true ) {
+      const auto end = find(start, str.end(), delim);
+
+      result.push_back(std::string(start, end));
+      if ( end == str.end() )
+        break;
+      start = end + 1;
+  }
+
+  return result;
+}
+
+} // unnamed namespace
+
+std::string
+computeRelativePath(const std::string& path1, const std::string& path2)
+{
+    const auto a = split(path1, '/');
+    const auto b = split(path2, '/');
+    const auto l = std::min(a.size(), b.size());
+
+    const auto x = mismatch(a.begin(), a.begin() + l, b.begin());
+
+    const size_t ups = (a.end() - x.first) - 1;
+    std::string r;
+    for ( size_t i = 0; i < ups; ++i ) {
+      r += "../";
+    }
+
+    for ( auto it = x.second; it != b.end(); ++it ) {
+        if ( it != x.second )
+          r += "/";
+        r += *it;
+    }
+    return r;
+}
+
 /* Warning: the relative path must be with slashes */
 std::string computeAbsolutePath(const std::string& path,
                                 const std::string& relativePath)

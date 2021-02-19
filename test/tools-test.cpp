@@ -55,6 +55,21 @@ TEST(CommonTools, decodeUrl)
   }
 }
 
+TEST(CommonTools, computeRelativePath)
+{
+  EXPECT_EQ("B", computeRelativePath("A", "B"));
+  EXPECT_EQ("B/CD/EFG", computeRelativePath("A", "B/CD/EFG"));
+
+  EXPECT_EQ("c", computeRelativePath("dir/b", "dir/c"));
+  EXPECT_EQ("subdir/", computeRelativePath("dir/b", "dir/subdir/"));
+  EXPECT_EQ("../c", computeRelativePath("dir/subdir/", "dir/c"));
+
+  EXPECT_EQ("../c", computeRelativePath("A/B/f", "A/c"));
+  EXPECT_EQ("D/c", computeRelativePath("A/f", "A/D/c"));
+
+  EXPECT_EQ("c", computeRelativePath("A/B/f", "A/B/c"));
+}
+
 TEST(CommonTools, computeAbsolutePath)
 {
   std::string str;

@@ -36,6 +36,7 @@
 #include <unordered_map>
 
 #include "version.h"
+#include "tools.h"
 
 #include <fcntl.h>
 #ifdef _WIN32
@@ -134,7 +135,7 @@ class ZimDumper
     void dumpFiles(const std::string& directory, bool symlinkdump, std::function<bool (const char c)> nsfilter);
 
   private:
-    void writeHttpRedirect(const std::string& directory, const std::string& relative_path, const std::string& redirectPath);
+    void writeHttpRedirect(const std::string& directory, const std::string& relative_path, const std::string& currentEntryPath, std::string redirectPath);
 };
 
 zim::Entry ZimDumper::getEntryByPath(const std::string& path)
@@ -305,15 +306,16 @@ inline void write_to_file(const std::string &base, const std::string& path, cons
     close(fd);
 }
 
-void ZimDumper::writeHttpRedirect(const std::string& directory, const std::string& relative_path, const std::string& redirectPath)
+void ZimDumper::writeHttpRedirect(const std::string& directory, const std::string& outputPath, const std::string& currentEntryPath, std::string redirectPath)
 {
+    redirectPath = computeRelativePath(currentEntryPath, redirectPath);
     auto encodedurl = urlEncode(redirectPath, true);
     std::ostringstream ss;
 
     ss << "<!DOCTYPE html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />";
     ss << "<meta http-equiv=\"refresh\" content=\"0;url=" + encodedurl + "\" /><head><body></body></html>";
     auto content = ss.str();
-    write_to_file(directory + SEPARATOR, relative_path, content.c_str(), content.size());
+    write_to_file(directory + SEPARATOR, outputPath, content.c_str(), content.size());
 }
 
 void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::function<bool (const char c)> nsfilter)
@@ -328,7 +330,7 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
 
   std::vector<std::string> pathcache;
   for (auto& entry:m_archive.iterEfficient()) {
-    std::string path = entry.getPath();
+    const std::string path = entry.getPath();
     std::string dir = "";
     std::string filename = path;
     auto position = path.find_last_of('/');
@@ -358,7 +360,7 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
         auto redirectItem = entry.getItem(true);
         std::string redirectPath = redirectItem.getPath();
         if (symlinkdump == false && redirectItem.getMimetype() == "text/html") {
-            writeHttpRedirect(directory, relative_path, redirectPath);
+            writeHttpRedirect(directory, relative_path, path, redirectPath);
         } else {
 #ifdef _WIN32
             auto blob = redirectItem.getData();
