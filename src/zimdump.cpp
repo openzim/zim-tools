@@ -30,7 +30,6 @@
 #include <docopt/docopt.h>
 #include <sys/stat.h>
 #include <iomanip>
-#include <array>
 #include <vector>
 #include <codecvt>
 #include <unordered_map>
@@ -67,46 +66,6 @@ inline static void createdir(const std::string &path, const std::string &base)
             #endif
         }
     }
-}
-
-static bool isReservedUrlChar(const char c)
-{
-    constexpr std::array<char, 10> reserved = {{';', ',', '?', ':',
-                                               '@', '&', '=', '+', '$' }};
-
-    return std::any_of(reserved.begin(), reserved.end(),
-                       [&c] (const char &elem) { return elem == c; } );
-}
-
-static bool needsEscape(const char c, const bool encodeReserved)
-{
-  if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))
-    return false;
-
-  if (isReservedUrlChar(c))
-    return encodeReserved;
-
-  constexpr std::array<char, 10> noNeedEscape = {{'-', '_', '.', '!', '~',
-                                                '*', '\'', '(', ')', '/' }};
-
-  return not std::any_of(noNeedEscape.begin(), noNeedEscape.end(),
-                         [&c] (const char &elem) { return elem == c; } );
-}
-
-std::string urlEncode(const std::string& value, bool encodeReserved)
-{
-  std::ostringstream os;
-  os << std::hex << std::uppercase;
-  for (std::string::const_iterator it = value.begin();
-       it != value.end();
-       ++it) {
-    if (!needsEscape(*it, encodeReserved)) {
-      os << *it;
-    } else {
-      os << '%' << std::setw(2) << static_cast<unsigned int>(static_cast<unsigned char>(*it));
-    }
-  }
-  return os.str();
 }
 
 class ZimDumper
@@ -309,12 +268,7 @@ inline void write_to_file(const std::string &base, const std::string& path, cons
 void ZimDumper::writeHttpRedirect(const std::string& directory, const std::string& outputPath, const std::string& currentEntryPath, std::string redirectPath)
 {
     redirectPath = computeRelativePath(currentEntryPath, redirectPath);
-    auto encodedurl = urlEncode(redirectPath, true);
-    std::ostringstream ss;
-
-    ss << "<!DOCTYPE html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />";
-    ss << "<meta http-equiv=\"refresh\" content=\"0;url=" + encodedurl + "\" /><head><body></body></html>";
-    auto content = ss.str();
+    const auto content = httpRedirectHtml(redirectPath);
     write_to_file(directory + SEPARATOR, outputPath, content.c_str(), content.size());
 }
 

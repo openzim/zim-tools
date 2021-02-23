@@ -244,3 +244,30 @@ TEST(tools, getLinks)
     ASSERT_EQ(v3[0].attribute, "src");
     ASSERT_EQ(v3[0].link, "https://fonts.goos.com/css?family=OpenSans");
 }
+
+TEST(tools, httpRedirectHtml)
+{
+    EXPECT_EQ(
+      httpRedirectHtml("http://example.com"),
+      "<!DOCTYPE html>"
+      "<html>"
+        "<head>"
+          "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />"
+          "<meta http-equiv=\"refresh\" content=\"0;url=http%3A//example.com\" />"
+        "</head>"
+        "<body></body>"
+      "</html>"
+    );
+
+    EXPECT_EQ(
+      httpRedirectHtml(u8"A/Κίουι"),
+      "<!DOCTYPE html>"
+      "<html>"
+        "<head>"
+          "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />"
+          "<meta http-equiv=\"refresh\" content=\"0;url=A/%CE%9A%CE%AF%CE%BF%CF%85%CE%B9\" />"
+        "</head>"
+        "<body></body>"
+      "</html>"
+    );
+}

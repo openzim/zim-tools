@@ -197,4 +197,5 @@ int adler32(const std::string& buf);
 //Converts the %20 to space.Essential for comparing URLs.
 std::string normalize_link(const std::string& input, const std::string& baseUrl);
 
+std::string httpRedirectHtml(const std::string& redirectUrl);
 #endif  // OPENZIM_TOOLS_H
