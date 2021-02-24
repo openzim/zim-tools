@@ -30,12 +30,12 @@
 #include <docopt/docopt.h>
 #include <sys/stat.h>
 #include <iomanip>
-#include <array>
 #include <vector>
 #include <codecvt>
 #include <unordered_map>
 
 #include "version.h"
+#include "tools.h"
 
 #include <fcntl.h>
 #ifdef _WIN32
@@ -68,46 +68,6 @@ inline static void createdir(const std::string &path, const std::string &base)
     }
 }
 
-static bool isReservedUrlChar(const char c)
-{
-    constexpr std::array<char, 10> reserved = {{';', ',', '?', ':',
-                                               '@', '&', '=', '+', '$' }};
-
-    return std::any_of(reserved.begin(), reserved.end(),
-                       [&c] (const char &elem) { return elem == c; } );
-}
-
-static bool needsEscape(const char c, const bool encodeReserved)
-{
-  if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))
-    return false;
-
-  if (isReservedUrlChar(c))
-    return encodeReserved;
-
-  constexpr std::array<char, 10> noNeedEscape = {{'-', '_', '.', '!', '~',
-                                                '*', '\'', '(', ')', '/' }};
-
-  return not std::any_of(noNeedEscape.begin(), noNeedEscape.end(),
-                         [&c] (const char &elem) { return elem == c; } );
-}
-
-std::string urlEncode(const std::string& value, bool encodeReserved)
-{
-  std::ostringstream os;
-  os << std::hex << std::uppercase;
-  for (std::string::const_iterator it = value.begin();
-       it != value.end();
-       ++it) {
-    if (!needsEscape(*it, encodeReserved)) {
-      os << *it;
-    } else {
-      os << '%' << std::setw(2) << static_cast<unsigned int>(static_cast<unsigned char>(*it));
-    }
-  }
-  return os.str();
-}
-
 class ZimDumper
 {
     zim::Archive m_archive;
@@ -132,6 +92,9 @@ class ZimDumper
     zim::Entry getEntry(zim::size_type idx);
 
     void dumpFiles(const std::string& directory, bool symlinkdump, std::function<bool (const char c)> nsfilter);
+
+  private:
+    void writeHttpRedirect(const std::string& directory, const std::string& relative_path, const std::string& currentEntryPath, std::string redirectPath);
 };
 
 zim::Entry ZimDumper::getEntryByPath(const std::string& path)
@@ -302,6 +265,12 @@ inline void write_to_file(const std::string &base, const std::string& path, cons
     close(fd);
 }
 
+void ZimDumper::writeHttpRedirect(const std::string& directory, const std::string& outputPath, const std::string& currentEntryPath, std::string redirectPath)
+{
+    redirectPath = computeRelativePath(currentEntryPath, redirectPath);
+    const auto content = httpRedirectHtml(redirectPath);
+    write_to_file(directory + SEPARATOR, outputPath, content.c_str(), content.size());
+}
 
 void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::function<bool (const char c)> nsfilter)
 {
@@ -315,7 +284,7 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
 
   std::vector<std::string> pathcache;
   for (auto& entry:m_archive.iterEfficient()) {
-    std::string path = entry.getPath();
+    const std::string path = entry.getPath();
     std::string dir = "";
     std::string filename = path;
     auto position = path.find_last_of('/');
@@ -345,13 +314,7 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
         auto redirectItem = entry.getItem(true);
         std::string redirectPath = redirectItem.getPath();
         if (symlinkdump == false && redirectItem.getMimetype() == "text/html") {
-            auto encodedurl = urlEncode(redirectPath, true);
-            std::ostringstream ss;
-
-            ss << "<!DOCTYPE html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />";
-            ss << "<meta http-equiv=\"refresh\" content=\"0;url=" + encodedurl + "\" /><head><body></body></html>";
-            auto content = ss.str();
-            write_to_file(directory + SEPARATOR, relative_path, content.c_str(), content.size());
+            writeHttpRedirect(directory, relative_path, path, redirectPath);
         } else {
 #ifdef _WIN32
             auto blob = redirectItem.getData();
@@ -428,7 +391,7 @@ int subcmdDump(ZimDumper &app,  std::map<std::string, docopt::value> &args)
         std::string nspace = args["--ns"].asString();
         filter = [nspace](const char c){ return nspace.at(0) == c; };
     }
-    
+
     std::string directory = args["--dir"].asString();
 
     if (directory.empty()) {

@@ -55,6 +55,21 @@ TEST(CommonTools, decodeUrl)
   }
 }
 
+TEST(CommonTools, computeRelativePath)
+{
+  EXPECT_EQ("B", computeRelativePath("A", "B"));
+  EXPECT_EQ("B/CD/EFG", computeRelativePath("A", "B/CD/EFG"));
+
+  EXPECT_EQ("c", computeRelativePath("dir/b", "dir/c"));
+  EXPECT_EQ("subdir/", computeRelativePath("dir/b", "dir/subdir/"));
+  EXPECT_EQ("../c", computeRelativePath("dir/subdir/", "dir/c"));
+
+  EXPECT_EQ("../c", computeRelativePath("A/B/f", "A/c"));
+  EXPECT_EQ("D/c", computeRelativePath("A/f", "A/D/c"));
+
+  EXPECT_EQ("c", computeRelativePath("A/B/f", "A/B/c"));
+}
+
 TEST(CommonTools, computeAbsolutePath)
 {
   std::string str;
@@ -228,4 +243,31 @@ TEST(tools, getLinks)
     ASSERT_TRUE(v3.size() == 1);
     ASSERT_EQ(v3[0].attribute, "src");
     ASSERT_EQ(v3[0].link, "https://fonts.goos.com/css?family=OpenSans");
+}
+
+TEST(tools, httpRedirectHtml)
+{
+    EXPECT_EQ(
+      httpRedirectHtml("http://example.com"),
+      "<!DOCTYPE html>"
+      "<html>"
+        "<head>"
+          "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />"
+          "<meta http-equiv=\"refresh\" content=\"0;url=http%3A//example.com\" />"
+        "</head>"
+        "<body></body>"
+      "</html>"
+    );
+
+    EXPECT_EQ(
+      httpRedirectHtml(u8"A/Κίουι"),
+      "<!DOCTYPE html>"
+      "<html>"
+        "<head>"
+          "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />"
+          "<meta http-equiv=\"refresh\" content=\"0;url=A/%CE%9A%CE%AF%CE%BF%CF%85%CE%B9\" />"
+        "</head>"
+        "<body></body>"
+      "</html>"
+    );
 }

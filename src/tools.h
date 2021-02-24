@@ -161,6 +161,12 @@ class CopyItem : public zim::writer::Item         //Article class that will be p
 std::string getMimeTypeForFile(const std::string& basedir, const std::string& filename);
 std::string getFileContent(const std::string& path);
 std::string decodeUrl(const std::string& encodedUrl);
+
+// Assuming that path1 and path2 are relative to the same location
+// returns the relative path of path2 from path1
+std::string computeRelativePath(const std::string& path1,
+                                const std::string& path2);
+
 std::string computeAbsolutePath(const std::string& path,
                                 const std::string& relativePath);
 bool fileExists(const std::string& path);
@@ -191,4 +197,5 @@ int adler32(const std::string& buf);
 //Converts the %20 to space.Essential for comparing URLs.
 std::string normalize_link(const std::string& input, const std::string& baseUrl);
 
+std::string httpRedirectHtml(const std::string& redirectUrl);
 #endif  // OPENZIM_TOOLS_H
