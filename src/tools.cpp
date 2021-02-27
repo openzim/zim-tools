@@ -507,6 +507,7 @@ std::string httpRedirectHtml(const std::string& redirectUrl)
           "<head>"
           "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />"
           "<meta http-equiv=\"refresh\" content=\"0;url=" + encodedurl + "\" />"
+          "<link rel=\"canonical\" href=\"" + encodedurl + "\" />"      
           "</head>"
           "<body></body>"
           "</html>";
