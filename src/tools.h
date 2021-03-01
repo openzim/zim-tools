@@ -162,10 +162,10 @@ std::string getMimeTypeForFile(const std::string& basedir, const std::string& fi
 std::string getFileContent(const std::string& path);
 std::string decodeUrl(const std::string& encodedUrl);
 
-// Assuming that path1 and path2 are relative to the same location
-// returns the relative path of path2 from path1
-std::string computeRelativePath(const std::string& path1,
-                                const std::string& path2);
+// Assuming that basePath and targetPath are relative to the same location
+// returns the relative path of targetPath from basePath
+std::string computeRelativePath(const std::string& basePath,
+                                const std::string& targetPath);
 
 std::string computeAbsolutePath(const std::string& path,
                                 const std::string& relativePath);

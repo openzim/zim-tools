@@ -174,29 +174,44 @@ std::vector<std::string> split(const std::string & str, char delim)
   return result;
 }
 
-} // unnamed namespace
-
 std::string
-computeRelativePath(const std::string& path1, const std::string& path2)
+getRelativePath(const std::string& basePath, const std::string& targetPath)
 {
-    const auto a = split(path1, '/');
-    const auto b = split(path2, '/');
-    const auto l = std::min(a.size(), b.size());
+    const auto b = split(basePath, '/');
+    const auto t = split(targetPath, '/');
+    const auto l = std::min(b.size()-1, t.size());
 
-    const auto x = mismatch(a.begin(), a.begin() + l, b.begin());
+    auto x = mismatch(b.begin(), b.begin() + l, t.begin());
 
-    const size_t ups = (a.end() - x.first) - 1;
+    const size_t ups = (b.end() - x.first) + (x.second == t.end());
     std::string r;
-    for ( size_t i = 0; i < ups; ++i ) {
-      r += "../";
+    for ( size_t i = 1; i < ups; ++i ) {
+      if ( !r.empty() && r.back() != '/' )
+        r += "/";
+      r += "..";
     }
 
-    for ( auto it = x.second; it != b.end(); ++it ) {
-        if ( it != x.second )
+    for ( auto it = x.second; it != t.end(); ++it ) {
+        if ( !r.empty() && r.back() != '/' )
           r += "/";
         r += *it;
     }
     return r;
+}
+
+} // unnamed namespace
+
+std::string
+computeRelativePath(const std::string& basePath, const std::string& targetPath)
+{
+  if ( targetPath.back() == '/' ) {
+    if ( basePath == targetPath )
+      return "./";
+
+    const std::string strippedPath = targetPath.substr(0, targetPath.size()-1);
+    return getRelativePath(basePath, strippedPath) + '/';
+  }
+  return getRelativePath(basePath, targetPath);
 }
 
 /* Warning: the relative path must be with slashes */
