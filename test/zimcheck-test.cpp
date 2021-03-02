@@ -66,6 +66,27 @@ TEST(zimfilechecks, test_articles)
     ASSERT_TRUE(logger.overallStatus());
 }
 
+TEST(zimfilechecks, test_redirect_loop_pass)
+{
+  std::string fn = "data/zimfiles/wikibooks_be_all_nopic_2017-02.zim";
+
+  zim::Archive archive(fn);
+  ErrorLogger logger;
+
+  test_redirect_loop(archive, logger);
+
+  ASSERT_TRUE(logger.overallStatus());
+}
+
+TEST(zimfilechecks, test_redirect_loop_fail)
+{
+  ErrorLogger logger;
+  std::string poor_zim = "data/zimfiles/poor.zim";
+  zim::Archive archive_poor(poor_zim);
+  test_redirect_loop(archive_poor, logger);
+  ASSERT_FALSE(logger.overallStatus());
+}
+
 class CapturedStdStream
 {
   std::ostream& stream;
@@ -120,6 +141,7 @@ const std::string zimcheck_help_message(
   "-B , --progress        Print progress report\n"
   "-H , --help            Displays Help\n"
   "-V , --version         Displays software version\n"
+  "-L , --redirect_loop   Checks for the existence of redirect loops\n"
   "examples:\n"
   "zimcheck -A wikipedia.zim\n"
   "zimcheck --checksum --redundant wikipedia.zim\n"
@@ -348,6 +370,24 @@ TEST(zimcheck, redundant_articles_goodzimfile)
     );
 }
 
+TEST(zimcheck, redirect_loop_goodzimfile)
+{
+  const std::string expected_output(
+    "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
+    "[INFO] Checking for redirect loops..." "\n"
+    "[INFO] Overall Test Status: Pass" "\n"
+    "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+  );
+
+  test_zimcheck_single_option(
+    {"-l", "-L", "--redirect_loop"},
+    GOOD_ZIMFILE,
+    0,
+    expected_output,
+    EMPTY_STDERR
+  );
+}
+
 const std::string ALL_CHECKS_OUTPUT_ON_GOODZIMFILE(
       "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
       "[INFO] Verifying ZIM-archive structure integrity..." "\n"
@@ -358,6 +398,7 @@ const std::string ALL_CHECKS_OUTPUT_ON_GOODZIMFILE(
       "[INFO] Verifying Articles' content..." "\n"
       "[INFO] Searching for redundant articles..." "\n"
       "  Verifying Similar Articles for redundancies..." "\n"
+      "[INFO] Checking for redirect loops..." "\n"
       "[INFO] Overall Test Status: Pass" "\n"
       "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
 );
@@ -571,6 +612,31 @@ TEST(zimcheck, redundant_poorzimfile)
     );
 }
 
+TEST(zimcheck, redirect_loop_poorzimfile)
+{
+  const std::string expected_output(
+    "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
+    "[INFO] Checking for redirect loops..." "\n"
+    "[ERROR] Redirect loop(s) exist:" "\n"
+    "  Redirect loop exists from entry redirect_loop.html" "\n"
+    "" "\n"
+    "  Redirect loop exists from entry redirect_loop2.html" "\n"
+    "" "\n"
+    "  Redirect loop exists from entry redirect_loop3.html" "\n"
+    "" "\n"
+    "[INFO] Overall Test Status: Fail" "\n"
+    "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+  );
+
+  test_zimcheck_single_option(
+    {"-l", "-L", "--redirect_loop"},
+    POOR_ZIMFILE,
+    1,
+    expected_output,
+    EMPTY_STDERR
+  );
+}
+
 const std::string ALL_CHECKS_OUTPUT_ON_POORZIMFILE(
       "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
       "[INFO] Verifying ZIM-archive structure integrity..." "\n"
@@ -581,6 +647,7 @@ const std::string ALL_CHECKS_OUTPUT_ON_POORZIMFILE(
       "[INFO] Verifying Articles' content..." "\n"
       "[INFO] Searching for redundant articles..." "\n"
       "  Verifying Similar Articles for redundancies..." "\n"
+      "[INFO] Checking for redirect loops..." "\n"
       "[ERROR] Empty articles:" "\n"
       "  Entry empty.html is empty" "\n"
       "[ERROR] Missing metadata entries:" "\n"
@@ -599,6 +666,13 @@ const std::string ALL_CHECKS_OUTPUT_ON_POORZIMFILE(
       "  ../../oops.html is out of bounds. Article: outofbounds_link.html" "\n"
       "[ERROR] Invalid external links found:" "\n"
       "  http://a.io/pic.png is an external dependence in article external_link.html" "\n"
+      "[ERROR] Redirect loop(s) exist:" "\n"
+      "  Redirect loop exists from entry redirect_loop.html" "\n"
+      "" "\n"
+      "  Redirect loop exists from entry redirect_loop2.html" "\n"
+      "" "\n"
+      "  Redirect loop exists from entry redirect_loop3.html" "\n"
+      "" "\n"
       "[INFO] Overall Test Status: Fail" "\n"
       "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
 );
