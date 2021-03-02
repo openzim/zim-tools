@@ -60,6 +60,7 @@ void displayHelp()
              "-B , --progress        Print progress report\n"
              "-H , --help            Displays Help\n"
              "-V , --version         Displays software version\n"
+             "-L , --redirect_loop   Checks for the existence of redirect loops\n"
              "examples:\n"
              "zimcheck -A wikipedia.zim\n"
              "zimcheck --checksum --redundant wikipedia.zim\n"
@@ -114,10 +115,11 @@ int zimcheck (const std::vector<const char*>& args)
             { "details",      no_argument, 0, 'D'},
             { "help",         no_argument, 0, 'H'},
             { "version",      no_argument, 0, 'V'},
+            { "redirect_loop",no_argument, 0, 'L'},
             { 0, 0, 0, 0}
         };
         int option_index = 0;
-        int c = getopt_long (argc, const_cast<char**>(argv), "ACIMFPRUXEDHBVacimfpruxedhbv0",
+        int c = getopt_long (argc, const_cast<char**>(argv), "ACIMFPRUXLEDHBVacimfpruxledhbv0",
                              long_options, &option_index);
         //c = getopt (argc, argv, "ACMFPRUXED");
         if(c == -1)
@@ -175,6 +177,11 @@ int zimcheck (const std::vector<const char*>& args)
         case 'X':
         case 'x':
             enabled_tests.enable(TestType::URL_EXTERNAL);
+            no_args = false;
+            break;
+        case 'L':
+        case 'l':
+            enabled_tests.enable(TestType::REDIRECT);
             no_args = false;
             break;
         case 'D':
@@ -292,6 +299,8 @@ int zimcheck (const std::vector<const char*>& args)
              enabled_tests.isEnabled(TestType::EMPTY) )
           test_articles(archive, error, progress, enabled_tests);
 
+        if ( enabled_tests.isEnabled(TestType::REDIRECT))
+            test_redirect_loop(archive, error);
 
         error.report(error_details);
         std::cout << "[INFO] Overall Test Status: ";

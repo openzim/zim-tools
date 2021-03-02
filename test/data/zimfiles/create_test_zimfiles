@@ -71,6 +71,12 @@ make__poor__zim()
     sed -e 's!I/image.png!http://a.io/pic.png!' main.html > external_link.html
     sed -e 's/article1/non_existent/' main.html > dangling_link.html
     sed -e 's!A/article1!../../oops!' main.html > outofbounds_link.html
+    command_set="sed -e '6 a <meta http-equiv=refresh content=\"0;URL=redirect_loop.html\">' main.html"
+    eval $command_set > redirect_loop.html
+    command_set2="sed -e '6 a <meta http-equiv=refresh content=\"0;URL=redirect_loop3.html\">' main.html"
+    eval $command_set2 > redirect_loop2.html
+    command_set3="sed -e '6 a <meta http-equiv=refresh content=\"0;URL=redirect_loop2.html\">' main.html"
+    eval $command_set > redirect_loop3.html
     cp article1.html redundant_article.html
   )
   zimwriterfs --withoutFTIndex \

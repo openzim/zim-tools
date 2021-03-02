@@ -42,7 +42,7 @@ enum class TestType {
     URL_INTERNAL,
     URL_EXTERNAL,
     OTHER,
-
+    REDIRECT,
     COUNT
 };
 
@@ -63,6 +63,7 @@ static std::unordered_map<TestType, std::pair<LogTag, std::string>> errormapping
     { TestType::REDUNDANT,     {LogTag::WARNING, "Redundant data found"}},
     { TestType::URL_INTERNAL,  {LogTag::ERROR, "Invalid internal links found"}},
     { TestType::URL_EXTERNAL,  {LogTag::ERROR, "Invalid external links found"}},
+    { TestType::REDIRECT,      {LogTag::ERROR, "Redirect loop(s) exist"}},
     { TestType::OTHER,      {LogTag::ERROR, "Other errors found"}}
 };
 
@@ -133,5 +134,6 @@ void test_favicon(const zim::Archive& archive, ErrorLogger& reporter);
 void test_mainpage(const zim::Archive& archive, ErrorLogger& reporter);
 void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressBar progress,
                    const EnabledTests enabled_tests);
+void test_redirect_loop(const zim::Archive& archive, ErrorLogger& reporter);
 
 #endif

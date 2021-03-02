@@ -244,3 +244,27 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
         }
     }
 }
+
+void test_redirect_loop(const zim::Archive& archive, ErrorLogger& reporter) {    
+    std::cout << "[INFO] Checking for redirect loops..." << std::endl;
+
+    int chained_redirection_limit = 50;
+
+    for(auto& entry: archive.iterEfficient())
+    {
+        auto current_entry = entry;
+        int redirections_done = 0;
+        while(current_entry.isRedirect() && redirections_done < chained_redirection_limit)
+        {
+            current_entry = current_entry.getRedirectEntry();
+            redirections_done++;
+        }
+
+        if(current_entry.isRedirect()){
+            reporter.setTestResult(TestType::REDIRECT, false);
+            std::ostringstream ss;
+            ss << "Redirect loop exists from entry " << entry.getPath() << std::endl;
+            reporter.addReportMsg(TestType::REDIRECT, ss.str());
+        }
+    }
+}
