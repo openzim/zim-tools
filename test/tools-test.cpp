@@ -57,17 +57,47 @@ TEST(CommonTools, decodeUrl)
 
 TEST(CommonTools, computeRelativePath)
 {
-  EXPECT_EQ("B", computeRelativePath("A", "B"));
+  EXPECT_EQ("A",  computeRelativePath("A" , "A" ));
+  EXPECT_EQ("..", computeRelativePath("A/", "A" ));
+  EXPECT_EQ("A/", computeRelativePath("A" , "A/"));
+  EXPECT_EQ("./", computeRelativePath("A/", "A/"));
+
+  EXPECT_EQ("B",     computeRelativePath("A" , "B" ));
+  EXPECT_EQ("../B",  computeRelativePath("A/", "B" ));
+  EXPECT_EQ("B/",    computeRelativePath("A" , "B/"));
+  EXPECT_EQ("../B/", computeRelativePath("A/", "B/"));
+
+  EXPECT_EQ("A/B",  computeRelativePath("A" , "A/B" ));
+  EXPECT_EQ("B",    computeRelativePath("A/", "A/B" ));
+  EXPECT_EQ("A/B/", computeRelativePath("A" , "A/B/"));
+  EXPECT_EQ("B/",   computeRelativePath("A/", "A/B/"));
+
+  EXPECT_EQ("..",     computeRelativePath("A/B",  "A" ));
+  EXPECT_EQ("../..",  computeRelativePath("A/B/", "A" ));
+  EXPECT_EQ("../",    computeRelativePath("A/B",  "A/"));
+  EXPECT_EQ("../../", computeRelativePath("A/B/", "A/"));
+
   EXPECT_EQ("B/CD/EFG", computeRelativePath("A", "B/CD/EFG"));
 
   EXPECT_EQ("c", computeRelativePath("dir/b", "dir/c"));
+  EXPECT_EQ("b", computeRelativePath("dir/b", "dir/b"));
+  EXPECT_EQ("b/c", computeRelativePath("dir/b", "dir/b/c"));
+  EXPECT_EQ("..", computeRelativePath("dir/b/c", "dir/b"));
   EXPECT_EQ("subdir/", computeRelativePath("dir/b", "dir/subdir/"));
+  EXPECT_EQ("../", computeRelativePath("dir/subdir/b", "dir/subdir/"));
+  EXPECT_EQ("..", computeRelativePath("dir/subdir/b", "dir/subdir"));
+  EXPECT_EQ("../../", computeRelativePath("dir/subdir/b/c", "dir/subdir/"));
+  EXPECT_EQ("../..", computeRelativePath("dir/subdir/b/c", "dir/subdir"));
   EXPECT_EQ("../c", computeRelativePath("dir/subdir/", "dir/c"));
 
   EXPECT_EQ("../c", computeRelativePath("A/B/f", "A/c"));
   EXPECT_EQ("D/c", computeRelativePath("A/f", "A/D/c"));
 
   EXPECT_EQ("c", computeRelativePath("A/B/f", "A/B/c"));
+  EXPECT_EQ("c", computeRelativePath("A/B/c", "A/B/c"));
+  EXPECT_EQ("c/d", computeRelativePath("A/B/c", "A/B/c/d"));
+  EXPECT_EQ("..", computeRelativePath("A/B/c/d", "A/B/c"));
+  EXPECT_EQ("../..", computeRelativePath("A/B/c/d", "A/B"));
 }
 
 TEST(CommonTools, computeAbsolutePath)
