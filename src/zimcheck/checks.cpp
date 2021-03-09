@@ -63,7 +63,7 @@ std::unordered_map<MsgId, MsgInfo> msgTable = {
   { MsgId::EMPTY_ENTRY,      { TestType::EMPTY, "Entry {{path}} is empty" } },
   { MsgId::OUTOFBOUNDS_LINK, { TestType::URL_INTERNAL, "{{link}} is out of bounds. Article: {{path}}" } },
   { MsgId::EMPTY_LINKS,      { TestType::URL_INTERNAL, "Found {{count}} empty links in article: {{path}}" } },
-  { MsgId::DANGLING_LINKS,   { TestType::URL_INTERNAL, "The following links:\n{{#links}}- ???{{???}}???\n{{/links}}({{normalized_link}}) were not found in article {{path}}" } },
+  { MsgId::DANGLING_LINKS,   { TestType::URL_INTERNAL, "The following links:\n{{#links}}- {{value}}\n{{/links}}({{normalized_link}}) were not found in article {{path}}" } },
   { MsgId::EXTERNAL_LINK,    { TestType::URL_EXTERNAL, "{{link}} is an external dependence in article {{path}}" } },
   { MsgId::REDUNDANT_ITEMS,  { TestType::REDUNDANT, "{{path1}} and {{path2}}" } },
   { MsgId::MISSING_METADATA, { TestType::METADATA, "{{metadata_type}}" } },
@@ -109,6 +109,14 @@ std::ostream& operator<<(std::ostream& out, const kainjow::mustache::data& d)
       element_separator = ", ";
     }
     out << "]";
+  } else if (d.is_object()) {
+    // HACK: kainjow::mustache::data wrapping a kainjow::mustache::object
+    // HACK: doesn't provide direct access to the object or its keys.
+    // HACK: So assuming that an object is only used to wrap a string or a list
+    // HACK: under a hardcoded key 'value'
+    const auto* v = d.get("value");
+    if ( v )
+      out << *v;
   } else {
     out << "!!! UNSUPPORTED DATA TYPE !!!";
   }
@@ -376,7 +384,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
                     {
                         kainjow::mustache::list links;
                         for (const auto &olink : p.second)
-                            links.push_back(olink);
+                            links.push_back({"value", olink});
                         reporter.addMsg(MsgId::DANGLING_LINKS, {{"path", path}, {"normalized_link", link}, {"links", links}});
                         previousIndex = index;
                     }
