@@ -63,7 +63,7 @@ std::unordered_map<MsgId, MsgInfo> msgTable = {
   { MsgId::EMPTY_ENTRY,      { TestType::EMPTY, "Entry {{path}} is empty" } },
   { MsgId::OUTOFBOUNDS_LINK, { TestType::URL_INTERNAL, "{{link}} is out of bounds. Article: {{path}}" } },
   { MsgId::EMPTY_LINKS,      { TestType::URL_INTERNAL, "Found {{count}} empty links in article: {{path}}" } },
-  { MsgId::DANGLING_LINKS,   { TestType::URL_INTERNAL, "The following links:\n{{links}}({{normalized_link}}) were not found in article {{path}}" } },
+  { MsgId::DANGLING_LINKS,   { TestType::URL_INTERNAL, "The following links:\n{{#links}}- ???{{???}}???\n{{/links}}({{normalized_link}}) were not found in article {{path}}" } },
   { MsgId::EXTERNAL_LINK,    { TestType::URL_EXTERNAL, "{{link}} is an external dependence in article {{path}}" } },
   { MsgId::REDUNDANT_ITEMS,  { TestType::REDUNDANT, "{{path1}} and {{path2}}" } },
   { MsgId::MISSING_METADATA, { TestType::METADATA, "{{metadata_type}}" } },
@@ -99,8 +99,19 @@ std::string escapeJSONString(const std::string& s)
 
 std::ostream& operator<<(std::ostream& out, const kainjow::mustache::data& d)
 {
-  assert(d.is_string());
-  out << "'" << escapeJSONString(d.string_value()) << "'";
+  if (d.is_string()) {
+    out << "'" << escapeJSONString(d.string_value()) << "'";
+  } else if (d.is_list()) {
+    out << "[";
+    const char* element_separator = "";
+    for ( const auto& el : d.list_value() ) {
+      out << element_separator << el;
+      element_separator = ", ";
+    }
+    out << "]";
+  } else {
+    out << "!!! UNSUPPORTED DATA TYPE !!!";
+  }
   return out;
 }
 
@@ -363,9 +374,9 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
                     int index = item.getIndex();
                     if (previousIndex != index)
                     {
-                        std::string links;
+                        kainjow::mustache::list links;
                         for (const auto &olink : p.second)
-                            links += "- " + olink + "\n";
+                            links.push_back(olink);
                         reporter.addMsg(MsgId::DANGLING_LINKS, {{"path", path}, {"normalized_link", link}, {"links", links}});
                         previousIndex = index;
                     }
