@@ -191,18 +191,7 @@ void ErrorLogger::jsonOutput(const MsgIdWithParams& msg) const {
 }
 
 void ErrorLogger::report(bool error_details) const {
-    if ( !jsonOutputMode ) {
-        for ( size_t i = 0; i < size_t(TestType::COUNT); ++i ) {
-            const auto& testmsg = reportMsgs[i];
-            if ( !testStatus[i] ) {
-                auto &p = errormapping[TestType(i)];
-                std::cout << "[" + tagToStr[p.first] + "] " << p.second << ":" << std::endl;
-                for (auto& msg: testmsg) {
-                    std::cout << "  " << expand(msg) << std::endl;
-                }
-            }
-        }
-    } else {
+    if ( jsonOutputMode ) {
         std::cout << sep << indentation() << "'logs' : [";
         const char* msgSep = "\n";
         for ( size_t i = 0; i < size_t(TestType::COUNT); ++i ) {
@@ -213,6 +202,17 @@ void ErrorLogger::report(bool error_details) const {
             }
         }
         std::cout << "\n" << indentation() << "]";
+    } else {
+        for ( size_t i = 0; i < size_t(TestType::COUNT); ++i ) {
+            const auto& testmsg = reportMsgs[i];
+            if ( !testStatus[i] ) {
+                auto &p = errormapping[TestType(i)];
+                std::cout << "[" + tagToStr[p.first] + "] " << p.second << ":" << std::endl;
+                for (auto& msg: testmsg) {
+                    std::cout << "  " << expand(msg) << std::endl;
+                }
+            }
+        }
     }
 }
 
