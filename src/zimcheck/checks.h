@@ -58,7 +58,8 @@ enum class MsgId
   DANGLING_LINKS,
   EXTERNAL_LINK,
   REDUNDANT_ITEMS,
-  REDIRECT_LOOP
+  REDIRECT_LOOP,
+  MISSING_FAVICON
 };
 
 using MsgParams = kainjow::mustache::object;
