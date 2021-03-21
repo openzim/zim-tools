@@ -28,9 +28,6 @@ namespace std {
   };
 }
 
-static std::unordered_map<LogTag, std::string> tagToStr{ {LogTag::ERROR,     "ERROR"},
-                                                         {LogTag::WARNING,   "WARNING"}};
-
 enum class TestType {
     CHECKSUM,
     INTEGRITY,
@@ -52,20 +49,6 @@ namespace std {
     size_t operator() (const TestType &t) const { return size_t(t); }
   };
 }
-
-static std::unordered_map<TestType, std::pair<LogTag, std::string>> errormapping = {
-    { TestType::CHECKSUM,      {LogTag::ERROR, "Invalid checksum"}},
-    { TestType::INTEGRITY,     {LogTag::ERROR, "Invalid low-level structure"}},
-    { TestType::EMPTY,         {LogTag::ERROR, "Empty articles"}},
-    { TestType::METADATA,      {LogTag::ERROR, "Missing metadata entries"}},
-    { TestType::FAVICON,       {LogTag::ERROR, "Missing favicon"}},
-    { TestType::MAIN_PAGE,     {LogTag::ERROR, "Missing mainpage"}},
-    { TestType::REDUNDANT,     {LogTag::WARNING, "Redundant data found"}},
-    { TestType::URL_INTERNAL,  {LogTag::ERROR, "Invalid internal links found"}},
-    { TestType::URL_EXTERNAL,  {LogTag::ERROR, "Invalid external links found"}},
-    { TestType::REDIRECT,      {LogTag::ERROR, "Redirect loop(s) exist"}},
-    { TestType::OTHER,      {LogTag::ERROR, "Other errors found"}}
-};
 
 class EnabledTests {
     std::bitset<size_t(TestType::COUNT)> tests;
@@ -105,28 +88,10 @@ class ErrorLogger {
     }
 
   public:
-    explicit ErrorLogger(bool _jsonOutputMode = false)
-      : reportMsgs(size_t(TestType::COUNT))
-      , jsonOutputMode(_jsonOutputMode)
-    {
-        testStatus.set();
-        if ( jsonOutputMode ) {
-          std::cout << "{" << std::flush;
-        }
-    }
+    explicit ErrorLogger(bool _jsonOutputMode = false);
+    ~ErrorLogger();
 
-    ~ErrorLogger()
-    {
-        if ( jsonOutputMode ) {
-          std::cout << "\n}" << std::endl;
-        }
-    }
-
-    void infoMsg(const std::string& msg) const {
-      if ( !jsonOutputMode ) {
-        std::cout << msg << std::endl;
-      }
-    }
+    void infoMsg(const std::string& msg) const;
 
     template<class T>
     void addInfo(const std::string& key, const T& value) {
@@ -138,39 +103,10 @@ class ErrorLogger {
       }
     }
 
-    void setTestResult(TestType type, bool status) {
-        testStatus[size_t(type)] = status;
-    }
-
-    void addReportMsg(TestType type, const std::string& message) {
-        reportMsgs[size_t(type)].push_back(message);
-    }
-
-    void report(bool error_details) const {
-      if ( !jsonOutputMode ) {
-        for ( size_t i = 0; i < size_t(TestType::COUNT); ++i ) {
-            const auto& testmsg = reportMsgs[i];
-            if ( !testStatus[i] ) {
-                auto &p = errormapping[TestType(i)];
-                std::cout << "[" + tagToStr[p.first] + "] " << p.second << ":" << std::endl;
-                for (auto& msg: testmsg) {
-                    std::cout << "  " << msg << std::endl;
-                }
-            }
-        }
-      }
-    }
-
-    inline bool overallStatus() const {
-        for ( size_t i = 0; i < size_t(TestType::COUNT); ++i ) {
-            if (errormapping[TestType(i)].first == LogTag::ERROR) {
-                if ( testStatus[i] == false ) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
+    void setTestResult(TestType type, bool status);
+    void addReportMsg(TestType type, const std::string& message);
+    void report(bool error_details) const;
+    bool overallStatus() const;
 };
 
 
