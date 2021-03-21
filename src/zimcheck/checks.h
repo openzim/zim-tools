@@ -7,6 +7,7 @@
 
 #include <mustache.hpp>
 
+#include "json_tools.h"
 #include "../progress.h"
 
 namespace zim {
@@ -64,6 +65,9 @@ enum class MsgId
 
 using MsgParams = kainjow::mustache::object;
 
+JSON::OutputStream& operator<<(JSON::OutputStream& out, TestType check);
+JSON::OutputStream& operator<<(JSON::OutputStream& out, EnabledTests checks);
+
 class ErrorLogger {
   private:
     struct MsgIdWithParams
@@ -78,51 +82,7 @@ class ErrorLogger {
     // testStatus[i] corresponds to the status of i'th test
     std::bitset<size_t(TestType::COUNT)> testStatus;
 
-    const bool jsonOutputMode;
-    const char* sep = "\n";
-    std::string m_indentation = "  ";
-
-    const std::string& indentation() const { return m_indentation; }
-
-    static std::string formatForJSON(const std::string& s) {
-      return "'" + s + "'";
-    }
-
-    static std::string formatForJSON(const char* s) {
-      return formatForJSON(std::string(s));
-    }
-
-    static const char* formatForJSON(bool b) {
-      return b ? "true" : "false";
-    }
-
-    static const char* formatForJSON(TestType tt) {
-        switch(tt) {
-          case TestType::CHECKSUM:     return "'checksum'";
-          case TestType::INTEGRITY:    return "'integrity'";
-          case TestType::EMPTY:        return "'empty'";
-          case TestType::METADATA:     return "'metadata'";
-          case TestType::FAVICON:      return "'favicon'";
-          case TestType::MAIN_PAGE:    return "'main_page'";
-          case TestType::REDUNDANT:    return "'redundant'";
-          case TestType::URL_INTERNAL: return "'url_internal'";
-          case TestType::URL_EXTERNAL: return "'url_external'";
-          case TestType::REDIRECT:     return "'redirect'";
-          default:  throw std::logic_error("Invalid TestType");
-        };
-    }
-
-    static std::string formatForJSON(EnabledTests checks) {
-        std::string result;
-        for ( size_t i = 0; i < size_t(TestType::COUNT); ++i ) {
-            if ( checks.isEnabled(TestType(i)) ) {
-                if ( !result.empty() )
-                  result += ", ";
-                result += formatForJSON(TestType(i));
-            }
-        }
-        return "[" + result + "]";
-    }
+    mutable JSON::OutputStream jsonOutputStream;
 
     static std::string expand(const MsgIdWithParams& msg);
     void jsonOutput(const MsgIdWithParams& msg) const;
@@ -135,11 +95,8 @@ class ErrorLogger {
 
     template<class T>
     void addInfo(const std::string& key, const T& value) {
-      if ( jsonOutputMode ) {
-        std::cout << sep << indentation()
-                  << "'" << key << "' : " << formatForJSON(value)
-                  << std::flush;
-        sep = ",\n";
+      if ( jsonOutputStream.enabled() ) {
+        jsonOutputStream << JSON::property(key, value);
       }
     }
 

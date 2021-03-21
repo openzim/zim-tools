@@ -10,7 +10,7 @@ zimwriter_srcs = [  '../src/zimwriterfs/tools.cpp',
                     '../src/zimwriterfs/zimcreatorfs.cpp',
                     '../src/tools.cpp']
 
-tests_src_map = { 'zimcheck-test' : ['../src/zimcheck/zimcheck.cpp', '../src/zimcheck/checks.cpp', '../src/tools.cpp'],
+tests_src_map = { 'zimcheck-test' : ['../src/zimcheck/zimcheck.cpp', '../src/zimcheck/checks.cpp',  '../src/zimcheck/json_tools.cpp', '../src/tools.cpp'],
                   'tools-test' : zimwriter_srcs,
                   'zimwriterfs-zimcreatorfs' : zimwriter_srcs }
 

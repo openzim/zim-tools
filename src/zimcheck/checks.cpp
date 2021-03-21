@@ -81,34 +81,32 @@ std::string toStr(T t)
   return ss.str();
 }
 
-std::string escapeJSONString(const std::string& s)
-{
-  std::string escaped;
-  for (char c : s) {
-    if (c == '\'' || c == '\\') {
-      escaped.push_back('\\');
-      escaped.push_back(c);
-    } else if ( c == '\n' ) {
-      escaped.append("\\n");
-    } else {
-      escaped.push_back(c);
-    }
-  }
-  return escaped;
+const char* toStr(TestType tt) {
+  switch(tt) {
+    case TestType::CHECKSUM:     return "checksum";
+    case TestType::INTEGRITY:    return "integrity";
+    case TestType::EMPTY:        return "empty";
+    case TestType::METADATA:     return "metadata";
+    case TestType::FAVICON:      return "favicon";
+    case TestType::MAIN_PAGE:    return "main_page";
+    case TestType::REDUNDANT:    return "redundant";
+    case TestType::URL_INTERNAL: return "url_internal";
+    case TestType::URL_EXTERNAL: return "url_external";
+    case TestType::REDIRECT:     return "redirect";
+    default:  throw std::logic_error("Invalid TestType");
+  };
 }
 
-std::ostream& operator<<(std::ostream& out, const kainjow::mustache::data& d)
+JSON::OutputStream& operator<<(JSON::OutputStream& out, const kainjow::mustache::data& d)
 {
   if (d.is_string()) {
-    out << "'" << escapeJSONString(d.string_value()) << "'";
+    out << d.string_value();
   } else if (d.is_list()) {
-    out << "[";
-    const char* element_separator = "";
+    out << JSON::startArray;
     for ( const auto& el : d.list_value() ) {
-      out << element_separator << el;
-      element_separator = ", ";
+      out << el;
     }
-    out << "]";
+    out << JSON::endArray;
   } else if (d.is_object()) {
     // HACK: kainjow::mustache::data wrapping a kainjow::mustache::object
     // HACK: doesn't provide direct access to the object or its keys.
@@ -131,25 +129,38 @@ SortedMsgParams sortedMsgParams(const MsgParams& msgParams)
 
 } // unnamed namespace
 
+JSON::OutputStream& operator<<(JSON::OutputStream& out, TestType check)
+{
+  return out << toStr(check);
+}
+
+JSON::OutputStream& operator<<(JSON::OutputStream& out, EnabledTests checks)
+{
+  out << JSON::startArray;
+  for ( size_t i = 0; i < size_t(TestType::COUNT); ++i ) {
+      if ( checks.isEnabled(TestType(i)) ) {
+          out << TestType(i);
+      }
+  }
+  out << JSON::endArray;
+  return out;
+}
+
 ErrorLogger::ErrorLogger(bool _jsonOutputMode)
   : reportMsgs(size_t(TestType::COUNT))
-  , jsonOutputMode(_jsonOutputMode)
+  , jsonOutputStream(_jsonOutputMode ? &std::cout : nullptr)
 {
     testStatus.set();
-    if ( jsonOutputMode ) {
-      std::cout << "{" << std::flush;
-    }
+    jsonOutputStream << JSON::startObject;
 }
 
 ErrorLogger::~ErrorLogger()
 {
-    if ( jsonOutputMode ) {
-      std::cout << "\n}" << std::endl;
-    }
+    jsonOutputStream << JSON::endObject;
 }
 
 void ErrorLogger::infoMsg(const std::string& msg) const {
-  if ( !jsonOutputMode ) {
+  if ( !jsonOutputStream.enabled() ) {
     std::cout << msg << std::endl;
   }
 }
@@ -175,33 +186,27 @@ std::string ErrorLogger::expand(const MsgIdWithParams& msg)
 
 void ErrorLogger::jsonOutput(const MsgIdWithParams& msg) const {
   const MsgInfo& m = msgTable.at(msg.msgId);
-  const std::string i = indentation();
-  const std::string i2 = i + i;
-  const std::string i3 = i2 + i;
-  std::cout << i2 << "{\n";
-  std::cout << i3 << "'check' : " << formatForJSON(m.check) << ",\n";
-  std::cout << i3 << "'level' : '" << tagToStr[errormapping[m.check].first] << "',\n";
-  std::cout << i3 << "'code' : " << size_t(msg.msgId) << ",\n"; // XXX
-  std::cout << i3 << "'message' : '" << escapeJSONString(expand(msg)) << "'";
+  jsonOutputStream << JSON::startObject;
+  jsonOutputStream << JSON::property("check", m.check);
+  jsonOutputStream << JSON::property("level", tagToStr[errormapping[m.check].first]);
+  jsonOutputStream << JSON::property("code", size_t(msg.msgId)); // XXX
+  jsonOutputStream << JSON::property("message", expand(msg));
 
   for ( const auto& kv : sortedMsgParams(msg.msgParams) ) {
-    std::cout << ",\n" << i3 << "'" << kv.first << "' : " << kv.second;
+    jsonOutputStream << JSON::property(kv.first, kv.second);
   }
-  std::cout << "\n" << i2 << "}";
+  jsonOutputStream << JSON::endObject;
 }
 
 void ErrorLogger::report(bool error_details) const {
-    if ( jsonOutputMode ) {
-        std::cout << sep << indentation() << "'logs' : [";
-        const char* msgSep = "\n";
+    if ( jsonOutputStream.enabled() ) {
+        jsonOutputStream << JSON::property("logs", JSON::startArray);
         for ( size_t i = 0; i < size_t(TestType::COUNT); ++i ) {
             for (const auto& msg: reportMsgs[i]) {
-                std::cout << msgSep;
                 jsonOutput(msg);
-                msgSep = ",\n";
             }
         }
-        std::cout << "\n" << indentation() << "]";
+        jsonOutputStream << JSON::endArray;
     } else {
         for ( size_t i = 0; i < size_t(TestType::COUNT); ++i ) {
             const auto& testmsg = reportMsgs[i];

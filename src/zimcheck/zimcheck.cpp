@@ -249,7 +249,7 @@ int zimcheck (const std::vector<const char*>& args)
     }
 
     ErrorLogger error(json);
-    error.addInfo("zimcheck_version",  VERSION);
+    error.addInfo("zimcheck_version",  std::string(VERSION));
     //Tests.
     try
     {

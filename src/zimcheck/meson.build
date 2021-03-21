@@ -10,6 +10,7 @@ executable('zimcheck',
   'main.cpp',
   'zimcheck.cpp',
   'checks.cpp',
+  'json_tools.cpp',
   '../tools.cpp',
   dependencies: libzim_dep,
   install: true)
