@@ -458,7 +458,8 @@ TEST(zimcheck, json_goodzimfile)
       "{"                                                         "\n"
       "  'zimcheck_version' : '2.2.0',"                           "\n"
       "  'file_name' : 'data/zimfiles/good.zim',"                 "\n"
-      "  'file_uuid' : '00000000-0000-0000-0000-000000000000'"    "\n"
+      "  'file_uuid' : '00000000-0000-0000-0000-000000000000',"   "\n"
+      "  'status' : true"                                         "\n"
       "}" "\n"
       , std::string(zimcheck_output)
     );
