@@ -253,6 +253,7 @@ int zimcheck (const std::vector<const char*>& args)
     //Tests.
     try
     {
+        error.addInfo("checks", enabled_tests);
         error.addInfo("file_name",  filename);
         error.infoMsg("[INFO] Checking zim file " + filename);
 
