@@ -70,6 +70,14 @@ void displayHelp()
     return;
 }
 
+template<class T>
+std::string stringify(const T& x)
+{
+  std::ostringstream ss;
+  ss << x;
+  return ss.str();
+}
+
 int zimcheck (const std::vector<const char*>& args)
 {
     const int argc = args.size();
@@ -241,9 +249,11 @@ int zimcheck (const std::vector<const char*>& args)
     }
 
     ErrorLogger error(json);
+    error.addInfo("zimcheck_version",  VERSION);
     //Tests.
     try
     {
+        error.addInfo("file_name",  filename);
         error.infoMsg("[INFO] Checking zim file " + filename);
 
         //Test 0: Low-level ZIM-file structure integrity checks
@@ -253,6 +263,7 @@ int zimcheck (const std::vector<const char*>& args)
         // Does it make sense to do the other checks if the integrity
         // check fails?
         zim::Archive archive( filename );
+        error.addInfo("file_uuid",  stringify(archive.getUuid()));
 
         //Test 1: Internal Checksum
         if(enabled_tests.isEnabled(TestType::CHECKSUM)) {
