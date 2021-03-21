@@ -104,6 +104,12 @@ std::ostream& operator<<(std::ostream& out, const kainjow::mustache::data& d)
   return out;
 }
 
+typedef std::map<MsgParams::key_type, MsgParams::mapped_type> SortedMsgParams;
+SortedMsgParams sortedMsgParams(const MsgParams& msgParams)
+{
+  return SortedMsgParams(msgParams.begin(), msgParams.end());
+}
+
 } // unnamed namespace
 
 ErrorLogger::ErrorLogger(bool _jsonOutputMode)
@@ -158,7 +164,8 @@ void ErrorLogger::jsonOutput(const MsgIdWithParams& msg) const {
   std::cout << i3 << "'level' : '" << tagToStr[errormapping[m.check].first] << "',\n";
   std::cout << i3 << "'code' : " << size_t(msg.msgId) << ",\n"; // XXX
   std::cout << i3 << "'message' : '" << escapeJSONString(expand(msg)) << "'";
-  for ( const auto& kv : msg.msgParams ) {
+
+  for ( const auto& kv : sortedMsgParams(msg.msgParams) ) {
     std::cout << ",\n" << i3 << "'" << kv.first << "' : " << kv.second;
   }
   std::cout << "\n" << i2 << "}";
