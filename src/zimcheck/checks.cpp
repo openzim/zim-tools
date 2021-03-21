@@ -102,16 +102,19 @@ void ErrorLogger::setTestResult(TestType type, bool status) {
     testStatus[size_t(type)] = status;
 }
 
-void ErrorLogger::addReportMsg(TestType type, const std::string& message) {
-    reportMsgs[size_t(type)].push_back(message);
-}
-
 void ErrorLogger::addMsg(MsgId msgid, const MsgParams& msgParams)
 {
   const MsgInfo& m = msgTable.at(msgid);
   setTestResult(m.check, false);
+  reportMsgs[size_t(m.check)].push_back({msgid, msgParams});
+
+}
+
+std::string ErrorLogger::expand(const MsgIdWithParams& msg)
+{
+  const MsgInfo& m = msgTable.at(msg.msgId);
   mustache tmpl{m.msgTemplate};
-  addReportMsg(m.check, tmpl.render(msgParams));
+  return tmpl.render(msg.msgParams);
 }
 
 void ErrorLogger::report(bool error_details) const {
@@ -122,7 +125,7 @@ void ErrorLogger::report(bool error_details) const {
                 auto &p = errormapping[TestType(i)];
                 std::cout << "[" + tagToStr[p.first] + "] " << p.second << ":" << std::endl;
                 for (auto& msg: testmsg) {
-                    std::cout << "  " << msg << std::endl;
+                    std::cout << "  " << expand(msg) << std::endl;
                 }
             }
         }
