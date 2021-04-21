@@ -128,6 +128,10 @@ void create(const std::string& originFilename, const std::string& outFilename, b
   } catch(...) {}
 
   for(auto& metakey:origin.getMetadataKeys()) {
+    if (metakey == "Counter" ) {
+      // Counter is already added by libzim
+      continue;
+    }
     auto metadata = origin.getMetadata(metakey);
     auto metaProvider = std::unique_ptr<zim::writer::ContentProvider>(new zim::writer::StringProvider(metadata));
     zimCreator.addMetadata(metakey, std::move(metaProvider), "text/plain");
