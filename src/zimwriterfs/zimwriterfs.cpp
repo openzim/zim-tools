@@ -33,7 +33,6 @@
 #include <queue>
 
 #include "zimcreatorfs.h"
-#include "mimetypecounter.h"
 #include "../tools.h"
 #include "tools.h"
 
@@ -429,8 +428,6 @@ void create_zim()
   }
 
   /* Directory visitor */
-  MimetypeCounter mimetypeCounter;
-  zimCreator.add_customHandler(&mimetypeCounter);
   zimCreator.visitDirectory(directoryPath);
 
   /* Check redirects file and read it if necessary*/

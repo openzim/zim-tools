@@ -26,28 +26,16 @@
 
 #include <zim/writer/creator.h>
 
-class IHandler
-{
- public:
-  virtual void handleItem(std::shared_ptr<zim::writer::Item> item) = 0;
-  virtual std::string getName() const = 0;
-  virtual std::string getData() const = 0;
-  virtual ~IHandler() = default;
-};
-
 class ZimCreatorFS : public zim::writer::Creator
 {
  public:
   ZimCreatorFS(std::string _directoryPath);
   virtual ~ZimCreatorFS() = default;
 
-  virtual void add_customHandler(IHandler* handler);
   virtual void add_redirectArticles_from_file(const std::string& path);
   virtual void visitDirectory(const std::string& path);
 
   virtual void addFile(const std::string& path);
-  virtual void addItem(std::shared_ptr<zim::writer::Item> item);
-  virtual void finishZimCreation();
 
   void processSymlink(const std::string& curdir, const std::string& symlink_path);
   const std::string & basedir() const { return directoryPath; }
@@ -62,7 +50,6 @@ class ZimCreatorFS : public zim::writer::Creator
   }
 
  private:
-  std::vector<IHandler*> itemHandlers;
   std::string directoryPath;  ///< html dir without trailing slash
   std::string canonical_basedir;
 };

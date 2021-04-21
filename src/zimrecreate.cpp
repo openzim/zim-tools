@@ -96,13 +96,13 @@ class PatchItem : public zim::writer::Item
 };
 
 
-void create(const std::string& originFilename, const std::string& outFilename, bool zstdFlag)
+void create(const std::string& originFilename, const std::string& outFilename, bool zstdFlag, bool withFtIndexFlag)
 {
   zim::Archive origin(originFilename);
   zim::writer::Creator zimCreator;
   zimCreator.configVerbose(true)
             // [TODO] Use the correct language
-            .configIndexing(true, "eng")
+            .configIndexing(withFtIndexFlag, "eng")
             .configMinClusterSize(2048)
             .configCompression(zstdFlag ? zim::zimcompZstd : zim::zimcompLzma);
 
@@ -128,6 +128,10 @@ void create(const std::string& originFilename, const std::string& outFilename, b
   } catch(...) {}
 
   for(auto& metakey:origin.getMetadataKeys()) {
+    if (metakey == "Counter" ) {
+      // Counter is already added by libzim
+      continue;
+    }
     auto metadata = origin.getMetadata(metakey);
     auto metaProvider = std::unique_ptr<zim::writer::ContentProvider>(new zim::writer::StringProvider(metadata));
     zimCreator.addMetadata(metakey, std::move(metaProvider), "text/plain");
@@ -173,14 +177,16 @@ void usage()
     std::cout << "\nzimrecreate recreates a ZIM file from a existing ZIM.\n"
     "\nUsage: zimrecreate ORIGIN_FILE OUTPUT_FILE [Options]"
     "\nOptions:\n"
-    "\t-v, --version    print software version\n"
-    "\t-z, --zstd       use Zstandard as ZIM compression (lzma otherwise)\n";
+    "\t-v, --version           print software version\n"
+    "\t-z, --zstd              use Zstandard as ZIM compression (lzma otherwise)\n"
+    "\t-j, --withoutFTIndex    don't create and add a fulltext index of the content to the ZIM\n";
     return;
 }
 
 int main(int argc, char* argv[])
 {
     bool zstdFlag = false;
+    bool withFtIndexFlag = true;
 
     //Parsing arguments
     //There will be only two arguments, so no detailed parsing is required.
@@ -207,6 +213,12 @@ int main(int argc, char* argv[])
         {
             zstdFlag = true;
         }
+
+        if(std::string(argv[i])=="--withoutFTIndex" ||
+           std::string(argv[i])=="-j")
+        {
+            withFtIndexFlag = false;
+        }
     }
     if(argc<3)
     {
@@ -218,7 +230,7 @@ int main(int argc, char* argv[])
     std::string outputFilename =argv[2];
     try
     {
-        create(originFilename, outputFilename, zstdFlag);
+        create(originFilename, outputFilename, zstdFlag, withFtIndexFlag);
     }
     catch (const std::exception& e)
     {
