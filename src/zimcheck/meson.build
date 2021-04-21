@@ -6,12 +6,15 @@ else
   error('Cannot find header mustache.hpp')
 endif
 
+inc = include_directories(extra_include)
+
 executable('zimcheck',
   'main.cpp',
   'zimcheck.cpp',
   'checks.cpp',
   'json_tools.cpp',
   '../tools.cpp',
+  include_directories : inc,
   dependencies: libzim_dep,
   install: true)
 

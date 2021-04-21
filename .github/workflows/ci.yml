@@ -25,6 +25,7 @@ jobs:
         shell: bash
         run: |
           export PKG_CONFIG_PATH=$HOME/BUILD_native_dyn/INSTALL/lib/pkgconfig
+          export CPPFLAGS="-I$HOME/BUILD_native_dyn/INSTALL/include"
           meson . build
           cd build
           ninja
