@@ -194,7 +194,6 @@ void ErrorLogger::jsonOutput(const MsgIdWithParams& msg) const {
   jsonOutputStream << JSON::startObject;
   jsonOutputStream << JSON::property("check", m.check);
   jsonOutputStream << JSON::property("level", tagToStr[errormapping[m.check].first]);
-  jsonOutputStream << JSON::property("code", size_t(msg.msgId)); // XXX
   jsonOutputStream << JSON::property("message", expand(msg));
 
   for ( const auto& kv : sortedMsgParams(msg.msgParams) ) {
