@@ -97,16 +97,27 @@ const char* toStr(TestType tt) {
   };
 }
 
-JSON::OutputStream& operator<<(JSON::OutputStream& out, const kainjow::mustache::data& d)
+typedef std::map<MsgParams::key_type, MsgParams::mapped_type> SortedMsgParams;
+SortedMsgParams sortedMsgParams(const MsgParams& msgParams)
+{
+  return SortedMsgParams(msgParams.begin(), msgParams.end());
+}
+
+} // unnamed namespace
+
+namespace JSON
+{
+
+OutputStream& operator<<(OutputStream& out, const kainjow::mustache::data& d)
 {
   if (d.is_string()) {
     out << d.string_value();
   } else if (d.is_list()) {
-    out << JSON::startArray;
+    out << startArray;
     for ( const auto& el : d.list_value() ) {
       out << el;
     }
-    out << JSON::endArray;
+    out << endArray;
   } else if (d.is_object()) {
     // HACK: kainjow::mustache::data wrapping a kainjow::mustache::object
     // HACK: doesn't provide direct access to the object or its keys.
@@ -121,13 +132,7 @@ JSON::OutputStream& operator<<(JSON::OutputStream& out, const kainjow::mustache:
   return out;
 }
 
-typedef std::map<MsgParams::key_type, MsgParams::mapped_type> SortedMsgParams;
-SortedMsgParams sortedMsgParams(const MsgParams& msgParams)
-{
-  return SortedMsgParams(msgParams.begin(), msgParams.end());
-}
-
-} // unnamed namespace
+} // namespace JSON
 
 JSON::OutputStream& operator<<(JSON::OutputStream& out, TestType check)
 {
