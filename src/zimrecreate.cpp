@@ -96,7 +96,7 @@ class PatchItem : public zim::writer::Item
 };
 
 
-void create(const std::string& originFilename, const std::string& outFilename, bool zstdFlag, bool withFtIndexFlag)
+void create(const std::string& originFilename, const std::string& outFilename, bool zstdFlag, bool withFtIndexFlag, unsigned long nbThreads)
 {
   zim::Archive origin(originFilename);
   zim::writer::Creator zimCreator;
@@ -104,7 +104,8 @@ void create(const std::string& originFilename, const std::string& outFilename, b
             // [TODO] Use the correct language
             .configIndexing(withFtIndexFlag, "eng")
             .configMinClusterSize(2048)
-            .configCompression(zstdFlag ? zim::zimcompZstd : zim::zimcompLzma);
+            .configCompression(zstdFlag ? zim::zimcompZstd : zim::zimcompLzma)
+            .configNbWorkers(nbThreads);
 
   std::cout << "starting zim creation" << std::endl;
   zimCreator.startZimCreation(outFilename);
@@ -179,7 +180,8 @@ void usage()
     "\nOptions:\n"
     "\t-v, --version           print software version\n"
     "\t-z, --zstd              use Zstandard as ZIM compression (lzma otherwise)\n"
-    "\t-j, --withoutFTIndex    don't create and add a fulltext index of the content to the ZIM\n";
+    "\t-j, --withoutFTIndex    don't create and add a fulltext index of the content to the ZIM\n"
+    "\t-J, --threads <number>  count of threads to utilize (default: 4)\n";
     return;
 }
 
@@ -187,10 +189,11 @@ int main(int argc, char* argv[])
 {
     bool zstdFlag = false;
     bool withFtIndexFlag = true;
+    unsigned long nbThreads = 4;
 
     //Parsing arguments
     //There will be only two arguments, so no detailed parsing is required.
-    std::cout<<"zimrecreate\n";
+    std::cout << "zimrecreate" << std::endl;;
     for(int i=0;i<argc;i++)
     {
         if(std::string(argv[i])=="-H" ||
@@ -219,18 +222,40 @@ int main(int argc, char* argv[])
         {
             withFtIndexFlag = false;
         }
+
+        if(std::string(argv[i])=="-J" ||
+           std::string(argv[i])=="--threads")
+        {
+            if(argc<5)
+            {
+                std::cout << std::endl << "[ERROR] Not enough Arguments provided" << std::endl;
+                usage();
+                return -1;
+            }
+            try
+            {
+                nbThreads = std::stoul(argv[i+1]);
+            }
+            catch (...)
+            {
+                std::cerr << "The number of workers should be a number" << std::endl;
+                usage();
+                return -1;
+            }
+        }
     }
+
     if(argc<3)
     {
-        std::cout<<"\n[ERROR] Not enough Arguments provided\n";
+        std::cout << std::endl << "[ERROR] Not enough Arguments provided" << std::endl;
         usage();
         return -1;
     }
-    std::string originFilename =argv[1];
-    std::string outputFilename =argv[2];
+    std::string originFilename = argv[1];
+    std::string outputFilename = argv[2];
     try
     {
-        create(originFilename, outputFilename, zstdFlag, withFtIndexFlag);
+        create(originFilename, outputFilename, zstdFlag, withFtIndexFlag, nbThreads);
     }
     catch (const std::exception& e)
     {
