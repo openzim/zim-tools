@@ -9,32 +9,257 @@
 #include <zim/archive.h>
 #include <zim/item.h>
 
+// Specialization of std::hash needed for our unordered_map. Can be removed in c++14
+namespace std {
+  template <> struct hash<LogTag> {
+    size_t operator() (const LogTag &t) const { return size_t(t); }
+  };
+}
+
+// Specialization of std::hash needed for our unordered_map. Can be removed in c++14
+namespace std {
+  template <> struct hash<TestType> {
+    size_t operator() (const TestType &t) const { return size_t(t); }
+  };
+}
+
+// Specialization of std::hash needed for our unordered_map. Can be removed in c++14
+namespace std {
+  template <> struct hash<MsgId> {
+    size_t operator() (const MsgId &msgid) const { return size_t(msgid); }
+  };
+}
+
+namespace
+{
+
+std::unordered_map<LogTag, std::string> tagToStr = {
+    {LogTag::ERROR,     "ERROR"},
+    {LogTag::WARNING,   "WARNING"}
+};
+
+std::unordered_map<TestType, std::pair<LogTag, std::string>> errormapping = {
+    { TestType::CHECKSUM,      {LogTag::ERROR, "Invalid checksum"}},
+    { TestType::INTEGRITY,     {LogTag::ERROR, "Invalid low-level structure"}},
+    { TestType::EMPTY,         {LogTag::ERROR, "Empty articles"}},
+    { TestType::METADATA,      {LogTag::ERROR, "Missing metadata entries"}},
+    { TestType::FAVICON,       {LogTag::ERROR, "Favicon"}},
+    { TestType::MAIN_PAGE,     {LogTag::ERROR, "Missing mainpage"}},
+    { TestType::REDUNDANT,     {LogTag::WARNING, "Redundant data found"}},
+    { TestType::URL_INTERNAL,  {LogTag::ERROR, "Invalid internal links found"}},
+    { TestType::URL_EXTERNAL,  {LogTag::ERROR, "Invalid external links found"}},
+    { TestType::REDIRECT,      {LogTag::ERROR, "Redirect loop(s) exist"}},
+};
+
+struct MsgInfo
+{
+  TestType check;
+  std::string msgTemplate;
+};
+
+std::unordered_map<MsgId, MsgInfo> msgTable = {
+  { MsgId::CHECKSUM,         { TestType::CHECKSUM, "ZIM Archive Checksum in archive: {{&archive_checksum}}\n" } },
+  { MsgId::MAIN_PAGE,        { TestType::MAIN_PAGE, "Main Page Index stored in Archive Header: {{&main_page_index}}" } },
+  { MsgId::EMPTY_ENTRY,      { TestType::EMPTY, "Entry {{&path}} is empty" } },
+  { MsgId::OUTOFBOUNDS_LINK, { TestType::URL_INTERNAL, "{{&link}} is out of bounds. Article: {{&path}}" } },
+  { MsgId::EMPTY_LINKS,      { TestType::URL_INTERNAL, "Found {{&count}} empty links in article: {{&path}}" } },
+  { MsgId::DANGLING_LINKS,   { TestType::URL_INTERNAL, "The following links:\n{{#links}}- {{&value}}\n{{/links}}({{&normalized_link}}) were not found in article {{&path}}" } },
+  { MsgId::EXTERNAL_LINK,    { TestType::URL_EXTERNAL, "{{&link}} is an external dependence in article {{&path}}" } },
+  { MsgId::REDUNDANT_ITEMS,  { TestType::REDUNDANT, "{{&path1}} and {{&path2}}" } },
+  { MsgId::MISSING_METADATA, { TestType::METADATA, "{{&metadata_type}}" } },
+  { MsgId::REDIRECT_LOOP,    { TestType::REDIRECT, "Redirect loop exists from entry {{&entry_path}}\n"  } },
+  { MsgId::MISSING_FAVICON,  { TestType::FAVICON, "Favicon is missing" } }
+};
+
+using kainjow::mustache::mustache;
+
+template<typename T>
+std::string toStr(T t)
+{
+  std::ostringstream ss;
+  ss << t;
+  return ss.str();
+}
+
+const char* toStr(TestType tt) {
+  switch(tt) {
+    case TestType::CHECKSUM:     return "checksum";
+    case TestType::INTEGRITY:    return "integrity";
+    case TestType::EMPTY:        return "empty";
+    case TestType::METADATA:     return "metadata";
+    case TestType::FAVICON:      return "favicon";
+    case TestType::MAIN_PAGE:    return "main_page";
+    case TestType::REDUNDANT:    return "redundant";
+    case TestType::URL_INTERNAL: return "url_internal";
+    case TestType::URL_EXTERNAL: return "url_external";
+    case TestType::REDIRECT:     return "redirect";
+    default:  throw std::logic_error("Invalid TestType");
+  };
+}
+
+typedef std::map<MsgParams::key_type, MsgParams::mapped_type> SortedMsgParams;
+SortedMsgParams sortedMsgParams(const MsgParams& msgParams)
+{
+  return SortedMsgParams(msgParams.begin(), msgParams.end());
+}
+
+} // unnamed namespace
+
+namespace JSON
+{
+
+OutputStream& operator<<(OutputStream& out, const kainjow::mustache::data& d)
+{
+  if (d.is_string()) {
+    out << d.string_value();
+  } else if (d.is_list()) {
+    out << startArray;
+    for ( const auto& el : d.list_value() ) {
+      out << el;
+    }
+    out << endArray;
+  } else if (d.is_object()) {
+    // HACK: kainjow::mustache::data wrapping a kainjow::mustache::object
+    // HACK: doesn't provide direct access to the object or its keys.
+    // HACK: So assuming that an object is only used to wrap a string or a list
+    // HACK: under a hardcoded key 'value'
+    const auto* v = d.get("value");
+    if ( v )
+      out << *v;
+  } else {
+    out << "!!! UNSUPPORTED DATA TYPE !!!";
+  }
+  return out;
+}
+
+} // namespace JSON
+
+JSON::OutputStream& operator<<(JSON::OutputStream& out, TestType check)
+{
+  return out << toStr(check);
+}
+
+JSON::OutputStream& operator<<(JSON::OutputStream& out, EnabledTests checks)
+{
+  out << JSON::startArray;
+  for ( size_t i = 0; i < size_t(TestType::COUNT); ++i ) {
+      if ( checks.isEnabled(TestType(i)) ) {
+          out << TestType(i);
+      }
+  }
+  out << JSON::endArray;
+  return out;
+}
+
+ErrorLogger::ErrorLogger(bool _jsonOutputMode)
+  : reportMsgs(size_t(TestType::COUNT))
+  , jsonOutputStream(_jsonOutputMode ? &std::cout : nullptr)
+{
+    testStatus.set();
+    jsonOutputStream << JSON::startObject;
+}
+
+ErrorLogger::~ErrorLogger()
+{
+    jsonOutputStream << JSON::endObject;
+}
+
+void ErrorLogger::infoMsg(const std::string& msg) const {
+  if ( !jsonOutputStream.enabled() ) {
+    std::cout << msg << std::endl;
+  }
+}
+
+void ErrorLogger::setTestResult(TestType type, bool status) {
+    testStatus[size_t(type)] = status;
+}
+
+void ErrorLogger::addMsg(MsgId msgid, const MsgParams& msgParams)
+{
+  const MsgInfo& m = msgTable.at(msgid);
+  setTestResult(m.check, false);
+  reportMsgs[size_t(m.check)].push_back({msgid, msgParams});
+
+}
+
+std::string ErrorLogger::expand(const MsgIdWithParams& msg)
+{
+  const MsgInfo& m = msgTable.at(msg.msgId);
+  mustache tmpl{m.msgTemplate};
+  return tmpl.render(msg.msgParams);
+}
+
+void ErrorLogger::jsonOutput(const MsgIdWithParams& msg) const {
+  const MsgInfo& m = msgTable.at(msg.msgId);
+  jsonOutputStream << JSON::startObject;
+  jsonOutputStream << JSON::property("check", m.check);
+  jsonOutputStream << JSON::property("level", tagToStr[errormapping[m.check].first]);
+  jsonOutputStream << JSON::property("message", expand(msg));
+
+  for ( const auto& kv : sortedMsgParams(msg.msgParams) ) {
+    jsonOutputStream << JSON::property(kv.first, kv.second);
+  }
+  jsonOutputStream << JSON::endObject;
+}
+
+void ErrorLogger::report(bool error_details) const {
+    if ( jsonOutputStream.enabled() ) {
+        jsonOutputStream << JSON::property("logs", JSON::startArray);
+        for ( size_t i = 0; i < size_t(TestType::COUNT); ++i ) {
+            for (const auto& msg: reportMsgs[i]) {
+                jsonOutput(msg);
+            }
+        }
+        jsonOutputStream << JSON::endArray;
+    } else {
+        for ( size_t i = 0; i < size_t(TestType::COUNT); ++i ) {
+            const auto& testmsg = reportMsgs[i];
+            if ( !testStatus[i] ) {
+                auto &p = errormapping[TestType(i)];
+                std::cout << "[" + tagToStr[p.first] + "] " << p.second << ":" << std::endl;
+                for (auto& msg: testmsg) {
+                    std::cout << "  " << expand(msg) << std::endl;
+                }
+            }
+        }
+    }
+}
+
+bool ErrorLogger::overallStatus() const {
+    for ( size_t i = 0; i < size_t(TestType::COUNT); ++i ) {
+        if (errormapping[TestType(i)].first == LogTag::ERROR) {
+            if ( testStatus[i] == false ) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+
 void test_checksum(zim::Archive& archive, ErrorLogger& reporter) {
-    std::cout << "[INFO] Verifying Internal Checksum..." << std::endl;
+    reporter.infoMsg("[INFO] Verifying Internal Checksum...");
     bool result = archive.check();
-    reporter.setTestResult(TestType::CHECKSUM, result);
     if (!result) {
-        std::cout << "  [ERROR] Wrong Checksum in ZIM archive" << std::endl;
-        std::ostringstream ss;
-        ss << "ZIM Archive Checksum in archive: " << archive.getChecksum() << std::endl;
-        reporter.addReportMsg(TestType::CHECKSUM, ss.str());
+        reporter.infoMsg("  [ERROR] Wrong Checksum in ZIM archive");
+        reporter.addMsg(MsgId::CHECKSUM, {{"archive_checksum", archive.getChecksum()}});
     }
 }
 
 void test_integrity(const std::string& filename, ErrorLogger& reporter) {
-    std::cout << "[INFO] Verifying ZIM-archive structure integrity..." << std::endl;
+    reporter.infoMsg("[INFO] Verifying ZIM-archive structure integrity...");
     zim::IntegrityCheckList checks;
     checks.set(); // enable all checks (including checksum)
     bool result = zim::validate(filename, checks);
     reporter.setTestResult(TestType::INTEGRITY, result);
     if (!result) {
-        std::cout << "  [ERROR] ZIM file's low level structure is invalid" << std::endl;
+        reporter.infoMsg("  [ERROR] ZIM file's low level structure is invalid");
     }
 }
 
 
 void test_metadata(const zim::Archive& archive, ErrorLogger& reporter) {
-    std::cout << "[INFO] Searching for metadata entries..." << std::endl;
+    reporter.infoMsg("[INFO] Searching for metadata entries...");
     static const char* const test_meta[] = {
         "Title",
         "Creator",
@@ -47,43 +272,39 @@ void test_metadata(const zim::Archive& archive, ErrorLogger& reporter) {
     auto end = existing_metadata.end();
     for (auto &meta : test_meta) {
         if (std::find(begin, end, meta) == end) {
-            reporter.setTestResult(TestType::METADATA, false);
-            reporter.addReportMsg(TestType::METADATA, meta);
+            reporter.addMsg(MsgId::MISSING_METADATA, {{"metadata_type", meta}});
         }
     }
 }
 
 void test_favicon(const zim::Archive& archive, ErrorLogger& reporter) {
-    std::cout << "[INFO] Searching for Favicon..." << std::endl;
+    reporter.infoMsg("[INFO] Searching for Favicon...");
     static const char* const favicon_paths[] = {"-/favicon.png", "I/favicon.png", "I/favicon", "-/favicon"};
     for (auto &path: favicon_paths) {
         if (archive.hasEntryByPath(path)) {
             return;
         }
     }
-    reporter.setTestResult(TestType::FAVICON, false);
+    reporter.addMsg(MsgId::MISSING_FAVICON, {});
 }
 
 void test_mainpage(const zim::Archive& archive, ErrorLogger& reporter) {
-    std::cout << "[INFO] Searching for main page..." << std::endl;
+    reporter.infoMsg("[INFO] Searching for main page...");
     bool testok = true;
     try {
       archive.getMainEntry();
     } catch(...) {
         testok = false;
     }
-    reporter.setTestResult(TestType::MAIN_PAGE, testok);
     if (!testok) {
-        std::ostringstream ss;
-        ss << "Main Page Index stored in Archive Header: " << archive.getMainEntryIndex();
-        reporter.addReportMsg(TestType::MAIN_PAGE, ss.str());
+        reporter.addMsg(MsgId::MAIN_PAGE, {{"main_page_index", toStr(archive.getMainEntryIndex())}});
     }
 }
 
 
 void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressBar progress,
                    const EnabledTests checks) {
-    std::cout << "[INFO] Verifying Articles' content..." << std::endl;
+    reporter.infoMsg("[INFO] Verifying Articles' content...");
     // Article are store in a map<hash, list<index>>.
     // So all article with the same hash will be stored in the same list.
     std::map<unsigned int, std::list<zim::entry_index_type>> hash_main;
@@ -103,10 +324,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
         if (checks.isEnabled(TestType::EMPTY) && (ns == 'C' || ns=='A' || ns == 'I')) {
             auto item = entry.getItem();
             if (item.getSize() == 0) {
-                std::ostringstream ss;
-                ss << "Entry " << path << " is empty";
-                reporter.addReportMsg(TestType::EMPTY, ss.str());
-                reporter.setTestResult(TestType::EMPTY, false);
+                reporter.addMsg(MsgId::EMPTY_ENTRY, {{"path", path}});
             }
         }
 
@@ -153,10 +371,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
 
                 if (isOutofBounds(l.link, baseUrl))
                 {
-                    std::ostringstream ss;
-                    ss << l.link << " is out of bounds. Article: " << path;
-                    reporter.addReportMsg(TestType::URL_INTERNAL, ss.str());
-                    reporter.setTestResult(TestType::URL_INTERNAL, false);
+                    reporter.addMsg(MsgId::OUTOFBOUNDS_LINK, {{"link", l.link}, {"path", path}});
                     continue;
                 }
 
@@ -166,10 +381,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
 
             if (nremptylinks)
             {
-                std::ostringstream ss;
-                ss << "Found " << nremptylinks << " empty links in article: " << path;
-                reporter.addReportMsg(TestType::URL_INTERNAL, ss.str());
-                reporter.setTestResult(TestType::URL_INTERNAL, false);
+                reporter.addMsg(MsgId::EMPTY_LINKS, {{"count", toStr(nremptylinks)}, {"path", path}});
             }
 
             for(const auto &p: filtered)
@@ -179,12 +391,10 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
                     int index = item.getIndex();
                     if (previousIndex != index)
                     {
-                        std::ostringstream ss;
-                        ss << "The following links:\n";
+                        kainjow::mustache::list links;
                         for (const auto &olink : p.second)
-                            ss << "- " << olink << '\n';
-                        ss << "(" << link << ") were not found in article " << path;
-                        reporter.addReportMsg(TestType::URL_INTERNAL, ss.str());
+                            links.push_back({"value", olink});
+                        reporter.addMsg(MsgId::DANGLING_LINKS, {{"path", path}, {"normalized_link", link}, {"links", links}});
                         previousIndex = index;
                     }
                     reporter.setTestResult(TestType::URL_INTERNAL, false);
@@ -198,10 +408,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
             {
                 if (l.attribute == "src" && l.isExternalUrl())
                 {
-                    std::ostringstream ss;
-                    ss << l.link << " is an external dependence in article " << path;
-                    reporter.addReportMsg(TestType::URL_EXTERNAL, ss.str());
-                    reporter.setTestResult(TestType::URL_EXTERNAL, false);
+                    reporter.addMsg(MsgId::EXTERNAL_LINK, {{"link", l.link}, {"path", path}});
                     break;
                 }
             }
@@ -210,8 +417,8 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
 
     if (checks.isEnabled(TestType::REDUNDANT))
     {
-        std::cout << "[INFO] Searching for redundant articles..." << std::endl;
-        std::cout << "  Verifying Similar Articles for redundancies..." << std::endl;
+        reporter.infoMsg("[INFO] Searching for redundant articles...");
+        reporter.infoMsg("  Verifying Similar Articles for redundancies...");
         std::ostringstream output_details;
         progress.reset(hash_main.size());
         for(const auto &it: hash_main)
@@ -233,10 +440,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
                             continue;
                         }
 
-                        reporter.setTestResult(TestType::REDUNDANT, false);
-                        std::ostringstream ss;
-                        ss << e1.getPath() << " and " << e2.getPath();
-                        reporter.addReportMsg(TestType::REDUNDANT, ss.str());
+                        reporter.addMsg(MsgId::REDUNDANT_ITEMS, {{"path1", e1.getPath()}, {"path2", e2.getPath()}});
                     }
                     l.swap(articlesDifferentFromE1);
                 }
@@ -245,8 +449,8 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
     }
 }
 
-void test_redirect_loop(const zim::Archive& archive, ErrorLogger& reporter) {    
-    std::cout << "[INFO] Checking for redirect loops..." << std::endl;
+void test_redirect_loop(const zim::Archive& archive, ErrorLogger& reporter) {
+    reporter.infoMsg("[INFO] Checking for redirect loops...");
 
     int chained_redirection_limit = 50;
 
@@ -261,10 +465,7 @@ void test_redirect_loop(const zim::Archive& archive, ErrorLogger& reporter) {
         }
 
         if(current_entry.isRedirect()){
-            reporter.setTestResult(TestType::REDIRECT, false);
-            std::ostringstream ss;
-            ss << "Redirect loop exists from entry " << entry.getPath() << std::endl;
-            reporter.addReportMsg(TestType::REDIRECT, ss.str());
+            reporter.addMsg(MsgId::REDIRECT_LOOP, {{"entry_path", entry.getPath()}});
         }
     }
 }

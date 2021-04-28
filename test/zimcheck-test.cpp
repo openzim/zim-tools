@@ -139,6 +139,7 @@ const std::string zimcheck_help_message(
   "-X , --url_external    URL check - External URLs\n"
   "-D , --details         Details of error\n"
   "-B , --progress        Print progress report\n"
+  "-J , --json            Output in JSON format\n"
   "-H , --help            Displays Help\n"
   "-V , --version         Displays software version\n"
   "-L , --redirect_loop   Checks for the existence of redirect loops\n"
@@ -444,6 +445,40 @@ TEST(zimcheck, invalid_long_option)
     }
 }
 
+TEST(zimcheck, json_goodzimfile)
+{
+    CapturedStdout zimcheck_output;
+    ASSERT_EQ(0, zimcheck({
+      "zimcheck",
+      "--json",
+      "data/zimfiles/good.zim"
+    }));
+
+    ASSERT_EQ(
+      "{"                                                         "\n"
+      "  'zimcheck_version' : '2.2.0',"                           "\n"
+      "  'checks' : ["                                            "\n"
+      "    'checksum',"                                           "\n"
+      "    'integrity',"                                          "\n"
+      "    'empty',"                                              "\n"
+      "    'metadata',"                                           "\n"
+      "    'favicon',"                                            "\n"
+      "    'main_page',"                                          "\n"
+      "    'redundant',"                                          "\n"
+      "    'url_internal',"                                       "\n"
+      "    'url_external',"                                       "\n"
+      "    'redirect'"                                            "\n"
+      "  ],"                                                      "\n"
+      "  'file_name' : 'data/zimfiles/good.zim',"                 "\n"
+      "  'file_uuid' : '00000000-0000-0000-0000-000000000000',"   "\n"
+      "  'status' : true,"                                        "\n"
+      "  'logs' : ["                                              "\n"
+      "  ]"                                                       "\n"
+      "}" "\n"
+      , std::string(zimcheck_output)
+    );
+}
+
 TEST(zimcheck, bad_checksum)
 {
     const std::string expected_output(
@@ -492,7 +527,8 @@ TEST(zimcheck, favicon_poorzimfile)
     const std::string expected_stdout(
       "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
       "[INFO] Searching for Favicon..." "\n"
-      "[ERROR] Missing favicon:" "\n"
+      "[ERROR] Favicon:" "\n"
+      "  Favicon is missing" "\n"
       "[INFO] Overall Test Status: Fail" "\n"
       "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
     );
@@ -653,7 +689,8 @@ const std::string ALL_CHECKS_OUTPUT_ON_POORZIMFILE(
       "[ERROR] Missing metadata entries:" "\n"
       "  Title" "\n"
       "  Description" "\n"
-      "[ERROR] Missing favicon:" "\n"
+      "[ERROR] Favicon:" "\n"
+      "  Favicon is missing" "\n"
       "[ERROR] Missing mainpage:" "\n"
       "  Main Page Index stored in Archive Header: 4294967295" "\n"
       "[WARNING] Redundant data found:" "\n"
@@ -694,4 +731,150 @@ TEST(zimcheck, all_checks_poorzimfile)
         ALL_CHECKS_OUTPUT_ON_POORZIMFILE,
         EMPTY_STDERR
     );
+}
+
+TEST(zimcheck, json_bad_checksum)
+{
+    CapturedStdout zimcheck_output;
+    ASSERT_EQ(1, zimcheck({
+      "zimcheck",
+      "--json",
+      "-C",
+      "data/zimfiles/bad_checksum.zim"
+    }));
+
+    ASSERT_EQ(
+      "{"                                                         "\n"
+      "  'zimcheck_version' : '2.2.0',"                           "\n"
+      "  'checks' : ["                                            "\n"
+      "    'checksum'"                                            "\n"
+      "  ],"                                                      "\n"
+      "  'file_name' : 'data/zimfiles/bad_checksum.zim',"         "\n"
+      "  'file_uuid' : '00000000-0000-0000-0000-000000000000',"   "\n"
+      "  'status' : false,"                                       "\n"
+      "  'logs' : ["                                              "\n"
+      "    {"                                                     "\n"
+      "      'check' : 'checksum',"                               "\n"
+      "      'level' : 'ERROR',"                                  "\n"
+      "      'message' : 'ZIM Archive Checksum in archive: 00000000000000000000000000000000\\n'," "\n"
+      "      'archive_checksum' : '00000000000000000000000000000000'" "\n"
+      "    }"                                                     "\n"
+      "  ]"                                                       "\n"
+      "}"                                                         "\n"
+      , std::string(zimcheck_output)
+    );
+}
+
+TEST(zimcheck, json_poorzimfile)
+{
+    CapturedStdout zimcheck_output;
+    ASSERT_EQ(1, zimcheck({"zimcheck", "--json", POOR_ZIMFILE}));
+
+    ASSERT_EQ(
+      "{"                                                                   "\n"
+      "  'zimcheck_version' : '2.2.0',"                                     "\n"
+      "  'checks' : ["                                            "\n"
+      "    'checksum',"                                           "\n"
+      "    'integrity',"                                          "\n"
+      "    'empty',"                                              "\n"
+      "    'metadata',"                                           "\n"
+      "    'favicon',"                                            "\n"
+      "    'main_page',"                                          "\n"
+      "    'redundant',"                                          "\n"
+      "    'url_internal',"                                       "\n"
+      "    'url_external',"                                       "\n"
+      "    'redirect'"                                            "\n"
+      "  ],"                                                      "\n"
+      "  'file_name' : 'data/zimfiles/poor.zim',"                           "\n"
+      "  'file_uuid' : '00000000-0000-0000-0000-000000000000',"             "\n"
+      "  'status' : false,"                                                 "\n"
+      "  'logs' : ["                                                        "\n"
+      "    {"                                                               "\n"
+      "      'check' : 'empty',"                                            "\n"
+      "      'level' : 'ERROR',"                                            "\n"
+      "      'message' : 'Entry empty.html is empty',"                      "\n"
+      "      'path' : 'empty.html'"                                         "\n"
+      "    },"                                                              "\n"
+      "    {"                                                               "\n"
+      "      'check' : 'metadata',"                                         "\n"
+      "      'level' : 'ERROR',"                                            "\n"
+      "      'message' : 'Title',"                                          "\n"
+      "      'metadata_type' : 'Title'"                                     "\n"
+      "    },"                                                              "\n"
+      "    {"                                                               "\n"
+      "      'check' : 'metadata',"                                         "\n"
+      "      'level' : 'ERROR',"                                            "\n"
+      "      'message' : 'Description',"                                    "\n"
+      "      'metadata_type' : 'Description'"                               "\n"
+      "    },"                                                              "\n"
+      "    {"                                                               "\n"
+      "      'check' : 'favicon',"                                          "\n"
+      "      'level' : 'ERROR',"                                            "\n"
+      "      'message' : 'Favicon is missing'"                              "\n"
+      "    },"                                                              "\n"
+      "    {"                                                               "\n"
+      "      'check' : 'main_page',"                                        "\n"
+      "      'level' : 'ERROR',"                                            "\n"
+      "      'message' : 'Main Page Index stored in Archive Header: 4294967295'," "\n"
+      "      'main_page_index' : '4294967295'"                              "\n"
+      "    },"                                                              "\n"
+      "    {"                                                               "\n"
+      "      'check' : 'redundant',"                                        "\n"
+      "      'level' : 'WARNING',"                                          "\n"
+      "      'message' : 'article1.html and redundant_article.html',"       "\n"
+      "      'path1' : 'article1.html',"                                    "\n"
+      "      'path2' : 'redundant_article.html'"                            "\n"
+      "    },"                                                              "\n"
+      "    {"                                                               "\n"
+      "      'check' : 'url_internal',"                                     "\n"
+      "      'level' : 'ERROR',"                                            "\n"
+      "      'message' : 'The following links:\\n- A/non_existent.html\\n(/A/non_existent.html) were not found in article dangling_link.html'," "\n"
+      "      'links' : ["                                                   "\n"
+      "        'A/non_existent.html'"                                       "\n"
+      "      ],"                                                            "\n"
+      "      'normalized_link' : '/A/non_existent.html',"                   "\n"
+      "      'path' : 'dangling_link.html'"                                 "\n"
+      "    },"                                                              "\n"
+      "    {"                                                               "\n"
+      "      'check' : 'url_internal',"                                     "\n"
+      "      'level' : 'ERROR',"                                            "\n"
+      "      'message' : 'Found 1 empty links in article: empty_link.html'," "\n"
+      "      'count' : '1',"                                                "\n"
+      "      'path' : 'empty_link.html'"                                    "\n"
+      "    },"                                                              "\n"
+      "    {"                                                               "\n"
+      "      'check' : 'url_internal',"                                     "\n"
+      "      'level' : 'ERROR',"                                            "\n"
+      "      'message' : '../../oops.html is out of bounds. Article: outofbounds_link.html'," "\n"
+      "      'link' : '../../oops.html',"                                   "\n"
+      "      'path' : 'outofbounds_link.html'"                              "\n"
+      "    },"                                                              "\n"
+      "    {"                                                               "\n"
+      "      'check' : 'url_external',"                                     "\n"
+      "      'level' : 'ERROR',"                                            "\n"
+      "      'message' : 'http://a.io/pic.png is an external dependence in article external_link.html'," "\n"
+      "      'link' : 'http://a.io/pic.png',"                               "\n"
+      "      'path' : 'external_link.html'"                                 "\n"
+      "    },"                                                              "\n"
+      "    {"                                                               "\n"
+      "      'check' : 'redirect',"                                         "\n"
+      "      'level' : 'ERROR',"                                            "\n"
+      "      'message' : 'Redirect loop exists from entry redirect_loop.html\\n'," "\n"
+      "      'entry_path' : 'redirect_loop.html'"                           "\n"
+      "    },"                                                              "\n"
+      "    {"                                                               "\n"
+      "      'check' : 'redirect',"                                         "\n"
+      "      'level' : 'ERROR',"                                            "\n"
+      "      'message' : 'Redirect loop exists from entry redirect_loop2.html\\n'," "\n"
+      "      'entry_path' : 'redirect_loop2.html'"                          "\n"
+      "    },"                                                              "\n"
+      "    {"                                                               "\n"
+      "      'check' : 'redirect',"                                         "\n"
+      "      'level' : 'ERROR',"                                            "\n"
+      "      'message' : 'Redirect loop exists from entry redirect_loop3.html\\n'," "\n"
+      "      'entry_path' : 'redirect_loop3.html'"                          "\n"
+      "    }"                                                               "\n"
+      "  ]"                                                                 "\n"
+      "}"                                                                   "\n"
+      , std::string(zimcheck_output));
 }
