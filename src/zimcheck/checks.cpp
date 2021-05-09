@@ -359,16 +359,12 @@ void ArticleChecker::check(zim::Entry entry)
         return;
     }
 
-    if (checks.isEnabled(TestType::EMPTY) && (ns == 'C' || ns=='A' || ns == 'I')) {
-        auto item = entry.getItem();
-        if (item.getSize() == 0) {
-            reporter.addMsg(MsgId::EMPTY_ENTRY, {{"path", path}});
-        }
-    }
-
-    auto item = entry.getItem();
+    const auto item = entry.getItem();
 
     if (item.getSize() == 0) {
+        if (checks.isEnabled(TestType::EMPTY) && (ns == 'C' || ns=='A' || ns == 'I')) {
+            reporter.addMsg(MsgId::EMPTY_ENTRY, {{"path", path}});
+        }
         return;
     }
 
