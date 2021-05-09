@@ -333,6 +333,7 @@ private: // types
     typedef std::unordered_map<std::string, StringCollection> GroupedLinkCollection;
 
 private: // functions
+    void checkItem(const zim::Item& item);
     void check_internal_links(zim::Item item, const LinkCollection& links);
     void check_internal_links(zim::Item item, const GroupedLinkCollection& groupedLinks);
     void check_external_links(zim::Item item, const LinkCollection& links);
@@ -359,11 +360,18 @@ void ArticleChecker::check(zim::Entry entry)
         return;
     }
 
-    const auto item = entry.getItem();
+    checkItem(entry.getItem());
+}
 
+void ArticleChecker::checkItem(const zim::Item& item)
+{
     if (item.getSize() == 0) {
-        if (checks.isEnabled(TestType::EMPTY) && (ns == 'C' || ns=='A' || ns == 'I')) {
-            reporter.addMsg(MsgId::EMPTY_ENTRY, {{"path", path}});
+        if (checks.isEnabled(TestType::EMPTY)) {
+            const auto path = item.getPath();
+            const char ns = archive.hasNewNamespaceScheme() ? 'C' : path[0];
+            if (ns == 'C' || ns=='A' || ns == 'I') {
+                reporter.addMsg(MsgId::EMPTY_ENTRY, {{"path", path}});
+            }
         }
         return;
     }
