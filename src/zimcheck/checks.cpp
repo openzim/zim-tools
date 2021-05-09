@@ -313,15 +313,18 @@ public: // types
     typedef std::vector<html_link> LinkCollection;
 
 public: // functions
-    ArticleChecker(const zim::Archive& _archive, ErrorLogger& _reporter, EnabledTests _checks)
+    ArticleChecker(const zim::Archive& _archive, ErrorLogger& _reporter, ProgressBar& _progress, EnabledTests _checks)
         : archive(_archive)
         , reporter(_reporter)
+        , progress(_progress)
         , checks(_checks)
-    {}
+    {
+        progress.reset(archive.getEntryCount());
+    }
 
 
     void check(zim::Entry entry);
-    void detect_redundant_articles(ProgressBar& progress);
+    void detect_redundant_articles();
 
 private: // types
     typedef std::vector<std::string> StringCollection;
@@ -337,6 +340,7 @@ private: // functions
 private: // data
     const zim::Archive& archive;
     ErrorLogger& reporter;
+    ProgressBar& progress;
     const EnabledTests checks;
 
     // All article with the same hash will be recorded in the same bucket of
@@ -346,6 +350,8 @@ private: // data
 
 void ArticleChecker::check(zim::Entry entry)
 {
+    progress.report();
+
     const auto path = entry.getPath();
     const char ns = archive.hasNewNamespaceScheme() ? 'C' : path[0];
 
@@ -466,7 +472,7 @@ void ArticleChecker::check_external_links(zim::Item item, const LinkCollection& 
     }
 }
 
-void ArticleChecker::detect_redundant_articles(ProgressBar& progress)
+void ArticleChecker::detect_redundant_articles()
 {
     reporter.infoMsg("[INFO] Searching for redundant articles...");
     reporter.infoMsg("  Verifying Similar Articles for redundancies...");
@@ -627,23 +633,20 @@ private: // data
 
 } // unnamed namespace
 
-void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressBar progress,
+void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressBar& progress,
                    const EnabledTests checks, int thread_count) {
-    ArticleChecker articleChecker(archive, reporter, checks);
+    ArticleChecker articleChecker(archive, reporter, progress, checks);
     reporter.infoMsg("[INFO] Verifying Articles' content...");
 
-    progress.reset(archive.getEntryCount());
     TaskDispatcher td(&articleChecker, thread_count);
     for (auto& entry:archive.iterEfficient()) {
-        progress.report();
-
         td.addTask(entry);
     }
     td.waitForAllTasksToComplete();
 
     if (checks.isEnabled(TestType::REDUNDANT))
     {
-        articleChecker.detect_redundant_articles(progress);
+        articleChecker.detect_redundant_articles();
     }
 }
 
