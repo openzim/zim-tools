@@ -8,6 +8,13 @@ endif
 
 inc = include_directories(extra_include)
 
+if compiler.get_id() == 'gcc' and host_machine.system() == 'linux'
+  # C++ std::thread is implemented using pthread on linux by gcc
+  thread_dep = dependency('threads')
+else
+  thread_dep = dependency('', required:false)
+endif
+
 executable('zimcheck',
   'main.cpp',
   'zimcheck.cpp',
@@ -15,7 +22,7 @@ executable('zimcheck',
   'json_tools.cpp',
   '../tools.cpp',
   include_directories : inc,
-  dependencies: libzim_dep,
+  dependencies: [libzim_dep, thread_dep],
   install: true)
 
 
