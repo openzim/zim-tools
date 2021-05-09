@@ -311,7 +311,6 @@ public: // functions
         : archive(_archive)
         , reporter(_reporter)
         , checks(_checks)
-        , previousIndex(-1)
     {}
 
 
@@ -333,7 +332,6 @@ private: // data
     const zim::Archive& archive;
     ErrorLogger& reporter;
     const EnabledTests checks;
-    int previousIndex;
 
     // All article with the same hash will be recorded in the same bucket of
     // this hash table.
@@ -430,11 +428,12 @@ void ArticleChecker::check_internal_links(zim::Item item, const LinkCollection& 
 void ArticleChecker::check_internal_links(zim::Item item, const GroupedLinkCollection& groupedLinks)
 {
     const auto path = item.getPath();
+    zim::entry_index_type previousIndex(-1);
     for(const auto &p: groupedLinks)
     {
         const std::string link = p.first;
         if (!archive.hasEntryByPath(link)) {
-            int index = item.getIndex();
+            const zim::entry_index_type index = item.getIndex();
             if (previousIndex != index)
             {
                 kainjow::mustache::list links;
