@@ -598,6 +598,8 @@ public: // functions
     explicit TaskDispatcher(ArticleChecker* ac, unsigned n)
         : currentCluster(-1)
     {
+        if (n > 8 )
+            throw std::runtime_error("Too many threads requested");
         while ( n-- )
             taskStreams.emplace_back(ac);
     }
@@ -626,12 +628,12 @@ private: // data
 } // unnamed namespace
 
 void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressBar progress,
-                   const EnabledTests checks) {
+                   const EnabledTests checks, int thread_count) {
     ArticleChecker articleChecker(archive, reporter, checks);
     reporter.infoMsg("[INFO] Verifying Articles' content...");
 
     progress.reset(archive.getEntryCount());
-    TaskDispatcher td(&articleChecker, 4);
+    TaskDispatcher td(&articleChecker, thread_count);
     for (auto& entry:archive.iterEfficient()) {
         progress.report();
 
