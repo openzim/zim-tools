@@ -317,8 +317,6 @@ public: // functions
 
     void check(zim::Entry entry);
     void detect_redundant_articles(ProgressBar& progress);
-    void check_internal_links(zim::Item item, const LinkCollection& links);
-    void check_external_links(zim::Item item, const LinkCollection& links);
 
 private: // types
     typedef std::vector<std::string> StringCollection;
@@ -327,7 +325,9 @@ private: // types
     typedef std::unordered_map<std::string, StringCollection> GroupedLinkCollection;
 
 private: // functions
+    void check_internal_links(zim::Item item, const LinkCollection& links);
     void check_internal_links(zim::Item item, const GroupedLinkCollection& groupedLinks);
+    void check_external_links(zim::Item item, const LinkCollection& links);
 
 private: // data
     const zim::Archive& archive;
