@@ -306,26 +306,67 @@ class ArticleChecker
 public: // types
     typedef std::vector<html_link> LinkCollection;
 
-    typedef std::vector<std::string> StringCollection;
-
-    // collection of links grouped into sets of equivalent normalized links
-    typedef std::unordered_map<std::string, StringCollection> GroupedLinkCollection;
-
 public: // functions
     ArticleChecker(const zim::Archive& _archive, ErrorLogger& _reporter)
         : archive(_archive)
         , reporter(_reporter)
     {}
 
-    void check_internal_links(zim::Item item, const GroupedLinkCollection& groupedLinks);
-
+    void check_internal_links(zim::Item item, const LinkCollection& links);
     void check_external_links(zim::Item item, const LinkCollection& links);
+
+private: // types
+    typedef std::vector<std::string> StringCollection;
+
+    // collection of links grouped into sets of equivalent normalized links
+    typedef std::unordered_map<std::string, StringCollection> GroupedLinkCollection;
+
+private: // functions
+    void check_internal_links(zim::Item item, const GroupedLinkCollection& groupedLinks);
 
 private: // data
     const zim::Archive& archive;
     ErrorLogger& reporter;
     int previousIndex = -1;
 };
+
+void ArticleChecker::check_internal_links(zim::Item item, const LinkCollection& links)
+{
+    const auto path = item.getPath();
+    auto baseUrl = path;
+    auto pos = baseUrl.find_last_of('/');
+    baseUrl.resize( pos==baseUrl.npos ? 0 : pos );
+
+    ArticleChecker::GroupedLinkCollection groupedLinks;
+    int nremptylinks = 0;
+    for (const auto &l : links)
+    {
+        if (l.link.front() == '#' || l.link.front() == '?') continue;
+        if (l.isInternalUrl() == false) continue;
+        if (l.link.empty())
+        {
+            nremptylinks++;
+            continue;
+        }
+
+
+        if (isOutofBounds(l.link, baseUrl))
+        {
+            reporter.addMsg(MsgId::OUTOFBOUNDS_LINK, {{"link", l.link}, {"path", path}});
+            continue;
+        }
+
+        auto normalized = normalize_link(l.link, baseUrl);
+        groupedLinks[normalized].push_back(l.link);
+    }
+
+    if (nremptylinks)
+    {
+        reporter.addMsg(MsgId::EMPTY_LINKS, {{"count", toStr(nremptylinks)}, {"path", path}});
+    }
+
+    check_internal_links(item, groupedLinks);
+}
 
 void ArticleChecker::check_internal_links(zim::Item item, const GroupedLinkCollection& groupedLinks)
 {
@@ -412,39 +453,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
 
         if(checks.isEnabled(TestType::URL_INTERNAL))
         {
-            auto baseUrl = path;
-            auto pos = baseUrl.find_last_of('/');
-            baseUrl.resize( pos==baseUrl.npos ? 0 : pos );
-
-            ArticleChecker::GroupedLinkCollection groupedLinks;
-            int nremptylinks = 0;
-            for (const auto &l : links)
-            {
-                if (l.link.front() == '#' || l.link.front() == '?') continue;
-                if (l.isInternalUrl() == false) continue;
-                if (l.link.empty())
-                {
-                    nremptylinks++;
-                    continue;
-                }
-
-
-                if (isOutofBounds(l.link, baseUrl))
-                {
-                    reporter.addMsg(MsgId::OUTOFBOUNDS_LINK, {{"link", l.link}, {"path", path}});
-                    continue;
-                }
-
-                auto normalized = normalize_link(l.link, baseUrl);
-                groupedLinks[normalized].push_back(l.link);
-            }
-
-            if (nremptylinks)
-            {
-                reporter.addMsg(MsgId::EMPTY_LINKS, {{"count", toStr(nremptylinks)}, {"path", path}});
-            }
-
-            articleChecker.check_internal_links(item, groupedLinks);
+            articleChecker.check_internal_links(item, links);
         }
 
         if (checks.isEnabled(TestType::URL_EXTERNAL))
