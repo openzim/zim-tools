@@ -307,6 +307,8 @@ namespace
 class ArticleChecker
 {
 public: // types
+    typedef std::vector<html_link> LinkCollection;
+
     typedef std::vector<std::string> StringCollection;
 
     // collection of links grouped into sets of equivalent normalized links
@@ -319,6 +321,8 @@ public: // functions
     {}
 
     void check_internal_links(zim::Item item, const GroupedLinkCollection& groupedLinks);
+
+    void check_external_links(zim::Item item, const LinkCollection& links);
 
 private: // data
     const zim::Archive& archive;
@@ -343,6 +347,19 @@ void ArticleChecker::check_internal_links(zim::Item item, const GroupedLinkColle
                 previousIndex = index;
             }
             reporter.setTestResult(TestType::URL_INTERNAL, false);
+        }
+    }
+}
+
+void ArticleChecker::check_external_links(zim::Item item, const LinkCollection& links)
+{
+    const auto path = item.getPath();
+    for (const auto &l: links)
+    {
+        if (l.attribute == "src" && l.isExternalUrl())
+        {
+            reporter.addMsg(MsgId::EXTERNAL_LINK, {{"link", l.link}, {"path", path}});
+            break;
         }
     }
 }
@@ -390,7 +407,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
         if (item.getMimetype() != "text/html")
             continue;
 
-        std::vector<html_link> links;
+        ArticleChecker::LinkCollection links;
         if (checks.isEnabled(TestType::URL_INTERNAL) ||
             checks.isEnabled(TestType::URL_EXTERNAL)) {
             links = generic_getLinks(data);
@@ -435,14 +452,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
 
         if (checks.isEnabled(TestType::URL_EXTERNAL))
         {
-            for (const auto &l: links)
-            {
-                if (l.attribute == "src" && l.isExternalUrl())
-                {
-                    reporter.addMsg(MsgId::EXTERNAL_LINK, {{"link", l.link}, {"path", path}});
-                    break;
-                }
-            }
+            articleChecker.check_external_links(item, links);
         }
     }
 
