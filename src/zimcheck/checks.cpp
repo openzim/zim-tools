@@ -440,21 +440,16 @@ void ArticleChecker::check_internal_links(zim::Item item, const LinkCollection& 
 void ArticleChecker::check_internal_links(zim::Item item, const GroupedLinkCollection& groupedLinks)
 {
     const auto path = item.getPath();
-    zim::entry_index_type previousIndex(-1);
     for(const auto &p: groupedLinks)
     {
         const std::string link = p.first;
         if (!archive.hasEntryByPath(link)) {
-            const zim::entry_index_type index = item.getIndex();
-            if (previousIndex != index)
-            {
-                kainjow::mustache::list links;
-                for (const auto &olink : p.second)
-                    links.push_back({"value", olink});
-                reporter.addMsg(MsgId::DANGLING_LINKS, {{"path", path}, {"normalized_link", link}, {"links", links}});
-                previousIndex = index;
-            }
+            kainjow::mustache::list links;
+            for (const auto &olink : p.second)
+                links.push_back({"value", olink});
+            reporter.addMsg(MsgId::DANGLING_LINKS, {{"path", path}, {"normalized_link", link}, {"links", links}});
             reporter.setTestResult(TestType::URL_INTERNAL, false);
+            break;
         }
     }
 }
