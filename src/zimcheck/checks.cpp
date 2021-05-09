@@ -452,7 +452,6 @@ void ArticleChecker::check_internal_links(zim::Item item, const GroupedLinkColle
             for (const auto &olink : p.second)
                 links.push_back({"value", olink});
             reporter.addMsg(MsgId::DANGLING_LINKS, {{"path", path}, {"normalized_link", link}, {"links", links}});
-            reporter.setTestResult(TestType::URL_INTERNAL, false);
             break;
         }
     }
