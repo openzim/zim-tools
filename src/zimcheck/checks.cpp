@@ -298,15 +298,61 @@ void test_mainpage(const zim::Archive& archive, ErrorLogger& reporter) {
     }
 }
 
+namespace
+{
+
+class ArticleChecker
+{
+public: // types
+    typedef std::vector<std::string> StringCollection;
+
+    // collection of links grouped into sets of equivalent normalized links
+    typedef std::unordered_map<std::string, StringCollection> GroupedLinkCollection;
+
+public: // functions
+    ArticleChecker(const zim::Archive& _archive, ErrorLogger& _reporter)
+        : archive(_archive)
+        , reporter(_reporter)
+    {}
+
+    void check_internal_links(zim::Item item, const GroupedLinkCollection& groupedLinks);
+
+private: // data
+    const zim::Archive& archive;
+    ErrorLogger& reporter;
+    int previousIndex = -1;
+};
+
+void ArticleChecker::check_internal_links(zim::Item item, const GroupedLinkCollection& groupedLinks)
+{
+    const auto path = item.getPath();
+    for(const auto &p: groupedLinks)
+    {
+        const std::string link = p.first;
+        if (!archive.hasEntryByPath(link)) {
+            int index = item.getIndex();
+            if (previousIndex != index)
+            {
+                kainjow::mustache::list links;
+                for (const auto &olink : p.second)
+                    links.push_back({"value", olink});
+                reporter.addMsg(MsgId::DANGLING_LINKS, {{"path", path}, {"normalized_link", link}, {"links", links}});
+                previousIndex = index;
+            }
+            reporter.setTestResult(TestType::URL_INTERNAL, false);
+        }
+    }
+}
+
+} // unnamed namespace
 
 void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressBar progress,
                    const EnabledTests checks) {
+    ArticleChecker articleChecker(archive, reporter);
     reporter.infoMsg("[INFO] Verifying Articles' content...");
     // Article are store in a map<hash, list<index>>.
     // So all article with the same hash will be stored in the same list.
     std::map<unsigned int, std::list<zim::entry_index_type>> hash_main;
-
-    int previousIndex = -1;
 
     progress.reset(archive.getEntryCount());
     for (auto& entry:archive.iterEfficient()) {
@@ -353,7 +399,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
             auto pos = baseUrl.find_last_of('/');
             baseUrl.resize( pos==baseUrl.npos ? 0 : pos );
 
-            std::unordered_map<std::string, std::vector<std::string>> filtered;
+            ArticleChecker::GroupedLinkCollection groupedLinks;
             int nremptylinks = 0;
             for (const auto &l : links)
             {
@@ -373,7 +419,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
                 }
 
                 auto normalized = normalize_link(l.link, baseUrl);
-                filtered[normalized].push_back(l.link);
+                groupedLinks[normalized].push_back(l.link);
             }
 
             if (nremptylinks)
@@ -381,22 +427,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
                 reporter.addMsg(MsgId::EMPTY_LINKS, {{"count", toStr(nremptylinks)}, {"path", path}});
             }
 
-            for(const auto &p: filtered)
-            {
-                const std::string link = p.first;
-                if (!archive.hasEntryByPath(link)) {
-                    int index = item.getIndex();
-                    if (previousIndex != index)
-                    {
-                        kainjow::mustache::list links;
-                        for (const auto &olink : p.second)
-                            links.push_back({"value", olink});
-                        reporter.addMsg(MsgId::DANGLING_LINKS, {{"path", path}, {"normalized_link", link}, {"links", links}});
-                        previousIndex = index;
-                    }
-                    reporter.setTestResult(TestType::URL_INTERNAL, false);
-                }
-            }
+            articleChecker.check_internal_links(item, groupedLinks);
         }
 
         if (checks.isEnabled(TestType::URL_EXTERNAL))
