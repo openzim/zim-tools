@@ -121,11 +121,8 @@ void create(const std::string& originFilename, const std::string& outFilename, b
   } catch(...) {}
 
   try {
-    auto faviconPath = origin.getFaviconEntry().getItem(true).getPath();
-    if (!fromNewNamespace) {
-      faviconPath = faviconPath.substr(2, std::string::npos);
-    }
-    zimCreator.setFaviconPath(faviconPath);
+    auto illustration = origin.getIllustrationItem();
+    zimCreator.addIllustration(48, illustration.getData());
   } catch(...) {}
 
   for(auto& metakey:origin.getMetadataKeys()) {

@@ -124,8 +124,8 @@ void ZimDumper::printInfo()
     std::cout << "main page: -\n";
   }
 
-  if (m_archive.hasFaviconEntry()) {
-    std::cout << "favicon: " << m_archive.getFaviconEntry().getPath() << "\n";
+  if (m_archive.hasIllustration()) {
+    std::cout << "favicon: " << m_archive.getIllustrationItem().getPath() << "\n";
   } else {
     std::cout << "favicon: -\n";
   }

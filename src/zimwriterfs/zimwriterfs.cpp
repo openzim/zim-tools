@@ -54,7 +54,7 @@ std::string name;
 std::string source;
 std::string description;
 std::string welcome;
-std::string favicon;
+std::string illustration;
 std::string redirectsPath;
 std::string zimPath;
 std::string directoryPath;
@@ -82,7 +82,7 @@ bool thereAreMissingArguments()
       || description.empty()
       || language.empty()
       || welcome.empty()
-      || favicon.empty();
+      || illustration.empty();
 }
 
 }
@@ -129,7 +129,7 @@ void usage()
   std::cout << "\t-w, --welcome\t\tpath of default/main HTML page. The path "
                "must be relative to HTML_DIRECTORY."
             << std::endl;
-  std::cout << "\t-f, --favicon\t\tpath of ZIM file favicon. The path must be "
+  std::cout << "\t-I, --illustration\t\tpath of ZIM file illustration. The path must be "
                "relative to HTML_DIRECTORY and the image a 48x48 PNG."
             << std::endl;
   std::cout << "\t-l, --language\t\tlanguage code of the content in ISO639-3"
@@ -185,7 +185,7 @@ void usage()
 
   std::cout << "Example:" << std::endl;
   std::cout
-      << "\tzimwriterfs --welcome=index.html --favicon=m/favicon.png --language=fra --title=foobar --description=mydescription \\\n\t\t\
+      << "\tzimwriterfs --welcome=index.html --illustration=illustration.png --language=fra --title=foobar --description=mydescription \\\n\t\t\
 --creator=Wikipedia --publisher=Kiwix ./my_project_html_directory my_project.zim"
       << std::endl;
   std::cout << std::endl;
@@ -213,7 +213,7 @@ void parse_args(int argc, char** argv)
          {"scraper", required_argument, 0, 's'},
          {"redirects", required_argument, 0, 'r'},
          {"inflateHtml", no_argument, 0, 'x'},
-         {"favicon", required_argument, 0, 'f'},
+         {"illustration", required_argument, 0, 'I'},
          {"language", required_argument, 0, 'l'},
          {"title", required_argument, 0, 't'},
          {"tags", required_argument, 0, 'a'},
@@ -235,7 +235,7 @@ void parse_args(int argc, char** argv)
 
   do {
     c = getopt_long(
-        argc, argv, "hVvijxuzw:f:t:d:c:l:p:r:e:n:J:UB", long_options, &option_index);
+        argc, argv, "hVvijxuzw:I:t:d:c:l:p:r:e:n:J:UB", long_options, &option_index);
 
     if (c != -1) {
       switch (c) {
@@ -262,8 +262,8 @@ void parse_args(int argc, char** argv)
         case 'd':
           description = optarg;
           break;
-        case 'f':
-          favicon = optarg;
+        case 'I':
+          illustration = optarg;
           break;
         case 'i':
           withoutFTIndex = false;
@@ -350,10 +350,10 @@ void parse_args(int argc, char** argv)
     exit(1);
   }
 
-  if (!dontCheckArgs && !fileExists(directoryPath + "/" + favicon)) {
-    std::cerr << "zimwriterfs: unable to find favicon at " << directoryPath
-              << "/" << favicon
-              << "'. --favicon path/value must be relative to HTML_DIRECTORY."
+  if (!dontCheckArgs && !fileExists(directoryPath + "/" + illustration)) {
+    std::cerr << "zimwriterfs: unable to find illustration at " << directoryPath
+              << "/" << illustration
+              << "'. --illustration path/value must be relative to HTML_DIRECTORY."
               << std::endl;
     exit(1);
   }
@@ -423,8 +423,8 @@ void create_zim()
     zimCreator.setMainPath(welcome);
   }
 
-  if ( !favicon.empty() )  {
-    zimCreator.setFaviconPath(favicon);
+  if ( !illustration.empty() )  {
+    zimCreator.addIllustration(48, getFileContent(directoryPath + "/" + illustration));
   }
 
   /* Directory visitor */
