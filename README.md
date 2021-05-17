@@ -42,12 +42,11 @@ with the ZIM libary compilation itself, we recommend to have a look to
 Dependencies
 ------------
 
-Most of the utilities that form the zim-tools programs rely on libzim:
-
 * [ZIM](https://openzim.org) (package `libzim-dev` on Debian/Ubuntu)
-
-`zimdump` additionally requires:
 * [docopt.cpp](https://github.com/docopt/docopt.cpp) (package `libdocopt-dev` on Debian/Ubuntu)
+* [Mustache](https://github.com/kainjow/Mustache) (package `libkainjow-mustache-dev` on Debian/Ubuntu)
+  Be sure you use Mustache version 4.1 or above. You can just copy the header `mustache.hpp`
+  somewhere it can be found by the compiler and/or set CPPFLAGS with correct `-I` option.
 
 `zimwriterfs` relies on many third-party software libraries. They are
 prerequisites to compiling zimwriterfs. The following libraries
