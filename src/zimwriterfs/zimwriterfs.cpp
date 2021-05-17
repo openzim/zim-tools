@@ -61,7 +61,7 @@ std::string directoryPath;
 
 
 int threads = 4;
-int minChunkSize = 2048;
+zim::size_type clusterSize = 2048*1024;
 
 bool verboseFlag = false;
 bool withoutFTIndex = false;
@@ -154,7 +154,7 @@ void usage()
   std::cout << "\t-h, --help\t\tprint this help" << std::endl;
   std::cout << "\t-V, --version\t\tprint the version number" << std::endl;
   std::cout
-      << "\t-m, --minChunkSize\tnumber of bytes per ZIM cluster (default: 2048)"
+      << "\t--clusterSize\tnumber of bytes per ZIM cluster (default: 2048Kb)"
       << std::endl;
   std::cout << "\t-J, --threads\tcount of threads to utilize (default: 4)"
       << std::endl;
@@ -206,7 +206,7 @@ void parse_args(int argc, char** argv)
          {"verbose", no_argument, 0, 'v'},
          {"version", no_argument, 0, 'V'},
          {"welcome", required_argument, 0, 'w'},
-         {"minchunksize", required_argument, 0, 'm'},
+         {"clusterSize", required_argument, 0, 'm'},
          {"name", required_argument, 0, 'n'},
          {"source", required_argument, 0, 'e'},
          {"flavour", required_argument, 0, 'o'},
@@ -235,7 +235,7 @@ void parse_args(int argc, char** argv)
 
   do {
     c = getopt_long(
-        argc, argv, "hVvijxuzw:m:f:t:d:c:l:p:r:e:n:J:UB", long_options, &option_index);
+        argc, argv, "hVvijxuzw:f:t:d:c:l:p:r:e:n:J:UB", long_options, &option_index);
 
     if (c != -1) {
       switch (c) {
@@ -275,7 +275,7 @@ void parse_args(int argc, char** argv)
           language = optarg;
           break;
         case 'm':
-          minChunkSize = atoi(optarg);
+          clusterSize = atoi(optarg);
           break;
         case 'n':
           name = optarg;
@@ -379,7 +379,7 @@ void create_zim()
   ZimCreatorFS zimCreator(directoryPath);
   zimCreator.configVerbose(isVerbose())
             .configNbWorkers(threads)
-            .configMinClusterSize(minChunkSize)
+            .configClusterSize(clusterSize)
             .configIndexing(!withoutFTIndex, language)
             .configCompression(zstdFlag ? zim::zimcompZstd : zim::zimcompLzma);
   if ( noUuid ) {

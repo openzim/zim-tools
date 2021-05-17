@@ -25,7 +25,8 @@
 
 void printSearchResults(zim::Search& search)
 {
-    for (zim::Search::iterator it = search.begin(); it != search.end(); ++it)
+    auto results = search.getResults(0, search.getEstimatedMatches());
+    for (auto it = results.begin(); it != results.end(); ++it)
     {
       std::cout << "article " << it->getIndex() << "\nscore " << it.get_score() << "\t:\t" << it->getTitle() << std::endl;
     }
@@ -62,8 +63,10 @@ int main(int argc, char* argv[])
     }
 
     zim::Archive zimarchive(argv[1]);
-    zim::Search search(zimarchive);
-    search.set_query(s);
+    zim::Searcher searcher(zimarchive);
+    zim::Query query;
+    query.setQuery(s, false);
+    auto search = searcher.search(query);
     printSearchResults(search);
   }
   catch (const std::exception& e)
