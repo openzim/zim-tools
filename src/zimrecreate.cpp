@@ -103,7 +103,7 @@ void create(const std::string& originFilename, const std::string& outFilename, b
   zimCreator.configVerbose(true)
             // [TODO] Use the correct language
             .configIndexing(withFtIndexFlag, "eng")
-            .configMinClusterSize(2048)
+            .configClusterSize(2048*1024)
             .configCompression(zstdFlag ? zim::zimcompZstd : zim::zimcompLzma)
             .configNbWorkers(nbThreads);
 

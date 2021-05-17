@@ -64,7 +64,7 @@ void create(const std::string& start_filename, const std::string& diff_filename,
   zim::Archive diff_archive(diff_filename);
 
   zim::writer::Creator zimCreator;
-  zimCreator.configMinClusterSize(2048);
+  zimCreator.configClusterSize(2048*1024);
   zimCreator.startZimCreation(out_filename);
 
   std::string id=diff_archive.getMetadata("endfileuid");

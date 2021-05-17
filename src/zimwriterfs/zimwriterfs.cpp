@@ -154,7 +154,7 @@ void usage()
   std::cout << "\t-h, --help\t\tprint this help" << std::endl;
   std::cout << "\t-V, --version\t\tprint the version number" << std::endl;
   std::cout
-      << "\t-m, --minChunkSize\tnumber of bytes per ZIM cluster (default: 2048)"
+      << "\t-m, --minChunkSize\tnumber of kilobytes per ZIM cluster (default: 2048)"
       << std::endl;
   std::cout << "\t-J, --threads\tcount of threads to utilize (default: 4)"
       << std::endl;
@@ -379,7 +379,7 @@ void create_zim()
   ZimCreatorFS zimCreator(directoryPath);
   zimCreator.configVerbose(isVerbose())
             .configNbWorkers(threads)
-            .configMinClusterSize(minChunkSize)
+            .configClusterSize(minChunkSize * 1024)
             .configIndexing(!withoutFTIndex, language)
             .configCompression(zstdFlag ? zim::zimcompZstd : zim::zimcompLzma);
   if ( noUuid ) {
