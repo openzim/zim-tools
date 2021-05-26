@@ -28,7 +28,7 @@ void printSearchResults(zim::Search& search)
     auto results = search.getResults(0, search.getEstimatedMatches());
     for (auto it = results.begin(); it != results.end(); ++it)
     {
-      std::cout << "article " << it->getIndex() << "\nscore " << it.get_score() << "\t:\t" << it->getTitle() << std::endl;
+      std::cout << "article " << it->getIndex() << "\nscore " << it.getScore() << "\t:\t" << it.getTitle() << std::endl;
     }
 }
 
