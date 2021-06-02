@@ -1,3 +1,4 @@
+#define ZIM_PRIVATE
 #include "checks.h"
 #include "../tools.h"
 
@@ -11,7 +12,6 @@
 #include <mutex>
 #include <thread>
 #include <queue>
-#define ZIM_PRIVATE
 #include <zim/archive.h>
 #include <zim/item.h>
 
@@ -591,9 +591,7 @@ private: // data
 
 zim::cluster_index_type getClusterIndexOfZimEntry(zim::Entry e)
 {
-    // FIXME
-    // return e.getClusterNumber();
-    return 0;
+    return e.isRedirect() ? 0 : e.getItem().getClusterIndex();
 }
 
 class TaskDispatcher
