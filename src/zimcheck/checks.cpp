@@ -1,6 +1,7 @@
 #define ZIM_PRIVATE
 #include "checks.h"
 #include "../tools.h"
+#include "../concurrent_cache.h"
 
 #include <cassert>
 #include <map>
@@ -318,6 +319,7 @@ public: // functions
         , reporter(_reporter)
         , progress(_progress)
         , checks(_checks)
+        , linkStatusCache(64*1024)
     {
         progress.reset(archive.getEntryCount());
     }
@@ -338,6 +340,13 @@ private: // functions
     void check_internal_links(zim::Item item, const GroupedLinkCollection& groupedLinks);
     void check_external_links(zim::Item item, const LinkCollection& links);
 
+    bool is_valid_internal_link(const std::string& link)
+    {
+      return linkStatusCache.getOrPut(link, [=](){
+                return archive.hasEntryByPath(link);
+      });
+    }
+
 private: // data
     const zim::Archive& archive;
     ErrorLogger& reporter;
@@ -347,6 +356,8 @@ private: // data
     // All article with the same hash will be recorded in the same bucket of
     // this hash table.
     std::map<unsigned int, std::list<zim::entry_index_type>> hash_main;
+
+    zim::ConcurrentCache<std::string, bool> linkStatusCache;
 };
 
 void ArticleChecker::check(zim::Entry entry)
@@ -447,7 +458,7 @@ void ArticleChecker::check_internal_links(zim::Item item, const GroupedLinkColle
     for(const auto &p: groupedLinks)
     {
         const std::string link = p.first;
-        if (!archive.hasEntryByPath(link)) {
+        if (!is_valid_internal_link(link)) {
             kainjow::mustache::list links;
             for (const auto &olink : p.second)
                 links.push_back({"value", olink});
