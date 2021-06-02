@@ -330,7 +330,7 @@ private: // types
     typedef std::vector<std::string> StringCollection;
 
     // collection of links grouped into sets of equivalent normalized links
-    typedef std::unordered_map<std::string, StringCollection> GroupedLinkCollection;
+    typedef std::map<std::string, StringCollection> GroupedLinkCollection;
 
 private: // functions
     void checkItem(const zim::Item& item);
