@@ -155,6 +155,7 @@ void ZimCreatorFS::addFile(const std::string& path)
   auto url = path.substr(directoryPath.size()+1);
   auto mimetype = getMimeTypeForFile(directoryPath, url);
   auto title = std::string{};
+  zim::writer::Hints hints;
 
   std::shared_ptr<zim::writer::Item> item;
   if ( mimetype.find("text/html") != std::string::npos
@@ -162,18 +163,20 @@ void ZimCreatorFS::addFile(const std::string& path)
     auto content = getFileContent(path);
 
     if (mimetype.find("text/html") != std::string::npos) {
+      hints[zim::writer::FRONT_ARTICLE] = 1;
       auto redirectUrl = parseAndAdaptHtml(content, title, url);
       if (!redirectUrl.empty()) {
         // This is a redirect.
-        addRedirection(url, title, redirectUrl);
+        addRedirection(url, title, redirectUrl, hints);
         return;
       }
     } else {
       adaptCss(content, url);
     }
-    item = zim::writer::StringItem::create(url, mimetype, title, content);
+
+    item = zim::writer::StringItem::create(url, mimetype, title, hints, content);
   } else {
-    item = std::make_shared<zim::writer::FileItem>(url, mimetype, title, path);
+    item = std::make_shared<zim::writer::FileItem>(url, mimetype, title, hints, path);
   }
   addItem(item);
 }
