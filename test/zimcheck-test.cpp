@@ -143,6 +143,7 @@ const std::string zimcheck_help_message(
   "-H , --help            Displays Help\n"
   "-V , --version         Displays software version\n"
   "-L , --redirect_loop   Checks for the existence of redirect loops\n"
+  "-W , --threads         count of threads to utilize (default: 1)\n"
   "examples:\n"
   "zimcheck -A wikipedia.zim\n"
   "zimcheck --checksum --redundant wikipedia.zim\n"

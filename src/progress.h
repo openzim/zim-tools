@@ -23,6 +23,8 @@
 
 #include <chrono>
 #include <iostream>
+#include <atomic>
+#include <mutex>
 
 using TimePoint = std::chrono::system_clock::time_point;
 
@@ -32,8 +34,9 @@ private:
     double time_interval; // The time interval a report will be printed.
     TimePoint last_report_time; // Last time a report has been printed.
     int max_no;     //Maximum no of times report() will be called.
-    int counter;    //Number of times report() has been called(at a particular time).
+    std::atomic<int> counter;    //Number of times report() has been called(at a particular time).
     bool report_progress; //Boolean value to store wether report should display any characters.
+    std::mutex mutex;
 
 public:
     ProgressBar(double time_interval)
@@ -61,6 +64,7 @@ public:
         if(!report_progress)
             return;
 
+        std::unique_lock<std::mutex> lock(mutex);
         auto now = std::chrono::system_clock::now();
         std::chrono::duration<double> duration = now-last_report_time;
         if (duration.count() > time_interval) {
