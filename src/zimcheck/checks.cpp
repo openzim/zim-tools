@@ -611,8 +611,6 @@ public: // functions
     explicit TaskDispatcher(ArticleChecker* ac, unsigned n)
         : currentCluster(-1)
     {
-        if (n > 8 )
-            throw std::runtime_error("Too many threads requested");
         while ( n-- )
             taskStreams.emplace_back(ac);
     }
