@@ -619,6 +619,8 @@ public: // functions
 
     void addTask(zim::Entry entry)
     {
+        // Assuming that the entries are passed in in cluster order
+        // (which is currently the case for zim::Archive::iterEfficient())
         const auto entryCluster = getClusterIndexOfZimEntry(entry);
         if ( currentCluster != entryCluster )
         {
