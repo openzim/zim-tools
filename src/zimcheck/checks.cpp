@@ -335,7 +335,7 @@ private: // types
     typedef std::map<std::string, StringCollection> GroupedLinkCollection;
 
 private: // functions
-    void checkItem(const zim::Item& item);
+    void check_item(const zim::Item& item);
     void check_internal_links(zim::Item item, const LinkCollection& links);
     void check_internal_links(zim::Item item, const GroupedLinkCollection& groupedLinks);
     void check_external_links(zim::Item item, const LinkCollection& links);
@@ -371,10 +371,10 @@ void ArticleChecker::check(zim::Entry entry)
         return;
     }
 
-    checkItem(entry.getItem());
+    check_item(entry.getItem());
 }
 
-void ArticleChecker::checkItem(const zim::Item& item)
+void ArticleChecker::check_item(const zim::Item& item)
 {
     if (item.getSize() == 0) {
         if (checks.isEnabled(TestType::EMPTY)) {
