@@ -279,13 +279,9 @@ void test_metadata(const zim::Archive& archive, ErrorLogger& reporter) {
 
 void test_favicon(const zim::Archive& archive, ErrorLogger& reporter) {
     reporter.infoMsg("[INFO] Searching for Favicon...");
-    static const char* const favicon_paths[] = {"-/favicon.png", "I/favicon.png", "I/favicon", "-/favicon"};
-    for (auto &path: favicon_paths) {
-        if (archive.hasEntryByPath(path)) {
-            return;
-        }
-    }
-    reporter.addMsg(MsgId::MISSING_FAVICON, {});
+
+    if ( archive.getIllustrationSizes().empty() )
+      reporter.addMsg(MsgId::MISSING_FAVICON, {});
 }
 
 void test_mainpage(const zim::Archive& archive, ErrorLogger& reporter) {
