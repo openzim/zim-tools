@@ -280,7 +280,8 @@ void test_metadata(const zim::Archive& archive, ErrorLogger& reporter) {
 void test_favicon(const zim::Archive& archive, ErrorLogger& reporter) {
     reporter.infoMsg("[INFO] Searching for Favicon...");
 
-    if ( archive.getIllustrationSizes().empty() )
+    const auto illustrationSizes = archive.getIllustrationSizes();
+    if ( illustrationSizes.find(48) == illustrationSizes.end() )
       reporter.addMsg(MsgId::MISSING_FAVICON, {});
 }
 
