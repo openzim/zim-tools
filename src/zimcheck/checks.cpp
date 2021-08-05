@@ -526,8 +526,17 @@ public: // functions
 
     ~TaskStream()
     {
+        finish();
+    }
+
+    // Wait for all tasks to complete and terminate the worker thread.
+    // The TaskStream object becomes unusable after call to finish().
+    void finish()
+    {
         noMoreTasks();
-        thread.join();
+        if ( thread.joinable()) {
+          thread.join();
+        }
     }
 
     void addTask(zim::Entry entry)
@@ -628,7 +637,9 @@ public: // functions
         taskStreams.begin()->addTask(entry);
     }
 
-    void waitForAllTasksToComplete()
+    // Wait for all tasks to complete and terminate the worker threads.
+    // The TaskDispatcher object becomes unusable after call to finish().
+    void finish()
     {
         taskStreams.clear();
     }
@@ -649,7 +660,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
     for (auto& entry:archive.iterEfficient()) {
         td.addTask(entry);
     }
-    td.waitForAllTasksToComplete();
+    td.finish();
 
     if (checks.isEnabled(TestType::REDUNDANT))
     {
