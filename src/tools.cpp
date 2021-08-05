@@ -365,7 +365,7 @@ std::string normalize_link(const std::string& input, const std::string& baseUrl)
     } else {
       //This is a relative url, use base url
       output = baseUrl;
-      if (output.back() != '/')
+      if (!output.empty() && output.back() != '/')
           output += '/';
       check_rel = true;
     }

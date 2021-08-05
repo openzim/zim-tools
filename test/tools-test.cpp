@@ -238,6 +238,9 @@ TEST(tools, normalize_link)
     ASSERT_EQ(normalize_link(".././a", "/b/c"), "/b/a");
     ASSERT_EQ(normalize_link("../a/b/aa#localanchor", "/b/c"), "/b/a/b/aa");
     ASSERT_EQ(normalize_link("../a/b/aa?localanchor", "/b/c"), "/b/a/b/aa");
+
+    ASSERT_EQ(normalize_link("a", ""), "a");
+    ASSERT_EQ(normalize_link("./a", ""), "a");
 }
 
 TEST(tools, addler32)
