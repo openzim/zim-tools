@@ -1,11 +1,18 @@
+#define ZIM_PRIVATE
 #include "checks.h"
 #include "../tools.h"
+#include "../concurrent_cache.h"
 
+#include <cassert>
 #include <map>
 #include <unordered_map>
 #include <list>
 #include <sstream>
-#define ZIM_PRIVATE
+#include <atomic>
+#include <condition_variable>
+#include <mutex>
+#include <thread>
+#include <queue>
 #include <zim/archive.h>
 #include <zim/item.h>
 
@@ -298,151 +305,366 @@ void test_mainpage(const zim::Archive& archive, ErrorLogger& reporter) {
     }
 }
 
+namespace
+{
 
-void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressBar progress,
-                   const EnabledTests checks) {
-    reporter.infoMsg("[INFO] Verifying Articles' content...");
-    // Article are store in a map<hash, list<index>>.
-    // So all article with the same hash will be stored in the same list.
+class ArticleChecker
+{
+public: // types
+    typedef std::vector<html_link> LinkCollection;
+
+public: // functions
+    ArticleChecker(const zim::Archive& _archive, ErrorLogger& _reporter, ProgressBar& _progress, EnabledTests _checks)
+        : archive(_archive)
+        , reporter(_reporter)
+        , progress(_progress)
+        , checks(_checks)
+        , linkStatusCache(64*1024)
+    {
+        progress.reset(archive.getEntryCount());
+    }
+
+
+    void check(zim::Entry entry);
+    void detect_redundant_articles();
+
+private: // types
+    typedef std::vector<std::string> StringCollection;
+
+    // collection of links grouped into sets of equivalent normalized links
+    typedef std::map<std::string, StringCollection> GroupedLinkCollection;
+
+private: // functions
+    void check_item(const zim::Item& item);
+    void check_internal_links(zim::Item item, const LinkCollection& links);
+    void check_internal_links(zim::Item item, const GroupedLinkCollection& groupedLinks);
+    void check_external_links(zim::Item item, const LinkCollection& links);
+
+    bool is_valid_internal_link(const std::string& link)
+    {
+      return linkStatusCache.getOrPut(link, [=](){
+                return archive.hasEntryByPath(link);
+      });
+    }
+
+private: // data
+    const zim::Archive& archive;
+    ErrorLogger& reporter;
+    ProgressBar& progress;
+    const EnabledTests checks;
+
+    // All article with the same hash will be recorded in the same bucket of
+    // this hash table.
     std::map<unsigned int, std::list<zim::entry_index_type>> hash_main;
 
-    int previousIndex = -1;
+    zim::ConcurrentCache<std::string, bool> linkStatusCache;
+};
 
-    progress.reset(archive.getEntryCount());
-    for (auto& entry:archive.iterEfficient()) {
-        progress.report();
-        auto path = entry.getPath();
-        char ns = archive.hasNewNamespaceScheme() ? 'C' : path[0];
+void ArticleChecker::check(zim::Entry entry)
+{
+    progress.report();
 
-        if (entry.isRedirect() || ns == 'M') {
-            continue;
-        }
+    const auto path = entry.getPath();
+    const char ns = archive.hasNewNamespaceScheme() ? 'C' : path[0];
 
-        if (checks.isEnabled(TestType::EMPTY) && (ns == 'C' || ns=='A' || ns == 'I')) {
-            auto item = entry.getItem();
-            if (item.getSize() == 0) {
+    if (entry.isRedirect() || ns == 'M') {
+        return;
+    }
+
+    check_item(entry.getItem());
+}
+
+void ArticleChecker::check_item(const zim::Item& item)
+{
+    if (item.getSize() == 0) {
+        if (checks.isEnabled(TestType::EMPTY)) {
+            const auto path = item.getPath();
+            const char ns = archive.hasNewNamespaceScheme() ? 'C' : path[0];
+            if (ns == 'C' || ns=='A' || ns == 'I') {
                 reporter.addMsg(MsgId::EMPTY_ENTRY, {{"path", path}});
             }
         }
+        return;
+    }
 
-        auto item = entry.getItem();
+    std::string data;
+    if (checks.isEnabled(TestType::REDUNDANT) || item.getMimetype() == "text/html")
+        data = item.getData();
 
-        if (item.getSize() == 0) {
-            continue;
-        }
+    if(checks.isEnabled(TestType::REDUNDANT))
+        hash_main[adler32(data)].push_back( item.getIndex() );
 
-        std::string data;
-        if (checks.isEnabled(TestType::REDUNDANT) || item.getMimetype() == "text/html")
-            data = item.getData();
+    if (item.getMimetype() != "text/html")
+        return;
 
-        if(checks.isEnabled(TestType::REDUNDANT))
-            hash_main[adler32(data)].push_back( item.getIndex() );
+    ArticleChecker::LinkCollection links;
+    if (checks.isEnabled(TestType::URL_INTERNAL) ||
+        checks.isEnabled(TestType::URL_EXTERNAL)) {
+        links = generic_getLinks(data);
+    }
 
-        if (item.getMimetype() != "text/html")
-            continue;
+    if(checks.isEnabled(TestType::URL_INTERNAL))
+    {
+        check_internal_links(item, links);
+    }
 
-        std::vector<html_link> links;
-        if (checks.isEnabled(TestType::URL_INTERNAL) ||
-            checks.isEnabled(TestType::URL_EXTERNAL)) {
-            links = generic_getLinks(data);
-        }
+    if (checks.isEnabled(TestType::URL_EXTERNAL))
+    {
+        check_external_links(item, links);
+    }
+}
 
-        if(checks.isEnabled(TestType::URL_INTERNAL))
+void ArticleChecker::check_internal_links(zim::Item item, const LinkCollection& links)
+{
+    const auto path = item.getPath();
+    auto baseUrl = path;
+    auto pos = baseUrl.find_last_of('/');
+    baseUrl.resize( pos==baseUrl.npos ? 0 : pos );
+
+    ArticleChecker::GroupedLinkCollection groupedLinks;
+    int nremptylinks = 0;
+    for (const auto &l : links)
+    {
+        if (l.link.front() == '#' || l.link.front() == '?') continue;
+        if (l.isInternalUrl() == false) continue;
+        if (l.link.empty())
         {
-            auto baseUrl = path;
-            auto pos = baseUrl.find_last_of('/');
-            baseUrl.resize( pos==baseUrl.npos ? 0 : pos );
-
-            std::unordered_map<std::string, std::vector<std::string>> filtered;
-            int nremptylinks = 0;
-            for (const auto &l : links)
-            {
-                if (l.link.front() == '#' || l.link.front() == '?') continue;
-                if (l.isInternalUrl() == false) continue;
-                if (l.link.empty())
-                {
-                    nremptylinks++;
-                    continue;
-                }
+            nremptylinks++;
+            continue;
+        }
 
 
-                if (isOutofBounds(l.link, baseUrl))
-                {
-                    reporter.addMsg(MsgId::OUTOFBOUNDS_LINK, {{"link", l.link}, {"path", path}});
-                    continue;
-                }
+        if (isOutofBounds(l.link, baseUrl))
+        {
+            reporter.addMsg(MsgId::OUTOFBOUNDS_LINK, {{"link", l.link}, {"path", path}});
+            continue;
+        }
 
-                auto normalized = normalize_link(l.link, baseUrl);
-                filtered[normalized].push_back(l.link);
-            }
+        auto normalized = normalize_link(l.link, baseUrl);
+        groupedLinks[normalized].push_back(l.link);
+    }
 
-            if (nremptylinks)
-            {
-                reporter.addMsg(MsgId::EMPTY_LINKS, {{"count", toStr(nremptylinks)}, {"path", path}});
-            }
+    if (nremptylinks)
+    {
+        reporter.addMsg(MsgId::EMPTY_LINKS, {{"count", toStr(nremptylinks)}, {"path", path}});
+    }
 
-            for(const auto &p: filtered)
-            {
-                const std::string link = p.first;
-                if (!archive.hasEntryByPath(link)) {
-                    int index = item.getIndex();
-                    if (previousIndex != index)
-                    {
-                        kainjow::mustache::list links;
-                        for (const auto &olink : p.second)
-                            links.push_back({"value", olink});
-                        reporter.addMsg(MsgId::DANGLING_LINKS, {{"path", path}, {"normalized_link", link}, {"links", links}});
-                        previousIndex = index;
+    check_internal_links(item, groupedLinks);
+}
+
+void ArticleChecker::check_internal_links(zim::Item item, const GroupedLinkCollection& groupedLinks)
+{
+    const auto path = item.getPath();
+    for(const auto &p: groupedLinks)
+    {
+        const std::string link = p.first;
+        if (!is_valid_internal_link(link)) {
+            kainjow::mustache::list links;
+            for (const auto &olink : p.second)
+                links.push_back({"value", olink});
+            reporter.addMsg(MsgId::DANGLING_LINKS, {{"path", path}, {"normalized_link", link}, {"links", links}});
+            break;
+        }
+    }
+}
+
+void ArticleChecker::check_external_links(zim::Item item, const LinkCollection& links)
+{
+    const auto path = item.getPath();
+    for (const auto &l: links)
+    {
+        if (l.attribute == "src" && l.isExternalUrl())
+        {
+            reporter.addMsg(MsgId::EXTERNAL_LINK, {{"link", l.link}, {"path", path}});
+            break;
+        }
+    }
+}
+
+void ArticleChecker::detect_redundant_articles()
+{
+    reporter.infoMsg("[INFO] Searching for redundant articles...");
+    reporter.infoMsg("  Verifying Similar Articles for redundancies...");
+    std::ostringstream output_details;
+    progress.reset(hash_main.size());
+    for(const auto &it: hash_main)
+    {
+        progress.report();
+        auto l = it.second;
+        while ( !l.empty() ) {
+            const auto e1 = archive.getEntryByPath(l.front());
+            l.pop_front();
+            if ( !l.empty() ) {
+                // The way we have constructed `l`, e1 MUST BE an item
+                const std::string s1 = e1.getItem().getData();
+                decltype(l) articlesDifferentFromE1;
+                for(auto other : l) {
+                    auto e2 = archive.getEntryByPath(other);
+                    std::string s2 = e2.getItem().getData();
+                    if (s1 != s2 ) {
+                        articlesDifferentFromE1.push_back(other);
+                        continue;
                     }
-                    reporter.setTestResult(TestType::URL_INTERNAL, false);
-                }
-            }
-        }
 
-        if (checks.isEnabled(TestType::URL_EXTERNAL))
-        {
-            for (const auto &l: links)
-            {
-                if (l.attribute == "src" && l.isExternalUrl())
-                {
-                    reporter.addMsg(MsgId::EXTERNAL_LINK, {{"link", l.link}, {"path", path}});
-                    break;
+                    reporter.addMsg(MsgId::REDUNDANT_ITEMS, {{"path1", e1.getPath()}, {"path2", e2.getPath()}});
                 }
+                l.swap(articlesDifferentFromE1);
             }
         }
     }
+}
+
+class TaskStream
+{
+public: // functions
+    explicit TaskStream(ArticleChecker* ac)
+        : articleChecker(*ac)
+        , expectingMoreTasks(true)
+    {
+        thread = std::thread([this]() { this->processTasks(); });
+    }
+
+    ~TaskStream()
+    {
+        finish();
+    }
+
+    // Wait for all tasks to complete and terminate the worker thread.
+    // The TaskStream object becomes unusable after call to finish().
+    void finish()
+    {
+        noMoreTasks();
+        if ( thread.joinable()) {
+          thread.join();
+        }
+    }
+
+    void addTask(zim::Entry entry)
+    {
+        assert(expectingMoreTasks);
+        std::lock_guard<std::mutex> lock(mutex);
+        taskQueue.push(entry);
+        unblock();
+    }
+
+    void noMoreTasks()
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        expectingMoreTasks = false;
+        unblock();
+    }
+
+private: // types
+    typedef std::shared_ptr<zim::Entry> Task;
+
+private: // functions
+    void processTasks()
+    {
+        while ( true )
+        {
+            const auto t = getNextTask();
+            if ( !t )
+                break;
+            articleChecker.check(*t);
+        }
+    }
+
+    bool blocked() const
+    {
+        return expectingMoreTasks && taskQueue.empty();
+    }
+
+    void waitUntilUnblocked(std::unique_lock<std::mutex>& lock)
+    {
+        cv.wait(lock);
+    }
+
+    void unblock()
+    {
+        cv.notify_one();
+    }
+
+    Task getNextTask()
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        if ( blocked() )
+            waitUntilUnblocked(lock);
+
+        Task t;
+        if ( !taskQueue.empty() )
+        {
+            t = std::make_shared<zim::Entry>(taskQueue.front());
+            taskQueue.pop();
+        }
+        return t;
+    }
+
+private: // data
+    ArticleChecker& articleChecker;
+    std::queue<zim::Entry> taskQueue;
+    std::mutex mutex;
+    std::thread thread;
+    std::condition_variable cv;
+    std::atomic<bool> expectingMoreTasks;
+};
+
+
+zim::cluster_index_type getClusterIndexOfZimEntry(zim::Entry e)
+{
+    return e.isRedirect() ? 0 : e.getItem().getClusterIndex();
+}
+
+class TaskDispatcher
+{
+public: // functions
+    explicit TaskDispatcher(ArticleChecker* ac, unsigned n)
+        : currentCluster(-1)
+    {
+        while ( n-- )
+            taskStreams.emplace_back(ac);
+    }
+
+    void addTask(zim::Entry entry)
+    {
+        // Assuming that the entries are passed in in cluster order
+        // (which is currently the case for zim::Archive::iterEfficient())
+        const auto entryCluster = getClusterIndexOfZimEntry(entry);
+        if ( currentCluster != entryCluster )
+        {
+            taskStreams.splice(taskStreams.end(), taskStreams, taskStreams.begin());
+            currentCluster = entryCluster;
+        }
+        taskStreams.begin()->addTask(entry);
+    }
+
+    // Wait for all tasks to complete and terminate the worker threads.
+    // The TaskDispatcher object becomes unusable after call to finish().
+    void finish()
+    {
+        taskStreams.clear();
+    }
+
+private: // data
+    std::list<TaskStream> taskStreams;
+    zim::cluster_index_type currentCluster;
+};
+
+} // unnamed namespace
+
+void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressBar& progress,
+                   const EnabledTests checks, int thread_count) {
+    ArticleChecker articleChecker(archive, reporter, progress, checks);
+    reporter.infoMsg("[INFO] Verifying Articles' content...");
+
+    TaskDispatcher td(&articleChecker, thread_count);
+    for (auto& entry:archive.iterEfficient()) {
+        td.addTask(entry);
+    }
+    td.finish();
 
     if (checks.isEnabled(TestType::REDUNDANT))
     {
-        reporter.infoMsg("[INFO] Searching for redundant articles...");
-        reporter.infoMsg("  Verifying Similar Articles for redundancies...");
-        std::ostringstream output_details;
-        progress.reset(hash_main.size());
-        for(const auto &it: hash_main)
-        {
-            progress.report();
-            auto l = it.second;
-            while ( !l.empty() ) {
-                const auto e1 = archive.getEntryByPath(l.front());
-                l.pop_front();
-                if ( !l.empty() ) {
-                    // The way we have constructed `l`, e1 MUST BE an item
-                    const std::string s1 = e1.getItem().getData();
-                    decltype(l) articlesDifferentFromE1;
-                    for(auto other : l) {
-                        auto e2 = archive.getEntryByPath(other);
-                        std::string s2 = e2.getItem().getData();
-                        if (s1 != s2 ) {
-                            articlesDifferentFromE1.push_back(other);
-                            continue;
-                        }
-
-                        reporter.addMsg(MsgId::REDUNDANT_ITEMS, {{"path1", e1.getPath()}, {"path2", e2.getPath()}});
-                    }
-                    l.swap(articlesDifferentFromE1);
-                }
-            }
-        }
+        articleChecker.detect_redundant_articles();
     }
 }
 

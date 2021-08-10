@@ -62,6 +62,7 @@ void displayHelp()
              "-H , --help            Displays Help\n"
              "-V , --version         Displays software version\n"
              "-L , --redirect_loop   Checks for the existence of redirect loops\n"
+             "-W , --threads         count of threads to utilize (default: 1)\n"
              "examples:\n"
              "zimcheck -A wikipedia.zim\n"
              "zimcheck --checksum --redundant wikipedia.zim\n"
@@ -96,6 +97,7 @@ int zimcheck (const std::vector<const char*>& args)
     bool no_args = true;
     bool json = false;
     bool help = false;
+    int thread_count = 1;
 
     std::string filename = "";
     ProgressBar progress(1);
@@ -123,13 +125,14 @@ int zimcheck (const std::vector<const char*>& args)
             { "url_external", no_argument, 0, 'X'},
             { "details",      no_argument, 0, 'D'},
             { "json",         no_argument, 0, 'J'},
+            { "threads",      required_argument, 0, 'w'},
             { "help",         no_argument, 0, 'H'},
             { "version",      no_argument, 0, 'V'},
             { "redirect_loop",no_argument, 0, 'L'},
             { 0, 0, 0, 0}
         };
         int option_index = 0;
-        int c = getopt_long (argc, const_cast<char**>(argv), "ACIMFPRUXLEDHBVacimfpruxledhbv0",
+        int c = getopt_long (argc, const_cast<char**>(argv), "ACIMFPRUXLEDHBVW:acimfpruxledhbvw:0",
                              long_options, &option_index);
         //c = getopt (argc, argv, "ACMFPRUXED");
         if(c == -1)
@@ -201,6 +204,10 @@ int zimcheck (const std::vector<const char*>& args)
         case 'J':
         case 'j':
             json = true;
+            break;
+        case 'W':
+        case 'w':
+            thread_count = atoi(optarg);
             break;
         case 'H':
         case 'h':
@@ -318,7 +325,7 @@ int zimcheck (const std::vector<const char*>& args)
              enabled_tests.isEnabled(TestType::URL_EXTERNAL) ||
              enabled_tests.isEnabled(TestType::REDUNDANT) ||
              enabled_tests.isEnabled(TestType::EMPTY) )
-          test_articles(archive, error, progress, enabled_tests);
+          test_articles(archive, error, progress, enabled_tests, thread_count);
 
         if ( enabled_tests.isEnabled(TestType::REDIRECT))
             test_redirect_loop(archive, error);
