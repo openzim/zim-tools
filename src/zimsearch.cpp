@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
     zim::Archive zimarchive(argv[1]);
     zim::Searcher searcher(zimarchive);
     zim::Query query;
-    query.setQuery(s, false);
+    query.setQuery(s);
     auto search = searcher.search(query);
     printSearchResults(search);
   }
