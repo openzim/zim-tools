@@ -96,7 +96,7 @@ class PatchItem : public zim::writer::Item
 };
 
 
-void create(const std::string& originFilename, const std::string& outFilename, bool zstdFlag, bool withFtIndexFlag, unsigned long nbThreads)
+void create(const std::string& originFilename, const std::string& outFilename, bool withFtIndexFlag, unsigned long nbThreads)
 {
   zim::Archive origin(originFilename);
   zim::writer::Creator zimCreator;
@@ -104,7 +104,6 @@ void create(const std::string& originFilename, const std::string& outFilename, b
             // [TODO] Use the correct language
             .configIndexing(withFtIndexFlag, "eng")
             .configClusterSize(2048*1024)
-            .configCompression(zstdFlag ? zim::zimcompZstd : zim::zimcompLzma)
             .configNbWorkers(nbThreads);
 
   std::cout << "starting zim creation" << std::endl;
@@ -176,7 +175,6 @@ void usage()
     "\nUsage: zimrecreate ORIGIN_FILE OUTPUT_FILE [Options]"
     "\nOptions:\n"
     "\t-v, --version           print software version\n"
-    "\t-z, --zstd              use Zstandard as ZIM compression (lzma otherwise)\n"
     "\t-j, --withoutFTIndex    don't create and add a fulltext index of the content to the ZIM\n"
     "\t-J, --threads <number>  count of threads to utilize (default: 4)\n";
     return;
@@ -184,7 +182,6 @@ void usage()
 
 int main(int argc, char* argv[])
 {
-    bool zstdFlag = false;
     bool withFtIndexFlag = true;
     unsigned long nbThreads = 4;
 
@@ -206,12 +203,6 @@ int main(int argc, char* argv[])
         {
             version();
             return 0;
-        }
-
-        if(std::string(argv[i])=="--zstd" ||
-           std::string(argv[i])=="-z")
-        {
-            zstdFlag = true;
         }
 
         if(std::string(argv[i])=="--withoutFTIndex" ||
@@ -252,7 +243,7 @@ int main(int argc, char* argv[])
     std::string outputFilename = argv[2];
     try
     {
-        create(originFilename, outputFilename, zstdFlag, withFtIndexFlag, nbThreads);
+        create(originFilename, outputFilename, withFtIndexFlag, nbThreads);
     }
     catch (const std::exception& e)
     {
