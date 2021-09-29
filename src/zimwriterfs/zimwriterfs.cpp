@@ -381,7 +381,7 @@ void create_zim()
             .configNbWorkers(threads)
             .configClusterSize(clusterSize)
             .configIndexing(!withoutFTIndex, language)
-            .configCompression(zstdFlag ? zim::zimcompZstd : zim::zimcompLzma);
+            .configCompression(zstdFlag ? zim::Compression::Zstd : zim::Compression::Lzma);
   if ( noUuid ) {
     zimCreator.setUuid(zim::Uuid());
   }
