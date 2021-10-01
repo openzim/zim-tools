@@ -65,7 +65,6 @@ zim::size_type clusterSize = 2048*1024;
 
 bool verboseFlag = false;
 bool withoutFTIndex = false;
-bool zstdFlag = false;
 bool noUuid = false;
 bool dontCheckArgs = false;
 
@@ -176,8 +175,6 @@ void usage()
             << std::endl;
   std::cout << "\t-s, --scraper\t\tname & version of tool used to produce HTML content"
             << std::endl;
-  std::cout << "\t-z, --zstd\t\tuse Zstandard as ZIM compression (lzma otherwise)"
-            << std::endl;
   // --no-uuid and --dont-check-arguments are dev options, let's keep them secret
   // std::cout << "\t-U, --no-uuid\t\tdon't generate a random UUID" << std::endl;
   // std::cout << "\t-B, --dont-check-arguments\t\tdon't check arguments (and possibly produce a broken ZIM file)" << std::endl;
@@ -220,7 +217,6 @@ void parse_args(int argc, char** argv)
          {"description", required_argument, 0, 'd'},
          {"creator", required_argument, 0, 'c'},
          {"publisher", required_argument, 0, 'p'},
-         {"zstd", no_argument, 0, 'z'},
          {"withoutFTIndex", no_argument, 0, 'j'},
          {"threads", required_argument, 0, 'J'},
          {"no-uuid", no_argument, 0, 'U'},
@@ -235,7 +231,7 @@ void parse_args(int argc, char** argv)
 
   do {
     c = getopt_long(
-        argc, argv, "hVvijxuzw:I:t:d:c:l:p:r:e:n:J:UB", long_options, &option_index);
+        argc, argv, "hVvijxuw:I:t:d:c:l:p:r:e:n:J:UB", long_options, &option_index);
 
     if (c != -1) {
       switch (c) {
@@ -300,9 +296,6 @@ void parse_args(int argc, char** argv)
           break;
         case 'w':
           welcome = optarg;
-          break;
-        case 'z':
-          zstdFlag = true;
           break;
         case 'J':
           threads = atoi(optarg);
@@ -380,8 +373,7 @@ void create_zim()
   zimCreator.configVerbose(isVerbose())
             .configNbWorkers(threads)
             .configClusterSize(clusterSize)
-            .configIndexing(!withoutFTIndex, language)
-            .configCompression(zstdFlag ? zim::zimcompZstd : zim::zimcompLzma);
+            .configIndexing(!withoutFTIndex, language);
   if ( noUuid ) {
     zimCreator.setUuid(zim::Uuid());
   }
