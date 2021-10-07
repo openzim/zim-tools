@@ -252,9 +252,9 @@ std::string getMimeTypeForFile(const std::string &directoryPath, const std::stri
   /* Try to get the mimeType from the file extension */
   auto index_of_last_dot = filename.find_last_of(".");
   if (index_of_last_dot != std::string::npos) {
-    mimeType = filename.substr(index_of_last_dot + 1);
+    auto extension = filename.substr(index_of_last_dot + 1);
     try {
-      return extMimeTypes.at(mimeType);
+      return extMimeTypes.at(extension);
     } catch (std::out_of_range&) {}
   }
 
