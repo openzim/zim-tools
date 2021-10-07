@@ -1,3 +1,34 @@
+zim-tools 3.0.0
+===============
+
+ * zimwriterfs: Do not allow zimwriterfs to overwrite a existing zim file
+   (@asashnov #193)
+ * zimcheck: Make zimcheck print json output with option `--json`
+   (@veloman-yunkan #206)
+ * zimcheck: Make zimcheck multithreaded (@veloman-yunkan #194)
+ * zimcheck: Add an option to check for redirection loops (@shashwat1002 #218)
+ * zimrecreate: Add an option `-j` to not create fulltext index (@data-man #234)
+ * zimrecreate: Add option `-J` (--threads) to set the number of threads to
+   use (@data-man #235)
+ * remove zstd compression options. We are now always creating zim file with
+   zstd (@kelson42 #261, 264)
+ * zimwriterfs: Do not use the extension of file as mimetype (@mgautier #265)
+ * zimcheck: Improve performance of detection of the kind of url
+   (@veloman-yunkan #179)
+ * Support new protocols xmpp, news and urn (@kelson42 #205)
+ * zimdump: zimdump now print the favicon and mainentry path instead of the
+   index (@kelson42 #220)
+ * zimdump: Add a option to create html redirect insteal of symlink
+ * zimdump: Fix issue where zimdump crash depending of the stored path of
+ redirection (@maneesh #211)
+ * zimdump: Fix argument --ns not working (@maneesh #216)
+ * Add zimcheck unit tests (@veloman-yunkan #215)
+ * zimdump: Fix http redirect (@veloman-yunkan #225)
+ * Adapt zim tools to new libzim api (@mgautier @veloman-yunkan @maneesh)
+ * Compile zimsearch binary only if libzim is compiled with xapian
+   (@mgautier, #201)
+ * Docker : Better open zimtools image (@rgaudin #209)
+
 zim-tools 2.1.0
 ===============
 
