@@ -457,7 +457,7 @@ TEST(zimcheck, json_goodzimfile)
 
     ASSERT_EQ(
       "{"                                                         "\n"
-      "  'zimcheck_version' : '2.2.0',"                           "\n"
+      "  'zimcheck_version' : '3.0.0',"                           "\n"
       "  'checks' : ["                                            "\n"
       "    'checksum',"                                           "\n"
       "    'integrity',"                                          "\n"
@@ -746,7 +746,7 @@ TEST(zimcheck, json_bad_checksum)
 
     ASSERT_EQ(
       "{"                                                         "\n"
-      "  'zimcheck_version' : '2.2.0',"                           "\n"
+      "  'zimcheck_version' : '3.0.0',"                           "\n"
       "  'checks' : ["                                            "\n"
       "    'checksum'"                                            "\n"
       "  ],"                                                      "\n"
@@ -773,7 +773,7 @@ TEST(zimcheck, json_poorzimfile)
 
     ASSERT_EQ(
       "{"                                                                   "\n"
-      "  'zimcheck_version' : '2.2.0',"                                     "\n"
+      "  'zimcheck_version' : '3.0.0',"                                     "\n"
       "  'checks' : ["                                            "\n"
       "    'checksum',"                                           "\n"
       "    'integrity',"                                          "\n"
