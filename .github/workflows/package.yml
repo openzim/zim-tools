@@ -8,6 +8,7 @@ jobs:
       fail-fast: false
       matrix:
         distro:
+          - ubuntu-jammy
           - ubuntu-impish
           - ubuntu-hirsute
           - ubuntu-focal
@@ -32,6 +33,14 @@ jobs:
           fullname: Kiwix builder
           email: release+launchpad@kiwix.org
           distro: ${{ matrix.distro }}
+
+      - uses: legoktm/gh-action-build-deb@ubuntu-jammy
+        if: matrix.distro == 'ubuntu-jammy'
+        name: Build package for ubuntu-jammy
+        id: build-ubuntu-jammy
+        with:
+          args: --no-sign
+          ppa: ${{ steps.ppa.outputs.ppa }}
 
       - uses: legoktm/gh-action-build-deb@ubuntu-impish
         if: matrix.distro == 'ubuntu-impish'
