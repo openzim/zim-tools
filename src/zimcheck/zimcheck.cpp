@@ -256,13 +256,14 @@ int zimcheck (const std::vector<const char*>& args)
     }
 
     ErrorLogger error(json);
-    error.addInfo("zimcheck_version",  std::string(VERSION));
+    error.addInfo("zimcheck_version", std::string(VERSION));
     //Tests.
     try
     {
         error.addInfo("checks", enabled_tests);
         error.addInfo("file_name",  filename);
         error.infoMsg("[INFO] Checking zim file " + filename);
+        error.infoMsg("[INFO] Zimcheck version is " + std::string(VERSION));
 
         //Test 0: Low-level ZIM-file structure integrity checks
         if(enabled_tests.isEnabled(TestType::INTEGRITY))
