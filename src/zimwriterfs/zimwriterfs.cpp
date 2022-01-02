@@ -34,12 +34,8 @@
 
 #include "zimcreatorfs.h"
 #include "../tools.h"
+#include "../version.h"
 #include "tools.h"
-
-/* Check for version number */
-#ifndef VERSION
-  #define VERSION "UNKNOWN"
-#endif
 
 namespace {
 /* Command line options */
@@ -99,15 +95,6 @@ bool isVerbose()
   bool retVal = verboseFlag;
   pthread_mutex_unlock(&verboseMutex);
   return retVal;
-}
-
-/* Print current version defined in the macro */
-void version()
-{
-  // Access the version number through meson macro define
-  std::cout << "Version:  " << "v" << VERSION << std::endl;
-  std::cout << "\tSee -h or --help argument flags for further argument options" << std::endl;
-  std::cout << "\tCopyright 2013-2016 Emmanuel Engelhart <kelson@kiwix.org>" << std::endl;
 }
 
 /* Print correct console usage options */
