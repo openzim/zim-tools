@@ -28,10 +28,10 @@
   #define VERSION "undefined"
 #endif
 
-void version() {
-  std::cout << VERSION << std::endl;
-  std::cout << std::endl;
-  zim::printVersions();
+void version(std::ostream& out = std::cout) {
+  out << VERSION << std::endl;
+  out << std::endl;
+  zim::printVersions(out);
 }
 
 #endif //_ZIM_TOOL_VERSION_H_
