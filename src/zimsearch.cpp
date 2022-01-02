@@ -38,9 +38,9 @@ int main(int argc, char* argv[])
   {
 
     // version number
-    if (argc > 1 && std::string(argv[1]) == "-v")
+    if (argc > 1 && (std::string(argv[1]) == "-v" || std::string(argv[1])=="--version"))
     {
-      version();
+      printVersions();
       return 0;
     }
 
@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
         "\n"
         "options\n"
         "  -x indexfile   specify indexfile\n"
-        "  -v             print software version\n" << std::endl;
+        "  -v, --version  print software version\n" << std::endl;
       return 1;
     }
 

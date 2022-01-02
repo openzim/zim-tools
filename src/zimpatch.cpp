@@ -274,7 +274,7 @@ int main(int argc, char* argv[])
         if(std::string(argv[i])=="--version" ||
            std::string(argv[i])=="-v")
         {
-            version();
+            printVersions();
             return 0;
         }
     }

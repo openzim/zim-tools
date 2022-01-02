@@ -226,7 +226,7 @@ void parse_args(int argc, char** argv)
           tags = optarg;
           break;
         case 'V':
-          version();
+          printVersions();
           exit(0);
           break;
         case 'h':

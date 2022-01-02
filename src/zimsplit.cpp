@@ -190,7 +190,7 @@ int main(int argc, char* argv[])
   try
   {
     std::ostringstream versions;
-    version(versions);
+    printVersions(versions);
     std::map<std::string, docopt::value> args = docopt::docopt(USAGE,
                                                                {argv + 1, argv + argc},
                                                                true,
