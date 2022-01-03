@@ -18,6 +18,7 @@
  */
 
 #include <fstream>
+#include <sstream>
 #include <stdexcept>
 
 #define ZIM_PRIVATE
@@ -188,12 +189,12 @@ int main(int argc, char* argv[])
 {
   try
   {
-
-    std::string versionstr("zimsplit " + std::string(VERSION));
+    std::ostringstream versions;
+    printVersions(versions);
     std::map<std::string, docopt::value> args = docopt::docopt(USAGE,
-                                                            {argv + 1, argv + argc},
-                                                            true,
-                                                            versionstr);
+                                                               {argv + 1, argv + argc},
+                                                               true,
+                                                               versions.str());
 
     std::string prefix = args["<file>"].asString();
     if (args["--prefix"])

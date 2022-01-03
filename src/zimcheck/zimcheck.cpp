@@ -219,7 +219,7 @@ int zimcheck (const std::vector<const char*>& args)
             return 1;
         case 'V':
         case 'v':
-          version();
+          printVersions();
           return 0;
         default:
             abort ();

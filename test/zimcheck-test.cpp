@@ -1,9 +1,17 @@
+#include <sstream>
+
 #include "gtest/gtest.h"
 
 #include "zim/zim.h"
 #include "zim/archive.h"
 #include "../src/zimcheck/checks.h"
 
+std::string getLine(std::string str) {
+  std::istringstream f(str);
+  std::string line;
+  std::getline(f, line);
+  return line;
+}
 
 TEST(zimfilechecks, test_checksum)
 {
@@ -172,20 +180,22 @@ TEST(zimcheck, help)
 
 TEST(zimcheck, version)
 {
+    std::string version = "zim-tools " + std::string(VERSION);
+
     {
       CapturedStdout zimcheck_output;
       ASSERT_EQ(0, zimcheck({"zimcheck", "-v"}));
-      ASSERT_EQ(std::string(VERSION) + "\n", std::string(zimcheck_output));
+      ASSERT_EQ(version, getLine(std::string(zimcheck_output)));
     }
     {
       CapturedStdout zimcheck_output;
       ASSERT_EQ(0, zimcheck({"zimcheck", "-V"}));
-      ASSERT_EQ(std::string(VERSION) + "\n", std::string(zimcheck_output));
+      ASSERT_EQ(version, getLine(std::string(zimcheck_output)));
     }
     {
       CapturedStdout zimcheck_output;
       ASSERT_EQ(0, zimcheck({"zimcheck", "--version"}));
-      ASSERT_EQ(std::string(VERSION) + "\n", std::string(zimcheck_output));
+      ASSERT_EQ(version, getLine(std::string(zimcheck_output)));
     }
 }
 

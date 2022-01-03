@@ -449,12 +449,13 @@ int subcmdList(ZimDumper &app, std::map<std::string, docopt::value> &args)
 int main(int argc, char* argv[])
 {
     int ret = 0;
-    std::string versionstr("zimdump " + std::string(VERSION));
+    std::ostringstream versions;
+    printVersions(versions);
     std::map<std::string, docopt::value> args
         = docopt::docopt(USAGE,
                          { argv + 1, argv + argc },
                          true,
-                         versionstr);
+                         versions.str());
 
     try {
         ZimDumper app(args["<file>"].asString());

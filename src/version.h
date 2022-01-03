@@ -22,13 +22,16 @@
 
 #include <iostream>
 
+#include <zim/version.h>
+
 #ifndef VERSION
   #define VERSION "undefined"
 #endif
 
-void version()
-{
-  std::cout << VERSION << std::endl;
+void printVersions(std::ostream& out = std::cout) {
+  out << "zim-tools " << VERSION << std::endl;
+  out << std::endl;
+  zim::printVersions(out);
 }
 
 #endif //_ZIM_TOOL_VERSION_H_

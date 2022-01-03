@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
             distinctCount = atoi(optarg);
             break;
           case 'v':
-            version();
+            printVersions();
             return 0;
         };
       } else {
