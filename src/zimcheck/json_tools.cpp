@@ -50,9 +50,9 @@ void OutputStream::output(const char* s)
   assert(!m_nesting.empty());
   m_nesting.top().hasData = true;
   auto& out = *m_out;
-  out << '\'';
+  out << '\"';
   for (const char* p = s; *p; ++p) {
-    if (*p == '\'' || *p == '\\') {
+    if (*p == '\"' || *p == '\\') {
       out << '\\' << *p;
     } else if ( *p == '\n' ) {
       out << "\\n";
@@ -60,7 +60,7 @@ void OutputStream::output(const char* s)
       out << *p;
     }
   }
-  out << '\'';
+  out << '\"';
 }
 
 void OutputStream::output(StartObject)
