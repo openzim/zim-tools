@@ -425,13 +425,13 @@ void ArticleChecker::check_internal_links(zim::Item item, const LinkCollection& 
     int nremptylinks = 0;
     for (const auto &l : links)
     {
-        if (l.link.front() == '#' || l.link.front() == '?') continue;
-        if (l.isInternalUrl() == false) continue;
         if (l.link.empty())
         {
             nremptylinks++;
             continue;
         }
+        if (l.link.front() == '#' || l.link.front() == '?') continue;
+        if (l.isInternalUrl() == false) continue;
 
 
         if (isOutofBounds(l.link, baseUrl))
