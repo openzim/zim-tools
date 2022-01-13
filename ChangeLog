@@ -1,3 +1,16 @@
+zim-tools 3.1.0
+===============
+
+ * zimcheck: Fix json output (Use `"` instead of `'`) for strings
+   (@mgautierfr #281)
+ * zimcheck: Avoid undefined behavior (and crash) when testing link's content.
+   (@mgautierfr #280)
+ * The `--version` option now also print the version of all dependencies (@kelson42, #275)
+ * zimcheck: Add the zimcheck version in the output log (@kelson42, #274)
+ * CI: Readd build on Ubuntu Impish (@kelson42, #267)
+ * CI: Add build on Ubuntu Jammy (@legoktm, #273)
+
+
 zim-tools 3.0.0
 ===============
 
