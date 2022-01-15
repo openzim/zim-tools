@@ -254,7 +254,7 @@ TEST(zimcheck, integrity_goodzimfile)
 {
     const std::string expected_output(
         "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
-        "[INFO] Zimcheck version is 3.0.0" "\n"
+        "[INFO] Zimcheck version is 3.1.0" "\n"
         "[INFO] Verifying ZIM-archive structure integrity..." "\n"
         "[INFO] Overall Test Status: Pass" "\n"
         "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
@@ -273,7 +273,7 @@ TEST(zimcheck, checksum_goodzimfile)
 {
     const std::string expected_output(
         "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
-        "[INFO] Zimcheck version is 3.0.0" "\n"
+        "[INFO] Zimcheck version is 3.1.0" "\n"
         "[INFO] Verifying Internal Checksum..." "\n"
         "[INFO] Overall Test Status: Pass" "\n"
         "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
@@ -292,7 +292,7 @@ TEST(zimcheck, metadata_goodzimfile)
 {
     const std::string expected_output(
         "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
-        "[INFO] Zimcheck version is 3.0.0" "\n"
+        "[INFO] Zimcheck version is 3.1.0" "\n"
         "[INFO] Searching for metadata entries..." "\n"
         "[INFO] Overall Test Status: Pass" "\n"
         "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
@@ -311,7 +311,7 @@ TEST(zimcheck, favicon_goodzimfile)
 {
     const std::string expected_output(
         "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
-        "[INFO] Zimcheck version is 3.0.0" "\n"
+        "[INFO] Zimcheck version is 3.1.0" "\n"
         "[INFO] Searching for Favicon..." "\n"
         "[INFO] Overall Test Status: Pass" "\n"
         "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
@@ -330,7 +330,7 @@ TEST(zimcheck, mainpage_goodzimfile)
 {
     const std::string expected_output(
         "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
-        "[INFO] Zimcheck version is 3.0.0" "\n"
+        "[INFO] Zimcheck version is 3.1.0" "\n"
         "[INFO] Searching for main page..." "\n"
         "[INFO] Overall Test Status: Pass" "\n"
         "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
@@ -349,7 +349,7 @@ TEST(zimcheck, article_content_goodzimfile)
 {
     const std::string expected_output(
         "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
-        "[INFO] Zimcheck version is 3.0.0" "\n"
+        "[INFO] Zimcheck version is 3.1.0" "\n"
         "[INFO] Verifying Articles' content..." "\n"
         "[INFO] Overall Test Status: Pass" "\n"
         "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
@@ -372,7 +372,7 @@ TEST(zimcheck, redundant_articles_goodzimfile)
 {
     const std::string expected_output(
         "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
-        "[INFO] Zimcheck version is 3.0.0" "\n"
+        "[INFO] Zimcheck version is 3.1.0" "\n"
         "[INFO] Verifying Articles' content..." "\n"
         "[INFO] Searching for redundant articles..." "\n"
         "  Verifying Similar Articles for redundancies..." "\n"
@@ -393,7 +393,7 @@ TEST(zimcheck, redirect_loop_goodzimfile)
 {
   const std::string expected_output(
     "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
-    "[INFO] Zimcheck version is 3.0.0" "\n"
+    "[INFO] Zimcheck version is 3.1.0" "\n"
     "[INFO] Checking for redirect loops..." "\n"
     "[INFO] Overall Test Status: Pass" "\n"
     "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
@@ -410,7 +410,7 @@ TEST(zimcheck, redirect_loop_goodzimfile)
 
 const std::string ALL_CHECKS_OUTPUT_ON_GOODZIMFILE(
       "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
-      "[INFO] Zimcheck version is 3.0.0" "\n"
+      "[INFO] Zimcheck version is 3.1.0" "\n"
       "[INFO] Verifying ZIM-archive structure integrity..." "\n"
       "[INFO] Avoiding redundant checksum test (already performed by the integrity check)." "\n"
       "[INFO] Searching for metadata entries..." "\n"
@@ -476,7 +476,7 @@ TEST(zimcheck, json_goodzimfile)
 
     ASSERT_EQ(
       "{"                                                           "\n"
-      "  \"zimcheck_version\" : \"3.0.0\","                         "\n"
+      "  \"zimcheck_version\" : \"3.1.0\","                         "\n"
       "  \"checks\" : ["                                            "\n"
       "    \"checksum\","                                           "\n"
       "    \"integrity\","                                          "\n"
@@ -503,7 +503,7 @@ TEST(zimcheck, bad_checksum)
 {
     const std::string expected_output(
       "[INFO] Checking zim file data/zimfiles/bad_checksum.zim" "\n"
-      "[INFO] Zimcheck version is 3.0.0" "\n"
+      "[INFO] Zimcheck version is 3.1.0" "\n"
       "[INFO] Verifying Internal Checksum..." "\n"
       "  [ERROR] Wrong Checksum in ZIM archive" "\n"
       "[ERROR] Invalid checksum:" "\n"
@@ -526,7 +526,7 @@ TEST(zimcheck, metadata_poorzimfile)
 {
     const std::string expected_stdout(
       "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
-      "[INFO] Zimcheck version is 3.0.0" "\n"
+      "[INFO] Zimcheck version is 3.1.0" "\n"
       "[INFO] Searching for metadata entries..." "\n"
       "[ERROR] Missing metadata entries:" "\n"
       "  Title" "\n"
@@ -548,7 +548,7 @@ TEST(zimcheck, favicon_poorzimfile)
 {
     const std::string expected_stdout(
       "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
-      "[INFO] Zimcheck version is 3.0.0" "\n"
+      "[INFO] Zimcheck version is 3.1.0" "\n"
       "[INFO] Searching for Favicon..." "\n"
       "[ERROR] Favicon:" "\n"
       "  Favicon is missing" "\n"
@@ -569,7 +569,7 @@ TEST(zimcheck, mainpage_poorzimfile)
 {
     const std::string expected_stdout(
       "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
-      "[INFO] Zimcheck version is 3.0.0" "\n"
+      "[INFO] Zimcheck version is 3.1.0" "\n"
       "[INFO] Searching for main page..." "\n"
       "[ERROR] Missing mainpage:" "\n"
       "  Main Page Index stored in Archive Header: 4294967295" "\n"
@@ -590,7 +590,7 @@ TEST(zimcheck, empty_items_poorzimfile)
 {
     const std::string expected_stdout(
       "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
-      "[INFO] Zimcheck version is 3.0.0" "\n"
+      "[INFO] Zimcheck version is 3.1.0" "\n"
       "[INFO] Verifying Articles' content..." "\n"
       "[ERROR] Empty articles:" "\n"
       "  Entry empty.html is empty" "\n"
@@ -611,7 +611,7 @@ TEST(zimcheck, internal_url_check_poorzimfile)
 {
     const std::string expected_stdout(
       "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
-      "[INFO] Zimcheck version is 3.0.0" "\n"
+      "[INFO] Zimcheck version is 3.1.0" "\n"
       "[INFO] Verifying Articles' content..." "\n"
       "[ERROR] Invalid internal links found:" "\n"
       "  The following links:" "\n"
@@ -636,7 +636,7 @@ TEST(zimcheck, external_url_check_poorzimfile)
 {
     const std::string expected_stdout(
       "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
-      "[INFO] Zimcheck version is 3.0.0" "\n"
+      "[INFO] Zimcheck version is 3.1.0" "\n"
       "[INFO] Verifying Articles' content..." "\n"
       "[ERROR] Invalid external links found:" "\n"
       "  http://a.io/pic.png is an external dependence in article external_link.html" "\n"
@@ -657,7 +657,7 @@ TEST(zimcheck, redundant_poorzimfile)
 {
     const std::string expected_stdout(
       "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
-      "[INFO] Zimcheck version is 3.0.0" "\n"
+      "[INFO] Zimcheck version is 3.1.0" "\n"
       "[INFO] Verifying Articles' content..." "\n"
       "[INFO] Searching for redundant articles..." "\n"
       "  Verifying Similar Articles for redundancies..." "\n"
@@ -680,7 +680,7 @@ TEST(zimcheck, redirect_loop_poorzimfile)
 {
   const std::string expected_output(
     "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
-    "[INFO] Zimcheck version is 3.0.0" "\n"
+    "[INFO] Zimcheck version is 3.1.0" "\n"
     "[INFO] Checking for redirect loops..." "\n"
     "[ERROR] Redirect loop(s) exist:" "\n"
     "  Redirect loop exists from entry redirect_loop.html" "\n"
@@ -704,7 +704,7 @@ TEST(zimcheck, redirect_loop_poorzimfile)
 
 const std::string ALL_CHECKS_OUTPUT_ON_POORZIMFILE(
       "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
-      "[INFO] Zimcheck version is 3.0.0" "\n"
+      "[INFO] Zimcheck version is 3.1.0" "\n"
       "[INFO] Verifying ZIM-archive structure integrity..." "\n"
       "[INFO] Avoiding redundant checksum test (already performed by the integrity check)." "\n"
       "[INFO] Searching for metadata entries..." "\n"
@@ -775,7 +775,7 @@ TEST(zimcheck, json_bad_checksum)
 
     ASSERT_EQ(
       "{"                                                                   "\n"
-      "  \"zimcheck_version\" : \"3.0.0\","                                 "\n"
+      "  \"zimcheck_version\" : \"3.1.0\","                                 "\n"
       "  \"checks\" : ["                                                    "\n"
       "    \"checksum\""                                                    "\n"
       "  ],"                                                                "\n"
@@ -802,7 +802,7 @@ TEST(zimcheck, json_poorzimfile)
 
     ASSERT_EQ(
       "{"                                                                   "\n"
-      "  \"zimcheck_version\" : \"3.0.0\","                                 "\n"
+      "  \"zimcheck_version\" : \"3.1.0\","                                 "\n"
       "  \"checks\" : ["                                                    "\n"
       "    \"checksum\","                                                   "\n"
       "    \"integrity\","                                                  "\n"
