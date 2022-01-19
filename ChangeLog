@@ -1,3 +1,16 @@
+zim-tools 3.1.0
+===============
+
+ * zimcheck: Fix json output (Use `"` instead of `'`) for strings
+   (@mgautierfr #281)
+ * zimcheck: Avoid undefined behavior (and crash) when testing link's content.
+   (@mgautierfr #280)
+ * The `--version` option now also print the version of all dependencies (@kelson42, #275)
+ * zimcheck: Add the zimcheck version in the output log (@kelson42, #274)
+ * CI: Readd build on Ubuntu Impish (@kelson42, #267)
+ * CI: Add build on Ubuntu Jammy (@legoktm, #273)
+
+
 zim-tools 3.0.0
 ===============
 
@@ -12,7 +25,7 @@ zim-tools 3.0.0
    use (@data-man #235)
  * remove zstd compression options. We are now always creating zim file with
    zstd (@kelson42 #261, 264)
- * zimwriterfs: Do not use the extension of file as mimetype (@mgautier #265)
+ * zimwriterfs: Do not use the extension of file as mimetype (@mgautierfr #265)
  * zimcheck: Improve performance of detection of the kind of url
    (@veloman-yunkan #179)
  * Support new protocols xmpp, news and urn (@kelson42 #205)
@@ -24,9 +37,9 @@ zim-tools 3.0.0
  * zimdump: Fix argument --ns not working (@maneesh #216)
  * Add zimcheck unit tests (@veloman-yunkan #215)
  * zimdump: Fix http redirect (@veloman-yunkan #225)
- * Adapt zim tools to new libzim api (@mgautier @veloman-yunkan @maneesh)
+ * Adapt zim tools to new libzim api (@mgautierfr @veloman-yunkan @maneesh)
  * Compile zimsearch binary only if libzim is compiled with xapian
-   (@mgautier, #201)
+   (@mgautierfr, #201)
  * Docker : Better open zimtools image (@rgaudin #209)
 
 zim-tools 2.1.0
