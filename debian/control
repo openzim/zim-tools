@@ -5,7 +5,7 @@ Maintainer: Kiwix team <kiwix@kiwix.org>
 Build-Depends: debhelper-compat (= 13),
  meson,
  pkg-config,
- libzim-dev (>= 7.2.0),
+ libzim-dev (>= 7.2.0~),
  libmagic-dev,
  zlib1g-dev,
  libgumbo-dev,
