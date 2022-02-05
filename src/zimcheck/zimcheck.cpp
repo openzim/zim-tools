@@ -349,7 +349,16 @@ int zimcheck (const std::vector<const char*>& args)
         const std::chrono::duration<double> runtime(endtime - starttime);
         const long seconds = lround(runtime.count());
         std::ostringstream ss;
-        ss << "[INFO] Total time taken by zimcheck: " << seconds << " seconds.";
+        ss << "[INFO] Total time taken by zimcheck: ";
+        if ( seconds < 3 )
+        {
+          ss << "<3";
+        }
+        else
+        {
+          ss << seconds;
+        }
+        ss << " seconds.";
         error.infoMsg(ss.str());
     }
     catch (const std::exception & e)
