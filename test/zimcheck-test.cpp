@@ -257,7 +257,7 @@ TEST(zimcheck, integrity_goodzimfile)
         "[INFO] Zimcheck version is " VERSION "\n"
         "[INFO] Verifying ZIM-archive structure integrity..." "\n"
         "[INFO] Overall Test Status: Pass" "\n"
-        "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+        "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
     );
 
     test_zimcheck_single_option(
@@ -276,7 +276,7 @@ TEST(zimcheck, checksum_goodzimfile)
         "[INFO] Zimcheck version is " VERSION "\n"
         "[INFO] Verifying Internal Checksum..." "\n"
         "[INFO] Overall Test Status: Pass" "\n"
-        "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+        "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
     );
 
     test_zimcheck_single_option(
@@ -295,7 +295,7 @@ TEST(zimcheck, metadata_goodzimfile)
         "[INFO] Zimcheck version is " VERSION "\n"
         "[INFO] Searching for metadata entries..." "\n"
         "[INFO] Overall Test Status: Pass" "\n"
-        "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+        "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
     );
 
     test_zimcheck_single_option(
@@ -314,7 +314,7 @@ TEST(zimcheck, favicon_goodzimfile)
         "[INFO] Zimcheck version is " VERSION "\n"
         "[INFO] Searching for Favicon..." "\n"
         "[INFO] Overall Test Status: Pass" "\n"
-        "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+        "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
     );
 
     test_zimcheck_single_option(
@@ -333,7 +333,7 @@ TEST(zimcheck, mainpage_goodzimfile)
         "[INFO] Zimcheck version is " VERSION "\n"
         "[INFO] Searching for main page..." "\n"
         "[INFO] Overall Test Status: Pass" "\n"
-        "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+        "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
     );
 
     test_zimcheck_single_option(
@@ -352,7 +352,7 @@ TEST(zimcheck, article_content_goodzimfile)
         "[INFO] Zimcheck version is " VERSION "\n"
         "[INFO] Verifying Articles' content..." "\n"
         "[INFO] Overall Test Status: Pass" "\n"
-        "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+        "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
     );
 
     test_zimcheck_single_option(
@@ -377,7 +377,7 @@ TEST(zimcheck, redundant_articles_goodzimfile)
         "[INFO] Searching for redundant articles..." "\n"
         "  Verifying Similar Articles for redundancies..." "\n"
         "[INFO] Overall Test Status: Pass" "\n"
-        "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+        "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
     );
 
     test_zimcheck_single_option(
@@ -396,7 +396,7 @@ TEST(zimcheck, redirect_loop_goodzimfile)
     "[INFO] Zimcheck version is " VERSION "\n"
     "[INFO] Checking for redirect loops..." "\n"
     "[INFO] Overall Test Status: Pass" "\n"
-    "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+    "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
   );
 
   test_zimcheck_single_option(
@@ -421,7 +421,7 @@ const std::string ALL_CHECKS_OUTPUT_ON_GOODZIMFILE(
       "  Verifying Similar Articles for redundancies..." "\n"
       "[INFO] Checking for redirect loops..." "\n"
       "[INFO] Overall Test Status: Pass" "\n"
-      "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+      "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
 );
 
 TEST(zimcheck, nooptions_goodzimfile)
@@ -510,7 +510,7 @@ TEST(zimcheck, bad_checksum)
       "  ZIM Archive Checksum in archive: 00000000000000000000000000000000" "\n"
       "" "\n"
       "[INFO] Overall Test Status: Fail" "\n"
-      "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+      "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
     );
 
     test_zimcheck_single_option(
@@ -532,7 +532,7 @@ TEST(zimcheck, metadata_poorzimfile)
       "  Title" "\n"
       "  Description" "\n"
       "[INFO] Overall Test Status: Fail" "\n"
-      "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+      "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
     );
 
     test_zimcheck_single_option(
@@ -553,7 +553,7 @@ TEST(zimcheck, favicon_poorzimfile)
       "[ERROR] Favicon:" "\n"
       "  Favicon is missing" "\n"
       "[INFO] Overall Test Status: Fail" "\n"
-      "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+      "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
     );
 
     test_zimcheck_single_option(
@@ -574,7 +574,7 @@ TEST(zimcheck, mainpage_poorzimfile)
       "[ERROR] Missing mainpage:" "\n"
       "  Main Page Index stored in Archive Header: 4294967295" "\n"
       "[INFO] Overall Test Status: Fail" "\n"
-      "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+      "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
     );
 
     test_zimcheck_single_option(
@@ -595,7 +595,7 @@ TEST(zimcheck, empty_items_poorzimfile)
       "[ERROR] Empty articles:" "\n"
       "  Entry empty.html is empty" "\n"
       "[INFO] Overall Test Status: Fail" "\n"
-      "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+      "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
     );
 
     test_zimcheck_single_option(
@@ -620,7 +620,7 @@ TEST(zimcheck, internal_url_check_poorzimfile)
       "  Found 1 empty links in article: empty_link.html" "\n"
       "  ../../oops.html is out of bounds. Article: outofbounds_link.html" "\n"
       "[INFO] Overall Test Status: Fail" "\n"
-      "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+      "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
     );
 
     test_zimcheck_single_option(
@@ -641,7 +641,7 @@ TEST(zimcheck, external_url_check_poorzimfile)
       "[ERROR] Invalid external links found:" "\n"
       "  http://a.io/pic.png is an external dependence in article external_link.html" "\n"
       "[INFO] Overall Test Status: Fail" "\n"
-      "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+      "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
     );
 
     test_zimcheck_single_option(
@@ -664,7 +664,7 @@ TEST(zimcheck, redundant_poorzimfile)
       "[WARNING] Redundant data found:" "\n"
       "  article1.html and redundant_article.html" "\n"
       "[INFO] Overall Test Status: Pass" "\n"
-      "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+      "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
     );
 
     test_zimcheck_single_option(
@@ -690,7 +690,7 @@ TEST(zimcheck, redirect_loop_poorzimfile)
     "  Redirect loop exists from entry redirect_loop3.html" "\n"
     "" "\n"
     "[INFO] Overall Test Status: Fail" "\n"
-    "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+    "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
   );
 
   test_zimcheck_single_option(
@@ -741,7 +741,7 @@ const std::string ALL_CHECKS_OUTPUT_ON_POORZIMFILE(
       "  Redirect loop exists from entry redirect_loop3.html" "\n"
       "" "\n"
       "[INFO] Overall Test Status: Fail" "\n"
-      "[INFO] Total time taken by zimcheck: 0 seconds." "\n"
+      "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
 );
 
 TEST(zimcheck, nooptions_poorzimfile)
