@@ -115,7 +115,7 @@ void usage()
   std::cout << "\t-w, --welcome\t\tpath of default/main HTML page. The path "
                "must be relative to HTML_DIRECTORY."
             << std::endl;
-  std::cout << "\t-I, --illustration\t\tpath of ZIM file illustration. The path must be "
+  std::cout << "\t-I, --illustration\tpath of ZIM file illustration. The path must be "
                "relative to HTML_DIRECTORY and the image a 48x48 PNG."
             << std::endl;
   std::cout << "\t-l, --language\t\tlanguage code of the content in ISO639-3"
@@ -140,9 +140,9 @@ void usage()
   std::cout << "\t-h, --help\t\tprint this help" << std::endl;
   std::cout << "\t-V, --version\t\tprint the version number" << std::endl;
   std::cout
-      << "\t--clusterSize\tnumber of bytes per ZIM cluster (default: 2048Kb)"
+      << "\t-m, --clusterSize\tnumber of bytes per ZIM cluster (default: 2048Kb)"
       << std::endl;
-  std::cout << "\t-J, --threads\tcount of threads to utilize (default: 4)"
+  std::cout << "\t-J, --threads\t\tcount of threads to utilize (default: 4)"
       << std::endl;
   std::cout << "\t-x, --inflateHtml\ttry to inflate HTML files before packing "
                "(*.html, *.htm, ...)"
@@ -218,7 +218,7 @@ void parse_args(int argc, char** argv)
 
   do {
     c = getopt_long(
-        argc, argv, "hVvijxuw:I:t:d:c:l:p:r:e:n:J:UB", long_options, &option_index);
+        argc, argv, "hVvijxuw:I:t:d:c:l:p:r:e:n:m:J:UB", long_options, &option_index);
 
     if (c != -1) {
       switch (c) {
