@@ -119,7 +119,7 @@ void ZimDumper::printInfo()
   }
 
   if (m_archive.hasMainEntry()) {
-    std::cout << "main page: " << m_archive.getMainEntry().getPath() << "\n";
+    std::cout << "main page: " << m_archive.getMainEntry().getItem(true).getPath() << "\n";
   } else {
     std::cout << "main page: -\n";
   }
