@@ -172,6 +172,9 @@ class ZimSplitter
 
 static const char USAGE[] = R"(
     zimsplit splits smartly a ZIM file in smaller parts.
+    
+    zimsplit cannot split certain internal portions of ZIM files (search index) and will leave them with a 
+    warning in excess of the specified size. Manually splitting the search index renders search inoperable.
 
 Usage:
     zimsplit [--prefix=PREFIX] [--force] [--size=N] <file>
