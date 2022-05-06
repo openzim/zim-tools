@@ -1,3 +1,14 @@
+zim-tools 3.1.1
+===============
+
+ * zimdump: Correctly print the main page (@mgautierfr #293)
+ * zimcheck: Correctly print spend time to avoid performance test to fail on slow
+   hardware (@veloman-yunkan #288)
+ * zimwriterfs: Fix usage message indentation (@kelson42 #291)
+ * Cross compilation: Correctly detect host machine (@kelson42 #290)
+ * CI: Fix libzim-dev deps (@legoktm #284)
+ * CI: Remove Ubuntu Hirsute (@legoktm #286)
+
 zim-tools 3.1.0
 ===============
 
