@@ -278,7 +278,8 @@ std::string ZimCreatorFS::parseAndAdaptHtml(std::string& data, std::string& titl
         }
       }
 
-      /* Detect if this is a redirection (if no redirects TSV file specified)
+      /* Detect if this is a HTML redirection (if no redirects TSV
+         file specified)
        */
       std::string targetUrl;
       try {
@@ -288,8 +289,10 @@ std::string ZimCreatorFS::parseAndAdaptHtml(std::string& data, std::string& titl
       }
       if (!targetUrl.empty()) {
         auto redirectUrl = computeAbsolutePath(url, decodeUrl(targetUrl));
-        if (!fileExists(directoryPath + "/" + redirectUrl)) {
-          throw std::runtime_error("Target path doesn't exists");
+        auto redirectUrlPath = directoryPath + "/" + redirectUrl;
+        if (!fileExists(redirectUrlPath)) {
+          throw std::runtime_error("'" + url + "' HTML redirection target path '"
+                                   + redirectUrlPath + "' doesn't exist.");
         }
         return redirectUrl;
       }
