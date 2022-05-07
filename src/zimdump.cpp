@@ -162,20 +162,20 @@ int ZimDumper::listEntry(const zim::Entry& entry)
 {
   std::cout <<
     "path: " << entry.getPath() << "\n"
-    "\ttitle:           " << entry.getTitle() << "\n"
-    "\tidx:             " << entry.getIndex() << "\n"
-    "\ttype:            " << (entry.isRedirect()   ? "redirect" : "item") << "\n";
+    "* title:          " << entry.getTitle() << "\n"
+    "* idx:            " << entry.getIndex() << "\n"
+    "* type:           " << (entry.isRedirect()   ? "redirect" : "item") << "\n";
 
   if (entry.isRedirect()) {
     std::cout <<
-      "\tredirect index:  " << entry.getRedirectEntry().getIndex() << "\n";
-  }
-  else {
+      "* redirect index: " << entry.getRedirectEntry().getIndex() << "\n";
+  } else {
     auto item = entry.getItem();
     std::cout <<
-      "\tmime-type:       " << item.getMimetype() << "\n"
-      "\titem size:    " << item.getSize() << "\n";
+      "* mime-type:      " << item.getMimetype() << "\n"
+      "* item size:      " << item.getSize() << "\n";
   }
+
   return 0;
 }
 
