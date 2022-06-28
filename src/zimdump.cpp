@@ -267,7 +267,6 @@ inline void write_to_file(const std::string &base, const std::string& path, cons
 
 void ZimDumper::writeHttpRedirect(const std::string& directory, const std::string& outputPath, const std::string& currentEntryPath, std::string redirectPath)
 {
-    redirectPath = computeRelativePath(currentEntryPath, redirectPath);
     const auto content = httpRedirectHtml(redirectPath);
     write_to_file(directory + SEPARATOR, outputPath, content.c_str(), content.size());
 }
@@ -313,6 +312,7 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
     if (entry.isRedirect()) {
         auto redirectItem = entry.getItem(true);
         std::string redirectPath = redirectItem.getPath();
+        redirectPath = computeRelativePath(path, redirectPath);
         if (symlinkdump == false && redirectItem.getMimetype() == "text/html") {
             writeHttpRedirect(directory, relative_path, path, redirectPath);
         } else {
