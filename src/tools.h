@@ -71,6 +71,7 @@ enum class UriKind : int
     URN,            // urn:nbn:de:bsz:24-digibib-bsz3530416370
 
     GENERIC_URI,    // Generic URI with scheme and authority: <scheme>://.....
+    PROTOCOL_RELATIVE, // Protocol-relative URL: //<host>/<path>/<to>/<resource>
 
     OTHER           // not a valid URI (though it can be a valid relative
                     // or absolute URL)

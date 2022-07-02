@@ -183,6 +183,8 @@ TEST(tools, uriKind)
     EXPECT_EQ(UriKind::GENERIC_URI, uriKind("file:///etc/passwd"));
     EXPECT_EQ(UriKind::GENERIC_URI, uriKind("ftp://download.kiwix.org/zim/"));
 
+    EXPECT_EQ(UriKind::PROTOCOL_RELATIVE, uriKind("//example.com"));
+
     EXPECT_EQ(UriKind::MAILTO, uriKind("mailto:someone@example.com"));
     EXPECT_EQ(UriKind::MAILTO, uriKind("MAILTO:someone@example.com"));
 

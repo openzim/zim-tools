@@ -454,8 +454,12 @@ void asciitolower(std::string& s)
 UriKind html_link::detectUriKind(const std::string& input_string)
 {
     const auto k = input_string.find_first_of(":/?#");
-    if ( k == std::string::npos || input_string[k] != ':' )
-        return UriKind::OTHER;
+    if ( k == std::string::npos || input_string[k] != ':' ) {
+        if ( k == 0 && input_string.substr(0, 2) == "//" )
+            return UriKind::PROTOCOL_RELATIVE;
+        else
+            return UriKind::OTHER;
+    }
 
     if ( k + 2 < input_string.size()
          && input_string[k+1] == '/'
