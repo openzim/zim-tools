@@ -516,6 +516,9 @@ void ArticleChecker::detect_redundant_articles()
 
 class TaskStream
 {
+public: // constants
+    const static size_t MAX_SIZE = 1000;
+
 public: // functions
     explicit TaskStream(ArticleChecker* ac)
         : articleChecker(*ac)
@@ -542,16 +545,20 @@ public: // functions
     void addTask(zim::Entry entry)
     {
         assert(expectingMoreTasks);
-        std::lock_guard<std::mutex> lock(mutex);
+        std::unique_lock<std::mutex> lock(mutex);
+
+        while ( inIsBlocked() )
+            waitUntilInIsUnblocked(lock);
+
         taskQueue.push(entry);
-        unblock();
+        unblockOut();
     }
 
     void noMoreTasks()
     {
         std::lock_guard<std::mutex> lock(mutex);
         expectingMoreTasks = false;
-        unblock();
+        unblockOut();
     }
 
 private: // types
@@ -569,17 +576,32 @@ private: // functions
         }
     }
 
-    bool blocked() const
+    bool inIsBlocked() const
+    {
+        return taskQueue.size() >= MAX_SIZE;
+    }
+
+    bool outIsBlocked() const
     {
         return expectingMoreTasks && taskQueue.empty();
     }
 
-    void waitUntilUnblocked(std::unique_lock<std::mutex>& lock)
+    void waitUntilInIsUnblocked(std::unique_lock<std::mutex>& lock)
     {
         cv.wait(lock);
     }
 
-    void unblock()
+    void waitUntilOutIsUnblocked(std::unique_lock<std::mutex>& lock)
+    {
+        cv.wait(lock);
+    }
+
+    void unblockIn()
+    {
+        cv.notify_one();
+    }
+
+    void unblockOut()
     {
         cv.notify_one();
     }
@@ -587,14 +609,15 @@ private: // functions
     Task getNextTask()
     {
         std::unique_lock<std::mutex> lock(mutex);
-        if ( blocked() )
-            waitUntilUnblocked(lock);
+        if ( outIsBlocked() )
+            waitUntilOutIsUnblocked(lock);
 
         Task t;
         if ( !taskQueue.empty() )
         {
             t = std::make_shared<zim::Entry>(taskQueue.front());
             taskQueue.pop();
+            unblockIn();
         }
         return t;
     }
@@ -604,7 +627,18 @@ private: // data
     std::queue<zim::Entry> taskQueue;
     std::mutex mutex;
     std::thread thread;
+
+    // cv is used for managing the blocking & unblocking of both ends of the
+    // task queue. This is possible with a single std::condition_variable due
+    // to the fact that both ends of the queue cannot be blocked at the same
+    // time:
+    // 1. when the input is blocked (because the queue is full), the consumer
+    //    is free to proceed (thus unblocking the input).
+    // 2. when the output is blocked (becuase the queue is empty while more data
+    //    has been promised) the producer is welcome to use the input end.
+    // Thus only the consumer or the producer waits on cv.
     std::condition_variable cv;
+
     std::atomic<bool> expectingMoreTasks;
 };
 
