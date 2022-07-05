@@ -214,6 +214,7 @@ TEST(tools, uriKind)
     EXPECT_EQ(UriKind::OTHER, uriKind("showlocation.cgi?geo:12.34,56.78"));
     EXPECT_EQ(UriKind::OTHER, uriKind("/xyz/javascript:console.log('hello, world!')"));
 
+    EXPECT_EQ(UriKind::OTHER, uriKind("/"));
     EXPECT_EQ(UriKind::OTHER, uriKind("/api/data:text/plain;charset=UTF-8,qwerty"));
     EXPECT_EQ(UriKind::OTHER, uriKind("../img/logo.png"));
     EXPECT_EQ(UriKind::OTHER, uriKind("style.css"));
