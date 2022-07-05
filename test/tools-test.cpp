@@ -183,6 +183,8 @@ TEST(tools, uriKind)
     EXPECT_EQ(UriKind::GENERIC_URI, uriKind("file:///etc/passwd"));
     EXPECT_EQ(UriKind::GENERIC_URI, uriKind("ftp://download.kiwix.org/zim/"));
 
+    EXPECT_EQ(UriKind::PROTOCOL_RELATIVE, uriKind("//example.com"));
+
     EXPECT_EQ(UriKind::MAILTO, uriKind("mailto:someone@example.com"));
     EXPECT_EQ(UriKind::MAILTO, uriKind("MAILTO:someone@example.com"));
 
@@ -212,6 +214,7 @@ TEST(tools, uriKind)
     EXPECT_EQ(UriKind::OTHER, uriKind("showlocation.cgi?geo:12.34,56.78"));
     EXPECT_EQ(UriKind::OTHER, uriKind("/xyz/javascript:console.log('hello, world!')"));
 
+    EXPECT_EQ(UriKind::OTHER, uriKind("/"));
     EXPECT_EQ(UriKind::OTHER, uriKind("/api/data:text/plain;charset=UTF-8,qwerty"));
     EXPECT_EQ(UriKind::OTHER, uriKind("../img/logo.png"));
     EXPECT_EQ(UriKind::OTHER, uriKind("style.css"));

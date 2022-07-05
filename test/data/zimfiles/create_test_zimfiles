@@ -32,7 +32,7 @@ make__good__zim()
               --threads 1 \
               --no-uuid \
               -w main.html \
-              -f favicon.png \
+              -I favicon.png \
               -l en \
               -t "Test ZIM file" \
               -d "N/A" \
@@ -68,7 +68,9 @@ make__poor__zim()
     mv favicon.png image.png
     sed -i -e 's!favicon.png!image.png!' main.html
     sed -e 's!A/article1.html!!' main.html > empty_link.html
-    sed -e 's!I/image.png!http://a.io/pic.png!' main.html > external_link.html
+    sed -e 's!I/image\.png!http://a.io/pic.png!' main.html > external_image_http.html
+    sed -e 's!I/image\.png!https://a.io/pic.png!' main.html > external_image_https.html
+    sed -e 's!I/image\.png!//a.io/pic.png!' main.html > external_image_protocol_relative.html
     sed -e 's/article1/non_existent/' main.html > dangling_link.html
     sed -e 's!A/article1!../../oops!' main.html > outofbounds_link.html
     command_set="sed -e '6 a <meta http-equiv=refresh content=\"0;URL=redirect_loop.html\">' main.html"
@@ -84,7 +86,7 @@ make__poor__zim()
               --threads 1 \
               --no-uuid \
               -w "" \
-              -f "" \
+              -I "" \
               -l en \
               -t "" \
               -d "" \
