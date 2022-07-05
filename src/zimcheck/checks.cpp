@@ -544,14 +544,14 @@ public: // functions
         assert(expectingMoreTasks);
         std::lock_guard<std::mutex> lock(mutex);
         taskQueue.push(entry);
-        unblock();
+        unblockOut();
     }
 
     void noMoreTasks()
     {
         std::lock_guard<std::mutex> lock(mutex);
         expectingMoreTasks = false;
-        unblock();
+        unblockOut();
     }
 
 private: // types
@@ -569,17 +569,17 @@ private: // functions
         }
     }
 
-    bool blocked() const
+    bool outIsBlocked() const
     {
         return expectingMoreTasks && taskQueue.empty();
     }
 
-    void waitUntilUnblocked(std::unique_lock<std::mutex>& lock)
+    void waitUntilOutIsUnblocked(std::unique_lock<std::mutex>& lock)
     {
         cv.wait(lock);
     }
 
-    void unblock()
+    void unblockOut()
     {
         cv.notify_one();
     }
@@ -587,8 +587,8 @@ private: // functions
     Task getNextTask()
     {
         std::unique_lock<std::mutex> lock(mutex);
-        if ( blocked() )
-            waitUntilUnblocked(lock);
+        if ( outIsBlocked() )
+            waitUntilOutIsUnblocked(lock);
 
         Task t;
         if ( !taskQueue.empty() )
