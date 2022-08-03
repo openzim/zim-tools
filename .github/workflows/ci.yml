@@ -108,6 +108,8 @@ jobs:
        cd $HOME/zim-tools/build
        meson test --verbose
        ninja coverage
+      env:
+        LD_LIBRARY_PATH: "/home/runner/BUILD_${{matrix.target}}/INSTALL/lib${{matrix.lib_postfix}}"
     - name: Publish coverage
       shell: bash
       run: |
