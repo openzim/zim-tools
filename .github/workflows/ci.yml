@@ -42,23 +42,23 @@ jobs:
           - win32_dyn
         include:
           - target: native_static
-            image_variant: xenial
+            image_variant: bionic
             lib_postfix: '/x86_64-linux-gnu'
           - target: native_dyn
-            image_variant: xenial
+            image_variant: bionic
             lib_postfix: '/x86_64-linux-gnu'
           - target: win32_static
-            image_variant: f31
+            image_variant: f35
             lib_postfix: '64'
           - target: win32_dyn
-            image_variant: f31
+            image_variant: f35
             lib_postfix: '64'
 
     env:
       HOME: /home/runner
     runs-on: ubuntu-latest
     container:
-      image: "kiwix/kiwix-build_ci:${{matrix.image_variant}}-31"
+      image: "kiwix/kiwix-build_ci:${{matrix.image_variant}}-32"
     steps:
     - name: Extract branch name
       shell: bash
@@ -108,6 +108,8 @@ jobs:
        cd $HOME/zim-tools/build
        meson test --verbose
        ninja coverage
+      env:
+        LD_LIBRARY_PATH: "/home/runner/BUILD_${{matrix.target}}/INSTALL/lib${{matrix.lib_postfix}}"
     - name: Publish coverage
       shell: bash
       run: |
