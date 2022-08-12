@@ -702,22 +702,106 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
     }
 }
 
+namespace
+{
+
+class RedirectionTable
+{
+private: // types
+    enum LoopStatus : uint8_t
+    {
+        UNKNOWN,
+        LOOP,
+        NONLOOP
+    };
+
+public: // functions
+    explicit RedirectionTable(size_t entryCount)
+    {
+        loopStatus.reserve(entryCount);
+        redirTable.reserve(entryCount);
+    }
+
+    void addRedirectionEntry(zim::entry_index_type targetEntryIndex)
+    {
+        redirTable.push_back(targetEntryIndex);
+        loopStatus.push_back(LoopStatus::UNKNOWN);
+    }
+
+    void addItem()
+    {
+        redirTable.push_back(redirTable.size());
+        loopStatus.push_back(LoopStatus::NONLOOP);
+    }
+
+    size_t size() const { return redirTable.size(); }
+
+    bool isInRedirectionLoop(zim::entry_index_type i)
+    {
+        if ( loopStatus[i] == UNKNOWN )
+        {
+            resolveLoopStatus(i);
+        }
+
+        return loopStatus[i] == LOOP;
+    }
+
+private: // functions
+    LoopStatus detectLoopStatus(zim::entry_index_type i) const
+    {
+        auto i1 = i;
+        auto i2 = i;
+        // Follow redirections until an entry with known loop status
+        // is found.
+        // i2 moves through redirections at twice the speed of i1
+        // if i2 runs over i1 then they are both inside a redirection loop
+        for (bool moveI1 = false ; ; moveI1 = !moveI1)
+        {
+            if ( loopStatus[i2] != LoopStatus::UNKNOWN )
+                return loopStatus[i2];
+
+            i2 = redirTable[i2];
+
+            if ( i2 == i1 )
+                return LoopStatus::LOOP;
+
+            if ( moveI1 )
+                i1 = redirTable[i1];
+        }
+    }
+
+    void resolveLoopStatus(zim::entry_index_type i)
+    {
+        const LoopStatus s = detectLoopStatus(i);
+        for ( ; loopStatus[i] == LoopStatus::UNKNOWN; i = redirTable[i] )
+        {
+            loopStatus[i] = s;
+        }
+    }
+
+private: // data
+    std::vector<zim::entry_index_type> redirTable;
+    std::vector<LoopStatus> loopStatus;
+};
+
+} // unnamed namespace
+
 void test_redirect_loop(const zim::Archive& archive, ErrorLogger& reporter) {
     reporter.infoMsg("[INFO] Checking for redirect loops...");
 
-    int chained_redirection_limit = 50;
-
-    for(auto& entry: archive.iterEfficient())
+    RedirectionTable redirTable(archive.getAllEntryCount());
+    for(const auto& entry: archive.iterByPath())
     {
-        auto current_entry = entry;
-        int redirections_done = 0;
-        while(current_entry.isRedirect() && redirections_done < chained_redirection_limit)
-        {
-            current_entry = current_entry.getRedirectEntry();
-            redirections_done++;
-        }
+        if ( entry.isRedirect() )
+            redirTable.addRedirectionEntry(entry.getRedirectEntryIndex());
+        else
+            redirTable.addItem();
+    }
 
-        if(current_entry.isRedirect()){
+    for(zim::entry_index_type i = 0; i < redirTable.size(); ++i )
+    {
+        if(redirTable.isInRedirectionLoop(i)){
+            const auto entry = archive.getEntryByPath(i);
             reporter.addMsg(MsgId::REDIRECT_LOOP, {{"entry_path", entry.getPath()}});
         }
     }
