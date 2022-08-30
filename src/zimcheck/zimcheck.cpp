@@ -132,7 +132,7 @@ int zimcheck (const std::vector<const char*>& args)
             { 0, 0, 0, 0}
         };
         int option_index = 0;
-        int c = getopt_long (argc, const_cast<char**>(argv), "ACIMFPRUXLEDHBVW:acimfpruxledhbvw:0",
+        int c = getopt_long (argc, const_cast<char**>(argv), "ACIJMFPRUXLEDHBVW:acijmfpruxledhbvw:0",
                              long_options, &option_index);
         //c = getopt (argc, argv, "ACMFPRUXED");
         if(c == -1)
