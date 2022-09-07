@@ -16,7 +16,7 @@ if static_linkage
   endif
 endif
 
-libzim_dep = dependency('libzim', version : '>=7.2.0', static:static_linkage)
+libzim_dep = dependency('libzim', version : '>=8.0.0', static:static_linkage)
 with_xapian_support = compiler.has_header_symbol('zim/zim.h', 'LIBZIM_WITH_XAPIAN')
 
 find_library_in_compiler = meson.version().version_compare('>=0.31.0')
