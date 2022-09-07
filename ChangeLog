@@ -1,3 +1,17 @@
+zim-tools 3.1.2
+===============
+
+  * zimdump: Create correct redirection when dumping zim with old namespace
+    scheme (@mgautierfr #306)
+  * zimcheck: Correctly handle protocol-relative absolute url as absolute url (@veloman-yunkan #307)
+  * zimcheck: Fix `J` flag at arguments parsing (@JameelKaisar #320)
+  * zimcheck: Limit the size of the task queue, which reduce the memory needed (@veloman-yunkan #309)
+  * zimcheck: Better and faster redirect loop check (@veloman-yunkan #312)
+  * zimdump: Improve indentation output of `zimdump list` (@kelson42 #301)
+  * zimwriterfs: Improve an error message (@kelson42 #302)
+  * CI: Fix CI compilation (@mgautierfr #313)
+
+
 zim-tools 3.1.1
 ===============
 
