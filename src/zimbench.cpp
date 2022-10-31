@@ -103,6 +103,10 @@ int main(int argc, char* argv[])
           case 'v':
             printVersions();
             return 0;
+          case '?':
+            std::cerr<<"Unknown option `" << argv[optind-1] << "'\n";
+            displayHelp();
+            return 1;
         };
       } else {
         if (optind < argc ) {
