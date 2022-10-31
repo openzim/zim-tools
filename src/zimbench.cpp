@@ -42,6 +42,17 @@ std::string randomUrl()
   return url;
 }
 
+void displayHelp()
+{
+  std::cerr << "\nzimbench benchmarks a ZIM file reading speed.\n\n"
+    "usage: zimbench [options] zimfile\n"
+    "\t-n number\tnumber of linear accessed articles (default 1000)\n"
+    "\t-r number\tnumber of random accessed articles (default: same as -n)\n"
+    "\t-d number\tnumber of distinct articles used for random access (default: same as -r)\n\n"
+    "\t-v to print the software version\n"
+            << std::flush;
+}
+
 int main(int argc, char* argv[])
 {
   unsigned int count = 1000;
@@ -103,13 +114,7 @@ int main(int argc, char* argv[])
 
     if (filename.empty())
     {
-      std::cerr << "\nzimbench benchmarks a ZIM file reading speed.\n\n"
-        "usage: " << argv[0] << " [options] zimfile\n"
-        "\t-n number\tnumber of linear accessed articles (default 1000)\n"
-        "\t-r number\tnumber of random accessed articles (default: same as -n)\n"
-        "\t-d number\tnumber of distinct articles used for random access (default: same as -r)\n\n"
-        "\t-v to print the software version\n"
-                << std::flush;
+      displayHelp();
       return 1;
     }
 
