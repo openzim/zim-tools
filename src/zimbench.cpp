@@ -52,8 +52,11 @@ int main(int argc, char* argv[])
   char ns = 'A';
   std::string filename;
 
-  static struct option long_options[]
-    = {{"ns", required_argument, 0, 's'}};
+  static struct option long_options[] = {
+        {"ns", required_argument, 0, 's'},
+        { 0, 0, 0, 0}
+  };
+
   try
   {
     while (true) {
