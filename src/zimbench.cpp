@@ -42,6 +42,17 @@ std::string randomUrl()
   return url;
 }
 
+void displayHelp()
+{
+  std::cerr << "\nzimbench benchmarks a ZIM file reading speed.\n\n"
+    "usage: zimbench [options] zimfile\n"
+    "\t-n number\tnumber of linear accessed articles (default 1000)\n"
+    "\t-r number\tnumber of random accessed articles (default: same as -n)\n"
+    "\t-d number\tnumber of distinct articles used for random access (default: same as -r)\n\n"
+    "\t-v to print the software version\n"
+            << std::flush;
+}
+
 int main(int argc, char* argv[])
 {
   unsigned int count = 1000;
@@ -49,23 +60,21 @@ int main(int argc, char* argv[])
   unsigned int randomCount = 1000;
   bool distinctCountSet = false;
   unsigned int distinctCount = 1000;
-  char ns = 'A';
   std::string filename;
 
-  static struct option long_options[]
-    = {{"ns", required_argument, 0, 's'}};
+  static struct option long_options[] = {
+        { 0, 0, 0, 0}
+  };
+
   try
   {
     while (true) {
       int option_index = 0;
-      int c = getopt_long(argc, argv, "vsn:r:d:",
+      int c = getopt_long(argc, argv, "vn:r:d:",
               long_options, &option_index);
 
       if (c!= -1) {
         switch (c) {
-          case 's':
-            ns = optarg[0];
-            break;
           case 'n':
             count = atoi(optarg);
             if (! randomCountSet ) {
@@ -89,6 +98,10 @@ int main(int argc, char* argv[])
           case 'v':
             printVersions();
             return 0;
+          case '?':
+            std::cerr<<"Unknown option `" << argv[optind-1] << "'\n";
+            displayHelp();
+            return 1;
         };
       } else {
         if (optind < argc ) {
@@ -100,13 +113,7 @@ int main(int argc, char* argv[])
 
     if (filename.empty())
     {
-      std::cerr << "\nzimbench benchmarks a ZIM file reading speed.\n\n"
-        "usage: " << argv[0] << " [options] zimfile\n"
-        "\t-n number\tnumber of linear accessed articles (default 1000)\n"
-        "\t-r number\tnumber of random accessed articles (default: same as -n)\n"
-        "\t-d number\tnumber of distinct articles used for random access (default: same as -r)\n\n"
-        "\t-v to print the software version\n"
-                << std::flush;
+      displayHelp();
       return 1;
     }
 
@@ -157,7 +164,7 @@ int main(int argc, char* argv[])
         auto entry = archive.getEntryByPath(*it);
         size += entry.getItem(true).getData().size();
       } catch(...) {
-        std::cerr << "Impossible to get article '" << *it << "' in namespace " << ns << std::endl;
+        std::cerr << "Impossible to get article '" << *it << "'" << std::endl;
       }
     }
 
