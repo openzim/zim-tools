@@ -1,3 +1,8 @@
+zim-tools 3.1.3
+===============
+
+  * zimbench: Fix command line parsing (@veloman-yunkan #323)
+
 zim-tools 3.1.2
 ===============
 
