@@ -6,9 +6,9 @@ and the [openZIM project](https://openzim.org).
 
 [![Releases](https://img.shields.io/github/v/tag/openzim/zim-tools?label=latest%20release&sort=semver)](https://download.openzim.org/release/zim-tools/)
 [![Reporitories](https://img.shields.io/repology/repositories/zim-tools?label=repositories)](https://github.com/openzim/zim-tools/wiki/Repology)
-[![Build Status](https://github.com/openzim/zim-tools/workflows/CI/badge.svg?query=branch%3Amaster)](https://github.com/openzim/zim-tools/actions?query=branch%3Amaster)
+[![Build Status](https://github.com/openzim/zim-tools/workflows/CI/badge.svg?query=branch%3Amain)](https://github.com/openzim/zim-tools/actions?query=branch%3Amain)
 [![Docker Build Status](https://img.shields.io/docker/v/openzim/zim-tools?arch=amd64&label=Docker&sort=date)](https://hub.docker.com/r/openzim/zim-tools)
-[![codecov](https://codecov.io/gh/openzim/zim-tools/branch/master/graph/badge.svg)](https://codecov.io/gh/openzim/zim-tools)
+[![codecov](https://codecov.io/gh/openzim/zim-tools/branch/main/graph/badge.svg)](https://codecov.io/gh/openzim/zim-tools)
 [![CodeFactor](https://www.codefactor.io/repository/github/openzim/zim-tools/badge)](https://www.codefactor.io/repository/github/openzim/zim-tools)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
