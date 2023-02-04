@@ -64,6 +64,7 @@ enum class UriKind : int
     JAVASCRIPT,     // javascript:...
     MAILTO,         // mailto:user@example.com
     TEL,            // tel:+0123456789
+    SIP,            // sip:1-999-123-4567@voip-provider.example.net
     GEO,            // geo:12.34,56.78
     DATA,           // data:image/png;base64,...
     XMPP,           // xmpp:kelson@kiwix.org

@@ -191,6 +191,9 @@ TEST(tools, uriKind)
     EXPECT_EQ(UriKind::TEL, uriKind("tel:+0123456789"));
     EXPECT_EQ(UriKind::TEL, uriKind("TEL:+0123456789"));
 
+    EXPECT_EQ(UriKind::SIP, uriKind("sip:1-999-123-4567@voip-provider.example.net"));
+    EXPECT_EQ(UriKind::SIP, uriKind("SIP:1-999-123-4567@voip-provider.example.net"));
+
     EXPECT_EQ(UriKind::GEO, uriKind("geo:12.34,56.78"));
     EXPECT_EQ(UriKind::GEO, uriKind("GEO:12.34,56.78"));
 
