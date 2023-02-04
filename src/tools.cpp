@@ -431,6 +431,7 @@ UriKind specialUriSchemeKind(const std::string& s)
         { "javascript", UriKind::JAVASCRIPT },
         { "mailto",     UriKind::MAILTO     },
         { "tel",        UriKind::TEL        },
+        { "sip",        UriKind::SIP        },
         { "geo",        UriKind::GEO        },
         { "data",       UriKind::DATA       },
         { "xmpp",       UriKind::XMPP       },
