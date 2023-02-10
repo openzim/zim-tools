@@ -10,6 +10,7 @@ jobs:
         distro:
           - ubuntu-jammy
           - ubuntu-focal
+          - ubuntu-kinetic
     steps:
       - uses: actions/checkout@v3
 
@@ -48,7 +49,15 @@ jobs:
           args: --no-sign
           ppa: ${{ steps.ppa.outputs.ppa }}
 
-      - uses: actions/upload-artifact@v2
+      - uses: legoktm/gh-action-build-deb@ubuntu-kinetic
+        if: matrix.distro == 'ubuntu-kinetic'
+        name: Build package for ubuntu-kinetic
+        id: build-ubuntu-kinetic
+        with:
+          args: --no-sign
+          ppa: ${{ steps.ppa.outputs.ppa }}
+
+      - uses: actions/upload-artifact@v3
         with:
           name: Packages for ${{ matrix.distro }}
           path: output
