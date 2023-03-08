@@ -49,6 +49,7 @@ std::string scraper = "zimwriterfs-" VERSION;
 std::string name;
 std::string source;
 std::string description;
+std::string longDescription;
 std::string welcome;
 std::string illustration;
 std::string redirectsPath;
@@ -78,6 +79,30 @@ bool thereAreMissingArguments()
       || language.empty()
       || welcome.empty()
       || illustration.empty();
+}
+
+bool checkDescriptionLengths() {
+  if (description.empty()) {
+    std::cerr << "Description metadata should not be empty." << std::endl;
+    return false;
+  }
+
+  if (!longDescription.empty() && longDescription.length() < description.length()) {
+    std::cerr << "Long description should not be shorter than the short description." << std::endl;
+    return false;
+  }
+
+  if (description.length() > 80) {
+    std::cerr << "Description length exceeds the 80 character limit." << std::endl;
+    return false;
+  }
+
+  if (!longDescription.empty() && longDescription.length() > 4000) {
+    std::cerr << "Long description length exceeds the 4000 character limit." << std::endl;
+    return false;
+  }
+
+  return true;
 }
 
 }
@@ -122,6 +147,8 @@ void usage()
             << std::endl;
   std::cout << "\t-t, --title\t\ttitle of the ZIM file" << std::endl;
   std::cout << "\t-d, --description\tshort description of the content"
+            << std::endl;
+  std::cout << "\t-L, --longDescription\tlong description of the content"
             << std::endl;
   std::cout << "\t-c, --creator\t\tcreator(s) of the content" << std::endl;
   std::cout << "\t-p, --publisher\t\tcreator of the ZIM file itself"
@@ -189,6 +216,7 @@ void parse_args(int argc, char** argv)
       = {{"help", no_argument, 0, 'h'},
          {"verbose", no_argument, 0, 'v'},
          {"version", no_argument, 0, 'V'},
+         {"longDescription", required_argument, 0, 'L'},
          {"welcome", required_argument, 0, 'w'},
          {"clusterSize", required_argument, 0, 'm'},
          {"name", required_argument, 0, 'n'},
@@ -260,6 +288,9 @@ void parse_args(int argc, char** argv)
         case 'm':
           clusterSize = atoi(optarg);
           break;
+        case 'L':
+          longDescription = optarg;
+          break;
         case 'n':
           name = optarg;
           break;
@@ -296,6 +327,11 @@ void parse_args(int argc, char** argv)
       }
     }
   } while (c != -1);
+
+  if ( !checkDescriptionLengths() ) {
+    exit(1);
+  }
+
 
   while (optind < argc) {
     if (directoryPath.empty()) {
