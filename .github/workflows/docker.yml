@@ -13,19 +13,18 @@ jobs:
     name: Deploy Docker Image
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3.4.0
       - name: Build and push
-        uses: openzim/docker-publish-action@v5
+        uses: openzim/docker-publish-action@v10
         with:
           image-name: openzim/zim-tools
           latest-on-tag: true
           restrict-to: openzim/zim-tools
           dockerfile: docker/Dockerfile
+          registries: ghcr.io
           build-args:
             VERSION={tag}
           credentials:
-            DOCKERIO_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
-            DOCKERIO_TOKEN=${{ secrets.DOCKERHUB_PASSWORD }}
             GHCRIO_USERNAME=${{ secrets.GHCR_USERNAME }}
             GHCRIO_TOKEN=${{ secrets.GHCR_TOKEN }}
           manual-tag: ${{ github.event.inputs.version }}
