@@ -21,6 +21,7 @@
 
 #include <sstream>
 #include <regex>
+#include <unicode/unistr.h>
 
 namespace zim
 {
@@ -41,6 +42,10 @@ bool matchRegex(const std::string& regexStr, const std::string& text)
   return std::regex_match(text.begin(), text.end(), regex);
 }
 
+size_t getTextLength(const std::string& utf8EncodedString)
+{
+  return icu::UnicodeString::fromUTF8(utf8EncodedString).length();
+}
 
 #include "metadata_constraints.cpp"
 
@@ -99,14 +104,14 @@ Metadata::Errors Metadata::checkSimpleConstraints() const
     const auto& value = nv.second;
     try {
       const auto& rmr = getReservedMetadataRecord(name);
-      if ( value.size() < rmr.minLength ) {
+      if ( rmr.minLength != 0 && getTextLength(value) < rmr.minLength ) {
         std::ostringstream oss;
-        oss << name << " must be at least " << rmr.minLength << " bytes";
+        oss << name << " must contain at least " << rmr.minLength << " characters";
         errors.push_back(oss.str());
       }
-      if ( rmr.maxLength != 0 && value.size() > rmr.maxLength ) {
+      if ( rmr.maxLength != 0 && getTextLength(value) > rmr.maxLength ) {
         std::ostringstream oss;
-        oss << name << " must be at most " << rmr.maxLength << " bytes";
+        oss << name << " must contain at most " << rmr.maxLength << " characters";
         errors.push_back(oss.str());
       }
       if ( !rmr.regex.empty() && !matchRegex(rmr.regex, value) ) {

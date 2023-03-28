@@ -82,7 +82,7 @@ TEST(Metadata, minSizeConstraints)
   ASSERT_FALSE(m.valid());
   ASSERT_EQ(m.check(),
       zim::Metadata::Errors({
-        "Title must be at least 1 bytes"
+        "Title must contain at least 1 characters"
       })
   );
   m.set("Title", "t");
@@ -96,7 +96,7 @@ TEST(Metadata, maxSizeConstraints)
   ASSERT_FALSE(m.valid());
   ASSERT_EQ(m.check(),
       zim::Metadata::Errors({
-        "Title must be at most 30 bytes"
+        "Title must contain at most 30 characters"
       })
   );
   m.set("Title", std::string(30, 'a'));

@@ -19,11 +19,8 @@ const Metadata::ReservedMetadataTable reservedMetadataInfoTable = {
   {
     "Illustration_48x48@1",
     MANDATORY,
-    67, // this is the lower limit on a syntactically valid PNG file
-        // (according to https://github.com/mathiasbynens/small)
-    10000, // this is roughly the size of the raw (i.e. without any compression)
-           // RGBA pixel data of a 48x48 image
-           // Question: how much PNG metadata shall we allow?
+    0, // There are no constraints on the illustration metadata size
+    0, // in order to avoid decoding it as UTF-8 encoded text
     PNG_REGEXP
   },
 };
