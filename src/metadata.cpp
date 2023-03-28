@@ -47,6 +47,75 @@ size_t getTextLength(const std::string& utf8EncodedString)
   return icu::UnicodeString::fromUTF8(utf8EncodedString).length();
 }
 
+bool checkTextLanguage(const std::string& text, const std::string& langCode)
+{
+  // TODO: check that text is in langCode's script
+  return true;
+}
+
+class MetadataComplexCheckBase
+{
+public:
+  const std::string description;
+  const MetadataComplexCheckBase* const prev;
+
+public: // functions
+  explicit MetadataComplexCheckBase(const std::string& desc);
+
+  MetadataComplexCheckBase(const MetadataComplexCheckBase&) = delete;
+  MetadataComplexCheckBase(MetadataComplexCheckBase&&) = delete;
+  void operator=(const MetadataComplexCheckBase&) = delete;
+  void operator=(MetadataComplexCheckBase&&) = delete;
+
+  virtual ~MetadataComplexCheckBase();
+
+  virtual bool checkMetadata(const Metadata& m) const = 0;
+
+  static const MetadataComplexCheckBase* getLastCheck() { return last; }
+
+private: // functions
+  static const MetadataComplexCheckBase* last;
+};
+
+const MetadataComplexCheckBase* MetadataComplexCheckBase::last = nullptr;
+
+MetadataComplexCheckBase::MetadataComplexCheckBase(const std::string& desc)
+  : description(desc)
+  , prev(last)
+{
+  last = this;
+}
+
+MetadataComplexCheckBase::~MetadataComplexCheckBase()
+{
+  // Ideally, we should de-register this object from the list of live objects.
+  // However, in the current implementation MetadataComplexCheckBase objects
+  // are only constructed in static storage and the list of active objects
+  // isn't supposed to be accessed after any MetadataComplexCheckBase object
+  // has been destroyed as part of program termination clean-up actions.
+}
+
+#define ADD_METADATA_COMPLEX_CHECK(DESC, CLSNAME)              \
+class CLSNAME : public MetadataComplexCheckBase                \
+{                                                              \
+public:                                                        \
+  CLSNAME() : MetadataComplexCheckBase(DESC) {}                \
+  bool checkMetadata(const Metadata& data) const override;     \
+};                                                             \
+                                                               \
+const CLSNAME CONCAT(obj, CLSNAME);                            \
+                                                               \
+bool CLSNAME::checkMetadata(const Metadata& data) const        \
+/* should be followed by the check body */
+
+
+
+#define CONCAT(X, Y) X##Y
+#define GENCLSNAME(UUID) CONCAT(MetadataComplexCheck, UUID)
+
+#define METADATA_ASSERT(DESC) ADD_METADATA_COMPLEX_CHECK(DESC, GENCLSNAME(__LINE__))
+
+
 #include "metadata_constraints.cpp"
 
 } // unnamed namespace
@@ -124,13 +193,29 @@ Metadata::Errors Metadata::checkSimpleConstraints() const
   return errors;
 }
 
+Metadata::Errors Metadata::checkComplexConstraints() const
+{
+  Errors errors;
+  const MetadataComplexCheckBase* c = MetadataComplexCheckBase::getLastCheck();
+  for ( ; c != nullptr ; c = c->prev ) {
+    if ( ! c->checkMetadata(*this) ) {
+      errors.push_back(c->description);
+    }
+  }
+  return errors;
+}
+
 Metadata::Errors Metadata::check() const
 {
   Errors e = checkMandatoryMetadata();
   if ( !e.empty() )
     return e;
 
-  return checkSimpleConstraints();
+  e = checkSimpleConstraints();
+  if ( !e.empty() )
+    return e;
+
+  return checkComplexConstraints();
 }
 
 } // namespace zim

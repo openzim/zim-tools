@@ -128,3 +128,16 @@ TEST(Metadata, regexpConstraints)
   m.set("Language", "fre,nch");
   ASSERT_TRUE(m.valid());
 }
+
+TEST(Metadata, complexConstraints)
+{
+  zim::Metadata m = makeValidMetadata();
+  m.set("Description",     "Short description");
+  m.set("LongDescription", "Long description");
+  ASSERT_FALSE(m.valid());
+  ASSERT_EQ(m.check(),
+      zim::Metadata::Errors({
+        "LongDescription shouldn't be shorter than Description"
+      })
+  );
+}

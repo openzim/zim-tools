@@ -59,6 +59,7 @@ public: // functions
 private: // functions
   Errors checkMandatoryMetadata() const;
   Errors checkSimpleConstraints() const;
+  Errors checkComplexConstraints() const;
 
 private: // data
   std::map<std::string, std::string> data;
