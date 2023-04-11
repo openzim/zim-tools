@@ -10,7 +10,10 @@ add_global_arguments('-DVERSION="@0@"'.format(meson.project_version()), language
 static_linkage = get_option('static-linkage')
 compiler = meson.get_compiler('cpp')
 if static_linkage
-  add_global_link_arguments('-static-libstdc++', '--static', language:'cpp')
+  # Static build is not supported on MacOS
+  if host_machine.system() != 'darwin'
+     add_global_link_arguments('-static-libstdc++', '--static', language:'cpp')
+  endif
   if compiler.get_id() == 'gcc' and build_machine.system() == 'linux'
     add_global_link_arguments('-Wl,--whole-archive', '-lpthread', '-Wl,--no-whole-archive', language:'cpp')
   endif
