@@ -427,6 +427,7 @@ void create_zim()
   zimCreator.addMetadata("Creator", creator);
   zimCreator.addMetadata("Title", title);
   zimCreator.addMetadata("Description", description);
+  zimCreator.addMetadata("LongDescription", longDescription);
   zimCreator.addMetadata("Name", name);
   zimCreator.addMetadata("Source", source);
   zimCreator.addMetadata("Flavour", flavour);
