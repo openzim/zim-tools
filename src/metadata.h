@@ -29,6 +29,8 @@ namespace zim
 
 class Metadata
 {
+  typedef std::map<std::string, std::string> KeyValueMap;
+
 public: // types
   struct ReservedMetadataRecord
   {
@@ -43,6 +45,8 @@ public: // types
 
   typedef std::vector<std::string> Errors;
 
+  typedef KeyValueMap::const_iterator Iterator;
+
 public: // data
   static const ReservedMetadataTable& reservedMetadataInfo;
 
@@ -56,13 +60,16 @@ public: // functions
 
   static const ReservedMetadataRecord& getReservedMetadataRecord(const std::string& name);
 
+  Iterator begin() const { return data.begin(); }
+  Iterator end()   const { return data.end(); }
+
 private: // functions
   Errors checkMandatoryMetadata() const;
   Errors checkSimpleConstraints() const;
   Errors checkComplexConstraints() const;
 
 private: // data
-  std::map<std::string, std::string> data;
+  KeyValueMap data;
 };
 
 } // namespace zim
