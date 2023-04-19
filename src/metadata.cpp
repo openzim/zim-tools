@@ -47,12 +47,6 @@ size_t getTextLength(const std::string& utf8EncodedString)
   return icu::UnicodeString::fromUTF8(utf8EncodedString).length();
 }
 
-bool checkTextLanguage(const std::string& text, const std::string& langCode)
-{
-  // TODO: check that text is in langCode's script
-  return true;
-}
-
 class MetadataComplexCheckBase
 {
 public:

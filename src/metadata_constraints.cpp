@@ -30,10 +30,3 @@ METADATA_ASSERT("LongDescription shouldn't be shorter than Description")
   return !data.has("LongDescription")
       || data["LongDescription"].size() >= data["Description"].size();
 }
-
-METADATA_ASSERT("Description must be in the language of the ZIM file")
-{
-  const auto lang = data["Language"];
-  const auto description = data["Description"];
-  return checkTextLanguage(description, lang);
-}
