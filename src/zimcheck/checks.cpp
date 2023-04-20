@@ -2,6 +2,7 @@
 #include "checks.h"
 #include "../tools.h"
 #include "../concurrent_cache.h"
+#include "../metadata.h"
 
 #include <cassert>
 #include <map>
@@ -266,22 +267,13 @@ void test_integrity(const std::string& filename, ErrorLogger& reporter) {
 
 
 void test_metadata(const zim::Archive& archive, ErrorLogger& reporter) {
-    reporter.infoMsg("[INFO] Searching for metadata entries...");
-    static const char* const test_meta[] = {
-        "Title",
-        "Creator",
-        "Publisher",
-        "Date",
-        "Description",
-        "Language"};
-    auto existing_metadata = archive.getMetadataKeys();
-    auto begin = existing_metadata.begin();
-    auto end = existing_metadata.end();
-    for (auto &meta : test_meta) {
-        if (std::find(begin, end, meta) == end) {
-            const std::string error = std::string("Missing ") + meta;
-            reporter.addMsg(MsgId::METADATA, {{"error", error}});
-        }
+    reporter.infoMsg("[INFO] Checking metadata...");
+    zim::Metadata metadata;
+    for ( const auto& key : archive.getMetadataKeys() ) {
+        metadata.set(key, archive.getMetadata(key));
+    }
+    for (const auto &error : metadata.check()) {
+        reporter.addMsg(MsgId::METADATA, {{"error", error}});
     }
 }
 

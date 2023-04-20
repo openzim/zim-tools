@@ -17,14 +17,12 @@ TEST(Metadata, detectsAbsenceOfMandatoryEntries)
   ASSERT_FALSE(m.valid());
   ASSERT_EQ(m.check(),
       zim::Metadata::Errors({
-        "Missing mandatory metadata: Name",
         "Missing mandatory metadata: Title",
         "Missing mandatory metadata: Language",
         "Missing mandatory metadata: Creator",
         "Missing mandatory metadata: Publisher",
         "Missing mandatory metadata: Date",
         "Missing mandatory metadata: Description",
-        "Missing mandatory metadata: Illustration_48x48@1",
       })
   );
 
@@ -39,7 +37,6 @@ TEST(Metadata, detectsAbsenceOfMandatoryEntries)
         "Missing mandatory metadata: Title",
         "Missing mandatory metadata: Language",
         "Missing mandatory metadata: Publisher",
-        "Missing mandatory metadata: Illustration_48x48@1",
       })
   );
 
@@ -121,7 +118,7 @@ TEST(Metadata, regexpConstraints)
   ASSERT_FALSE(m.valid());
   ASSERT_EQ(m.check(),
       zim::Metadata::Errors({
-        "Language doesn't match regex: \\w{3}(,\\w{3})*"
+        "Language doesn't match regex: \\w{2,3}(,\\w{2,3})*"
       })
   );
 

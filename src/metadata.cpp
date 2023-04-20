@@ -36,7 +36,7 @@ namespace
 const bool MANDATORY = true;
 const bool OPTIONAL  = false;
 
-const std::string LANGS_REGEXP = "\\w{3}(,\\w{3})*";
+const std::string LANGS_REGEXP = "\\w{2,3}(,\\w{2,3})*";
 const std::string DATE_REGEXP = R"(\d\d\d\d-\d\d-\d\d)";
 
 // PNG regexp has to be defined in such a tricky way because it includes

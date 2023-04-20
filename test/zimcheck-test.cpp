@@ -244,9 +244,9 @@ void test_zimcheck_single_option(std::vector<const char*> optionAliases,
         CapturedStdout zimcheck_output;
         CapturedStderr zimcheck_stderr;
         const CmdLine cmdline{"zimcheck", opt, zimfile};
-        ASSERT_EQ(expected_exit_code, zimcheck(cmdline)) << cmdline;
-        ASSERT_EQ(expected_stderr, std::string(zimcheck_stderr)) << cmdline;
-        ASSERT_EQ(expected_stdout, std::string(zimcheck_output)) << cmdline;
+        EXPECT_EQ(expected_exit_code, zimcheck(cmdline)) << cmdline;
+        EXPECT_EQ(expected_stderr, std::string(zimcheck_stderr)) << cmdline;
+        EXPECT_EQ(expected_stdout, std::string(zimcheck_output)) << cmdline;
     }
 }
 
@@ -293,7 +293,7 @@ TEST(zimcheck, metadata_goodzimfile)
     const std::string expected_output(
         "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
         "[INFO] Zimcheck version is " VERSION "\n"
-        "[INFO] Searching for metadata entries..." "\n"
+        "[INFO] Checking metadata..." "\n"
         "[INFO] Overall Test Status: Pass" "\n"
         "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
     );
@@ -413,7 +413,7 @@ const std::string ALL_CHECKS_OUTPUT_ON_GOODZIMFILE(
       "[INFO] Zimcheck version is " VERSION "\n"
       "[INFO] Verifying ZIM-archive structure integrity..." "\n"
       "[INFO] Avoiding redundant checksum test (already performed by the integrity check)." "\n"
-      "[INFO] Searching for metadata entries..." "\n"
+      "[INFO] Checking metadata..." "\n"
       "[INFO] Searching for Favicon..." "\n"
       "[INFO] Searching for main page..." "\n"
       "[INFO] Verifying Articles' content..." "\n"
@@ -527,10 +527,10 @@ TEST(zimcheck, metadata_poorzimfile)
     const std::string expected_stdout(
       "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
       "[INFO] Zimcheck version is " VERSION "\n"
-      "[INFO] Searching for metadata entries..." "\n"
+      "[INFO] Checking metadata..." "\n"
       "[ERROR] Metadata errors:" "\n"
-      "  Missing Title" "\n"
-      "  Missing Description" "\n"
+      "  Missing mandatory metadata: Title" "\n"
+      "  Missing mandatory metadata: Description" "\n"
       "[INFO] Overall Test Status: Fail" "\n"
       "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
     );
@@ -709,7 +709,7 @@ const std::string ALL_CHECKS_OUTPUT_ON_POORZIMFILE(
       "[INFO] Zimcheck version is " VERSION "\n"
       "[INFO] Verifying ZIM-archive structure integrity..." "\n"
       "[INFO] Avoiding redundant checksum test (already performed by the integrity check)." "\n"
-      "[INFO] Searching for metadata entries..." "\n"
+      "[INFO] Checking metadata..." "\n"
       "[INFO] Searching for Favicon..." "\n"
       "[INFO] Searching for main page..." "\n"
       "[INFO] Verifying Articles' content..." "\n"
@@ -719,8 +719,8 @@ const std::string ALL_CHECKS_OUTPUT_ON_POORZIMFILE(
       "[ERROR] Empty articles:" "\n"
       "  Entry empty.html is empty" "\n"
       "[ERROR] Metadata errors:" "\n"
-      "  Missing Title" "\n"
-      "  Missing Description" "\n"
+      "  Missing mandatory metadata: Title" "\n"
+      "  Missing mandatory metadata: Description" "\n"
       "[ERROR] Favicon:" "\n"
       "  Favicon is missing" "\n"
       "[ERROR] Missing mainpage:" "\n"
@@ -832,14 +832,14 @@ TEST(zimcheck, json_poorzimfile)
       "    {"                                                               "\n"
       "      \"check\" : \"metadata\","                                     "\n"
       "      \"level\" : \"ERROR\","                                        "\n"
-      "      \"message\" : \"Missing Title\","                              "\n"
-      "      \"error\" : \"Missing Title\""                                 "\n"
+      "      \"message\" : \"Missing mandatory metadata: Title\","          "\n"
+      "      \"error\" : \"Missing mandatory metadata: Title\""             "\n"
       "    },"                                                              "\n"
       "    {"                                                               "\n"
       "      \"check\" : \"metadata\","                                     "\n"
       "      \"level\" : \"ERROR\","                                        "\n"
-      "      \"message\" : \"Missing Description\","                        "\n"
-      "      \"error\" : \"Missing Description\""                           "\n"
+      "      \"message\" : \"Missing mandatory metadata: Description\","    "\n"
+      "      \"error\" : \"Missing mandatory metadata: Description\""       "\n"
       "    },"                                                              "\n"
       "    {"                                                               "\n"
       "      \"check\" : \"favicon\","                                      "\n"
