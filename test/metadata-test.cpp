@@ -131,10 +131,29 @@ TEST(Metadata, regexpConstraints)
   m.set("Illustration_48x48@1", "zimdata/favicon.png");
   ASSERT_EQ(m.check(),
       zim::Metadata::Errors({
-        "Illustration_48x48@1 doesn't match regex: ^\\x89PNG\\x0d\\x0a\\x1a\\x0a.+"
+        "Illustration_48x48@1 doesn't match regex: ^\\x89PNG\\x0d\\x0a\\x1a\\x0a(.|\\s|\\x00)+"
       })
   );
 }
+
+TEST(Metadata, pngRegexp)
+{
+  const std::string PNG_HEADER = "\x89PNG\r\n\x1a\n";
+  zim::Metadata m = makeValidMetadata();
+  {
+    m.set("Illustration_48x48@1", PNG_HEADER + 'A');
+    ASSERT_TRUE(m.valid());
+  }
+  {
+    m.set("Illustration_48x48@1", PNG_HEADER + '\n');
+    ASSERT_TRUE(m.valid());
+  }
+  {
+    m.set("Illustration_48x48@1", PNG_HEADER + '\0');
+    ASSERT_TRUE(m.valid());
+  }
+}
+
 
 TEST(Metadata, complexConstraints)
 {
