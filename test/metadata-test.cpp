@@ -127,6 +127,13 @@ TEST(Metadata, regexpConstraints)
 
   m.set("Language", "fre,nch");
   ASSERT_TRUE(m.valid());
+
+  m.set("Illustration_48x48@1", "zimdata/favicon.png");
+  ASSERT_EQ(m.check(),
+      zim::Metadata::Errors({
+        "Illustration_48x48@1 doesn't match regex: ^\x89PNG\x0d\x0a\x1a\x0a.+"
+      })
+  );
 }
 
 TEST(Metadata, complexConstraints)
