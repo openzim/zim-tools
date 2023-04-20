@@ -23,6 +23,10 @@
 #include <regex>
 #include <unicode/unistr.h>
 
+#include <cctype>
+#include <iomanip>
+
+
 namespace zim
 {
 
@@ -112,6 +116,25 @@ bool CLSNAME::checkMetadata(const Metadata& data) const        \
 
 #include "metadata_constraints.cpp"
 
+// This function is intended for pretty printing of regexps with non-printable
+// characters.
+// In a general purpose/rigorous version we should escape the escape symbol
+// (backslash) too, but that doesn't play well with the purpose stated above.
+std::string escapeNonPrintableChars(const std::string& s)
+{
+  std::ostringstream os;
+  os << std::hex;
+  for (const char c : s) {
+    if (std::isprint(c)) {
+      os << c;
+    } else {
+      const unsigned int charVal = static_cast<unsigned char>(c);
+      os << "\\x" << std::setw(2) << std::setfill('0') << charVal;
+    }
+  }
+  return os.str();
+}
+
 } // unnamed namespace
 
 const Metadata::ReservedMetadataTable& Metadata::reservedMetadataInfo = reservedMetadataInfoTable;
@@ -178,7 +201,8 @@ Metadata::Errors Metadata::checkSimpleConstraints() const
         errors.push_back(oss.str());
       }
       if ( !rmr.regex.empty() && !matchRegex(rmr.regex, value) ) {
-        errors.push_back(name + " doesn't match regex: " + rmr.regex);
+        const std::string regex = escapeNonPrintableChars(rmr.regex);
+        errors.push_back(name + " doesn't match regex: " + regex);
       }
     } catch ( const std::out_of_range& ) {
       // ignore non-reserved metadata
