@@ -10,12 +10,12 @@ endif
 # [FIXME] There are some problem with clock_gettime and mingw.
 if target_machine.system() != 'windows'
   executable('zimbench', 'zimbench.cpp',
-    dependencies: [libzim_dep, rt_dep],
+    dependencies: [libzim_dep, libbz2_dep, rt_dep],
     install: true)
 endif
 
 executable('zimdump', 'zimdump.cpp', 'tools.cpp',
-  dependencies: [libzim_dep, docopt_dep],
+  dependencies: [libzim_dep, libbz2_dep, docopt_dep],
   install: true)
 
 executable('zimdiff', ['zimdiff.cpp', 'tools.cpp'],
@@ -27,7 +27,7 @@ executable('zimpatch', ['zimpatch.cpp', 'tools.cpp'],
   install: true)
 
 executable('zimsplit', 'zimsplit.cpp',
-  dependencies: [libzim_dep, docopt_dep],
+  dependencies: [libzim_dep, libbz2_dep, docopt_dep],
   install: true)
 
 executable('zimrecreate', ['zimrecreate.cpp', 'tools.cpp'],

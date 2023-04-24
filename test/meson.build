@@ -19,7 +19,7 @@ if gtest_dep.found() and not meson.is_cross_build()
     foreach test_name : tests
 
         test_exe = executable(test_name, [test_name+'.cpp'] + tests_src_map[test_name],
-                              dependencies : [gtest_dep, libzim_dep, gumbo_dep, magic_dep, zlib_dep],
+                              dependencies : [gtest_dep, libzim_dep, libbz2_dep, gumbo_dep, magic_dep, zlib_dep],
                               include_directories: inc,
                               build_rpath : '$ORIGIN')
 

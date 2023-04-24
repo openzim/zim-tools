@@ -19,6 +19,7 @@ if static_linkage
   endif
 endif
 
+libbz2_dep = compiler.find_library('bz2', static:static_linkage)
 libzim_dep = dependency('libzim', version : '>=8.0.0', static:static_linkage)
 with_xapian_support = compiler.has_header_symbol('zim/zim.h', 'LIBZIM_WITH_XAPIAN')
 

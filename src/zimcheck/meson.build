@@ -22,7 +22,7 @@ executable('zimcheck',
   'json_tools.cpp',
   '../tools.cpp',
   include_directories : inc,
-  dependencies: [libzim_dep, thread_dep],
+  dependencies: [libzim_dep, libbz2_dep, thread_dep],
   install: true)
 
 
