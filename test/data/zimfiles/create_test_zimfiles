@@ -33,7 +33,8 @@ make__good__zim()
               --no-uuid \
               -w main.html \
               -I favicon.png \
-              -l en \
+              -n good_zimfile \
+              -l eng \
               -t "Test ZIM file" \
               -d "N/A" \
               -c "N/A" \
@@ -87,6 +88,7 @@ make__poor__zim()
               --no-uuid \
               -w "" \
               -I "" \
+              -n poor_zimfile \
               -l en \
               -t "" \
               -d "" \

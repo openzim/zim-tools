@@ -33,6 +33,7 @@
 #include <queue>
 
 #include "zimcreatorfs.h"
+#include "../metadata.h"
 #include "../tools.h"
 #include "../version.h"
 #include "tools.h"
@@ -81,29 +82,51 @@ bool thereAreMissingArguments()
       || illustration.empty();
 }
 
-bool checkDescriptionLengths() {
-  if (description.empty()) {
-    std::cerr << "Description metadata should not be empty." << std::endl;
-    return false;
+zim::Metadata makeMetadata() {
+  zim::Metadata metadata;
+
+  metadata.set("Language",        language);
+  metadata.set("Publisher",       publisher);
+  metadata.set("Creator",         creator);
+  metadata.set("Title",           title);
+  metadata.set("Description",     description);
+  metadata.set("LongDescription", longDescription);
+  metadata.set("Name",            name);
+  metadata.set("Source",          source);
+  metadata.set("Flavour",         flavour);
+  metadata.set("Scraper",         scraper);
+  metadata.set("Tags",            tags);
+  metadata.set("Date",            generateDate());
+  if ( !illustration.empty() )  {
+    const auto data = getFileContent(directoryPath + "/" + illustration);
+    metadata.set("Illustration_48x48@1", data);
   }
 
-  if (!longDescription.empty() && longDescription.length() < description.length()) {
-    std::cerr << "Long description should not be shorter than the short description." << std::endl;
-    return false;
-  }
-
-  if (description.length() > 80) {
-    std::cerr << "Description length exceeds the 80 character limit." << std::endl;
-    return false;
-  }
-
-  if (!longDescription.empty() && longDescription.length() > 4000) {
-    std::cerr << "Long description length exceeds the 4000 character limit." << std::endl;
-    return false;
-  }
-
-  return true;
+  return metadata;
 }
+
+
+bool checkMetadata(const zim::Metadata& metadata)
+{
+  const auto errors = metadata.check();
+
+  if ( !errors.empty() ) {
+    std::cerr << "Metadata doesn't meet the following requirements:\n";
+    for ( const auto& err : errors ) {
+      std::cerr << "    " << err << std::endl;
+    }
+  }
+
+  return errors.empty();
+}
+
+void addMetadata(ZimCreatorFS& zimCreator, const zim::Metadata& metadata)
+{
+  for ( const auto& kv : metadata ) {
+    zimCreator.addMetadata(kv.first, kv.second);
+  }
+}
+
 
 }
 
@@ -246,7 +269,7 @@ void parse_args(int argc, char** argv)
 
   do {
     c = getopt_long(
-        argc, argv, "hVvijxuw:I:t:d:c:l:p:r:e:n:m:J:UB", long_options, &option_index);
+        argc, argv, "hVvijxuw:I:t:d:c:l:p:r:e:n:m:J:UBL:", long_options, &option_index);
 
     if (c != -1) {
       switch (c) {
@@ -328,11 +351,6 @@ void parse_args(int argc, char** argv)
     }
   } while (c != -1);
 
-  if ( !checkDescriptionLengths() ) {
-    exit(1);
-  }
-
-
   while (optind < argc) {
     if (directoryPath.empty()) {
       directoryPath = argv[optind++];
@@ -390,7 +408,7 @@ void parse_args(int argc, char** argv)
   }
 }
 
-void create_zim()
+void create_zim(const zim::Metadata& metadata)
 {
   ZimCreatorFS zimCreator(directoryPath);
   zimCreator.configVerbose(isVerbose())
@@ -422,24 +440,10 @@ void create_zim()
 
   zimCreator.startZimCreation(zimPath);
 
-  zimCreator.addMetadata("Language", language);
-  zimCreator.addMetadata("Publisher", publisher);
-  zimCreator.addMetadata("Creator", creator);
-  zimCreator.addMetadata("Title", title);
-  zimCreator.addMetadata("Description", description);
-  zimCreator.addMetadata("Name", name);
-  zimCreator.addMetadata("Source", source);
-  zimCreator.addMetadata("Flavour", flavour);
-  zimCreator.addMetadata("Scraper", scraper);
-  zimCreator.addMetadata("Tags", tags);
-  zimCreator.addMetadata("Date", generateDate());
+  addMetadata(zimCreator, metadata);
 
   if ( !welcome.empty() )  {
     zimCreator.setMainPath(welcome);
-  }
-
-  if ( !illustration.empty() )  {
-    zimCreator.addIllustration(48, getFileContent(directoryPath + "/" + illustration));
   }
 
   /* Directory visitor */
@@ -474,7 +478,14 @@ int main(int argc, char** argv)
 
   try {
     parse_args(argc, argv);
-    create_zim();
+
+    const zim::Metadata metadata = makeMetadata();
+
+    if ( !checkMetadata(metadata) ) {
+      exit(1);
+    }
+
+    create_zim(metadata);
   }
   catch(std::exception &e) {
     std::cerr << "zimwriterfs: " << e.what() << std::endl;

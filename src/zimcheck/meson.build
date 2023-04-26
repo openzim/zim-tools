@@ -21,6 +21,7 @@ executable('zimcheck',
   'checks.cpp',
   'json_tools.cpp',
   '../tools.cpp',
+  '../metadata.cpp',
   include_directories : inc,
   dependencies: [libzim_dep, thread_dep],
   install: true)

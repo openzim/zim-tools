@@ -3,6 +3,7 @@ sources = [
   'zimwriterfs.cpp',
   'tools.cpp',
   '../tools.cpp',
+  '../metadata.cpp',
   'zimcreatorfs.cpp'
 ]
 

@@ -2,6 +2,7 @@
 #include "checks.h"
 #include "../tools.h"
 #include "../concurrent_cache.h"
+#include "../metadata.h"
 
 #include <cassert>
 #include <map>
@@ -49,7 +50,7 @@ std::unordered_map<TestType, std::pair<LogTag, std::string>> errormapping = {
     { TestType::CHECKSUM,      {LogTag::ERROR, "Invalid checksum"}},
     { TestType::INTEGRITY,     {LogTag::ERROR, "Invalid low-level structure"}},
     { TestType::EMPTY,         {LogTag::ERROR, "Empty articles"}},
-    { TestType::METADATA,      {LogTag::ERROR, "Missing metadata entries"}},
+    { TestType::METADATA,      {LogTag::ERROR, "Metadata errors"}},
     { TestType::FAVICON,       {LogTag::ERROR, "Favicon"}},
     { TestType::MAIN_PAGE,     {LogTag::ERROR, "Missing mainpage"}},
     { TestType::REDUNDANT,     {LogTag::WARNING, "Redundant data found"}},
@@ -73,7 +74,7 @@ std::unordered_map<MsgId, MsgInfo> msgTable = {
   { MsgId::DANGLING_LINKS,   { TestType::URL_INTERNAL, "The following links:\n{{#links}}- {{&value}}\n{{/links}}({{&normalized_link}}) were not found in article {{&path}}" } },
   { MsgId::EXTERNAL_LINK,    { TestType::URL_EXTERNAL, "{{&link}} is an external dependence in article {{&path}}" } },
   { MsgId::REDUNDANT_ITEMS,  { TestType::REDUNDANT, "{{&path1}} and {{&path2}}" } },
-  { MsgId::MISSING_METADATA, { TestType::METADATA, "{{&metadata_type}}" } },
+  { MsgId::METADATA,         { TestType::METADATA, "{{&error}}" } },
   { MsgId::REDIRECT_LOOP,    { TestType::REDIRECT, "Redirect loop exists from entry {{&entry_path}}\n"  } },
   { MsgId::MISSING_FAVICON,  { TestType::FAVICON, "Favicon is missing" } }
 };
@@ -266,21 +267,13 @@ void test_integrity(const std::string& filename, ErrorLogger& reporter) {
 
 
 void test_metadata(const zim::Archive& archive, ErrorLogger& reporter) {
-    reporter.infoMsg("[INFO] Searching for metadata entries...");
-    static const char* const test_meta[] = {
-        "Title",
-        "Creator",
-        "Publisher",
-        "Date",
-        "Description",
-        "Language"};
-    auto existing_metadata = archive.getMetadataKeys();
-    auto begin = existing_metadata.begin();
-    auto end = existing_metadata.end();
-    for (auto &meta : test_meta) {
-        if (std::find(begin, end, meta) == end) {
-            reporter.addMsg(MsgId::MISSING_METADATA, {{"metadata_type", meta}});
-        }
+    reporter.infoMsg("[INFO] Checking metadata...");
+    zim::Metadata metadata;
+    for ( const auto& key : archive.getMetadataKeys() ) {
+        metadata.set(key, archive.getMetadata(key));
+    }
+    for (const auto &error : metadata.check()) {
+        reporter.addMsg(MsgId::METADATA, {{"error", error}});
     }
 }
 

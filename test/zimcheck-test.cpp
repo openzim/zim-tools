@@ -27,7 +27,7 @@ TEST(zimfilechecks, test_checksum)
 
 TEST(zimfilechecks, test_metadata)
 {
-    std::string fn = "data/zimfiles/wikibooks_be_all_nopic_2017-02.zim";
+    std::string fn = "data/zimfiles/good.zim";
 
     zim::Archive archive(fn);
     ErrorLogger logger;
@@ -244,9 +244,9 @@ void test_zimcheck_single_option(std::vector<const char*> optionAliases,
         CapturedStdout zimcheck_output;
         CapturedStderr zimcheck_stderr;
         const CmdLine cmdline{"zimcheck", opt, zimfile};
-        ASSERT_EQ(expected_exit_code, zimcheck(cmdline)) << cmdline;
-        ASSERT_EQ(expected_stderr, std::string(zimcheck_stderr)) << cmdline;
-        ASSERT_EQ(expected_stdout, std::string(zimcheck_output)) << cmdline;
+        EXPECT_EQ(expected_exit_code, zimcheck(cmdline)) << cmdline;
+        EXPECT_EQ(expected_stderr, std::string(zimcheck_stderr)) << cmdline;
+        EXPECT_EQ(expected_stdout, std::string(zimcheck_output)) << cmdline;
     }
 }
 
@@ -293,7 +293,7 @@ TEST(zimcheck, metadata_goodzimfile)
     const std::string expected_output(
         "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
         "[INFO] Zimcheck version is " VERSION "\n"
-        "[INFO] Searching for metadata entries..." "\n"
+        "[INFO] Checking metadata..." "\n"
         "[INFO] Overall Test Status: Pass" "\n"
         "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
     );
@@ -413,7 +413,7 @@ const std::string ALL_CHECKS_OUTPUT_ON_GOODZIMFILE(
       "[INFO] Zimcheck version is " VERSION "\n"
       "[INFO] Verifying ZIM-archive structure integrity..." "\n"
       "[INFO] Avoiding redundant checksum test (already performed by the integrity check)." "\n"
-      "[INFO] Searching for metadata entries..." "\n"
+      "[INFO] Checking metadata..." "\n"
       "[INFO] Searching for Favicon..." "\n"
       "[INFO] Searching for main page..." "\n"
       "[INFO] Verifying Articles' content..." "\n"
@@ -527,10 +527,13 @@ TEST(zimcheck, metadata_poorzimfile)
     const std::string expected_stdout(
       "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
       "[INFO] Zimcheck version is " VERSION "\n"
-      "[INFO] Searching for metadata entries..." "\n"
-      "[ERROR] Missing metadata entries:" "\n"
-      "  Title" "\n"
-      "  Description" "\n"
+      "[INFO] Checking metadata..." "\n"
+      "[ERROR] Metadata errors:" "\n"
+      "  Missing mandatory metadata: Title" "\n"
+      "  Missing mandatory metadata: Description" "\n"
+      "  Missing mandatory metadata: Illustration_48x48@1" "\n"
+      "  Language must contain at least 3 characters" "\n"
+      "  Language doesn't match regex: \\w{3}(,\\w{3})*" "\n"
       "[INFO] Overall Test Status: Fail" "\n"
       "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
     );
@@ -709,7 +712,7 @@ const std::string ALL_CHECKS_OUTPUT_ON_POORZIMFILE(
       "[INFO] Zimcheck version is " VERSION "\n"
       "[INFO] Verifying ZIM-archive structure integrity..." "\n"
       "[INFO] Avoiding redundant checksum test (already performed by the integrity check)." "\n"
-      "[INFO] Searching for metadata entries..." "\n"
+      "[INFO] Checking metadata..." "\n"
       "[INFO] Searching for Favicon..." "\n"
       "[INFO] Searching for main page..." "\n"
       "[INFO] Verifying Articles' content..." "\n"
@@ -718,9 +721,12 @@ const std::string ALL_CHECKS_OUTPUT_ON_POORZIMFILE(
       "[INFO] Checking for redirect loops..." "\n"
       "[ERROR] Empty articles:" "\n"
       "  Entry empty.html is empty" "\n"
-      "[ERROR] Missing metadata entries:" "\n"
-      "  Title" "\n"
-      "  Description" "\n"
+      "[ERROR] Metadata errors:" "\n"
+      "  Missing mandatory metadata: Title" "\n"
+      "  Missing mandatory metadata: Description" "\n"
+      "  Missing mandatory metadata: Illustration_48x48@1" "\n"
+      "  Language must contain at least 3 characters" "\n"
+      "  Language doesn't match regex: \\w{3}(,\\w{3})*" "\n"
       "[ERROR] Favicon:" "\n"
       "  Favicon is missing" "\n"
       "[ERROR] Missing mainpage:" "\n"
@@ -832,14 +838,32 @@ TEST(zimcheck, json_poorzimfile)
       "    {"                                                               "\n"
       "      \"check\" : \"metadata\","                                     "\n"
       "      \"level\" : \"ERROR\","                                        "\n"
-      "      \"message\" : \"Title\","                                      "\n"
-      "      \"metadata_type\" : \"Title\""                                 "\n"
+      "      \"message\" : \"Missing mandatory metadata: Title\","          "\n"
+      "      \"error\" : \"Missing mandatory metadata: Title\""             "\n"
       "    },"                                                              "\n"
       "    {"                                                               "\n"
       "      \"check\" : \"metadata\","                                     "\n"
       "      \"level\" : \"ERROR\","                                        "\n"
-      "      \"message\" : \"Description\","                                "\n"
-      "      \"metadata_type\" : \"Description\""                           "\n"
+      "      \"message\" : \"Missing mandatory metadata: Description\","    "\n"
+      "      \"error\" : \"Missing mandatory metadata: Description\""       "\n"
+      "    },"                                                              "\n"
+      "    {"                                                               "\n"
+      "      \"check\" : \"metadata\","                                     "\n"
+      "      \"level\" : \"ERROR\","                                        "\n"
+      "      \"message\" : \"Missing mandatory metadata: Illustration_48x48@1\"," "\n"
+      "      \"error\" : \"Missing mandatory metadata: Illustration_48x48@1\""    "\n"
+      "    },"                                                              "\n"
+      "    {"                                                               "\n"
+      "      \"check\" : \"metadata\","                                     "\n"
+      "      \"level\" : \"ERROR\","                                        "\n"
+      "      \"message\" : \"Language must contain at least 3 characters\"," "\n"
+      "      \"error\" : \"Language must contain at least 3 characters\""    "\n"
+      "    },"                                                              "\n"
+      "    {"                                                               "\n"
+      "      \"check\" : \"metadata\","                                     "\n"
+      "      \"level\" : \"ERROR\","                                        "\n"
+      "      \"message\" : \"Language doesn't match regex: \\\\w{3}(,\\\\w{3})*\"," "\n"
+      "      \"error\" : \"Language doesn't match regex: \\\\w{3}(,\\\\w{3})*\""    "\n"
       "    },"                                                              "\n"
       "    {"                                                               "\n"
       "      \"check\" : \"favicon\","                                      "\n"
