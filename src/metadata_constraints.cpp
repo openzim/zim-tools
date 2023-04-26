@@ -1,8 +1,8 @@
 const Metadata::ReservedMetadataTable reservedMetadataInfoTable = {
   // name              isMandatory minLength   maxLength   regex
-  { "Name",            OPTIONAL,   1,          0,          ""                },
+  { "Name",            MANDATORY,  1,          0,          ""                },
   { "Title",           MANDATORY,  1,          30,         ""                },
-  { "Language",        MANDATORY,  2,          0,          LANGS_REGEXP      },
+  { "Language",        MANDATORY,  3,          0,          LANGS_REGEXP      },
   { "Creator",         MANDATORY,  1,          0,          ""                },
   { "Publisher",       MANDATORY,  1,          0,          ""                },
   { "Date",            MANDATORY,  10,         10,         DATE_REGEXP       },
@@ -18,7 +18,7 @@ const Metadata::ReservedMetadataTable reservedMetadataInfoTable = {
 
   {
     "Illustration_48x48@1",
-    OPTIONAL,
+    MANDATORY,
     0, // There are no constraints on the illustration metadata size
     0, // in order to avoid decoding it as UTF-8 encoded text
     PNG_REGEXP

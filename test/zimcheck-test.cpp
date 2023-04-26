@@ -27,7 +27,7 @@ TEST(zimfilechecks, test_checksum)
 
 TEST(zimfilechecks, test_metadata)
 {
-    std::string fn = "data/zimfiles/wikibooks_be_all_nopic_2017-02.zim";
+    std::string fn = "data/zimfiles/good.zim";
 
     zim::Archive archive(fn);
     ErrorLogger logger;
@@ -531,6 +531,7 @@ TEST(zimcheck, metadata_poorzimfile)
       "[ERROR] Metadata errors:" "\n"
       "  Missing mandatory metadata: Title" "\n"
       "  Missing mandatory metadata: Description" "\n"
+      "  Missing mandatory metadata: Illustration_48x48@1" "\n"
       "[INFO] Overall Test Status: Fail" "\n"
       "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
     );
@@ -721,6 +722,7 @@ const std::string ALL_CHECKS_OUTPUT_ON_POORZIMFILE(
       "[ERROR] Metadata errors:" "\n"
       "  Missing mandatory metadata: Title" "\n"
       "  Missing mandatory metadata: Description" "\n"
+      "  Missing mandatory metadata: Illustration_48x48@1" "\n"
       "[ERROR] Favicon:" "\n"
       "  Favicon is missing" "\n"
       "[ERROR] Missing mainpage:" "\n"
@@ -840,6 +842,12 @@ TEST(zimcheck, json_poorzimfile)
       "      \"level\" : \"ERROR\","                                        "\n"
       "      \"message\" : \"Missing mandatory metadata: Description\","    "\n"
       "      \"error\" : \"Missing mandatory metadata: Description\""       "\n"
+      "    },"                                                              "\n"
+      "    {"                                                               "\n"
+      "      \"check\" : \"metadata\","                                     "\n"
+      "      \"level\" : \"ERROR\","                                        "\n"
+      "      \"message\" : \"Missing mandatory metadata: Illustration_48x48@1\"," "\n"
+      "      \"error\" : \"Missing mandatory metadata: Illustration_48x48@1\""    "\n"
       "    },"                                                              "\n"
       "    {"                                                               "\n"
       "      \"check\" : \"favicon\","                                      "\n"
