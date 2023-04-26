@@ -195,3 +195,34 @@ TEST(Metadata, mandatoryMetadataAndSimpleChecksAreRunUnconditionally)
       })
   );
 }
+
+TEST(Metadata, complexChecksAreRunOnlyIfMandatoryMetadataRequirementsAreMet)
+{
+  zim::Metadata m;
+
+  m.set("Description",     "Blablabla");
+  m.set("LongDescription", "Blabla");
+  m.set("Date", "2020-20-20");
+  m.set("Creator", "TED");
+  m.set("Name", "TED_bodylanguage");
+  //m.set("Title", "");
+  m.set("Publisher", "Kiwix");
+  m.set("Language", "bod,yla,ngu,age");
+  m.set("Illustration_48x48@1", fakePNG());
+
+  ASSERT_FALSE(m.valid());
+  ASSERT_EQ(m.check(),
+      zim::Metadata::Errors({
+        "Missing mandatory metadata: Title",
+      })
+  );
+
+  m.set("Title", "Blabluba");
+
+  ASSERT_FALSE(m.valid());
+  ASSERT_EQ(m.check(),
+      zim::Metadata::Errors({
+        "LongDescription shouldn't be shorter than Description"
+      })
+  );
+}
