@@ -2,6 +2,10 @@
 
 #include "gtest/gtest.h"
 
+std::string fakePNG()
+{
+  return "\x89PNG\r\n\x1a\n" + std::string(100, 'x');
+}
 
 TEST(Metadata, isDefaultConstructible)
 {
@@ -46,7 +50,7 @@ TEST(Metadata, detectsAbsenceOfMandatoryEntries)
   m.set("Title", "Chief Executive Officer");
   m.set("Publisher", "Zangak");
   m.set("Language", "py3");
-  m.set("Illustration_48x48@1", "\x89PNG\r\n\x1a\n" + std::string(100, 'x'));
+  m.set("Illustration_48x48@1", fakePNG());
 
   ASSERT_TRUE(m.valid());
   ASSERT_TRUE(m.check().empty());
@@ -63,7 +67,7 @@ zim::Metadata makeValidMetadata()
   m.set("Title", "Chief Executive Officer");
   m.set("Publisher", "Zangak");
   m.set("Language", "py3");
-  m.set("Illustration_48x48@1", "\x89PNG\r\n\x1a\n" + std::string(100, 'x'));
+  m.set("Illustration_48x48@1", fakePNG());
 
   return m;
 }
