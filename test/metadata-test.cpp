@@ -167,3 +167,27 @@ TEST(Metadata, complexConstraints)
       })
   );
 }
+
+TEST(Metadata, mandatoryMetadataAndSimpleChecksAreRunUnconditionally)
+{
+  zim::Metadata m;
+
+  m.set("Description", "Blablabla");
+  m.set("Date", "2020-20-20");
+  m.set("Creator", "Demiurge");
+  m.set("Name", "wikipedia_js_maxi");
+  m.set("Title", "A title that is too long to read for a five year old");
+  m.set("Publisher", "Zangak");
+  m.set("Language", "js");
+  //m.set("Illustration_48x48@1", "");
+
+  ASSERT_FALSE(m.valid());
+  ASSERT_EQ(m.check(),
+      zim::Metadata::Errors({
+        "Missing mandatory metadata: Illustration_48x48@1",
+        "Language must contain at least 3 characters",
+        "Language doesn't match regex: \\w{3}(,\\w{3})*",
+        "Title must contain at most 30 characters"
+      })
+  );
+}

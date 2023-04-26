@@ -139,6 +139,12 @@ std::string escapeNonPrintableChars(const std::string& s)
   return os.str();
 }
 
+Metadata::Errors concat(Metadata::Errors e1, const Metadata::Errors& e2)
+{
+  e1.insert(e1.end(), e2.begin(), e2.end());
+  return e1;
+}
+
 } // unnamed namespace
 
 const Metadata::ReservedMetadataTable& Metadata::reservedMetadataInfo = reservedMetadataInfoTable;
@@ -229,13 +235,10 @@ Metadata::Errors Metadata::checkComplexConstraints() const
 
 Metadata::Errors Metadata::check() const
 {
-  Errors e = checkMandatoryMetadata();
-  if ( !e.empty() )
-    return e;
-
-  e = checkSimpleConstraints();
-  if ( !e.empty() )
-    return e;
+  const Errors e1 = checkMandatoryMetadata();
+  const Errors e2 = checkSimpleConstraints();
+  if ( !e1.empty() || !e2.empty() )
+    return concat(e1, e2);
 
   return checkComplexConstraints();
 }
