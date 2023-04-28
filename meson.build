@@ -1,5 +1,5 @@
 project('zim-tools', ['c', 'cpp'],
-  version : '3.1.3',
+  version : '3.2.0',
   license : 'GPLv3+',
   default_options : ['c_std=c11', 'cpp_std=c++11', 'werror=true'])
 

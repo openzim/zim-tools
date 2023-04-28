@@ -1,3 +1,12 @@
+zim-tools 3.2.0
+===============
+
+ * Introduce a "Metadata table" to centralize information about metadata and check them (@veloman-yunkan #339)
+ * Add check for description and longDescription (@Onyx2406 #333)
+ * Do not use `--static` option when compiling on MacOs (@mgautierfr #342)
+ * Add support for SIP uri scheme (@kelson42 #329)
+ * Various CI improvement (@kelson42)
+
 zim-tools 3.1.3
 ===============
 
