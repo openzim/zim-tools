@@ -95,10 +95,6 @@ jobs:
       env:
         LD_LIBRARY_PATH: "${{env.HOME}}/BUILD_${{matrix.target}}/INSTALL/lib${{matrix.lib_postfix}}"
     - name: Publish coverage
-      shell: bash
-      run: |
-        curl https://codecov.io/bash -o codecov.sh
-        bash codecov.sh -n "${OS_NAME}_${{matrix.target}}" -Z
-        rm codecov.sh
+      uses: codecov/codecov-action@v3
       env:
         CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
