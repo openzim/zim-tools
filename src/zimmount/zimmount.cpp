@@ -1,117 +1,82 @@
-#define FUSE_USE_VERSION 31
+#include "zimmount.h"
 
+#define FUSE_USE_VERSION 31
 #include <fuse3/fuse.h>
 
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
-#define ZIM_PRIVATE
-#include <zim/archive.h>
-#include <zim/item.h>
+ZimFSNode::ZimFSNode() : name(""), entry_index(INVALID_INDEX) {};
+ZimFSNode::ZimFSNode(const std::string& name, zim::entry_index_type index) : name(name), entry_index(index) {};
 
-class ZimFSNode
+void ZimFSNode::addEntry(const zim::Entry& entry)
 {
-  std::string name;
-
- public:
-  zim::entry_index_type entry_index;
-  std::unordered_map<std::string, ZimFSNode*> children;
-
-  ZimFSNode() : name(""), entry_index(-1) {}
-  ZimFSNode(const std::string& name, zim::entry_index_type index)
-      : name(name), entry_index(index)
-  {
-  }
-
-  void addEntry(const zim::Entry& entry)
-  {
-    std::stringstream ss(entry.getPath());
-    std::string token;
-    ZimFSNode* curr = this;
-    while (getline(ss, token, '/')) {
-      if (token.empty()) {
-        continue;
-      }
-
-      if (curr->children.find(token) == curr->children.end()) {
-        if (ss.eof()) {
-          curr->children[token] = new ZimFSNode(token, entry.getIndex());
-        } else {
-          curr->children[token] = new ZimFSNode(token, -1);
-        }
-      }
-      curr = curr->children[token];
+  std::stringstream ss(entry.getPath());
+  std::string token;
+  ZimFSNode* curr = this;
+  while (getline(ss, token, '/')) {
+    if (token.empty()) {
+      continue;
     }
-  }
 
-  ZimFSNode* findPath(const std::string& path)
-  {
-    std::stringstream ss(path);
-    std::string token;
-    ZimFSNode* curr = this;
-    while (getline(ss, token, '/')) {
-      if (token.empty()) {
-        continue;
+    if (curr->children.find(token) == curr->children.end()) {
+      if (ss.eof()) {
+        curr->children[token] = new ZimFSNode(token, entry.getIndex());
+      } else {
+        curr->children[token] = new ZimFSNode(token, INVALID_INDEX);
       }
-
-      if (curr->children.find(token) == curr->children.end()) {
-        return nullptr;
-      }
-      curr = curr->children[token];
     }
-    return curr;
+    curr = curr->children[token];
   }
+}
 
-  // Not used
-  // void traverseTree(int depth = 0) const
-  // {
-  //   for (auto child : children)
-  //   {
-  //     std::cout << std::string(depth * 2, '-') << child.second->name << " "
-  //     << child.second->getEntryIndex() << std::endl;
-  //     child.second->traverseTree(depth + 1);
-  //   }
-  // }
-
-  ~ZimFSNode()
-  {
-    for (auto child : children) {
-      delete child.second;
-    }
-  }
-};
-
-class ZimFS
+ZimFSNode* ZimFSNode::findPath(const std::string& path)
 {
-  zim::Archive archive;
-
- public:
-  ZimFSNode root;
-
-  ZimFS(const std::string& fname, bool check_intergrity) : archive(fname)
-  {
-    if (check_intergrity
-        && !archive.checkIntegrity(zim::IntegrityCheck::CHECKSUM)) {
-      throw std::runtime_error("zimfile intergrity check failed");
+  std::stringstream ss(path);
+  std::string token;
+  ZimFSNode* curr = this;
+  while (getline(ss, token, '/')) {
+    if (token.empty()) {
+      continue;
     }
 
-    // Cache all entries
-    size_t counter = 0;
-    for (auto& en : archive.iterEfficient()) {
-      root.addEntry(en);
-      counter++;
+    if (curr->children.find(token) == curr->children.end()) {
+      return nullptr;
     }
-    std::cout << "All entries loaded, total: " << counter << std::endl;
-
-    // root.traverseTree();
+    curr = curr->children[token];
   }
-};
+  return curr;
+}
 
-ZimFS *fs;
+ZimFSNode::~ZimFSNode()
+{
+  for (auto child : children) {
+    delete child.second;
+  }
+}
 
+
+ZimFS::ZimFS(const std::string& fname, bool check_intergrity) : archive(fname)
+{
+  if (check_intergrity
+      && !archive.checkIntegrity(zim::IntegrityCheck::CHECKSUM)) {
+    throw std::runtime_error("zimfile intergrity check failed");
+  }
+
+  // Cache all entries
+  size_t counter = 0;
+  for (auto& en : archive.iterByPath()) {
+    root.addEntry(en);
+    counter++;
+  }
+  std::cout << "All entries loaded, total: " << counter << std::endl;
+}
+
+ZimFS* fs;
+
+/* callbacks for fuse below */
 static int do_getattr(const char* path,
                       struct stat* stbuf,
                       struct fuse_file_info* fi)
@@ -124,7 +89,7 @@ static int do_getattr(const char* path,
     return -ENOENT;
   }
 
-  if (node->entry_index == (unsigned int)-1) {
+  if (node->entry_index == INVALID_INDEX) {
     stbuf->st_mode = S_IFDIR | 0755;
     stbuf->st_nlink = 1;
   } else {
@@ -160,14 +125,16 @@ static int do_readdir(const char* path,
 static struct fuse_operations operations
     = {.getattr = do_getattr, .readdir = do_readdir};
 
-
 /* Code for processing custom args below */
 struct zimfile_opt {
   char* path;
 };
 
 #define KEY_PATH 1
-#define ZIM_OPT(t, m, v) {t, offsetof(struct zimfile_opt, m), v}
+#define ZIM_OPT(t, m, v)                  \
+  {                                       \
+    t, offsetof(struct zimfile_opt, m), v \
+  }
 
 static int zimfile_opt_proc_fd(void* data,
                                const char* arg,
@@ -193,13 +160,13 @@ int main(int argc, char* argv[])
   struct zimfile_opt opt;
   memset(&opt, 0, sizeof(opt));
 
-  struct fuse_opt opts[]
-      = {ZIM_OPT("path=%s", path, KEY_PATH),
-         FUSE_OPT_END};
+  struct fuse_opt opts[] = {ZIM_OPT("path=%s", path, KEY_PATH), FUSE_OPT_END};
   fuse_opt_parse(&args, &opt, opts, zimfile_opt_proc_fd);
 
   if (opt.path == nullptr) {
-    std::cerr << "error: no zimfile path specified, use -o path=/path/to/zimfile to specify the zimfile to mount." << std::endl;
+    std::cerr << "error: no zimfile path specified, use -o "
+                 "path=/path/to/zimfile to specify the zimfile to mount."
+              << std::endl;
     return 1;
   }
   /* init global var `fs` */

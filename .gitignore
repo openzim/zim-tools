@@ -34,3 +34,6 @@
 *.zim
 pip-selfcheck.json
 build/
+
+# IDE Settings
+.vscode/*
