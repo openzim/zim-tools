@@ -39,3 +39,5 @@ subdir('zimcheck')
 if with_writer
   subdir('zimwriterfs')
 endif
+
+subdir('zimmount')
