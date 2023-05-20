@@ -32,6 +32,7 @@ if with_writer
   thread_dep = dependency('threads')
   zlib_dep = dependency('zlib', static:static_linkage)
   gumbo_dep = dependency('gumbo', static:static_linkage)
+  libfuse_dep = dependency('fuse3', version : '>=3.1')
 
   magic_include_path = ''
   magic_prefix_install = get_option('magic-install-prefix')

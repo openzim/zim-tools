@@ -4,7 +4,8 @@ tests = [
     'metadata-test',
     'tools-test',
     'zimwriterfs-zimcreatorfs',
-    'zimcheck-test'
+    'zimcheck-test',
+    'zimmount-test'
 ]
 
 zimwriter_srcs = [  '../src/zimwriterfs/tools.cpp',
@@ -14,14 +15,15 @@ zimwriter_srcs = [  '../src/zimwriterfs/tools.cpp',
 tests_src_map = { 'zimcheck-test' : ['../src/zimcheck/zimcheck.cpp', '../src/zimcheck/checks.cpp',  '../src/zimcheck/json_tools.cpp', '../src/tools.cpp', '../src/metadata.cpp'],
                   'tools-test' : zimwriter_srcs,
                   'metadata-test' : ['../src/metadata.cpp'],
-                  'zimwriterfs-zimcreatorfs' : zimwriter_srcs }
+                  'zimwriterfs-zimcreatorfs' : zimwriter_srcs,
+                  'zimmount-test': ['../src/zimmount/zimmount.cpp'] }
 
 if gtest_dep.found() and not meson.is_cross_build()
 
     foreach test_name : tests
 
         test_exe = executable(test_name, [test_name+'.cpp'] + tests_src_map[test_name],
-                              dependencies : [gtest_dep, libzim_dep, gumbo_dep, magic_dep, zlib_dep],
+                              dependencies : [gtest_dep, libzim_dep, gumbo_dep, magic_dep, zlib_dep, libfuse_dep],
                               include_directories: inc,
                               build_rpath : '$ORIGIN')
 
