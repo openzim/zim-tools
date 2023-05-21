@@ -32,40 +32,50 @@ if with_writer
   thread_dep = dependency('threads')
   zlib_dep = dependency('zlib', static:static_linkage)
   gumbo_dep = dependency('gumbo', static:static_linkage)
+  magic_dep = dependency('libmagic', static:static_linkage, required:false)
 
-  magic_include_path = ''
-  magic_prefix_install = get_option('magic-install-prefix')
-  if magic_prefix_install == ''
-    if compiler.has_header('magic.h')
-      if find_library_in_compiler
-        magic_lib = compiler.find_library('magic')
+  # libmagic.pc has been introduced in version 5.39 of
+  # File. Unfortunately Ubuntu 20.04 (Focal) still uses version
+  # 5.38. Therefore we have to keep this special handling. As
+  # soon as Ubuntu 20.04 will move forward we will be able to remove
+  # this custom code. Check https://launchpad.net/ubuntu/+source/file
+  # and https://bugs.launchpad.net/ubuntu/+source/file/+bug/1951594
+  if not magic_dep.found()
+    magic_include_path = ''
+    magic_prefix_install = get_option('magic-install-prefix')
+    if magic_prefix_install == ''
+      if compiler.has_header('magic.h')
+        if find_library_in_compiler
+          magic_lib = compiler.find_library('magic')
+        else
+          magic_lib = find_library('magic')
+        endif
+        magic_dep = declare_dependency(link_args:['-lmagic'])
       else
-        magic_lib = find_library('magic')
+        error('magic.h not found')
       endif
-      magic_dep = declare_dependency(link_args:['-lmagic'])
     else
-      error('magic.h not found')
-    endif
-  else
-    if not find_library_in_compiler
-      error('For custom magic_prefix_install you need a meson version >=0.31.0')
-    endif
-    magic_include_path = magic_prefix_install + '/include'
-    magic_include_args = ['-I'+magic_include_path]
-    if compiler.has_header('magic.h', args:magic_include_args)
-      magic_include_dir = include_directories(magic_include_path, is_system:true)
-      magic_lib_path = join_paths(magic_prefix_install, get_option('libdir'))
-      magic_lib = compiler.find_library('magic', dirs:magic_lib_path, required:false)
-      if not magic_lib.found()
-        magic_lib_path = join_paths(magic_prefix_install, 'lib')
-        magic_lib = compiler.find_library('magic', dirs:magic_lib_path)
+      if not find_library_in_compiler
+        error('For custom magic_prefix_install you need a meson version >=0.31.0')
       endif
-      magic_link_args = ['-L'+magic_lib_path, '-lmagic']
-      magic_dep = declare_dependency(include_directories:magic_include_dir, link_args:magic_link_args)
-    else
-      error('magic.h not found')
+      magic_include_path = magic_prefix_install + '/include'
+      magic_include_args = ['-I'+magic_include_path]
+      if compiler.has_header('magic.h', args:magic_include_args)
+        magic_include_dir = include_directories(magic_include_path, is_system:true)
+        magic_lib_path = join_paths(magic_prefix_install, get_option('libdir'))
+        magic_lib = compiler.find_library('magic', dirs:magic_lib_path, required:false)
+        if not magic_lib.found()
+          magic_lib_path = join_paths(magic_prefix_install, 'lib')
+          magic_lib = compiler.find_library('magic', dirs:magic_lib_path)
+        endif
+        magic_link_args = ['-L'+magic_lib_path, '-lmagic']
+        magic_dep = declare_dependency(include_directories:magic_include_dir, link_args:magic_link_args)
+      else
+        error('magic.h not found')
+      endif
     endif
   endif
+
 endif
 
 subdir('src')
