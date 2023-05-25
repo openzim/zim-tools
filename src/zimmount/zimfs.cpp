@@ -52,6 +52,31 @@ ZimFSNode::~ZimFSNode()
   }
 }
 
+void ZimFS::printInfo()
+{
+  std::cout << "count-entries: " << archive.getEntryCount() << "\n";
+  std::cout << "uuid: " << archive.getUuid() << "\n";
+  if (archive.hasChecksum()) {
+    std::cout << "checksum: " << archive.getChecksum() << "\n";
+  } else {
+    std::cout <<"no checksum\n";
+  }
+
+  if (archive.hasMainEntry()) {
+    std::cout << "main page: " << archive.getMainEntry().getItem(true).getPath() << "\n";
+  } else {
+    std::cout << "main page: -\n";
+  }
+
+  if (archive.hasIllustration()) {
+    std::cout << "favicon: " << archive.getIllustrationItem().getPath() << "\n";
+  } else {
+    std::cout << "favicon: -\n";
+  }
+
+  std::cout.flush();
+}
+
 ZimFS::ZimFS(const std::string& fname, bool check_intergrity) : archive(fname)
 {
   if (check_intergrity

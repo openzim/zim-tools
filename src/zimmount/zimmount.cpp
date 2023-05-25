@@ -23,12 +23,12 @@ static int do_getattr(const char* path,
   }
 
   if (node->entry_index == INVALID_INDEX) {
-    stbuf->st_mode = S_IFDIR | 0755;
+    stbuf->st_mode = S_IFDIR | 0555;
     stbuf->st_nlink = 1;
   } else {
-    stbuf->st_mode = S_IFREG | 0777;
+    stbuf->st_mode = S_IFREG | 0444;
     stbuf->st_nlink = 1;
-    stbuf->st_size = 1024;
+    stbuf->st_size = fs->archive.getEntryByPath(path).getItem(true).getSize();
   }
 
   return 0;
@@ -49,18 +49,62 @@ static int do_readdir(const char* path,
     return -ENOENT;
   }
 
-  fill_dir(buf, ".", nullptr, 0, (fuse_fill_dir_flags) 0);
-  fill_dir(buf, "..", nullptr, 0, (fuse_fill_dir_flags) 0);
+  fill_dir(buf, ".", nullptr, 0, (fuse_fill_dir_flags)0);
+  fill_dir(buf, "..", nullptr, 0, (fuse_fill_dir_flags)0);
 
   for (auto child : node->children) {
     fill_dir(buf, child.first.c_str(), nullptr, 0, (fuse_fill_dir_flags)0);
   }
-  
+
   return 0;
 }
 
+static int do_open(const char *path, struct fuse_file_info *fi)
+{
+  std::cout << "do_open: " << path << std::endl;
+
+  if ((fi->flags & 3) != O_RDONLY) {
+    return -EACCES;
+  }
+
+  ZimFSNode* node = fs->root.findPath(path);
+
+  if (node == nullptr) {
+    return -ENOENT;
+  }
+
+  return 0;
+}
+
+static int do_read(const char *path, char *buf, size_t size, off_t offset,
+                   struct fuse_file_info *fi)
+{
+  std::cout << "do_read: " << path << std::endl;
+
+  ZimFSNode* node = fs->root.findPath(path);
+
+  if (node == nullptr) {
+    return -ENOENT;
+  }
+
+  zim::Entry entry = fs->archive.getEntryByPath(path);
+  zim::Item item = entry.getItem(true);
+
+  if (offset >= (off_t) item.getSize()) {
+    return 0;
+  }
+
+  if (offset + size > item.getSize()) {
+    size = item.getSize() - offset;
+  }
+
+  memcpy(buf, item.getData().data() + offset, size);
+
+  return size;
+}
+
 static struct fuse_operations operations
-    = {.getattr = do_getattr, .readdir = do_readdir};
+    = {.getattr = do_getattr, .open=do_open, .read=do_read , .readdir = do_readdir};
 
 /* Code for processing custom args below */
 struct zimfile_opt {
@@ -109,6 +153,7 @@ struct fuse_args parse_args(int argc, char* argv[])
 
   /* init global var `fs` */
   fs = new ZimFS(opt.path, true);
+  fs->printInfo();
 
   return args;
 }

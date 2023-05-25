@@ -22,16 +22,20 @@ public:
 
   void addEntry(const zim::Entry& entry);
   ZimFSNode* findPath(const std::string& path);
+
+
   ~ZimFSNode();
 };
 
 class ZimFS
 {
-  zim::Archive archive;
-
 public:
+
+  zim::Archive archive;
   ZimFSNode root;
   ZimFS(const std::string& fname, bool check_intergrity);
+
+  void printInfo();
 };
 
 

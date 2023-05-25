@@ -4,7 +4,8 @@
 
 TEST(ZimMountTest, basic)
 {
-    std::string path = "data/zimfiles/good.zim";
-
-    ASSERT_TRUE(1);
+    std::stringstream ss;
+    ss << "Hello, world!";
+    EXPECT_EQ(ss.str(), "Hello, world!");
+    
 }
