@@ -1,10 +1,9 @@
-#ifndef OPENZIM_ZIMMOUNT_H
-#define OPENZIM_ZIMMOUNT_H
+#ifndef OPENZIM_ZIMFS_H
+#define OPENZIM_ZIMFS_H
 
 #include <string>
 #include <unordered_map>
 
-#define ZIM_PRIVATE
 #include <zim/archive.h>
 #include <zim/item.h>
 
@@ -14,7 +13,7 @@ class ZimFSNode
 {
   std::string name;
 
- public:
+public:
   zim::entry_index_type entry_index;
   std::unordered_map<std::string, ZimFSNode*> children;
 
@@ -30,9 +29,10 @@ class ZimFS
 {
   zim::Archive archive;
 
- public:
+public:
   ZimFSNode root;
   ZimFS(const std::string& fname, bool check_intergrity);
 };
 
-#endif  // OPENZIM_ZIMMOUNT_H
+
+#endif //OPENZIM_ZIMFS_H

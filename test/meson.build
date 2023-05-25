@@ -16,7 +16,7 @@ tests_src_map = { 'zimcheck-test' : ['../src/zimcheck/zimcheck.cpp', '../src/zim
                   'tools-test' : zimwriter_srcs,
                   'metadata-test' : ['../src/metadata.cpp'],
                   'zimwriterfs-zimcreatorfs' : zimwriter_srcs,
-                  'zimmount-test': ['../src/zimmount/zimmount.cpp'] }
+                  'zimmount-test': ['../src/zimmount/zimmount.cpp', '../src/zimmount/zimfs.cpp'] }
 
 if gtest_dep.found() and not meson.is_cross_build()
 

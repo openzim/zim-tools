@@ -1,78 +1,11 @@
-#include "zimmount.h"
+#include "zimfs.h"
 
 #define FUSE_USE_VERSION 31
 #include <fuse3/fuse.h>
 
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <vector>
-
-ZimFSNode::ZimFSNode() : name(""), entry_index(INVALID_INDEX) {};
-ZimFSNode::ZimFSNode(const std::string& name, zim::entry_index_type index) : name(name), entry_index(index) {};
-
-void ZimFSNode::addEntry(const zim::Entry& entry)
-{
-  std::stringstream ss(entry.getPath());
-  std::string token;
-  ZimFSNode* curr = this;
-  while (getline(ss, token, '/')) {
-    if (token.empty()) {
-      continue;
-    }
-
-    if (curr->children.find(token) == curr->children.end()) {
-      if (ss.eof()) {
-        curr->children[token] = new ZimFSNode(token, entry.getIndex());
-      } else {
-        curr->children[token] = new ZimFSNode(token, INVALID_INDEX);
-      }
-    }
-    curr = curr->children[token];
-  }
-}
-
-ZimFSNode* ZimFSNode::findPath(const std::string& path)
-{
-  std::stringstream ss(path);
-  std::string token;
-  ZimFSNode* curr = this;
-  while (getline(ss, token, '/')) {
-    if (token.empty()) {
-      continue;
-    }
-
-    if (curr->children.find(token) == curr->children.end()) {
-      return nullptr;
-    }
-    curr = curr->children[token];
-  }
-  return curr;
-}
-
-ZimFSNode::~ZimFSNode()
-{
-  for (auto child : children) {
-    delete child.second;
-  }
-}
-
-
-ZimFS::ZimFS(const std::string& fname, bool check_intergrity) : archive(fname)
-{
-  if (check_intergrity
-      && !archive.checkIntegrity(zim::IntegrityCheck::CHECKSUM)) {
-    throw std::runtime_error("zimfile intergrity check failed");
-  }
-
-  // Cache all entries
-  size_t counter = 0;
-  for (auto& en : archive.iterByPath()) {
-    root.addEntry(en);
-    counter++;
-  }
-  std::cout << "All entries loaded, total: " << counter << std::endl;
-}
 
 ZimFS* fs;
 
@@ -116,9 +49,13 @@ static int do_readdir(const char* path,
     return -ENOENT;
   }
 
+  fill_dir(buf, ".", nullptr, 0, (fuse_fill_dir_flags) 0);
+  fill_dir(buf, "..", nullptr, 0, (fuse_fill_dir_flags) 0);
+
   for (auto child : node->children) {
     fill_dir(buf, child.first.c_str(), nullptr, 0, (fuse_fill_dir_flags)0);
   }
+  
   return 0;
 }
 
@@ -152,7 +89,7 @@ static int zimfile_opt_proc_fd(void* data,
   return 1; /* Keep */
 }
 
-int main(int argc, char* argv[])
+struct fuse_args parse_args(int argc, char* argv[])
 {
   /* Custom args (zimfile path) */
   struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
@@ -167,10 +104,18 @@ int main(int argc, char* argv[])
     std::cerr << "error: no zimfile path specified, use -o "
                  "path=/path/to/zimfile to specify the zimfile to mount."
               << std::endl;
-    return 1;
+    throw std::runtime_error("no zimfile path specified");
   }
+
   /* init global var `fs` */
   fs = new ZimFS(opt.path, true);
+
+  return args;
+}
+
+int main(int argc, char* argv[])
+{
+  struct fuse_args args = parse_args(argc, argv);
 
   /* direct call to fuse_main with custom callbacks */
   return fuse_main(args.argc, args.argv, &operations, nullptr);

@@ -1,4 +1,5 @@
 sources = [
+  'zimfs.cpp',
   'zimmount.cpp'
 ]
 
