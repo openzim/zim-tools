@@ -97,8 +97,28 @@ zim::Metadata makeMetadata() {
   metadata.set("Scraper",         scraper);
   metadata.set("Tags",            tags);
   metadata.set("Date",            generateDate());
-  if ( !illustration.empty() )  {
+
+  if (!illustration.empty()) {
     const auto data = getFileContent(directoryPath + "/" + illustration);
+
+    if (data.length() >= 8) {
+      if (!(data.substr(0, 8) == "\x89\x50\x4e\x47\x0d\x0a\x1a\x0a")) {
+        std::cerr << "Illustration must be a PNG image.\n";
+        exit(1);
+      }
+    }
+
+    // In PNG file, 16-20 is width and 20-24 is height (in big endian order)
+    unsigned int width = (data.c_str()[16] << 24) + (data.c_str()[17] << 16)
+                         + (data.c_str()[18] << 8) + (data.c_str()[19] << 0);
+    unsigned int height = (data.c_str()[20] << 24) + (data.c_str()[21] << 16)
+                          + (data.c_str()[22] << 8) + (data.c_str()[23] << 0);
+
+    if (width != 48 || height != 48) {
+      std::cerr << "Illustration must be 48x48.\n";
+      exit(1);
+    }
+
     metadata.set("Illustration_48x48@1", data);
   }
 
