@@ -123,7 +123,11 @@ bool checkMetadata(const zim::Metadata& metadata)
 void addMetadata(ZimCreatorFS& zimCreator, const zim::Metadata& metadata)
 {
   for ( const auto& kv : metadata ) {
-    zimCreator.addMetadata(kv.first, kv.second);
+    if (kv.first == "Illustration_48x48@1") {
+      zimCreator.addIllustration(48, kv.second);
+    } else {
+      zimCreator.addMetadata(kv.first, kv.second);
+    }
   }
 }
 
