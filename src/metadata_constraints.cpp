@@ -21,7 +21,7 @@ const Metadata::ReservedMetadataTable reservedMetadataInfoTable = {
     MANDATORY,
     0, // There are no constraints on the illustration metadata size
     0, // in order to avoid decoding it as UTF-8 encoded text
-    PNG_REGEXP
+    ""
   },
 };
 
@@ -29,4 +29,28 @@ METADATA_ASSERT("LongDescription shouldn't be shorter than Description")
 {
   return !data.has("LongDescription")
       || data["LongDescription"].size() >= data["Description"].size();
+}
+
+METADATA_ASSERT("Illustration must exist and be a 48x48 PNG file")
+{
+  if (!data.has("Illustration_48x48@1")) {
+    return false;
+  }
+
+  const std::string& illustration = data["Illustration_48x48@1"];
+
+  if (illustration.length() >= 24) {
+    if (!(illustration.substr(0, 8) == "\x89\x50\x4e\x47\x0d\x0a\x1a\x0a")) {
+      return false;
+    }
+  }
+
+  // In PNG file, 16-20 is width and 20-24 is height in big endian order.
+  const std::string png48x48 = {0x00, 0x00, 0x00, 0x30, 0x00, 0x00, 0x00, 0x30};
+
+  if (illustration.substr(16, 8) != png48x48) {
+    return false;
+  };
+
+  return true;
 }
