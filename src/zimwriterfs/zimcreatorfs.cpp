@@ -56,7 +56,7 @@ void ZimCreatorFS::add_redirectArticles_from_file(const std::string& path)
   while (std::getline(in_stream, line)) {
     std::regex line_regex("(.+)\\t(.+)\\t(.+)");
     std::smatch matches;
-    if (!std::regex_search(line, matches, line_regex) || matches.size() != 5) {
+    if (!std::regex_search(line, matches, line_regex) || matches.size() != 4) {
       std::cerr << "zimwriterfs: line #" << line_number
                 << " has invalid format in redirect file " << path << ": '"
                 << line << "'" << std::endl;
