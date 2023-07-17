@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <magic.h>
+#include <functional>
 
 #include <zim/archive.h>
 
@@ -126,4 +127,50 @@ TEST(ZimCreatorFSTest, ThrowsErrorIfDirectoryNotExist)
   EXPECT_THROW({
     ZimCreatorFS zimCreator("Non-existing-dir");
   }, std::invalid_argument );
+}
+
+struct Redirect {
+  std::string path;
+  std::string title;
+  std::string target;
+};
+
+bool operator==(const Redirect& a, const Redirect& b) {
+  return a.path == b.path && a.title == b.title && a.target == b.target;
+}
+
+void parse_redirectArticles(std::istream& in_stream, std::function<void(std::string, std::string, std::string)> handler);
+
+TEST(ZimCreatorFSTest, ParseRedirect)
+{
+  {
+  std::stringstream ss;
+  ss << "path\ttitle\ttarget\n";
+  ss << "A/path/to/somewhere\tAn amazing title\tAnother/path";
+
+  std::vector<Redirect> found;
+  parse_redirectArticles(
+    ss,
+    [&](std::string path, std::string title, std::string target)
+     {found.push_back({path, title, target});}
+  );
+
+  std::vector<Redirect> expected;
+  expected.push_back({"path", "title", "target"});
+  expected.push_back({"A/path/to/somewhere", "An amazing title", "Another/path"});
+  EXPECT_EQ(found, expected);
+  }
+
+
+  {
+    std::stringstream ss;
+    ss << "A/path\tOups, no target";
+    EXPECT_THROW({
+      parse_redirectArticles(
+            ss,
+            [&](std::string path, std::string title, std::string target)
+             {}
+          );
+    }, std::runtime_error);
+  }
 }
