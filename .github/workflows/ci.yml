@@ -4,7 +4,7 @@ on: [push]
 
 jobs:
   Macos:
-    runs-on: macos-latest
+    runs-on: macos-11
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -56,9 +56,9 @@ jobs:
 
     env:
       HOME: /home/runner
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     container:
-      image: "ghcr.io/kiwix/kiwix-build_ci_${{matrix.image_variant}}:36"
+      image: "ghcr.io/kiwix/kiwix-build_ci_${{matrix.image_variant}}:38"
     steps:
     - name: Extract branch name
       shell: bash
