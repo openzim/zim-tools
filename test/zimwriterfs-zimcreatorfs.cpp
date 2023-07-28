@@ -165,4 +165,16 @@ TEST(ZimCreatorFSTest, ParseRedirect)
           );
     }, std::runtime_error);
   }
+
+  {
+      std::stringstream ss;
+      ss << "A/path\ttitle\ttarget\tOups, too many tabs\n";
+      EXPECT_THROW({
+        parse_redirectArticles(
+              ss,
+              [&](Redirect redirect)
+               {}
+            );
+      }, std::runtime_error);
+    }
 }

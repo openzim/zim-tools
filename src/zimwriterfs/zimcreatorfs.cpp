@@ -34,7 +34,7 @@ void parse_redirectArticles(std::istream& in_stream, redirect_handler handler) {
   std::string line;
   int line_number = 1;
   while (std::getline(in_stream, line)) {
-    std::regex line_regex("(.+)\\t(.+)\\t(.+)");
+    std::regex line_regex("^([^\\t]+)\\t([^\\t]+)\\t([^\\t]+)$");
     std::smatch matches;
     if (!std::regex_search(line, matches, line_regex) || matches.size() != 4) {
       throw std::runtime_error(
