@@ -18,7 +18,6 @@
 #include <unistd.h>
 #include <iostream>
 #include <magic.h>
-#include <functional>
 
 #include <zim/archive.h>
 
@@ -129,17 +128,9 @@ TEST(ZimCreatorFSTest, ThrowsErrorIfDirectoryNotExist)
   }, std::invalid_argument );
 }
 
-struct Redirect {
-  std::string path;
-  std::string title;
-  std::string target;
-};
-
 bool operator==(const Redirect& a, const Redirect& b) {
   return a.path == b.path && a.title == b.title && a.target == b.target;
 }
-
-void parse_redirectArticles(std::istream& in_stream, std::function<void(std::string, std::string, std::string)> handler);
 
 TEST(ZimCreatorFSTest, ParseRedirect)
 {
@@ -151,13 +142,14 @@ TEST(ZimCreatorFSTest, ParseRedirect)
   std::vector<Redirect> found;
   parse_redirectArticles(
     ss,
-    [&](std::string path, std::string title, std::string target)
-     {found.push_back({path, title, target});}
+    [&](Redirect redirect)
+     {found.push_back(redirect);}
   );
 
-  std::vector<Redirect> expected;
-  expected.push_back({"path", "title", "target"});
-  expected.push_back({"A/path/to/somewhere", "An amazing title", "Another/path"});
+  const std::vector<Redirect> expected {
+    {"path", "title", "target"},
+    {"A/path/to/somewhere", "An amazing title", "Another/path"}
+  };
   EXPECT_EQ(found, expected);
   }
 
@@ -168,7 +160,7 @@ TEST(ZimCreatorFSTest, ParseRedirect)
     EXPECT_THROW({
       parse_redirectArticles(
             ss,
-            [&](std::string path, std::string title, std::string target)
+            [&](Redirect redirect)
              {}
           );
     }, std::runtime_error);

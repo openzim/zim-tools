@@ -23,6 +23,7 @@
 
 #include <vector>
 #include <string>
+#include <functional>
 
 #include <zim/writer/creator.h>
 
@@ -53,5 +54,12 @@ class ZimCreatorFS : public zim::writer::Creator
   std::string directoryPath;  ///< html dir without trailing slash
   std::string canonical_basedir;
 };
+
+struct Redirect {
+  std::string path, title, target;
+};
+
+using redirect_handler = std::function<void(Redirect)>;
+void parse_redirectArticles(std::istream& in_stream, redirect_handler handler);
 
 #endif  // OPENZIM_ZIMWRITERFS_ARTICLESOURCE_H

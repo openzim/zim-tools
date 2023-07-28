@@ -30,8 +30,6 @@
 #include <limits.h>
 #include <cassert>
 
-
-using redirect_handler = std::function<void(std::string, std::string, std::string)>;
 void parse_redirectArticles(std::istream& in_stream, redirect_handler handler) {
   std::string line;
   int line_number = 1;
@@ -44,10 +42,12 @@ void parse_redirectArticles(std::istream& in_stream, redirect_handler handler) {
       );
     }
 
-    auto path = matches[1].str();
-    auto title = matches[2].str();
-    auto redirectUrl = matches[3].str();
-    handler(path, title, redirectUrl);
+    Redirect redirect = {
+      .path= matches[1].str(),
+      .title = matches[2].str(),
+      .target = matches[3].str()
+    };
+    handler(redirect);
     ++line_number;
   }
 }
@@ -74,7 +74,7 @@ void ZimCreatorFS::add_redirectArticles_from_file(const std::string& path)
 
   in_stream.open(path.c_str());
   try {
-    parse_redirectArticles(in_stream, [this](std::string path, std::string title, std::string redirectUrl) {this->addRedirection(path, title, redirectUrl);});
+    parse_redirectArticles(in_stream, [this](Redirect redirect) {this->addRedirection(redirect.path, redirect.title, redirect.target);});
   } catch(const std::runtime_error& e) {
     std::cerr << e.what() << "\nin redirect file " << path << std::endl;
     in_stream.close();
