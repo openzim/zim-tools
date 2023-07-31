@@ -30,6 +30,28 @@
 #include <limits.h>
 #include <cassert>
 
+void parse_redirectArticles(std::istream& in_stream, redirect_handler handler) {
+  std::string line;
+  int line_number = 1;
+  while (std::getline(in_stream, line)) {
+    std::regex line_regex("^([^\\t]+)\\t([^\\t]+)\\t([^\\t]+)$");
+    std::smatch matches;
+    if (!std::regex_search(line, matches, line_regex) || matches.size() != 4) {
+      throw std::runtime_error(
+        Formatter() << "Invalid line #" << line_number << " : '" << line << "'"
+      );
+    }
+
+    Redirect redirect = {
+      .path= matches[1].str(),
+      .title = matches[2].str(),
+      .target = matches[3].str()
+    };
+    handler(redirect);
+    ++line_number;
+  }
+}
+
 bool isVerbose();
 
 ZimCreatorFS::ZimCreatorFS(std::string _directoryPath)
@@ -49,26 +71,14 @@ ZimCreatorFS::ZimCreatorFS(std::string _directoryPath)
 void ZimCreatorFS::add_redirectArticles_from_file(const std::string& path)
 {
   std::ifstream in_stream;
-  std::string line;
 
   in_stream.open(path.c_str());
-  int line_number = 1;
-  while (std::getline(in_stream, line)) {
-    std::regex line_regex("(.+)\\t(.+)\\t(.+)");
-    std::smatch matches;
-    if (!std::regex_search(line, matches, line_regex) || matches.size() != 5) {
-      std::cerr << "zimwriterfs: line #" << line_number
-                << " has invalid format in redirect file " << path << ": '"
-                << line << "'" << std::endl;
-      in_stream.close();
-      exit(1);
-    }
-
-    auto path = matches[1].str();
-    auto title = matches[2].str();
-    auto redirectUrl = matches[3].str();
-    addRedirection(path, title, redirectUrl);
-    ++line_number;
+  try {
+    parse_redirectArticles(in_stream, [this](Redirect redirect) {this->addRedirection(redirect.path, redirect.title, redirect.target);});
+  } catch(const std::runtime_error& e) {
+    std::cerr << e.what() << "\nin redirect file " << path << std::endl;
+    in_stream.close();
+    exit(1);
   }
   in_stream.close();
 }

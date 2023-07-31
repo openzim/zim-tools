@@ -127,3 +127,54 @@ TEST(ZimCreatorFSTest, ThrowsErrorIfDirectoryNotExist)
     ZimCreatorFS zimCreator("Non-existing-dir");
   }, std::invalid_argument );
 }
+
+bool operator==(const Redirect& a, const Redirect& b) {
+  return a.path == b.path && a.title == b.title && a.target == b.target;
+}
+
+TEST(ZimCreatorFSTest, ParseRedirect)
+{
+  {
+  std::stringstream ss;
+  ss << "path\ttitle\ttarget\n";
+  ss << "A/path/to/somewhere\tAn amazing title\tAnother/path";
+
+  std::vector<Redirect> found;
+  parse_redirectArticles(
+    ss,
+    [&](Redirect redirect)
+     {found.push_back(redirect);}
+  );
+
+  const std::vector<Redirect> expected {
+    {"path", "title", "target"},
+    {"A/path/to/somewhere", "An amazing title", "Another/path"}
+  };
+  EXPECT_EQ(found, expected);
+  }
+
+
+  {
+    std::stringstream ss;
+    ss << "A/path\tOups, no target";
+    EXPECT_THROW({
+      parse_redirectArticles(
+            ss,
+            [&](Redirect redirect)
+             {}
+          );
+    }, std::runtime_error);
+  }
+
+  {
+      std::stringstream ss;
+      ss << "A/path\ttitle\ttarget\tOups, too many tabs\n";
+      EXPECT_THROW({
+        parse_redirectArticles(
+              ss,
+              [&](Redirect redirect)
+               {}
+            );
+      }, std::runtime_error);
+    }
+}
