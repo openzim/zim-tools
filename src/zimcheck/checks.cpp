@@ -55,6 +55,7 @@ std::unordered_map<TestType, std::pair<LogTag, std::string>> errormapping = {
     { TestType::MAIN_PAGE,     {LogTag::ERROR, "Missing mainpage"}},
     { TestType::REDUNDANT,     {LogTag::WARNING, "Redundant data found"}},
     { TestType::URL_INTERNAL,  {LogTag::ERROR, "Invalid internal links found"}},
+    { TestType::URL_EMPTY,     {LogTag::WARNING, "Empty links found"}},
     { TestType::URL_EXTERNAL,  {LogTag::ERROR, "Invalid external links found"}},
     { TestType::REDIRECT,      {LogTag::ERROR, "Redirect loop(s) exist"}},
 };
@@ -70,7 +71,7 @@ std::unordered_map<MsgId, MsgInfo> msgTable = {
   { MsgId::MAIN_PAGE,        { TestType::MAIN_PAGE, "Main Page Index stored in Archive Header: {{&main_page_index}}" } },
   { MsgId::EMPTY_ENTRY,      { TestType::EMPTY, "Entry {{&path}} is empty" } },
   { MsgId::OUTOFBOUNDS_LINK, { TestType::URL_INTERNAL, "{{&link}} is out of bounds. Article: {{&path}}" } },
-  { MsgId::EMPTY_LINKS,      { TestType::URL_INTERNAL, "Found {{&count}} empty links in article: {{&path}}" } },
+  { MsgId::EMPTY_LINKS,      { TestType::URL_EMPTY, "Found {{&count}} empty links in article: {{&path}}" } },
   { MsgId::DANGLING_LINKS,   { TestType::URL_INTERNAL, "The following links:\n{{#links}}- {{&value}}\n{{/links}}({{&normalized_link}}) were not found in article {{&path}}" } },
   { MsgId::EXTERNAL_LINK,    { TestType::URL_EXTERNAL, "{{&link}} is an external dependence in article {{&path}}" } },
   { MsgId::REDUNDANT_ITEMS,  { TestType::REDUNDANT, "{{&path1}} and {{&path2}}" } },
@@ -100,6 +101,7 @@ const char* toStr(TestType tt) {
     case TestType::REDUNDANT:    return "redundant";
     case TestType::URL_INTERNAL: return "url_internal";
     case TestType::URL_EXTERNAL: return "url_external";
+    case TestType::URL_EMPTY:    return "url_empty";
     case TestType::REDIRECT:     return "redirect";
     default:  throw std::logic_error("Invalid TestType");
   };
