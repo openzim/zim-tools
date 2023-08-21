@@ -32,6 +32,7 @@ enum class TestType {
     REDUNDANT,
     URL_INTERNAL,
     URL_EXTERNAL,
+    URL_EMPTY,
     REDIRECT,
 
     COUNT
