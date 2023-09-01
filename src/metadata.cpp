@@ -36,18 +36,14 @@ namespace
 const bool MANDATORY = true;
 const bool OPTIONAL  = false;
 
-const std::string LANGS_REGEXP = "\\w{3}(,\\w{3})*";
-const std::string DATE_REGEXP = R"(\d\d\d\d-\d\d-\d\d)";
+const std::string LANGS_REGEXP = "^\\w{3}(,\\w{3})*$";
+const std::string DATE_REGEXP = R"(^\d\d\d\d-\d\d-\d\d$)";
+const std::string PNG_REGEXP = "^\x89\x50\x4e\x47\x0d\x0a\x1a\x0a";
 
-// PNG regexp has to be defined in such a tricky way because it includes
-// a NUL character
-const char PNG_REGEXP_DATA[] =  "^\x89\x50\x4e\x47\x0d\x0a\x1a\x0a(.|\\s|\0)+";
-const std::string PNG_REGEXP(PNG_REGEXP_DATA, sizeof(PNG_REGEXP_DATA)-1);
-
-bool matchRegex(const std::string& regexStr, const std::string& text)
+bool searchRegex(const std::string& regexStr, const std::string& text)
 {
   const std::regex regex(regexStr);
-  return std::regex_match(text.begin(), text.end(), regex);
+  return std::regex_search(text.begin(), text.end(), regex);
 }
 
 size_t getTextLength(const std::string& utf8EncodedString)
@@ -210,7 +206,7 @@ Metadata::Errors Metadata::checkSimpleConstraints() const
         oss << name << " must contain at most " << rmr.maxLength << " characters";
         errors.push_back(oss.str());
       }
-      if ( !rmr.regex.empty() && !matchRegex(rmr.regex, value) ) {
+      if ( !rmr.regex.empty() && !searchRegex(rmr.regex, value) ) {
         const std::string regex = escapeNonPrintableChars(rmr.regex);
         errors.push_back(name + " doesn't match regex: " + regex);
       }

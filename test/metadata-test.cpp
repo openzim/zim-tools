@@ -114,7 +114,7 @@ TEST(Metadata, regexpConstraints)
   ASSERT_FALSE(m.valid());
   ASSERT_EQ(m.check(),
       zim::Metadata::Errors({
-        "Date doesn't match regex: \\d\\d\\d\\d-\\d\\d-\\d\\d"
+        "Date doesn't match regex: ^\\d\\d\\d\\d-\\d\\d-\\d\\d$"
       })
   );
   m.set("Date", "1234-56-78"); // Yes, such a date is considered valid
@@ -125,7 +125,7 @@ TEST(Metadata, regexpConstraints)
   ASSERT_FALSE(m.valid());
   ASSERT_EQ(m.check(),
       zim::Metadata::Errors({
-        "Language doesn't match regex: \\w{3}(,\\w{3})*"
+        "Language doesn't match regex: ^\\w{3}(,\\w{3})*$"
       })
   );
 
@@ -135,7 +135,7 @@ TEST(Metadata, regexpConstraints)
   m.set("Illustration_48x48@1", "zimdata/favicon.png");
   ASSERT_EQ(m.check(),
       zim::Metadata::Errors({
-        "Illustration_48x48@1 doesn't match regex: ^\\x89PNG\\x0d\\x0a\\x1a\\x0a(.|\\s|\\x00)+"
+        "Illustration_48x48@1 doesn't match regex: ^\\x89PNG\\x0d\\x0a\\x1a\\x0a"
       })
   );
 }
@@ -190,7 +190,7 @@ TEST(Metadata, mandatoryMetadataAndSimpleChecksAreRunUnconditionally)
       zim::Metadata::Errors({
         "Missing mandatory metadata: Illustration_48x48@1",
         "Language must contain at least 3 characters",
-        "Language doesn't match regex: \\w{3}(,\\w{3})*",
+        "Language doesn't match regex: ^\\w{3}(,\\w{3})*$",
         "Title must contain at most 30 characters"
       })
   );
