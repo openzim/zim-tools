@@ -4,9 +4,10 @@ LABEL org.opencontainers.image.source https://github.com/openzim/zim-tools
 # TARGETPLATFORM is injected by docker build
 ARG TARGETPLATFORM
 ARG VERSION
+ENV MAGIC=/usr/share/misc/magic.mgc
 
 RUN set -e && \
-    apk --no-cache add dumb-init curl && \
+    apk --no-cache add dumb-init curl libmagic && \
     echo "TARGETPLATFORM: $TARGETPLATFORM" && \
     if [ "$TARGETPLATFORM" = "linux/386" ]; then ARCH="i586"; \
     # linux/arm64/v8 points to linux/arm64
