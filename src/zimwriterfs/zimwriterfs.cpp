@@ -150,6 +150,13 @@ bool isVerbose()
   return retVal;
 }
 
+void printZimWriterFsVersions(std::ostream& out = std::cout) {
+  out << "zim-tools " << VERSION << std::endl;
+  out << "+ libmagic " << magic_version() << std::endl;
+  out << std::endl;
+  zim::printVersions(out);
+}
+
 /* Print correct console usage options */
 void usage()
 {
@@ -284,7 +291,7 @@ void parse_args(int argc, char** argv)
           tags = optarg;
           break;
         case 'V':
-          printVersions();
+          printZimWriterFsVersions();
           exit(0);
           break;
         case 'h':
