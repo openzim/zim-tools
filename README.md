@@ -170,6 +170,17 @@ distribution. Try then with a source tarball distributed by the
 problematic upstream project or even directly from the source code
 repository.
 
+### Magic File
+
+`zimwriterfs` use libmagic to detect the mimetype of files to add.
+It needs to load the magic database. Most of the time, this file is already present
+in your system and everything works.
+But sometime, this file may be not present or cannot be found.
+You can set the `MAGIC` environment variable to point to this file.
+
+`zimwriterfs` will refuse to run if this file is not found. You can force
+it to run passing the option `--skip-libmagic-check`.
+
 License
 -------
 
