@@ -488,6 +488,8 @@ void create_zim(const zim::Metadata& metadata)
 /* Main program entry point */
 int main(int argc, char** argv)
 {
+  parse_args(argc, argv);
+
   /* Init */
   magic = magic_open(MAGIC_MIME);
   if (magic_load(magic, NULL) != 0) {
@@ -499,8 +501,6 @@ int main(int argc, char** argv)
   pthread_mutex_init(&verboseMutex, NULL);
 
   try {
-    parse_args(argc, argv);
-
     const zim::Metadata metadata = makeMetadata();
 
     if ( !checkMetadata(metadata) ) {
