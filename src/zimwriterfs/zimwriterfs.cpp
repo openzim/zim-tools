@@ -477,7 +477,10 @@ int main(int argc, char** argv)
 {
   /* Init */
   magic = magic_open(MAGIC_MIME);
-  magic_load(magic, NULL);
+  if (magic_load(magic, NULL) != 0) {
+    std::cerr << "Impossible to load magic file. Set `MAGIC` environment variable to a `magic` (or `magic.mgc`) file." << std::endl;
+    exit(1);
+  }
   pthread_mutex_init(&verboseMutex, NULL);
 
   try {
