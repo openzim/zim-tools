@@ -65,6 +65,7 @@ bool verboseFlag = false;
 bool withoutFTIndex = false;
 bool noUuid = false;
 bool dontCheckArgs = false;
+bool continue_without_magic = false;
 
 bool thereAreMissingArguments()
 {
@@ -149,6 +150,13 @@ bool isVerbose()
   return retVal;
 }
 
+void printZimWriterFsVersions(std::ostream& out = std::cout) {
+  out << "zim-tools " << VERSION << std::endl;
+  out << "+ libmagic " << magic_version() << std::endl;
+  out << std::endl;
+  zim::printVersions(out);
+}
+
 /* Print correct console usage options */
 void usage()
 {
@@ -216,6 +224,7 @@ void usage()
             << std::endl;
   std::cout << "\t-s, --scraper\t\tname & version of tool used to produce HTML content"
             << std::endl;
+  std::cout << "\t--skip-libmagic-check\tAccept to run even if magic file cannot be loaded (mimetypes in the zim file may be wrong)." << std::endl;
   // --no-uuid and --dont-check-arguments are dev options, let's keep them secret
   // std::cout << "\t-U, --no-uuid\t\tdon't generate a random UUID" << std::endl;
   // std::cout << "\t-B, --dont-check-arguments\t\tdon't check arguments (and possibly produce a broken ZIM file)" << std::endl;
@@ -263,6 +272,7 @@ void parse_args(int argc, char** argv)
          {"threads", required_argument, 0, 'J'},
          {"no-uuid", no_argument, 0, 'U'},
          {"dont-check-arguments", no_argument, 0, 'B'},
+         {"skip-libmagic-check", no_argument, 0, 'M'},
 
          // Only for backward compatibility
          {"withFullTextIndex", no_argument, 0, 'i'},
@@ -281,7 +291,7 @@ void parse_args(int argc, char** argv)
           tags = optarg;
           break;
         case 'V':
-          printVersions();
+          printZimWriterFsVersions();
           exit(0);
           break;
         case 'h':
@@ -350,6 +360,9 @@ void parse_args(int argc, char** argv)
           break;
         case 'B':
           dontCheckArgs = true;
+          break;
+        case 'M':
+          continue_without_magic = true;
           break;
       }
     }
@@ -475,14 +488,19 @@ void create_zim(const zim::Metadata& metadata)
 /* Main program entry point */
 int main(int argc, char** argv)
 {
+  parse_args(argc, argv);
+
   /* Init */
   magic = magic_open(MAGIC_MIME);
-  magic_load(magic, NULL);
+  if (magic_load(magic, NULL) != 0) {
+    std::cerr << "Impossible to load magic file. Set `MAGIC` environment variable to a `magic` (or `magic.mgc`) file." << std::endl;
+    if (! continue_without_magic) {
+      exit(1);
+    }
+  }
   pthread_mutex_init(&verboseMutex, NULL);
 
   try {
-    parse_args(argc, argv);
-
     const zim::Metadata metadata = makeMetadata();
 
     if ( !checkMetadata(metadata) ) {
