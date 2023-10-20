@@ -31,7 +31,6 @@
 #include <sys/stat.h>
 #include <iomanip>
 #include <vector>
-#include <codecvt>
 #include <unordered_map>
 
 #include "version.h"
@@ -49,7 +48,22 @@
 
 #define ERRORSDIR "_exceptions/"
 
-std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+
+#ifdef _WIN32
+std::wstring utf8ToUtf16(const std::string& string) {
+  auto size = MultiByteToWideChar(CP_UTF8, 0,
+                string.c_str(), -1, nullptr, 0);
+  auto wdata = std::wstring(size, 0);
+  auto ret = MultiByteToWideChar(CP_UTF8, 0,
+                string.c_str(), -1, wdata.data(), size);
+  if (0 == ret) {
+    std::ostringstream oss;
+    oss << "Cannot convert string to wchar : " << GetLastError();
+    throw std::runtime_error(oss.str());
+  }
+  return wdata;
+}
+#endif
 
 inline static void createdir(const std::string &path, const std::string &base)
 {
@@ -59,7 +73,7 @@ inline static void createdir(const std::string &path, const std::string &base)
         if (position != std::string::npos) {
             std::string fulldir = base + SEPARATOR + path.substr(0, position);
             #if defined(_WIN32)
-            std::wstring wfulldir = converter.from_bytes(fulldir);
+            std::wstring wfulldir = utf8ToUtf16(fulldir);
             CreateDirectoryW(wfulldir.c_str(), NULL);
             #else
               ::mkdir(fulldir.c_str(), 0777);
@@ -220,7 +234,7 @@ void write_to_error_directory(const std::string& base, const std::string relpath
 
 #ifdef _WIN32
     auto fullpath = std::string(base + ERRORSDIR + url);
-    std::wstring wpath = converter.from_bytes(fullpath);
+    std::wstring wpath = utf8ToUtf16(fullpath);
     auto fd = _wopen(wpath.c_str(), _O_WRONLY | _O_CREAT | _O_TRUNC, S_IWRITE);
 
     if (fd == -1) {
@@ -249,7 +263,7 @@ void write_to_error_directory(const std::string& base, const std::string relpath
 inline void write_to_file(const std::string &base, const std::string& path, const char* data, ssize_t size) {
     std::string fullpath = base + path;
 #ifdef _WIN32
-    std::wstring wpath = converter.from_bytes(fullpath);
+    std::wstring wpath = utf8ToUtf16(fullpath);
     auto fd = _wopen(wpath.c_str(), _O_WRONLY | _O_CREAT | _O_TRUNC, S_IWRITE);
 #else
     auto fd = open(fullpath.c_str(), O_WRONLY | O_CREAT | O_TRUNC,
@@ -275,7 +289,7 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
 {
   unsigned int truncatedFiles = 0;
 #if defined(_WIN32)
-    std::wstring wdir = converter.from_bytes(directory);
+    std::wstring wdir = utf8ToUtf16(directory);
     CreateDirectoryW(wdir.c_str(), NULL);
 #else
   ::mkdir(directory.c_str(), 0777);
