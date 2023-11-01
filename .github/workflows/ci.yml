@@ -3,8 +3,16 @@ name: CI
 on: [push]
 
 jobs:
-  Macos:
-    runs-on: macos-11
+  macOS:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-11
+          - macos-12
+          - macos-13
+    runs-on: ${{ matrix.os }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
