@@ -35,7 +35,7 @@ jobs:
       - name: Install deps
         shell: bash
         run: |
-          ARCHIVE_NAME=deps2_osx_native_dyn_zim-tools.tar.xz
+          ARCHIVE_NAME=deps2_macos_native_dyn_zim-tools.tar.xz
           wget -O- http://tmp.kiwix.org/ci/${ARCHIVE_NAME} | tar -xJ -C $HOME
 
       - name: Compile
