@@ -403,7 +403,6 @@ std::string normalize_link(const std::string& input, const std::string& baseUrl)
     std::string output;
     output.reserve(baseUrl.size() + input.size() + 1);
 
-    bool in_query = false;
     bool check_rel = false;
     const char* p = input.c_str();
     if ( *(p) == '/') {
@@ -420,7 +419,7 @@ std::string normalize_link(const std::string& input, const std::string& baseUrl)
     //URL Decoding.
     while (*p)
     {
-        if ( !in_query && check_rel ) {
+        if ( check_rel ) {
             if (strncmp(p, "../", 3) == 0) {
                 // We must go "up"
                 // Remove the '/' at the end of output.
@@ -441,9 +440,13 @@ std::string normalize_link(const std::string& input, const std::string& baseUrl)
                 continue;
             }
         }
-        if ( *p == '#' || *p == '?')
-            // This is a beginning of the #anchor inside a page. No need to decode more
+
+        if ( *p == '#' || *p == '?') {
+            // For our purposes we can safely discard the query and/or fragment
+            // components of the URL
             break;
+        }
+
         if ( *p == '%')
         {
             char ch;
@@ -452,10 +455,7 @@ std::string normalize_link(const std::string& input, const std::string& baseUrl)
             p += 3;
             continue;
         }
-        if ( *p == '?' ) {
-            // We are in the query, so don't try to interprete '/' as path separator
-            in_query = true;
-        }
+
         if ( *p == '/') {
             check_rel = true;
             if (output.empty()) {
