@@ -294,6 +294,8 @@ TEST(tools, decodeHtmlEntities)
 
     ASSERT_EQ(decodeHtmlEntities("1&lt;2"),   "1<2");
 
+    ASSERT_EQ(decodeHtmlEntities("3&5&gt;3/5"), "3&5>3/5");
+
     ASSERT_EQ(
         decodeHtmlEntities("Q&amp;A stands for &quot;Questions and answers&quot;"),
         "Q&A stands for \"Questions and answers\""
