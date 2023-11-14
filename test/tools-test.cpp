@@ -257,33 +257,44 @@ TEST(tools, addler32)
     ASSERT_EQ(adler32(""), 1);
 }
 
+
+std::string links2Str(const std::vector<html_link>& links)
+{
+    std::ostringstream oss;
+    const char* sep = "";
+    for ( const auto& l : links ) {
+        oss << sep << "{ " << l.attribute << ", " << l.link << " }";
+        sep = "\n";
+    }
+    return oss.str();
+}
+
+#define EXPECT_LINKS(html, expectedStr) \
+        ASSERT_EQ(links2Str(generic_getLinks(html)), expectedStr)
+
 TEST(tools, getLinks)
 {
-    auto v = generic_getLinks("");
+    EXPECT_LINKS(
+      "",
+      ""
+    );
 
-    ASSERT_TRUE(v.empty());
+    EXPECT_LINKS(
+      R"(<link href="https://fonts.io/css?family=OpenSans" rel="stylesheet">)",
+      "{ href, https://fonts.io/css?family=OpenSans }"
+    );
 
-    std::string page1 = "<link href=\"https://fonts.goos.com/css?family=OpenSans\" rel=\"stylesheet\">";
-    auto v1 = generic_getLinks(page1);
+    EXPECT_LINKS(
+      R"(<link href='https://fonts.io/css?family=OpenSans' rel="stylesheet">)",
+      "{ href, https://fonts.io/css?family=OpenSans }"
+    );
 
-    ASSERT_TRUE(v1.size() == 1);
-    ASSERT_EQ(v1[0].attribute, "href");
-    ASSERT_EQ(v1[0].link, "https://fonts.goos.com/css?family=OpenSans");
-
-    std::string page2 = "<link href='https://fonts.goos.com/css?family=OpenSans' rel=\"stylesheet\">";
-    auto v2 = generic_getLinks(page2);
-
-    ASSERT_TRUE(v2.size() == 1);
-    ASSERT_EQ(v2[0].attribute, "href");
-    ASSERT_EQ(v2[0].link, "https://fonts.goos.com/css?family=OpenSans");
-
-    std::string page3 = "<link src=\"https://fonts.goos.com/css?family=OpenSans\" rel=\"stylesheet\">";
-    auto v3 = generic_getLinks(page3);
-
-    ASSERT_TRUE(v3.size() == 1);
-    ASSERT_EQ(v3[0].attribute, "src");
-    ASSERT_EQ(v3[0].link, "https://fonts.goos.com/css?family=OpenSans");
+    EXPECT_LINKS(
+      R"(<link src="https://fonts.io/css?family=OpenSans" rel="stylesheet">)",
+      "{ src, https://fonts.io/css?family=OpenSans }"
+    );
 }
+#undef EXPECT_LINKS
 
 TEST(tools, httpRedirectHtml)
 {
