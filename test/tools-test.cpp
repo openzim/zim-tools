@@ -336,6 +336,13 @@ TEST(tools, getLinks)
       "{ src, https://fonts.io/css?family=OpenSans }"
     );
 
+    // URI-decoding is NOT performed on extracted links
+    // (that's normalize_link()'s job)
+    EXPECT_LINKS(
+      "<audio controls src ='/music/It&apos;s%20only%20love.ogg'></audio>",
+      "{ src, /music/It's%20only%20love.ogg }"
+    );
+
     EXPECT_LINKS(
       R"(<a href="/R&amp;D">Research and development</a>
          blablabla
