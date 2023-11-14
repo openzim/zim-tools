@@ -266,6 +266,7 @@ TEST(tools, decodeHtmlEntities)
 
     // Supported HTML character references
     ASSERT_EQ(decodeHtmlEntities("&amp;"),  "&");
+    ASSERT_EQ(decodeHtmlEntities("&apos;"), "'");
     ASSERT_EQ(decodeHtmlEntities("&quot;"), "\"");
     ASSERT_EQ(decodeHtmlEntities("&lt;"),   "<");
     ASSERT_EQ(decodeHtmlEntities("&gt;"),   ">");
@@ -273,7 +274,7 @@ TEST(tools, decodeHtmlEntities)
     // All other HTML character references
     // (https://html.spec.whatwg.org/multipage/syntax.html#character-references)
     // are NOT currently supported
-    ASSERT_EQ(decodeHtmlEntities("&apos;"), "&apos;"); // should be "'"
+    ASSERT_EQ(decodeHtmlEntities("&nbsp;"), "&nbsp;");
 
     // Capitalized versions of supported ones do NOT work
     ASSERT_EQ(decodeHtmlEntities("&AMP;"), "&AMP;");

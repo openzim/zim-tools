@@ -283,6 +283,7 @@ const char* getHtmlEntity(const std::string& core)
 {
   static const std::map<std::string, const char*> t = {
     { "amp",  "&"  },
+    { "apos", "'"  },
     { "quot", "\"" },
     { "lt",   "<"  },
     { "gt",   ">"  },
