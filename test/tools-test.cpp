@@ -247,6 +247,9 @@ TEST(tools, normalize_link)
 
     ASSERT_EQ(normalize_link("a", ""), "a");
     ASSERT_EQ(normalize_link("./a", ""), "a");
+
+    // URI-decoding is performed
+    ASSERT_EQ(normalize_link("/%41%62c", "/"), "Abc");
 }
 
 TEST(tools, addler32)
