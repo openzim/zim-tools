@@ -332,7 +332,6 @@ TEST(tools, getLinks)
       "{ src, https://fonts.io/css?family=OpenSans }"
     );
 
-    // Known issue - HTML entities are not decoded
     EXPECT_LINKS(
       R"(<a href="/R&amp;D">Research and development</a>
          blablabla
@@ -341,10 +340,10 @@ TEST(tools, getLinks)
          <a href="/Presidents/Dwight_&quot;Ike&quot;_Eisenhower">#34</a>
          <img src="https://example.com/getlogo?w=640&amp;h=480">
       )",
-      "{ href, /R&amp;D }"                                        "\n"
-      "{ href, ../syntax/&lt;script&gt; }"                        "\n"
-      "{ href, /Presidents/Dwight_&quot;Ike&quot;_Eisenhower }"   "\n"
-      "{ src, https://example.com/getlogo?w=640&amp;h=480 }"
+      "{ href, /R&D }"                                    "\n"
+      "{ href, ../syntax/<script> }"                      "\n"
+      "{ href, /Presidents/Dwight_\"Ike\"_Eisenhower }"   "\n"
+      "{ src, https://example.com/getlogo?w=640&h=480 }"
     );
 
     // Known issue - HTML is not parsed and therefore false links

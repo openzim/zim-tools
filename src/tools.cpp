@@ -357,7 +357,7 @@ std::vector<html_link> generic_getLinks(const std::string& page)
         while(*p != delimiter)
             p++;
         const std::string link(linkStart, p);
-        links.push_back(html_link(attr, link));
+        links.push_back(html_link(attr, decodeHtmlEntities(link)));
         p += 1;
     }
     return links;
