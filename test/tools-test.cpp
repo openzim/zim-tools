@@ -363,8 +363,8 @@ TEST(tools, getLinks)
       R"(
 <html>
   <head>
-    <link src="/css/stylesheet.css" rel="stylesheet">
-    <link rel="icon" href="/favicon.ico">
+    <link src = "/css/stylesheet.css" rel="stylesheet">
+    <link rel="icon" href   =    '/favicon.ico'>
   </head>
   <body>
     <img src="../img/welcome.png">
@@ -390,6 +390,15 @@ TEST(tools, getLinks)
       "{ src, not_a_link_in_example_code_block.png }"     "\n"
       "{ href, https://kiwix.org }"
     );
+
+    // Despite HTML not being properly parsed, not every href or src followed
+    // by an equality sign (with optional whitespace in between) results in a
+    // link
+    EXPECT_LINKS(
+      "abcd href = qwerty src={123} xyz",
+      ""
+    );
+
 }
 #undef EXPECT_LINKS
 
