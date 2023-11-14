@@ -293,6 +293,55 @@ TEST(tools, getLinks)
       R"(<link src="https://fonts.io/css?family=OpenSans" rel="stylesheet">)",
       "{ src, https://fonts.io/css?family=OpenSans }"
     );
+
+    // Known issue - HTML entities are not decoded
+    EXPECT_LINKS(
+      R"(<a href="/R&amp;D">Research and development</a>
+         blablabla
+         <a href="../syntax/&lt;script&gt;">&lt;script&gt;</a>
+         ...
+         <a href="/Presidents/Dwight_&quot;Ike&quot;_Eisenhower">#34</a>
+         <img src="https://example.com/getlogo?w=640&amp;h=480">
+      )",
+      "{ href, /R&amp;D }"                                        "\n"
+      "{ href, ../syntax/&lt;script&gt; }"                        "\n"
+      "{ href, /Presidents/Dwight_&quot;Ike&quot;_Eisenhower }"   "\n"
+      "{ src, https://example.com/getlogo?w=640&amp;h=480 }"
+    );
+
+    // Known issue - HTML is not parsed and therefore false links
+    //               may be returned
+    EXPECT_LINKS(
+      R"(
+<html>
+  <head>
+    <link src="/css/stylesheet.css" rel="stylesheet">
+    <link rel="icon" href="/favicon.ico">
+  </head>
+  <body>
+    <img src="../img/welcome.png">
+    <!--
+      <a href="commented_out_link.htm"></a>
+      <img src="commented_out_image.png">
+    -->
+    <pre>
+      &lt;a href="not_a_link_in_example_code_block.htm"&gt;&lt;/a&gt;
+      &lt;img src="not_a_link_in_example_code_block.png"&gt;
+    </pre>
+    Powered by <a target="_blank" href="https://kiwix.org">Kiwix</a>.
+  </body>
+</html>
+)",
+      // links
+      "{ src, /css/stylesheet.css }"                      "\n"
+      "{ href, /favicon.ico }"                            "\n"
+      "{ src, ../img/welcome.png }"                       "\n"
+      "{ href, commented_out_link.htm }"                  "\n"
+      "{ src, commented_out_image.png }"                  "\n"
+      "{ href, not_a_link_in_example_code_block.htm }"    "\n"
+      "{ src, not_a_link_in_example_code_block.png }"     "\n"
+      "{ href, https://kiwix.org }"
+    );
 }
 #undef EXPECT_LINKS
 
