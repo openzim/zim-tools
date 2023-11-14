@@ -257,6 +257,44 @@ TEST(tools, addler32)
     ASSERT_EQ(adler32(""), 1);
 }
 
+TEST(tools, decodeHtmlEntities)
+{
+    ASSERT_EQ(decodeHtmlEntities(""),   "");
+
+    // Supported HTML character references
+    ASSERT_EQ(decodeHtmlEntities("&amp;"),  "&");
+    ASSERT_EQ(decodeHtmlEntities("&quot;"), "\"");
+    ASSERT_EQ(decodeHtmlEntities("&lt;"),   "<");
+    ASSERT_EQ(decodeHtmlEntities("&gt;"),   ">");
+
+    // All other HTML character references
+    // (https://html.spec.whatwg.org/multipage/syntax.html#character-references)
+    // are NOT currently supported
+    ASSERT_EQ(decodeHtmlEntities("&apos;"), "&apos;"); // should be "'"
+
+    // Capitalized versions of supported ones do NOT work
+    ASSERT_EQ(decodeHtmlEntities("&AMP;"), "&AMP;");
+    ASSERT_EQ(decodeHtmlEntities("&aMP;"), "&aMP;");
+
+    // HTML entities of the form &#dd...; and/or &#xhh...; are NOT decoded
+    ASSERT_EQ(decodeHtmlEntities("&#65;"),  "&#65;" ); // should be "A"
+    ASSERT_EQ(decodeHtmlEntities("&#x41;"), "&#x41;"); // should be "A"
+
+    // Handling of "incomplete" entity
+    ASSERT_EQ(decodeHtmlEntities("&amp"), "&amp");
+
+    // No double decoding
+    ASSERT_EQ(decodeHtmlEntities("&amp;lt;"), "&lt;");
+
+    ASSERT_EQ(decodeHtmlEntities("&lt;&gt;"), "<>");
+
+    ASSERT_EQ(decodeHtmlEntities("1&lt;2"),   "1<2");
+
+    ASSERT_EQ(
+        decodeHtmlEntities("Q&amp;A stands for &quot;Questions and answers&quot;"),
+        "Q&A stands for \"Questions and answers\""
+    );
+}
 
 std::string links2Str(const std::vector<html_link>& links)
 {

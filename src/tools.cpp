@@ -276,6 +276,53 @@ void stripTitleInvalidChars(std::string& str)
   replaceStringInPlace(str, "\u202C", "");
 }
 
+namespace
+{
+
+const char* getHtmlEntity(const std::string& core)
+{
+  static const std::map<std::string, const char*> t = {
+    { "amp",  "&"  },
+    { "quot", "\"" },
+    { "lt",   "<"  },
+    { "gt",   ">"  },
+  };
+
+  const auto it = t.find(core);
+  return it != t.end() ? it->second : nullptr;
+}
+
+} // unnamed namespace
+
+std::string decodeHtmlEntities(const std::string& str)
+{
+  const char* p = str.c_str();
+  std::string result;
+  const char* start = nullptr;
+  for ( ; *p ; ++p ) {
+    if ( *p == '&' ) {
+      if ( start ) {
+        result.insert(result.end(), start, p);
+      }
+      start = p;
+    } else if ( !start ) {
+      result.push_back(*p);
+    } else if ( *p == ';' ) {
+      const char* d = getHtmlEntity(std::string(start+1, p));
+      if ( d ) {
+        result += d;
+      } else {
+        result.insert(result.end(), start, p+1);
+      }
+      start = nullptr;
+    }
+  }
+  if ( start ) {
+    result.insert(result.end(), start, p);
+  }
+  return result;
+}
+
 std::vector<html_link> generic_getLinks(const std::string& page)
 {
     const char* p = page.c_str();
