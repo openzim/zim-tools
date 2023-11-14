@@ -270,11 +270,12 @@ TEST(tools, getLinks)
     ASSERT_EQ(v1[0].attribute, "href");
     ASSERT_EQ(v1[0].link, "https://fonts.goos.com/css?family=OpenSans");
 
-    std::string page2 = "<link href=\"https://fonts.goos.com/css?family=OpenSans\" rel=\"stylesheet\">";
+    std::string page2 = "<link href='https://fonts.goos.com/css?family=OpenSans' rel=\"stylesheet\">";
     auto v2 = generic_getLinks(page2);
 
     ASSERT_TRUE(v2.size() == 1);
-    ASSERT_EQ(v1[0].attribute, "href");
+    ASSERT_EQ(v2[0].attribute, "href");
+    ASSERT_EQ(v2[0].link, "https://fonts.goos.com/css?family=OpenSans");
 
     std::string page3 = "<link src=\"https://fonts.goos.com/css?family=OpenSans\" rel=\"stylesheet\">";
     auto v3 = generic_getLinks(page3);
