@@ -276,6 +276,54 @@ void stripTitleInvalidChars(std::string& str)
   replaceStringInPlace(str, "\u202C", "");
 }
 
+namespace
+{
+
+const char* getHtmlEntity(const std::string& core)
+{
+  static const std::map<std::string, const char*> t = {
+    { "amp",  "&"  },
+    { "apos", "'"  },
+    { "quot", "\"" },
+    { "lt",   "<"  },
+    { "gt",   ">"  },
+  };
+
+  const auto it = t.find(core);
+  return it != t.end() ? it->second : nullptr;
+}
+
+} // unnamed namespace
+
+std::string decodeHtmlEntities(const std::string& str)
+{
+  const char* p = str.c_str();
+  std::string result;
+  const char* start = nullptr;
+  for ( ; *p ; ++p ) {
+    if ( *p == '&' ) {
+      if ( start ) {
+        result.insert(result.end(), start, p);
+      }
+      start = p;
+    } else if ( !start ) {
+      result.push_back(*p);
+    } else if ( *p == ';' ) {
+      const char* d = getHtmlEntity(std::string(start+1, p));
+      if ( d ) {
+        result += d;
+      } else {
+        result.insert(result.end(), start, p+1);
+      }
+      start = nullptr;
+    }
+  }
+  if ( start ) {
+    result.insert(result.end(), start, p);
+  }
+  return result;
+}
+
 std::vector<html_link> generic_getLinks(const std::string& page)
 {
     const char* p = page.c_str();
@@ -310,7 +358,7 @@ std::vector<html_link> generic_getLinks(const std::string& page)
         while(*p != delimiter)
             p++;
         const std::string link(linkStart, p);
-        links.push_back(html_link(attr, link));
+        links.push_back(html_link(attr, decodeHtmlEntities(link)));
         p += 1;
     }
     return links;
@@ -356,7 +404,6 @@ std::string normalize_link(const std::string& input, const std::string& baseUrl)
     std::string output;
     output.reserve(baseUrl.size() + input.size() + 1);
 
-    bool in_query = false;
     bool check_rel = false;
     const char* p = input.c_str();
     if ( *(p) == '/') {
@@ -373,7 +420,7 @@ std::string normalize_link(const std::string& input, const std::string& baseUrl)
     //URL Decoding.
     while (*p)
     {
-        if ( !in_query && check_rel ) {
+        if ( check_rel ) {
             if (strncmp(p, "../", 3) == 0) {
                 // We must go "up"
                 // Remove the '/' at the end of output.
@@ -394,9 +441,13 @@ std::string normalize_link(const std::string& input, const std::string& baseUrl)
                 continue;
             }
         }
-        if ( *p == '#' || *p == '?')
-            // This is a beginning of the #anchor inside a page. No need to decode more
+
+        if ( *p == '#' || *p == '?') {
+            // For our purposes we can safely discard the query and/or fragment
+            // components of the URL
             break;
+        }
+
         if ( *p == '%')
         {
             char ch;
@@ -405,10 +456,7 @@ std::string normalize_link(const std::string& input, const std::string& baseUrl)
             p += 3;
             continue;
         }
-        if ( *p == '?' ) {
-            // We are in the query, so don't try to interprete '/' as path separator
-            in_query = true;
-        }
+
         if ( *p == '/') {
             check_rel = true;
             if (output.empty()) {

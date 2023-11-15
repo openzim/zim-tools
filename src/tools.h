@@ -203,6 +203,8 @@ bool isOutofBounds(const std::string& input, std::string base);
 //Please note that the adler32 hash function has a high number of collisions, and that the hash match is not taken as final.
 int adler32(const std::string& buf);
 
+std::string decodeHtmlEntities(const std::string& str);
+
 //Removes extra spaces from URLs. Usually done by the browser, so web authors sometimes tend to ignore it.
 //Converts the %20 to space.Essential for comparing URLs.
 std::string normalize_link(const std::string& input, const std::string& baseUrl);

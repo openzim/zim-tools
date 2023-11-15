@@ -247,6 +247,9 @@ TEST(tools, normalize_link)
 
     ASSERT_EQ(normalize_link("a", ""), "a");
     ASSERT_EQ(normalize_link("./a", ""), "a");
+
+    // URI-decoding is performed
+    ASSERT_EQ(normalize_link("/%41%62c", "/"), "Abc");
 }
 
 TEST(tools, addler32)
@@ -257,32 +260,149 @@ TEST(tools, addler32)
     ASSERT_EQ(adler32(""), 1);
 }
 
+TEST(tools, decodeHtmlEntities)
+{
+    ASSERT_EQ(decodeHtmlEntities(""),   "");
+
+    // Supported HTML character references
+    ASSERT_EQ(decodeHtmlEntities("&amp;"),  "&");
+    ASSERT_EQ(decodeHtmlEntities("&apos;"), "'");
+    ASSERT_EQ(decodeHtmlEntities("&quot;"), "\"");
+    ASSERT_EQ(decodeHtmlEntities("&lt;"),   "<");
+    ASSERT_EQ(decodeHtmlEntities("&gt;"),   ">");
+
+    // All other HTML character references
+    // (https://html.spec.whatwg.org/multipage/syntax.html#character-references)
+    // are NOT currently supported
+    ASSERT_EQ(decodeHtmlEntities("&nbsp;"), "&nbsp;");
+
+    // Capitalized versions of supported ones do NOT work
+    ASSERT_EQ(decodeHtmlEntities("&AMP;"), "&AMP;");
+    ASSERT_EQ(decodeHtmlEntities("&aMP;"), "&aMP;");
+
+    // HTML entities of the form &#dd...; and/or &#xhh...; are NOT decoded
+    ASSERT_EQ(decodeHtmlEntities("&#65;"),  "&#65;" ); // should be "A"
+    ASSERT_EQ(decodeHtmlEntities("&#x41;"), "&#x41;"); // should be "A"
+
+    // Handling of "incomplete" entity
+    ASSERT_EQ(decodeHtmlEntities("&amp"), "&amp");
+
+    // No double decoding
+    ASSERT_EQ(decodeHtmlEntities("&amp;lt;"), "&lt;");
+
+    ASSERT_EQ(decodeHtmlEntities("&lt;&gt;"), "<>");
+
+    ASSERT_EQ(decodeHtmlEntities("1&lt;2"),   "1<2");
+
+    ASSERT_EQ(decodeHtmlEntities("3&5&gt;3/5"), "3&5>3/5");
+
+    ASSERT_EQ(
+        decodeHtmlEntities("Q&amp;A stands for &quot;Questions and answers&quot;"),
+        "Q&A stands for \"Questions and answers\""
+    );
+}
+
+std::string links2Str(const std::vector<html_link>& links)
+{
+    std::ostringstream oss;
+    const char* sep = "";
+    for ( const auto& l : links ) {
+        oss << sep << "{ " << l.attribute << ", " << l.link << " }";
+        sep = "\n";
+    }
+    return oss.str();
+}
+
+#define EXPECT_LINKS(html, expectedStr) \
+        ASSERT_EQ(links2Str(generic_getLinks(html)), expectedStr)
+
 TEST(tools, getLinks)
 {
-    auto v = generic_getLinks("");
+    EXPECT_LINKS(
+      "",
+      ""
+    );
 
-    ASSERT_TRUE(v.empty());
+    EXPECT_LINKS(
+      R"(<link href="https://fonts.io/css?family=OpenSans" rel="stylesheet">)",
+      "{ href, https://fonts.io/css?family=OpenSans }"
+    );
 
-    std::string page1 = "<link href=\"https://fonts.goos.com/css?family=OpenSans\" rel=\"stylesheet\">";
-    auto v1 = generic_getLinks(page1);
+    EXPECT_LINKS(
+      R"(<link href='https://fonts.io/css?family=OpenSans' rel="stylesheet">)",
+      "{ href, https://fonts.io/css?family=OpenSans }"
+    );
 
-    ASSERT_TRUE(v1.size() == 1);
-    ASSERT_EQ(v1[0].attribute, "href");
-    ASSERT_EQ(v1[0].link, "https://fonts.goos.com/css?family=OpenSans");
+    EXPECT_LINKS(
+      R"(<link src="https://fonts.io/css?family=OpenSans" rel="stylesheet">)",
+      "{ src, https://fonts.io/css?family=OpenSans }"
+    );
 
-    std::string page2 = "<link href=\"https://fonts.goos.com/css?family=OpenSans\" rel=\"stylesheet\">";
-    auto v2 = generic_getLinks(page2);
+    // URI-decoding is NOT performed on extracted links
+    // (that's normalize_link()'s job)
+    EXPECT_LINKS(
+      "<audio controls src ='/music/It&apos;s%20only%20love.ogg'></audio>",
+      "{ src, /music/It's%20only%20love.ogg }"
+    );
 
-    ASSERT_TRUE(v2.size() == 1);
-    ASSERT_EQ(v1[0].attribute, "href");
+    EXPECT_LINKS(
+      R"(<a href="/R&amp;D">Research and development</a>
+         blablabla
+         <a href="../syntax/&lt;script&gt;">&lt;script&gt;</a>
+         ...
+         <a href="/Presidents/Dwight_&quot;Ike&quot;_Eisenhower">#34</a>
+         <img src="https://example.com/getlogo?w=640&amp;h=480">
+      )",
+      "{ href, /R&D }"                                    "\n"
+      "{ href, ../syntax/<script> }"                      "\n"
+      "{ href, /Presidents/Dwight_\"Ike\"_Eisenhower }"   "\n"
+      "{ src, https://example.com/getlogo?w=640&h=480 }"
+    );
 
-    std::string page3 = "<link src=\"https://fonts.goos.com/css?family=OpenSans\" rel=\"stylesheet\">";
-    auto v3 = generic_getLinks(page3);
+    // Known issue - HTML is not parsed and therefore false links
+    //               may be returned
+    EXPECT_LINKS(
+      R"(
+<html>
+  <head>
+    <link src = "/css/stylesheet.css" rel="stylesheet">
+    <link rel="icon" href   =    '/favicon.ico'>
+  </head>
+  <body>
+    <img src="../img/welcome.png">
+    <!--
+      <a href="commented_out_link.htm"></a>
+      <img src="commented_out_image.png">
+    -->
+    <pre>
+      &lt;a href="not_a_link_in_example_code_block.htm"&gt;&lt;/a&gt;
+      &lt;img src="not_a_link_in_example_code_block.png"&gt;
+    </pre>
+    Powered by <a target="_blank" href="https://kiwix.org">Kiwix</a>.
+  </body>
+</html>
+)",
+      // links
+      "{ src, /css/stylesheet.css }"                      "\n"
+      "{ href, /favicon.ico }"                            "\n"
+      "{ src, ../img/welcome.png }"                       "\n"
+      "{ href, commented_out_link.htm }"                  "\n"
+      "{ src, commented_out_image.png }"                  "\n"
+      "{ href, not_a_link_in_example_code_block.htm }"    "\n"
+      "{ src, not_a_link_in_example_code_block.png }"     "\n"
+      "{ href, https://kiwix.org }"
+    );
 
-    ASSERT_TRUE(v3.size() == 1);
-    ASSERT_EQ(v3[0].attribute, "src");
-    ASSERT_EQ(v3[0].link, "https://fonts.goos.com/css?family=OpenSans");
+    // Despite HTML not being properly parsed, not every href or src followed
+    // by an equality sign (with optional whitespace in between) results in a
+    // link
+    EXPECT_LINKS(
+      "abcd href = qwerty src={123} xyz",
+      ""
+    );
+
 }
+#undef EXPECT_LINKS
 
 TEST(tools, httpRedirectHtml)
 {
