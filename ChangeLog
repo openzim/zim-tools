@@ -1,11 +1,25 @@
+zim-tools 3.3.0
+===============
+
+  * zimcheck: Properly deal with HTML entities in URL (@veloman-yukan #378)
+  * zimcheck: Stop complaining about empty href (@BartlomiejZalas #367)
+  * zimcheck: Fix handling of bad or missing magic file (@rgaudin #374)
+  * zimwriterfs, zimcheck: Fix illustration check (@mgautierfr #369)
+  * zimwriterfs: Stop compressing illustrations (@mgautierfr #355)
+  * zimwriterfs: Properly deal with wrong amount of columns in redirect file (@mgautierfr #360)
+  * Fix Debian package compilation on arm64 (@mgautierfr #369)
+  * Full code base compliancy with C++17 (@mgautierfr #368)
+  * Container images for ARM CPU architecture (@rgaudin #351)
+  * Multiple CI/CD improvements (@kelson42)
+
 zim-tools 3.2.0
 ===============
 
- * Introduce a "Metadata table" to centralize information about metadata and check them (@veloman-yunkan #339)
- * Add check for description and longDescription (@Onyx2406 #333)
- * Do not use `--static` option when compiling on MacOs (@mgautierfr #342)
- * Add support for SIP uri scheme (@kelson42 #329)
- * Various CI improvement (@kelson42)
+  * Introduce a "Metadata table" to centralize information about metadata and check them (@veloman-yunkan #339)
+  * Add check for description and longDescription (@Onyx2406 #333)
+  * Do not use `--static` option when compiling on MacOs (@mgautierfr #342)
+  * Add support for SIP uri scheme (@kelson42 #329)
+  * Various CI improvement (@kelson42)
 
 zim-tools 3.1.3
 ===============
