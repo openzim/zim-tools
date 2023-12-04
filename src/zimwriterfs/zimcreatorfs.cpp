@@ -74,7 +74,16 @@ void ZimCreatorFS::add_redirectArticles_from_file(const std::string& path)
 
   in_stream.open(path.c_str());
   try {
-    parse_redirectArticles(in_stream, [this](Redirect redirect) {this->addRedirection(redirect.path, redirect.title, redirect.target);});
+    parse_redirectArticles(in_stream,
+      [this](Redirect redirect) {
+        this->addRedirection(
+          redirect.path,
+          redirect.title,
+          redirect.target,
+          {{zim::writer::HintKeys::FRONT_ARTICLE, 1}}
+        );
+      }
+    );
   } catch(const std::runtime_error& e) {
     std::cerr << e.what() << "\nin redirect file " << path << std::endl;
     in_stream.close();
