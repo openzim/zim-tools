@@ -14,29 +14,9 @@
 #include <mutex>
 #include <thread>
 #include <queue>
+#include <optional>
 #include <zim/archive.h>
 #include <zim/item.h>
-
-// Specialization of std::hash needed for our unordered_map. Can be removed in c++14
-namespace std {
-  template <> struct hash<LogTag> {
-    size_t operator() (const LogTag &t) const { return size_t(t); }
-  };
-}
-
-// Specialization of std::hash needed for our unordered_map. Can be removed in c++14
-namespace std {
-  template <> struct hash<TestType> {
-    size_t operator() (const TestType &t) const { return size_t(t); }
-  };
-}
-
-// Specialization of std::hash needed for our unordered_map. Can be removed in c++14
-namespace std {
-  template <> struct hash<MsgId> {
-    size_t operator() (const MsgId &msgid) const { return size_t(msgid); }
-  };
-}
 
 namespace
 {
@@ -111,6 +91,11 @@ typedef std::map<MsgParams::key_type, MsgParams::mapped_type> SortedMsgParams;
 SortedMsgParams sortedMsgParams(const MsgParams& msgParams)
 {
   return SortedMsgParams(msgParams.begin(), msgParams.end());
+}
+
+bool areAliases(const zim::Item& i1, const zim::Item& i2)
+{
+    return i1.getClusterIndex() == i2.getClusterIndex() && i1.getBlobIndex() == i2.getBlobIndex();
 }
 
 } // unnamed namespace
@@ -487,15 +472,22 @@ void ArticleChecker::detect_redundant_articles()
         progress.report();
         auto l = it.second;
         while ( !l.empty() ) {
-            const auto e1 = archive.getEntryByPath(l.front());
+            // The way we have constructed `l`, e1 MUST BE an item
+            const auto e1 = archive.getEntryByPath(l.front()).getItem();
             l.pop_front();
             if ( !l.empty() ) {
-                // The way we have constructed `l`, e1 MUST BE an item
-                const std::string s1 = e1.getItem().getData();
+                std::optional<std::string> s1;
                 decltype(l) articlesDifferentFromE1;
                 for(auto other : l) {
-                    auto e2 = archive.getEntryByPath(other);
-                    std::string s2 = e2.getItem().getData();
+                    // The way we have constructed `l`, e2 MUST BE an item
+                    const auto e2 = archive.getEntryByPath(other).getItem();
+                    if (areAliases(e1, e2)) {
+                        continue;
+                    }
+                    if (!s1) {
+                        s1 = e1.getData();
+                    }
+                    std::string s2 = e2.getData();
                     if (s1 != s2 ) {
                         articlesDifferentFromE1.push_back(other);
                         continue;
