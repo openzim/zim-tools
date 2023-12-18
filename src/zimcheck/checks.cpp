@@ -18,27 +18,6 @@
 #include <zim/archive.h>
 #include <zim/item.h>
 
-// Specialization of std::hash needed for our unordered_map. Can be removed in c++14
-namespace std {
-  template <> struct hash<LogTag> {
-    size_t operator() (const LogTag &t) const { return size_t(t); }
-  };
-}
-
-// Specialization of std::hash needed for our unordered_map. Can be removed in c++14
-namespace std {
-  template <> struct hash<TestType> {
-    size_t operator() (const TestType &t) const { return size_t(t); }
-  };
-}
-
-// Specialization of std::hash needed for our unordered_map. Can be removed in c++14
-namespace std {
-  template <> struct hash<MsgId> {
-    size_t operator() (const MsgId &msgid) const { return size_t(msgid); }
-  };
-}
-
 namespace
 {
 
