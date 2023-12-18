@@ -14,7 +14,6 @@
 #include <mutex>
 #include <thread>
 #include <queue>
-#include <optional>
 #include <zim/archive.h>
 #include <zim/item.h>
 
@@ -476,7 +475,7 @@ void ArticleChecker::detect_redundant_articles()
             const auto e1 = archive.getEntryByPath(l.front()).getItem();
             l.pop_front();
             if ( !l.empty() ) {
-                std::optional<std::string> s1;
+                std::unique_ptr<std::string> s1;
                 decltype(l) articlesDifferentFromE1;
                 for(auto other : l) {
                     // The way we have constructed `l`, e2 MUST BE an item
@@ -485,10 +484,10 @@ void ArticleChecker::detect_redundant_articles()
                         continue;
                     }
                     if (!s1) {
-                        s1 = e1.getData();
+                        s1 = std::make_unique<std::string>(e1.getData());
                     }
                     std::string s2 = e2.getData();
-                    if (s1 != s2 ) {
+                    if (*s1 != s2 ) {
                         articlesDifferentFromE1.push_back(other);
                         continue;
                     }
