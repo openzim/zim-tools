@@ -1,3 +1,10 @@
+zim-tools 3.4.0
+===============
+
+  * zimwriterfs: Fix regression of Redirect entries not findable in title suggestions (@mgautierfr #388)
+  * zimcheck: Do not use std::optional (@mgautierfr #392)
+  * zimcheck: Do not detect ZIM clone entry as duplicated content (@mgautierfr #379)
+
 zim-tools 3.3.0
 ===============
 
