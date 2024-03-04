@@ -27,7 +27,12 @@ jobs:
           python-version: '3.9'
 
       - name: Install packages
-        run: brew install gcovr ninja libmagic
+        run: |
+          brew update
+          brew unlink python3
+          # upgrade from python@3.12 to python@3.12.2 fails to overwrite those
+          rm -f /usr/local/bin/2to3 /usr/local/bin/2to3-3.12 /usr/local/bin/idle3 /usr/local/bin/idle3.12 /usr/local/bin/pydoc3 /usr/local/bin/pydoc3.12 /usr/local/bin/python3 /usr/local/bin/python3-config /usr/local/bin/python3.12 /usr/local/bin/python3.12-config
+          brew install gcovr ninja libmagic
         env:
           HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
 
