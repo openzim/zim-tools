@@ -103,6 +103,7 @@ class ZimDumper
     int listEntriesByNamespace(const std::string ns, bool details);
 
     zim::Entry getEntryByPath(const std::string &path);
+    zim::Entry getEntryByNsAndPath(char ns, const std::string &path);
     zim::Entry getEntry(zim::size_type idx);
 
     void dumpFiles(const std::string& directory, bool symlinkdump, std::function<bool (const char c)> nsfilter);
@@ -114,6 +115,11 @@ class ZimDumper
 zim::Entry ZimDumper::getEntryByPath(const std::string& path)
 {
     return m_archive.getEntryByPath(path);
+}
+
+zim::Entry ZimDumper::getEntryByNsAndPath(char ns, const std::string &path)
+{
+    return m_archive.getEntryByPathWithNamespace(ns, path);
 }
 
 zim::Entry ZimDumper::getEntry(zim::size_type idx)
@@ -380,7 +386,9 @@ Return value:
       See DIR/dump_errors.log for the listing of the errors.
 )";
 
-int subcmdInfo(ZimDumper &app, std::map<std::string, docopt::value> &args)
+typedef std::map<std::string, docopt::value> Options;
+
+int subcmdInfo(ZimDumper &app, Options &args)
 {
     app.printInfo();
     return 0;
@@ -396,7 +404,7 @@ int subcmdDumpAll(ZimDumper &app, const std::string &outdir, bool redirect, std:
     return 0;
 }
 
-int subcmdDump(ZimDumper &app,  std::map<std::string, docopt::value> &args)
+int subcmdDump(ZimDumper &app,  Options &args)
 {
     bool redirect = args["--redirect"].asBool();
 
@@ -419,22 +427,33 @@ int subcmdDump(ZimDumper &app,  std::map<std::string, docopt::value> &args)
     return subcmdDumpAll(app, directory, redirect, filter);
 }
 
-int subcmdShow(ZimDumper &app,  std::map<std::string, docopt::value> &args)
+zim::Entry getEntry(ZimDumper &app, Options &args)
+{
+    if (args["--idx"]) {
+        return app.getEntry(args["--idx"].asLong());
+    }
+
+    const std::string entryPath = args["--url"].asString();
+    const auto ns = args["--ns"];
+    if ( !ns ) {
+        return app.getEntryByPath(entryPath);
+    }
+
+    return app.getEntryByNsAndPath(ns.asString()[0], entryPath);
+}
+
+int subcmdShow(ZimDumper &app, Options &args)
 {
     // docopt guaranty us that we have `--idx` or `--url`.
     try {
-        if (args["--idx"]) {
-            return app.dumpEntry(app.getEntry(args["--idx"].asLong()));
-        } else {
-            return app.dumpEntry(app.getEntryByPath(args["--url"].asString()));
-        }
+        return app.dumpEntry(getEntry(app, args));
     } catch(...) {
         std::cerr << "Entry not found" << std::endl;
         return -1;
     }
 }
 
-int subcmdList(ZimDumper &app, std::map<std::string, docopt::value> &args)
+int subcmdList(ZimDumper &app, Options &args)
 {
     bool idx(args["--idx"]);
     bool url(args["--url"]);
@@ -465,8 +484,7 @@ int main(int argc, char* argv[])
     int ret = 0;
     std::ostringstream versions;
     printVersions(versions);
-    std::map<std::string, docopt::value> args
-        = docopt::docopt(USAGE,
+    Options args = docopt::docopt(USAGE,
                          { argv + 1, argv + argc },
                          true,
                          versions.str());
