@@ -258,8 +258,8 @@ void write_to_error_directory(const std::string& base, const std::string relpath
 
     if (stream.fail() || stream.bad()) {
         std::cerr << "Error writing file to errors dir. " << (base + ERRORSDIR + url) << std::endl;
-        throw std::runtime_error(
-          std::string("Error writing file to errors dir. ") + (base + ERRORSDIR + url));
+        //throw std::runtime_error(
+          std::string("Error writing file to errors dir. ") + (base + ERRORSDIR + url);
     } else {
         std::cerr << "Wrote " << (base + relpath) << " to " << (base + ERRORSDIR + url) << std::endl;
     }
@@ -341,8 +341,8 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
             write_to_file(directory + SEPARATOR, relative_path, blob.data(), blob.size());
 #else
             if (symlink(redirectPath.c_str(), full_path.c_str()) != 0) {
-              throw std::runtime_error(
-                std::string("Error creating symlink from ") + full_path + " to " + redirectPath);
+              //throw std::runtime_error(
+                std::string("Error creating symlink from ") + full_path + " to " + redirectPath;
             }
 #endif
         }
@@ -417,7 +417,7 @@ int subcmdDump(ZimDumper &app,  Options &args)
     std::string directory = args["--dir"].asString();
 
     if (directory.empty()) {
-        throw std::runtime_error("Directory cannot be empty.");
+        //throw std::runtime_error("Directory cannot be empty.");
     }
 
     if (directory.back() == '/'){
