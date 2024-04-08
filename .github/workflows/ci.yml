@@ -41,14 +41,13 @@ jobs:
       - name: Install dependencies
         uses: kiwix/kiwix-build/actions/dl_deps_archive@main
         with:
-          os_name: macos
-          target_platform: native_dyn
+          target_platform: macos-x86_64-dyn
 
       - name: Compile
         shell: bash
         run: |
-          export PKG_CONFIG_PATH=$HOME/BUILD_native_dyn/INSTALL/lib/pkgconfig
-          export CPPFLAGS="-I$HOME/BUILD_native_dyn/INSTALL/include"
+          export PKG_CONFIG_PATH=$HOME/BUILD_x86_64-apple-darwin/INSTALL/lib/pkgconfig
+          export CPPFLAGS="-I$HOME/BUILD_x86_64-apple-darwin/INSTALL/include"
           meson . build
           cd build
           ninja
@@ -59,24 +58,35 @@ jobs:
       fail-fast: false
       matrix:
         target:
-          - native_static
-          - native_dyn
-          - win32_static
-          - win32_dyn
+          - linux-x86_64-static
+          - linux-x86_64-dyn
+          - win32-static
+          - win32-dyn
         include:
-          - target: native_static
+          - target: linux-x86_64-static
             image_variant: focal
             lib_postfix: '/x86_64-linux-gnu'
-          - target: native_dyn
+            arch_name: linux-x86_64
+            run_test: true
+            coverage: true
+          - target: linux-x86_64-dyn
             image_variant: focal
             lib_postfix: '/x86_64-linux-gnu'
-          - target: win32_static
+            arch_name: linux-x86_64
+            run_test: true
+            coverage: true
+          - target: win32-static
             image_variant: f35
             lib_postfix: '64'
-          - target: win32_dyn
+            arch_name: i686-w64-mingw32
+            run_test: false
+            coverage: false
+          - target: win32-dyn
             image_variant: f35
             lib_postfix: '64'
-
+            arch_name: i686-w64-mingw32
+            run_test: false
+            coverage: false
     env:
       HOME: /home/runner
     runs-on: ubuntu-22.04
@@ -96,27 +106,31 @@ jobs:
     - name: Compile
       shell: bash
       run: |
-        if [[ "${{matrix.target}}" =~ .*_static ]]; then
+        if [[ "${{matrix.target}}" =~ .*-static ]]; then
           MESON_OPTION="-Dstatic-linkage=true"
         fi
-        if [[ ! "${{matrix.target}}" =~ native_.* ]]; then
-          MESON_OPTION="$MESON_OPTION --cross-file $HOME/BUILD_${{matrix.target}}/meson_cross_file.txt"
+        if [ -e "$HOME/BUILD_${{matrix.arch_name}}/meson_cross_file.txt" ]; then
+          MESON_OPTION="$MESON_OPTION --cross-file $HOME/BUILD_${{matrix.arch_name}}/meson_cross_file.txt"
         fi
         meson . build ${MESON_OPTION} -Db_coverage=true
         cd build
         ninja
       env:
-        PKG_CONFIG_PATH: "${{env.HOME}}/BUILD_${{matrix.target}}/INSTALL/lib/pkgconfig:${{env.HOME}}/BUILD_${{matrix.target}}/INSTALL/lib${{matrix.lib_postfix}}/pkgconfig"
-        CPPFLAGS: "-I${{env.HOME}}/BUILD_${{matrix.target}}/INSTALL/include"
+        PKG_CONFIG_PATH: "${{env.HOME}}/BUILD_${{matrix.arch_name}}/INSTALL/lib/pkgconfig:${{env.HOME}}/BUILD_${{matrix.arch_name}}/INSTALL/lib${{matrix.lib_postfix}}/pkgconfig"
+        CPPFLAGS: "-I${{env.HOME}}/BUILD_${{matrix.arch_name}}/INSTALL/include"
     - name: Test
+      if: matrix.run_test
       shell: bash
       run: |
-       cd build
-       meson test --verbose
-       ninja coverage
+        cd build
+        meson test --verbose
+        if [[ "${{matrix.coverage}}" = "true" ]]; then
+          ninja coverage
+        fi
       env:
-        LD_LIBRARY_PATH: "${{env.HOME}}/BUILD_${{matrix.target}}/INSTALL/lib${{matrix.lib_postfix}}"
+        LD_LIBRARY_PATH: "${{env.HOME}}/BUILD_${{matrix.arch_name}}/INSTALL/lib${{matrix.lib_postfix}}"
     - name: Publish coverage
+      if: matrix.coverage
       uses: codecov/codecov-action@v3
       env:
         CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
