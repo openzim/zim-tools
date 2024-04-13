@@ -1,5 +1,6 @@
 sources = [
-    'main.cpp'
+    'main.cpp',
+    'tree.cpp'
 ]
 
 deps = [libzim_dep, libfuse_dep]

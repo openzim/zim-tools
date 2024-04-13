@@ -29,7 +29,7 @@ icu_dep = dependency('icu-i18n', static:static_linkage)
 
 with_writer_and_mount = host_machine.system() != 'windows'
 
-if with_writer
+if with_writer_and_mount
   thread_dep = dependency('threads')
   zlib_dep = dependency('zlib', static:static_linkage)
   gumbo_dep = dependency('gumbo', static:static_linkage)
