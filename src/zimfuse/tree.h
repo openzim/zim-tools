@@ -9,14 +9,14 @@ class Tree
 {
 public:
     Tree(const std::string &path);
-    std::pair<Node*, bool> attachNode(std::string path, Node* parent);
-    Node* findNode(std::string name);
+    std::pair<Node*, bool> attachNode(const std::string& path, Node* parent);
+    Node* findNode(const std::string& name);
     zim::Archive* getArchive() { return &zimArchive; } 
     ~Tree();
 private:
-    std::unordered_map<std::string, Node*> mappedNodes;
+    std::unordered_map<std::string, Node::Ptr> mappedNodes;
     zim::Archive zimArchive;
-    Node *rootNode;
+    Node::Ptr rootNode;
 };
 
 #endif
