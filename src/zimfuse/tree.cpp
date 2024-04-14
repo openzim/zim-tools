@@ -2,77 +2,62 @@
 
 #include <string>
 
-std::pair<Node*, bool> Tree::attachNode(std::string path, Node* parent)
+std::pair<Node*, bool> Tree::attachNode(const std::string& path, Node* parent)
 {
   auto i = path.find_first_of('/');
   if (i == std::string::npos) {
     auto ss = path;
     auto ogPath = parent->originalPath + '/' + ss;
     if (mappedNodes.count(ogPath))
-      return {mappedNodes[ogPath], false};
-    auto n = new Node{
-        .name = ss, .isDir = false, .parent = parent, .originalPath = ogPath};
-    mappedNodes[ogPath] = n;
-    return {n, true};
+      return {mappedNodes[ogPath].get(), false};
+    auto n = Node::Ptr(new Node{.name = ss,
+                                .isDir = false,
+                                .parent = parent,
+                                .originalPath = ogPath});
+    mappedNodes[ogPath] = std::move(n);
+    return {mappedNodes[ogPath].get(), true};
   }
 
   auto ss = path.substr(0, i);
   auto ogPath = parent->originalPath + '/' + ss;
-  auto n = new Node{
-      .name = ss, .isDir = true, .parent = parent, .originalPath = ogPath};
+  auto n = Node::Ptr(new Node{.name = ss,
+                              .isDir = true,
+                              .parent = parent,
+                              .originalPath = ogPath});
   bool attach = true;
   if (mappedNodes.count(ogPath)) {
-    n = mappedNodes[ogPath];
+    n = std::move(mappedNodes[ogPath]);
     attach = false;
   }
-  auto child = attachNode(path.substr(i + 1), n);
+  auto child = attachNode(path.substr(i + 1), n.get());
   if (child.second && child.first) {
     n->addChild(child.first);
   }
-  mappedNodes[ogPath] = n;
-  return {n, attach};
+  mappedNodes[ogPath] = std::move(n);
+  return {mappedNodes[ogPath].get(), attach};
 }
 
-void printTree(Node* root)
-{
-  for (auto child : root->children) {
-    std::cout << child->originalPath << std::endl;
-    if (child->isDir)
-      printTree(child);
-  }
-}
-
-Node* Tree::findNode(std::string name)
+Node* Tree::findNode(const std::string& name)
 {
   if (mappedNodes.count(name))
-    return mappedNodes[name];
+    return mappedNodes[name].get();
   return nullptr;
 }
 
 Tree::Tree(const std::string& path) : zimArchive(path)
 {
-  rootNode = new Node{
-      .name = "/", .isDir = true, .parent = nullptr, .originalPath = ""};
-  mappedNodes["/"] = rootNode;
+  rootNode = Node::Ptr(new Node{
+                        .name = "/", 
+                        .isDir = true, 
+                        .parent = nullptr, 
+                        .originalPath = ""});
 
   for (auto it : zimArchive.iterByPath()) {
-    auto nChild = attachNode(it.getPath(), rootNode);
+    auto nChild = attachNode(it.getPath(), rootNode.get());
     if (nChild.second)
       rootNode->addChild(nChild.first);
   }
+  mappedNodes["/"] = std::move(rootNode);
 }
 
-void cleanup(Node* root)
-{
-  for (auto child : root->children) {
-    if (child->isDir)
-      cleanup(child);
-    delete child;
-  }
-}
-
-Tree::~Tree()
-{
-  cleanup(rootNode);
-  delete rootNode;
-}
+Tree::~Tree() {}

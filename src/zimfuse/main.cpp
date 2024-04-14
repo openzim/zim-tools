@@ -9,7 +9,7 @@
 #include "node.h"
 #include "tree.h"
 
-static const Node* getNode(std::string nName)
+static const Node* getNode(const std::string& nName)
 {
   Tree* const tree = static_cast<Tree*>(fuse_get_context()->private_data);
   auto node = tree->findNode(nName);
@@ -26,9 +26,9 @@ void setStat(struct stat* st, const Node* node)
     st->st_nlink = 1;
     Tree* const tree = static_cast<Tree*>(fuse_get_context()->private_data);
     st->st_size = tree->getArchive()
-                      ->getEntryByPath(node->originalPath.substr(1))
-                      .getItem(true)
-                      .getSize();
+                        ->getEntryByPath(node->originalPath.substr(1))
+                        .getItem(true)
+                        .getSize();
   }
 }
 
@@ -85,7 +85,7 @@ static int zimRead(const char* path,
   if (!node)
     return -ENOENT;
   const std::string strPath(path);
-  zim::Entry entry = tree->getArchive()->getEntryByPath(strPath.substr(1));
+  zim::Entry entry = tree->getArchive()->getEntryByPath(node->originalPath.substr(1));
   zim::Item item = entry.getItem(true);
 
   if (offset >= (off_t)item.getSize()) {
@@ -212,9 +212,10 @@ int main(int argc, char* argv[])
     printUsage();
     return EXIT_FAILURE;
   }
-  std::cout << param.filename << " " << param.mount_point << std::endl;
+
   auto tree = new Tree(param.filename);
   fuse_opt_add_arg(&args, "-s");
+  // fuse_opt_add_arg(&args, "-d");
 
   auto ret = fuse_main(args.argc, args.argv, &ops, tree);
   fuse_opt_free_args(&args);
