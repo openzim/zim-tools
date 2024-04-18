@@ -10,6 +10,7 @@ struct Node {
   std::string name;
   bool isDir = false;
   Node* parent;
+  std::string fullPath;
   std::string originalPath;
   std::vector<Node*> children;
 
