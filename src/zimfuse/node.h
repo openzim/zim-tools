@@ -12,6 +12,7 @@ struct Node {
   Node* parent;
   std::string fullPath;
   std::string originalPath;
+  int collisionCount = 0;
   std::vector<Node*> children;
 
   void addChild(Node* child)

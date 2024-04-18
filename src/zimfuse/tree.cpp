@@ -9,13 +9,18 @@ std::string sanitize(const std::string& name)
   return name;
 }
 
-std::pair<Node*, bool> Tree::attachFile(const std::string& name, Node* parent)
+std::pair<Node*, bool> Tree::attachFile(const std::string& name, Node* parent, int collisionCount = 0)
 {
   auto sanitizedName = sanitize(name);
+  if (collisionCount)
+    sanitizedName += '(' + std::to_string(collisionCount) + ')';
   auto fullPath = parent->fullPath + '/' + sanitizedName;
   auto originalPath = parent->originalPath + '/' + name;
-  if (mappedNodes.count(fullPath))
-    return {mappedNodes[fullPath].get(), false};
+  if (mappedNodes.count(fullPath)) {
+    auto node = mappedNodes[fullPath].get();
+    node->collisionCount++;
+    return attachFile(name, parent, node->collisionCount);
+  }
   
   auto n = Node::Ptr(new Node{.name = sanitizedName,
                               .isDir = false,
