@@ -10,7 +10,7 @@ class Tree
 public:
     Tree(const std::string &path);
     std::pair<Node*, bool> attachNode(const std::string& path, Node* parent);
-    std::pair<Node*, bool> attachFile(const std::string& path, Node* parent);
+    std::pair<Node*, bool> attachFile(const std::string& path, Node* parent, int collisionCount);
     Node* findNode(const std::string& name);
     zim::Archive* getArchive() { return &zimArchive; } 
     ~Tree();
