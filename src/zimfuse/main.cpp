@@ -18,6 +18,11 @@ static const Node* getNode(const std::string& nName)
 
 void setStat(struct stat* st, const Node* node)
 {
+  Tree* const tree = static_cast<Tree*>(fuse_get_context()->private_data);
+  if (tree->statCache.count(node->originalPath)) {
+    *st = tree->statCache[node->originalPath];
+    return;
+  }
   if (node->isDir) {
     st->st_mode = S_IFDIR | 0555;
     st->st_nlink = 1;
@@ -30,6 +35,7 @@ void setStat(struct stat* st, const Node* node)
                         .getItem(true)
                         .getSize();
   }
+  tree->statCache[node->originalPath] = *st;
 }
 
 static int zimGetAttr(const char* path, struct stat* st, fuse_file_info* fi)
