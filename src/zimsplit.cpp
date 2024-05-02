@@ -44,7 +44,7 @@ class ZimSplitter
     std::ifstream ifile;
     std::ofstream ofile;
     std::string part_name;
-    zim::size_type out_size;
+    zim::size_type currentPartSize;
     char* batch_buffer;
 
   public:
@@ -55,7 +55,7 @@ class ZimSplitter
         first_index(0),
         second_index(0),
         ifile(fname, std::ios::binary),
-        out_size(0)
+        currentPartSize(0)
       {
         batch_buffer = new char[BUFFER_SIZE];
     }
@@ -80,9 +80,9 @@ class ZimSplitter
     }
 
     void close_file() {
-        if (out_size > maxPartSize) {
+        if (currentPartSize > maxPartSize) {
            std::cout << "WARNING: Part " << part_name << " is bigger that max part size."
-            << " (" << out_size << ">" << maxPartSize << ")" << std::endl;
+            << " (" << currentPartSize << ">" << maxPartSize << ")" << std::endl;
         }
         ofile.close();
     }
@@ -92,7 +92,7 @@ class ZimSplitter
         part_name = prefix + get_new_suffix();
         std::cout << "opening new file " << part_name << std::endl;
         ofile.open(part_name, std::ios::binary);
-        out_size = 0;
+        currentPartSize = 0;
     }
 
     void copy_out(zim::size_type size) {
@@ -106,7 +106,7 @@ class ZimSplitter
            if (!ofile) {
                throw std::runtime_error("Error while writing zim part");
            }
-           out_size += size_to_copy;
+           currentPartSize += size_to_copy;
            size -= size_to_copy;
         }
     }
@@ -133,13 +133,13 @@ class ZimSplitter
             if (currentSize > maxPartSize) {
                 // One part is bigger than what we want :/
                 // Still have to write it.
-                if (out_size) {
+                if (currentPartSize) {
                     new_file();
                 }
                 copy_out(currentSize);
                 new_file();
             } else {
-                if (out_size+currentSize > maxPartSize) {
+                if (currentPartSize+currentSize > maxPartSize) {
                     // It would be too much to write the current part in the current file.
                     new_file();
                 }
