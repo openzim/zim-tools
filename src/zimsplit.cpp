@@ -129,21 +129,21 @@ class ZimSplitter
 
         zim::offset_type last(0);
         for(auto offset:offsets) {
-            auto currentSize = offset-last;
-            if (currentSize > maxPartSize) {
+            auto chunkSize = offset-last;
+            if (chunkSize > maxPartSize) {
                 // One part is bigger than what we want :/
                 // Still have to write it.
                 if (currentPartSize) {
                     new_file();
                 }
-                copy_out(currentSize);
+                copy_out(chunkSize);
                 new_file();
             } else {
-                if (currentPartSize+currentSize > maxPartSize) {
+                if (currentPartSize+chunkSize > maxPartSize) {
                     // It would be too much to write the current part in the current file.
                     new_file();
                 }
-                copy_out(currentSize);
+                copy_out(chunkSize);
             }
             last = offset;
         }
@@ -156,12 +156,12 @@ class ZimSplitter
 
         zim::offset_type last(0);
         for(auto offset:offsets) {
-            auto currentSize = offset-last;
-            if (currentSize > maxPartSize) {
+            auto chunkSize = offset-last;
+            if (chunkSize > maxPartSize) {
                 // One part is bigger than what we want :/
                 // Still have to write it.
                 std::cout << "The part (probably a cluster) is to big to fit in one part." << std::endl;
-                std::cout << "    size is " << currentSize << "(" << offset << "-" << last << ")." << std::endl;
+                std::cout << "    size is " << chunkSize << "(" << offset << "-" << last << ")." << std::endl;
                 error = true;
             }
             last = offset;
