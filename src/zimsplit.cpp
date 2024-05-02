@@ -130,21 +130,10 @@ class ZimSplitter
         zim::offset_type last(0);
         for(auto offset:offsets) {
             auto chunkSize = offset-last;
-            if (chunkSize > maxPartSize) {
-                // One part is bigger than what we want :/
-                // Still have to write it.
-                if (currentPartSize) {
+            if (currentPartSize > 0 && currentPartSize + chunkSize > maxPartSize) {
                     new_file();
-                }
-                copy_out(chunkSize);
-                new_file();
-            } else {
-                if (currentPartSize+chunkSize > maxPartSize) {
-                    // It would be too much to write the current part in the current file.
-                    new_file();
-                }
-                copy_out(chunkSize);
             }
+            copy_out(chunkSize);
             last = offset;
         }
     }
