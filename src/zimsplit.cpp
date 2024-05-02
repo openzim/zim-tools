@@ -37,7 +37,7 @@ class ZimSplitter
   private:
     zim::Archive archive;
     const std::string prefix;
-    zim::size_type partSize;
+    zim::size_type maxPartSize;
 
     char first_index, second_index;
 
@@ -48,10 +48,10 @@ class ZimSplitter
     char* batch_buffer;
 
   public:
-    ZimSplitter(const std::string& fname, const std::string& out_prefix, zim::size_type partSize)
+    ZimSplitter(const std::string& fname, const std::string& out_prefix, zim::size_type maxPartSize)
       : archive(fname),
         prefix(out_prefix),
-        partSize(partSize),
+        maxPartSize(maxPartSize),
         first_index(0),
         second_index(0),
         ifile(fname, std::ios::binary),
@@ -80,9 +80,9 @@ class ZimSplitter
     }
 
     void close_file() {
-        if (out_size > partSize) {
+        if (out_size > maxPartSize) {
            std::cout << "WARNING: Part " << part_name << " is bigger that max part size."
-            << " (" << out_size << ">" << partSize << ")" << std::endl;
+            << " (" << out_size << ">" << maxPartSize << ")" << std::endl;
         }
         ofile.close();
     }
@@ -130,7 +130,7 @@ class ZimSplitter
         zim::offset_type last(0);
         for(auto offset:offsets) {
             auto currentSize = offset-last;
-            if (currentSize > partSize) {
+            if (currentSize > maxPartSize) {
                 // One part is bigger than what we want :/
                 // Still have to write it.
                 if (out_size) {
@@ -139,7 +139,7 @@ class ZimSplitter
                 copy_out(currentSize);
                 new_file();
             } else {
-                if (out_size+currentSize > partSize) {
+                if (out_size+currentSize > maxPartSize) {
                     // It would be too much to write the current part in the current file.
                     new_file();
                 }
@@ -157,7 +157,7 @@ class ZimSplitter
         zim::offset_type last(0);
         for(auto offset:offsets) {
             auto currentSize = offset-last;
-            if (currentSize > partSize) {
+            if (currentSize > maxPartSize) {
                 // One part is bigger than what we want :/
                 // Still have to write it.
                 std::cout << "The part (probably a cluster) is to big to fit in one part." << std::endl;
