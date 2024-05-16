@@ -1,3 +1,10 @@
+zim-toosl 3.4.1
+===============
+
+  * zimsplit: stop creating trailing empty chunk (@mgautierfr #402)
+  * zimdump: Respecting the --ns option in zimdump show (@veloman-yunkan #316)
+  * Introduce max libzim version check in compilation (@kelson42 #397)
+
 zim-tools 3.4.0
 ===============
 
