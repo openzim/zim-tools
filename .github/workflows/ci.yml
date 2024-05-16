@@ -18,12 +18,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Setup python 3.9
-        uses: actions/setup-python@v4
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.12'
 
       - name: Install packages
         run: |
@@ -93,12 +93,8 @@ jobs:
     container:
       image: "ghcr.io/kiwix/kiwix-build_ci_${{matrix.image_variant}}:2023-10-30"
     steps:
-    - name: Extract branch name
-      shell: bash
-      run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-      id: extract_branch
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Install dependencies
       uses: kiwix/kiwix-build/actions/dl_deps_archive@main
       with:
@@ -131,6 +127,6 @@ jobs:
         LD_LIBRARY_PATH: "${{env.HOME}}/BUILD_${{matrix.arch_name}}/INSTALL/lib${{matrix.lib_postfix}}"
     - name: Publish coverage
       if: matrix.coverage
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       env:
         CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
