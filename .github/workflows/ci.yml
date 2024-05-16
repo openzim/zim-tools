@@ -127,6 +127,6 @@ jobs:
         LD_LIBRARY_PATH: "${{env.HOME}}/BUILD_${{matrix.arch_name}}/INSTALL/lib${{matrix.lib_postfix}}"
     - name: Publish coverage
       if: matrix.coverage
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       env:
         CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
