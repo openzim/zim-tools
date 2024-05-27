@@ -283,7 +283,7 @@ void parse_args(int argc, char** argv)
 
   do {
     c = getopt_long(
-        argc, argv, "hVvijxuw:I:t:d:c:l:p:r:e:n:m:J:UBL:", long_options, &option_index);
+        argc, argv, "ahVvijxuw:I:t:d:c:l:p:r:e:n:m:J:UBL:", long_options, &option_index);
 
     if (c != -1) {
       switch (c) {
