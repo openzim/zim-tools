@@ -180,6 +180,9 @@ void usage()
             << std::endl;
   std::cout << "\t-l, --language\t\tlanguage code of the content in ISO639-3"
             << std::endl;
+  std::cout << "\t-n, --name\t\tcustom (version independent) identifier for "
+               "the content"
+            << std::endl;
   std::cout << "\t-t, --title\t\ttitle of the ZIM file" << std::endl;
   std::cout << "\t-d, --description\tshort description of the content"
             << std::endl;
@@ -217,9 +220,6 @@ void usage()
       << std::endl;
   std::cout << "\t-a, --tags\t\ttags - semicolon separated" << std::endl;
   std::cout << "\t-e, --source\t\tcontent source URL" << std::endl;
-  std::cout << "\t-n, --name\t\tcustom (version independent) identifier for "
-               "the content"
-            << std::endl;
   std::cout << "\t-o, --flavour\t\tcustom (version independent) content flavour"
             << std::endl;
   std::cout << "\t-s, --scraper\t\tname & version of tool used to produce HTML content"
