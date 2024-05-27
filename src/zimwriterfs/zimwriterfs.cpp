@@ -186,8 +186,6 @@ void usage()
   std::cout << "\t-t, --title\t\ttitle of the ZIM file" << std::endl;
   std::cout << "\t-d, --description\tshort description of the content"
             << std::endl;
-  std::cout << "\t-L, --longDescription\tlong description of the content"
-            << std::endl;
   std::cout << "\t-c, --creator\t\tcreator(s) of the content" << std::endl;
   std::cout << "\t-p, --publisher\t\tcreator of the ZIM file itself"
             << std::endl;
@@ -204,6 +202,8 @@ void usage()
             << std::endl;
   std::cout << "\t-h, --help\t\tprint this help" << std::endl;
   std::cout << "\t-V, --version\t\tprint the version number" << std::endl;
+  std::cout << "\t-L, --longDescription\tlong description of the content"
+            << std::endl;
   std::cout
       << "\t-m, --clusterSize\tnumber of bytes per ZIM cluster (default: 2048Kb)"
       << std::endl;
