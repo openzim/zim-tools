@@ -81,6 +81,7 @@ bool thereAreMissingArguments()
       || description.empty()
       || language.empty()
       || welcome.empty()
+      || title.empty()
       || illustration.empty();
 }
 
