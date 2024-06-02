@@ -76,10 +76,12 @@ bool thereAreMissingArguments()
     return false;
 
   return creator.empty()
+      || name.empty()
       || publisher.empty()
       || description.empty()
       || language.empty()
       || welcome.empty()
+      || title.empty()
       || illustration.empty();
 }
 
@@ -186,8 +188,6 @@ void usage()
   std::cout << "\t-t, --title\t\ttitle of the ZIM file" << std::endl;
   std::cout << "\t-d, --description\tshort description of the content"
             << std::endl;
-  std::cout << "\t-L, --longDescription\tlong description of the content"
-            << std::endl;
   std::cout << "\t-c, --creator\t\tcreator(s) of the content" << std::endl;
   std::cout << "\t-p, --publisher\t\tcreator of the ZIM file itself"
             << std::endl;
@@ -204,6 +204,8 @@ void usage()
             << std::endl;
   std::cout << "\t-h, --help\t\tprint this help" << std::endl;
   std::cout << "\t-V, --version\t\tprint the version number" << std::endl;
+  std::cout << "\t-L, --longDescription\tlong description of the content"
+            << std::endl;
   std::cout
       << "\t-m, --clusterSize\tnumber of bytes per ZIM cluster (default: 2048Kb)"
       << std::endl;
@@ -283,7 +285,7 @@ void parse_args(int argc, char** argv)
 
   do {
     c = getopt_long(
-        argc, argv, "ahVvijxuw:I:t:d:c:l:p:r:e:n:m:J:UBL:", long_options, &option_index);
+        argc, argv, "a:hVvijxuw:I:t:d:c:l:p:r:e:n:m:J:UBL:", long_options, &option_index);
 
     if (c != -1) {
       switch (c) {
