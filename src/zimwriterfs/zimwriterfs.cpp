@@ -76,6 +76,7 @@ bool thereAreMissingArguments()
     return false;
 
   return creator.empty()
+      || name.empty()
       || publisher.empty()
       || description.empty()
       || language.empty()
