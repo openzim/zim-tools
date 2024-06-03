@@ -55,7 +55,8 @@ jobs:
         with:
           target_platform: ${{ matrix.target }}
 
-      - name: Compile
+      - name: Compile with x86_64
+        if: matrix.target == 'macos-x86_64-dyn'
         shell: bash
         run: |
           export PKG_CONFIG_PATH=$HOME/BUILD_x86_64-apple-darwin/INSTALL/lib/pkgconfig
@@ -64,6 +65,15 @@ jobs:
           cd build
           ninja
 
+      - name: Compile with ARM
+        if: matrix.target == 'macos-aarch64-dyn'
+        shell: bash
+        run: |
+          export PKG_CONFIG_PATH=$HOME/BUILD_arm64-apple-macos/INSTALL/lib/pkgconfig
+          export CPPFLAGS="-I$HOME/BUILD_arm64-apple-macos/INSTALL/include"
+          meson . build
+          cd build
+          ninja
 
   Linux:
     strategy:
