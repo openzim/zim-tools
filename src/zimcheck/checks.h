@@ -109,7 +109,7 @@ class ErrorLogger {
 
 
 void test_checksum(zim::Archive& archive, ErrorLogger& reporter);
-void test_integrity(const std::string& filename, ErrorLogger& reporter);
+bool test_integrity(const std::string& filename, ErrorLogger& reporter);
 void test_metadata(const zim::Archive& archive, ErrorLogger& reporter);
 void test_favicon(const zim::Archive& archive, ErrorLogger& reporter);
 void test_mainpage(const zim::Archive& archive, ErrorLogger& reporter);
