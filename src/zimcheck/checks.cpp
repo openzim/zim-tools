@@ -240,7 +240,7 @@ void test_checksum(zim::Archive& archive, ErrorLogger& reporter) {
     }
 }
 
-void test_integrity(const std::string& filename, ErrorLogger& reporter) {
+bool test_integrity(const std::string& filename, ErrorLogger& reporter) {
     reporter.infoMsg("[INFO] Verifying ZIM-archive structure integrity...");
     zim::IntegrityCheckList checks;
     checks.set(); // enable all checks (including checksum)
@@ -249,6 +249,7 @@ void test_integrity(const std::string& filename, ErrorLogger& reporter) {
     if (!result) {
         reporter.infoMsg("  [ERROR] ZIM file's low level structure is invalid");
     }
+    return result;
 }
 
 

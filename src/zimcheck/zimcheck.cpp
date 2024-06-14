@@ -266,70 +266,75 @@ int zimcheck (const std::vector<const char*>& args)
         error.infoMsg("[INFO] Zimcheck version is " + std::string(VERSION));
 
         //Test 0: Low-level ZIM-file structure integrity checks
-        if(enabled_tests.isEnabled(TestType::INTEGRITY))
-            test_integrity(filename, error);
-
-        // Does it make sense to do the other checks if the integrity
-        // check fails?
-        zim::Archive archive( filename );
-        error.addInfo("file_uuid",  stringify(archive.getUuid()));
-
-        //Test 1: Internal Checksum
-        if(enabled_tests.isEnabled(TestType::CHECKSUM)) {
-            if ( enabled_tests.isEnabled(TestType::INTEGRITY) ) {
-                error.infoMsg(
-                    "[INFO] Avoiding redundant checksum test"
-                    " (already performed by the integrity check)."
-                );
-            } else {
-                test_checksum(archive, error);
-            }
+        bool should_run_full_test = true;
+        if(enabled_tests.isEnabled(TestType::INTEGRITY)) {
+            should_run_full_test = test_integrity(filename, error);
+        } else {
+            error.infoMsg("[WARNING] Integrity check is skipped. Any detected errors may in fact be due to corrupted/invalid data.");
         }
 
-        //Test 2: Metadata Entries:
-        //The file is searched for the compulsory metadata entries.
-        if(enabled_tests.isEnabled(TestType::METADATA))
-            test_metadata(archive, error);
 
-        //Test 3: Test for Favicon.
-        if(enabled_tests.isEnabled(TestType::FAVICON))
-            test_favicon(archive, error);
+        if (should_run_full_test) {
+            zim::Archive archive( filename );
+            error.addInfo("file_uuid",  stringify(archive.getUuid()));
+
+            //Test 1: Internal Checksum
+            if(enabled_tests.isEnabled(TestType::CHECKSUM)) {
+                if ( enabled_tests.isEnabled(TestType::INTEGRITY) ) {
+                    error.infoMsg(
+                        "[INFO] Avoiding redundant checksum test"
+                        " (already performed by the integrity check)."
+                    );
+                } else {
+                    test_checksum(archive, error);
+                }
+            }
+
+            //Test 2: Metadata Entries:
+            //The file is searched for the compulsory metadata entries.
+            if(enabled_tests.isEnabled(TestType::METADATA))
+                test_metadata(archive, error);
+
+            //Test 3: Test for Favicon.
+            if(enabled_tests.isEnabled(TestType::FAVICON))
+                test_favicon(archive, error);
 
 
-        //Test 4: Main Page Entry
-        if(enabled_tests.isEnabled(TestType::MAIN_PAGE))
-            test_mainpage(archive, error);
+            //Test 4: Main Page Entry
+            if(enabled_tests.isEnabled(TestType::MAIN_PAGE))
+                test_mainpage(archive, error);
 
-        /* Now we want to avoid to loop on the tests but on the article.
-         *
-         * If we loop of the tests we will have :
-         *
-         * for (test: tests) {
-         *     for(article: articles) {
-         *          data = article->getData();
-         *          ...
-         *     }
-         * }
-         *
-         * And so we will get several the data of an article (and so decompression and so).
-         * By looping on the articles first, we have :
-         *
-         * for (article: articles) {
-         *     data = article->getData();
-         *     for (test: tests) {
-         *         ...
-         *     }
-         * }
-         */
+            /* Now we want to avoid to loop on the tests but on the article.
+             *
+             * If we loop of the tests we will have :
+             *
+             * for (test: tests) {
+             *     for(article: articles) {
+             *          data = article->getData();
+             *          ...
+             *     }
+             * }
+             *
+             * And so we will get several the data of an article (and so decompression and so).
+             * By looping on the articles first, we have :
+             *
+             * for (article: articles) {
+             *     data = article->getData();
+             *     for (test: tests) {
+             *         ...
+             *     }
+             * }
+             */
 
-        if ( enabled_tests.isEnabled(TestType::URL_INTERNAL) ||
-             enabled_tests.isEnabled(TestType::URL_EXTERNAL) ||
-             enabled_tests.isEnabled(TestType::REDUNDANT) ||
-             enabled_tests.isEnabled(TestType::EMPTY) )
-          test_articles(archive, error, progress, enabled_tests, thread_count);
+            if ( enabled_tests.isEnabled(TestType::URL_INTERNAL) ||
+                 enabled_tests.isEnabled(TestType::URL_EXTERNAL) ||
+                 enabled_tests.isEnabled(TestType::REDUNDANT) ||
+                 enabled_tests.isEnabled(TestType::EMPTY) )
+              test_articles(archive, error, progress, enabled_tests, thread_count);
 
-        if ( enabled_tests.isEnabled(TestType::REDIRECT))
-            test_redirect_loop(archive, error);
+            if ( enabled_tests.isEnabled(TestType::REDIRECT))
+                test_redirect_loop(archive, error);
+        }
 
         const bool overallStatus = error.overallStatus();
         error.addInfo("status", overallStatus);
