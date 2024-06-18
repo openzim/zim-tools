@@ -291,6 +291,12 @@ void ZimDumper::writeHttpRedirect(const std::string& directory, const std::strin
     write_to_file(directory + SEPARATOR, outputPath, content.c_str(), content.size());
 }
 
+static void replaceSlash(std::string& filename) {
+  std::string::size_type p;
+  while ((p = filename.find('/')) != std::string::npos)
+    filename.replace(p, 1, "%2F");
+}
+
 void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::function<bool (const char c)> nsfilter)
 {
   unsigned int truncatedFiles = 0;
@@ -300,23 +306,16 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
 #else
   ::mkdir(directory.c_str(), 0777);
 #endif
-
+  //  assuming all top level directory are single letter i.e. A/ I/
+  const size_t DirectoryPrefixSize = 2;
   std::vector<std::string> pathcache;
   for (auto& entry:m_archive.iterEfficient()) {
     const std::string path = entry.getPath();
-    std::string dir = "";
-    std::string filename = path;
-    auto position = path.find_last_of('/');
-    if (position != std::string::npos) {
-        dir = path.substr(0, position + 1);
-        filename = path.substr(position + 1);
-        if (find(pathcache.begin(), pathcache.end(), dir) == pathcache.end()) {
-            createdir(dir, directory);
-            pathcache.push_back(dir);
-        }
-
-    }
-
+    std::string dir = path.substr(0, DirectoryPrefixSize);
+    createdir(dir, directory);
+    std::string filename = path.substr(DirectoryPrefixSize);
+    //  all files are stored in same level by escape '/'
+    replaceSlash(filename);
     if ( filename.length() > 255 ) {
         std::ostringstream sspostfix, sst;
         sspostfix << (++truncatedFiles);
@@ -331,8 +330,9 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
 
     if (entry.isRedirect()) {
         auto redirectItem = entry.getItem(true);
-        std::string redirectPath = redirectItem.getPath();
-        redirectPath = computeRelativePath(path, redirectPath);
+        //  all files including redirected would be in same level
+        std::string redirectPath = redirectItem.getPath().substr(DirectoryPrefixSize);
+        replaceSlash(redirectPath);
         if (symlinkdump == false && redirectItem.getMimetype() == "text/html") {
             writeHttpRedirect(directory, relative_path, path, redirectPath);
         } else {
