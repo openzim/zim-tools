@@ -188,7 +188,6 @@ int main(int argc, char* argv[])
 
     //Parsing arguments
     //There will be only two arguments, so no detailed parsing is required.
-    std::cout << "zimrecreate" << std::endl;;
     for(int i=0;i<argc;i++)
     {
         if(std::string(argv[i])=="-H" ||
