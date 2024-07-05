@@ -125,8 +125,9 @@ void create(const std::string& originFilename, const std::string& outFilename, b
   } catch(...) {}
 
   for(auto& metakey:origin.getMetadataKeys()) {
-    if (metakey == "Counter" ) {
+    if (metakey == "Counter" || metakey.find("Illustration_") == 0) {
       // Counter is already added by libzim
+      // Illustration is already handled by `addIllustration`
       continue;
     }
     auto metadata = origin.getMetadata(metakey);
