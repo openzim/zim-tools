@@ -125,8 +125,9 @@ void create(const std::string& originFilename, const std::string& outFilename, b
   } catch(...) {}
 
   for(auto& metakey:origin.getMetadataKeys()) {
-    if (metakey == "Counter" ) {
+    if (metakey == "Counter" || metakey.find("Illustration_") == 0) {
       // Counter is already added by libzim
+      // Illustration is already handled by `addIllustration`
       continue;
     }
     auto metadata = origin.getMetadata(metakey);
@@ -176,7 +177,11 @@ void usage()
     "\nOptions:\n"
     "\t-v, --version           print software version\n"
     "\t-j, --withoutFTIndex    don't create and add a fulltext index of the content to the ZIM\n"
-    "\t-J, --threads <number>  count of threads to utilize (default: 4)\n";
+    "\t-J, --threads <number>  count of threads to utilize (default: 4)\n"
+    "\nReturn value:\n"
+    "- 0 if no error\n"
+    "- -1 if arguments are not valid\n"
+    "- -2 if zim creation fails\n";
     return;
 }
 
@@ -187,7 +192,6 @@ int main(int argc, char* argv[])
 
     //Parsing arguments
     //There will be only two arguments, so no detailed parsing is required.
-    std::cout << "zimrecreate" << std::endl;;
     for(int i=0;i<argc;i++)
     {
         if(std::string(argv[i])=="-H" ||
@@ -248,5 +252,7 @@ int main(int argc, char* argv[])
     catch (const std::exception& e)
     {
         std::cerr << e.what() << std::endl;
+        return -2;
     }
+    return 0;
 }
