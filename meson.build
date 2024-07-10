@@ -1,5 +1,5 @@
 project('zim-tools', ['c', 'cpp'],
-  version : '3.4.1',
+  version : '3.4.2',
   license : 'GPLv3+',
   default_options : ['c_std=c11', 'cpp_std=c++17', 'werror=true'])
 
@@ -19,7 +19,7 @@ if static_linkage
   endif
 endif
 
-libzim_dep = dependency('libzim', version:'>=9.1.0', static:static_linkage)
+libzim_dep = dependency('libzim', version:'>=9.2.2', static:static_linkage)
 libzim_dep = dependency('libzim', version:'<10.0.0', static:static_linkage)
 
 with_xapian_support = compiler.has_header_symbol('zim/zim.h', 'LIBZIM_WITH_XAPIAN')

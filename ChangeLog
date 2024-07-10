@@ -1,4 +1,12 @@
-zim-toosl 3.4.1
+zim-tools 3.4.2
+===============
+
+ * zimwriterfs: Support short option `-a` (tags) (@kelson42 #409)
+ * zimwriterfs: "Name", "Title" and "LongDescription" are mandatory metadata (@kelson42 #410 #411)
+ * zimcheck: Do not run check on content if zim integrity test is failing (@mgautierfr #413)
+ * zimrecreate: Do not try to add twice metadata (and fix return code) (@mgautiefr #419)
+
+zim-tools 3.4.1
 ===============
 
   * zimsplit: stop creating trailing empty chunk (@mgautierfr #402)
