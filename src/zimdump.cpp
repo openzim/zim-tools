@@ -21,6 +21,7 @@
 #include <sstream>
 #include <fstream>
 #include <set>
+#include <filesystem>
 
 #define ZIM_PRIVATE
 #include <zim/archive.h>
@@ -291,6 +292,16 @@ void ZimDumper::writeHttpRedirect(const std::string& directory, const std::strin
     write_to_file(directory + SEPARATOR, outputPath, content.c_str(), content.size());
 }
 
+inline static bool testSymLink(const std::string& sym, const std::string& target) {
+  namespace fs = std::filesystem;
+  std::error_code ec;
+  fs::path p = fs::read_symlink(fs::path(sym), ec);
+  if (!ec) {
+    return p.string() == target;
+  }
+  return false;
+}
+
 void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::function<bool (const char c)> nsfilter)
 {
   unsigned int truncatedFiles = 0;
@@ -341,8 +352,11 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
             write_to_file(directory + SEPARATOR, relative_path, blob.data(), blob.size());
 #else
             if (symlink(redirectPath.c_str(), full_path.c_str()) != 0) {
-              throw std::runtime_error(
-                std::string("Error creating symlink from ") + full_path + " to " + redirectPath);
+              //  let's double check if the symlink is already created
+              if (!testSymLink(full_path, redirectPath)) {
+                throw std::runtime_error(
+                  std::string("Error creating symlink from ") + full_path + " to " + redirectPath);
+              }
             }
 #endif
         }
