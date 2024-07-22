@@ -14,6 +14,18 @@ jobs:
         os:
           - macos-12
           - macos-13
+          - macos-14
+        target:
+          - macos-aarch64-dyn
+          - macos-x86_64-dyn
+        exclude:
+          - target: macos-aarch64-dyn
+            os: macos-12
+          - target: macos-aarch64-dyn
+            os: macos-13
+          - target: macos-x86_64-dyn
+            os: macos-14
+
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -41,9 +53,10 @@ jobs:
       - name: Install dependencies
         uses: kiwix/kiwix-build/actions/dl_deps_archive@main
         with:
-          target_platform: macos-x86_64-dyn
+          target_platform: ${{ matrix.target }}
 
-      - name: Compile
+      - name: Compile with x86_64
+        if: matrix.target == 'macos-x86_64-dyn'
         shell: bash
         run: |
           export PKG_CONFIG_PATH=$HOME/BUILD_x86_64-apple-darwin/INSTALL/lib/pkgconfig
@@ -52,6 +65,15 @@ jobs:
           cd build
           ninja
 
+      - name: Compile with ARM
+        if: matrix.target == 'macos-aarch64-dyn'
+        shell: bash
+        run: |
+          export PKG_CONFIG_PATH=$HOME/BUILD_arm64-apple-macos/INSTALL/lib/pkgconfig
+          export CPPFLAGS="-I$HOME/BUILD_arm64-apple-macos/INSTALL/include"
+          meson . build
+          cd build
+          ninja
 
   Linux:
     strategy:
@@ -91,7 +113,7 @@ jobs:
       HOME: /home/runner
     runs-on: ubuntu-22.04
     container:
-      image: "ghcr.io/kiwix/kiwix-build_ci_${{matrix.image_variant}}:2023-10-30"
+      image: "ghcr.io/kiwix/kiwix-build_ci_${{matrix.image_variant}}:2024-05-15"
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
