@@ -27,6 +27,7 @@ with_xapian_support = compiler.has_header_symbol('zim/zim.h', 'LIBZIM_WITH_XAPIA
 find_library_in_compiler = meson.version().version_compare('>=0.31.0')
 rt_dep = dependency('rt', required:false)
 docopt_dep = dependency('docopt', static:static_linkage)
+icu_dep = dependency('icu-i18n', static:static_linkage)
 
 with_writer = host_machine.system() != 'windows'
 

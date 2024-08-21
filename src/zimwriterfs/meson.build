@@ -7,7 +7,7 @@ sources = [
   'zimcreatorfs.cpp'
 ]
 
-deps = [thread_dep, libzim_dep, zlib_dep, gumbo_dep, magic_dep]
+deps = [thread_dep, libzim_dep, zlib_dep, gumbo_dep, magic_dep, icu_dep]
 
 zimwriterfs = executable('zimwriterfs',
                          sources,
