@@ -14,7 +14,7 @@ Build-Depends: debhelper-compat (= 13),
  cmake,
  libgtest-dev,
  libkainjow-mustache-dev
-Standards-Version: 4.5.0
+Standards-Version: 4.6.2
 Homepage: https://github.com/openzim/zim-tools
 Rules-Requires-Root: no
 
