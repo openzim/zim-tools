@@ -20,6 +20,10 @@ Most famous tools are:
 
 * `zimdump` inspects or dumps (part of) a [ZIM](https://openzim.org) file.
 
+* `zimsplit` splits
+  [smartly](https://wiki.openzim.org/wiki/ZIM_file_format#Split_ZIM_archives_in_chunks)
+  a ZIM file in smaller chunks.
+
 * `zimwriterfs` creates [ZIM](https://openzim.org) files from a
   locally-stored directory containing "self-sufficient" HTML content
   (with pictures, javascript and stylesheets). The result will contain
