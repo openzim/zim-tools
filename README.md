@@ -68,19 +68,19 @@ In the worst case, you will have to download and compile a more recent
 version by hand.
 
 If you want to install these dependencies locally, then ensure that
-meson (through `pkg-config`) will properly find them.
+meson (through `pkgconf` or `pkg-config`) will properly find them.
 
 Environment
 -------------
 
 The ZIM tools build using [Meson](https://mesonbuild.com/) version
-0.43 or higher. Meson relies itself on Ninja, pkg-config and few other
+0.43 or higher. Meson relies itself on Ninja, Pkgconf and few other
 compilation tools.
 
 Install first the few common compilation tools:
 * Meson
 * Ninja
-* Pkg-config
+* Pkgconf or Pkg-config
 
 These tools should be packaged if you use a cutting edge operating
 system. If not, have a look to the [Troubleshooting](#Troubleshooting)
