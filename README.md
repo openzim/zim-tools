@@ -129,7 +129,7 @@ where you want to install the libraries. After the installation
 succeeded, you may need to run ldconfig (as root).
 
 Uninstallation
-------------
+--------------
 
 If you want to uninstall the ZIM tools:
 ```bash
@@ -139,10 +139,10 @@ ninja -C build uninstall
 Like for the installation, you might need to run the command as user
 `root` (or using `sudo`).
 
-Docker
-------
+Container
+---------
 
-A Docker image with `zimwriterfs`, `zimcheck`,`zimdump` and all the
+A container image with `zimwriterfs`, `zimcheck`, `zimdump` and all the
 other tools can be built from the `docker` directory. The project
 maintains an official image available at https://ghcr.io/openzim/zim-tools.
 
