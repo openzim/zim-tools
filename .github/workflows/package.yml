@@ -78,6 +78,7 @@ jobs:
         id: build-ubuntu-noble
         with:
           args: --no-sign
+          ppa: ${{ steps.ppa.outputs.ppa }}
 
       - uses: legoktm/gh-action-build-deb@ubuntu-jammy
         if: matrix.distro == 'ubuntu-jammy'
@@ -85,6 +86,7 @@ jobs:
         id: build-ubuntu-jammy
         with:
           args: --no-sign
+          ppa: ${{ steps.ppa.outputs.ppa }}
 
       - uses: legoktm/gh-action-build-deb@ubuntu-focal
         if: matrix.distro == 'ubuntu-focal'
