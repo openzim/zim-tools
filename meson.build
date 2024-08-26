@@ -1,9 +1,7 @@
 project('zim-tools', ['c', 'cpp'],
   version : '3.4.2',
   license : 'GPLv3+',
-  default_options : ['c_std=c11', 'cpp_std=c++17', 'werror=true'])
-
-add_global_arguments(['-Werror', '-Wall'], language:'cpp')
+  default_options : ['c_std=c11', 'cpp_std=c++17', 'werror=true', 'warning_level=1'])
 
 add_global_arguments('-DVERSION="@0@"'.format(meson.project_version()), language : 'cpp')
 
