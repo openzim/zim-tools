@@ -125,7 +125,7 @@ std::string escapeNonPrintableChars(const std::string& s)
   std::ostringstream os;
   os << std::hex;
   for (const char c : s) {
-    if (std::isprint(c)) {
+    if (std::isprint(static_cast<unsigned char>(c))) {
       os << c;
     } else {
       const unsigned int charVal = static_cast<unsigned char>(c);
