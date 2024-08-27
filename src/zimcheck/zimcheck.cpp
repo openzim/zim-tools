@@ -20,7 +20,6 @@
  * MA 02110-1301, USA.
  */
 
-#include <unistd.h>
 #include <zim/archive.h>
 #include <getopt.h>
 #include <iostream>
@@ -34,6 +33,10 @@
 #include <ctime>
 #include <unordered_map>
 #include <cmath>
+
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 
 #include "../progress.h"
 #include "../version.h"
