@@ -48,7 +48,21 @@ bool searchRegex(const std::string& regexStr, const std::string& text)
 
 size_t getTextLength(const std::string& utf8EncodedString)
 {
-  return icu::UnicodeString::fromUTF8(utf8EncodedString).length();
+  // For some unknown reason implicite convertion from std::string to icu::StringPiece
+  // is broken on Windows.
+  // Constructors are definde in stringpiece.h as
+  // ```
+  // StringPiece(const std::string& str)
+  //  : ptr_(str.data()), length_(static_cast<int32_t>(str.size())) { }
+  // StringPiece(const char* offset, int32_t len) : ptr_(offset), length_(len) { }
+  // ```
+  // However using the first constructor ends with a corrupted StringPiece (wrong ptr)
+  // and using second one works. Don't ask me why
+  // This is broken
+  // icu::StringPiece stringPiece(utf8EncodedString);
+  // This is not
+  icu::StringPiece stringPiece(utf8EncodedString.data(), static_cast<int32_t>(utf8EncodedString.size()));
+  return icu::UnicodeString::fromUTF8(stringPiece).length();
 }
 
 class MetadataComplexCheckBase
