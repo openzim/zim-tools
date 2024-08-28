@@ -21,7 +21,7 @@
  */
 
 #include <zim/archive.h>
-#include <getopt.h>
+#include <docopt/docopt.h>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -33,6 +33,7 @@
 #include <ctime>
 #include <unordered_map>
 #include <cmath>
+#include <iostream>
 
 #ifndef _WIN32
 #include <unistd.h>
@@ -43,36 +44,37 @@
 #include "../tools.h"
 #include "checks.h"
 
-void displayHelp()
-{
-    std::cout<<"\n"
-             "zimcheck checks the quality of a ZIM file.\n\n"
-             "Usage: zimcheck [options] zimfile\n"
-             "options:\n"
-             "-A , --all             run all tests. Default if no flags are given.\n"
-             "-0 , --empty           Empty content\n"
-             "-C , --checksum        Internal CheckSum Test\n"
-             "-I , --integrity       Low-level correctness/integrity checks\n"
-             "-M , --metadata        MetaData Entries\n"
-             "-F , --favicon         Favicon\n"
-             "-P , --main            Main page\n"
-             "-R , --redundant       Redundant data check\n"
-             "-U , --url_internal    URL check - Internal URLs\n"
-             "-X , --url_external    URL check - External URLs\n"
-             "-D , --details         Details of error\n"
-             "-B , --progress        Print progress report\n"
-             "-J , --json            Output in JSON format\n"
-             "-H , --help            Displays Help\n"
-             "-V , --version         Displays software version\n"
-             "-L , --redirect_loop   Checks for the existence of redirect loops\n"
-             "-W , --threads         count of threads to utilize (default: 1)\n"
-             "examples:\n"
-             "zimcheck -A wikipedia.zim\n"
-             "zimcheck --checksum --redundant wikipedia.zim\n"
-             "zimcheck -F -R wikipedia.zim\n"
-             "zimcheck -M --favicon wikipedia.zim\n";
-    return;
-}
+static const char USAGE[] =
+R"(Zimcheck checks the quality of a ZIM file.
+
+Usage:
+  zimcheck [options] [ZIMFILE]
+
+Options:
+ -A --all             run all tests. Default if no flags are given.
+ -0 --empty           Empty content
+ -C --checksum        Internal CheckSum Test
+ -I --integrity       Low-level correctness/integrity checks
+ -M --metadata        MetaData Entries
+ -F --favicon         Favicon
+ -P --main            Main page
+ -R --redundant       Redundant data check
+ -U --url_internal    URL check - Internal URLs
+ -X --url_external    URL check - External URLs
+ -D --details         Details of error
+ -B --progress        Print progress report
+ -J --json            Output in JSON format
+ -H --help            Displays Help
+ -V --version         Displays software version
+ -L --redirect_loop   Checks for the existence of redirect loops
+ -W=<nb_thread> --threads=<nb_thread>  count of threads to utilize [default: 1]
+
+Examples:
+ zimcheck -A wikipedia.zim
+ zimcheck --checksum --redundant wikipedia.zim
+ zimcheck -F -R wikipedia.zim
+ zimcheck -M --favicon wikipedia.zim)";
+
 
 template<class T>
 std::string stringify(const T& x)
@@ -82,11 +84,36 @@ std::string stringify(const T& x)
   return ss.str();
 }
 
-int zimcheck (const std::vector<const char*>& args)
-{
-    const int argc = args.size();
-    const char* const* argv = &args[0];
+int zimcheck(const std::map<std::string, docopt::value>& args);
 
+int zimcheck(const std::vector<const char*>& args) {
+    std::vector<std::string> args_string;
+    bool first = true;
+    for (auto arg:args) {
+        if (first) {
+            first = false;
+            continue;
+        }
+        args_string.emplace_back(arg);
+    }
+
+    docopt::Options parsed_args;
+    try {
+      parsed_args = docopt::docopt_parse(
+        USAGE,
+        args_string,
+        false,
+        false);
+    } catch (docopt::DocoptArgumentError const& error) {
+		std::cerr << error.what() << std::endl;
+		std::cout << USAGE << std::endl;
+		return 1;
+	}    
+    return zimcheck(parsed_args);
+}
+
+int zimcheck(const docopt::Options& args)
+{
     // To calculate the total time taken by the program to run.
     const auto starttime = std::chrono::steady_clock::now();
 
@@ -99,140 +126,69 @@ int zimcheck (const std::vector<const char*>& args)
     bool error_details = false;
     bool no_args = true;
     bool json = false;
-    bool help = false;
     int thread_count = 1;
 
     std::string filename = "";
     ProgressBar progress(1);
 
     StatusCode status_code = PASS;
-
-    //Parsing through arguments using getopt_long(). Both long and short arguments are allowed.
-    optind = 1; // reset getopt_long(), so that zimcheck() works correctly if
-                // called more than once
-    opterr = 0; // silence getopt_long()
-    while (1)
-    {
-        static struct option long_options[] =
-        {
-            { "all",          no_argument, 0, 'A'},
-            { "progress",     no_argument, 0, 'B'},
-            { "empty",        no_argument, 0, '0'},
-            { "checksum",     no_argument, 0, 'C'},
-            { "integrity",    no_argument, 0, 'I'},
-            { "metadata",     no_argument, 0, 'M'},
-            { "favicon",      no_argument, 0, 'F'},
-            { "main",         no_argument, 0, 'P'},
-            { "redundant",    no_argument, 0, 'R'},
-            { "url_internal", no_argument, 0, 'U'},
-            { "url_external", no_argument, 0, 'X'},
-            { "details",      no_argument, 0, 'D'},
-            { "json",         no_argument, 0, 'J'},
-            { "threads",      required_argument, 0, 'w'},
-            { "help",         no_argument, 0, 'H'},
-            { "version",      no_argument, 0, 'V'},
-            { "redirect_loop",no_argument, 0, 'L'},
-            { 0, 0, 0, 0}
-        };
-        int option_index = 0;
-        int c = getopt_long (argc, const_cast<char**>(argv), "ACIJMFPRUXLEDHBVW:acijmfpruxledhbvw:0",
-                             long_options, &option_index);
-        //c = getopt (argc, argv, "ACMFPRUXED");
-        if(c == -1)
-            break;
-        switch (c)
-        {
-        case 'A':
-        case 'a':
+    
+    for(auto const& arg: args) {
+        if (arg.first == "--all" && arg.second.asBool()) {
             run_all = true;
             no_args = false;
-            break;
-        case '0':
+        } else if (arg.first == "--help" && arg.second.asBool()) {
+            std::cout << USAGE << std::endl;
+            return -1;
+        } else if (arg.first == "--empty" && arg.second.asBool()) {
             enabled_tests.enable(TestType::EMPTY);
             no_args = false;
-            break;
-        case 'C':
-        case 'c':
+        } else if (arg.first == "--checksum" && arg.second.asBool()) {
             enabled_tests.enable(TestType::CHECKSUM);
             no_args = false;
-            break;
-        case 'I':
-        case 'i':
+        } else if (arg.first == "--integrity" && arg.second.asBool()) {
             enabled_tests.enable(TestType::INTEGRITY);
             no_args = false;
-            break;
-        case 'M':
-        case 'm':
+        } else if (arg.first == "--metadata" && arg.second.asBool()) {
             enabled_tests.enable(TestType::METADATA);
             no_args = false;
-            break;
-        case 'B':
-        case 'b':
-            progress.set_progress_report(true);
-            break;
-        case 'F':
-        case 'f':
+        } else if (arg.first == "--progress") {
+            progress.set_progress_report(arg.second.asBool());
+        } else if (arg.first == "--favicon" && arg.second.asBool()) {
             enabled_tests.enable(TestType::FAVICON);
             no_args = false;
-            break;
-        case 'P':
-        case 'p':
+        } else if (arg.first == "--main" && arg.second.asBool()) {
             enabled_tests.enable(TestType::MAIN_PAGE);
             no_args = false;
-            break;
-        case 'R':
-        case 'r':
+        } else if (arg.first == "--redundant" && arg.second.asBool()) {
             enabled_tests.enable(TestType::REDUNDANT);
             no_args = false;
-            break;
-        case 'U':
-        case 'u':
+        } else if (arg.first == "--url_internal" && arg.second.asBool()) {
             enabled_tests.enable(TestType::URL_INTERNAL);
             no_args = false;
-            break;
-        case 'X':
-        case 'x':
+        } else if (arg.first == "--url_external" && arg.second.asBool()) {
             enabled_tests.enable(TestType::URL_EXTERNAL);
             no_args = false;
-            break;
-        case 'L':
-        case 'l':
+        } else if (arg.first == "--redirect_loop" && arg.second.asBool()) {
             enabled_tests.enable(TestType::REDIRECT);
             no_args = false;
-            break;
-        case 'D':
-        case 'd':
-            error_details = true;
-            break;
-        case 'J':
-        case 'j':
-            json = true;
-            break;
-        case 'W':
-        case 'w':
-            thread_count = atoi(optarg);
-            break;
-        case 'H':
-        case 'h':
-            help=true;
-            break;
-        case '?':
-            std::cerr<<"Unknown option `" << argv[optind-1] << "'\n";
-            displayHelp();
-            return 1;
-        case 'V':
-        case 'v':
-          printVersions();
-          return 0;
-        default:
-            abort ();
+        } else if (arg.first == "--details") {
+            error_details = arg.second.asBool();
+        } else if (arg.first == "--json") {
+            json = arg.second.asBool();
+        } else if (arg.first == "--threads") {
+            thread_count = arg.second.asLong();
+        } else if (arg.first == "ZIMFILE" && arg.second.isString()) {
+            filename = arg.second.asString();
+        } else if (arg.first == "--version" && arg.second.asBool()) {
+            printVersions();
+            return 0;
         }
     }
-
-    //Displaying Help for --help argument
-    if(help)
-    {
-        displayHelp();
+    
+    if (filename.empty()) {
+        std::cerr << "No file provided as argument" << std::endl;
+        std::cout << USAGE << std::endl;
         return -1;
     }
 
@@ -240,22 +196,6 @@ int zimcheck (const std::vector<const char*>& args)
     if ( run_all || no_args )
     {
         enabled_tests.enableAll();
-    }
-
-    //Obtaining filename from argument list
-    filename = "";
-    for(int i = 0; i < argc; i++)
-    {
-        if( (argv[i][0] != '-') && (i != 0))
-        {
-            filename = argv[i];
-        }
-    }
-    if(filename == "")
-    {
-        std::cerr<<"No file provided as argument\n";
-        displayHelp();
-        return -1;
     }
 
     ErrorLogger error(json);

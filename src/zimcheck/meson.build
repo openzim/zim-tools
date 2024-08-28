@@ -23,7 +23,7 @@ executable('zimcheck',
   '../tools.cpp',
   '../metadata.cpp',
   include_directories : inc,
-  dependencies: [libzim_dep, icu_dep, thread_dep],
+  dependencies: [libzim_dep, icu_dep, thread_dep, docopt_dep],
   install: true)
 
 

@@ -1,7 +1,7 @@
 gtest_dep = dependency('gtest', main:true, fallback:['gtest', 'gtest_main_dep'], required:false)
 
 
-test_deps = [gtest_dep, libzim_dep, icu_dep]
+test_deps = [gtest_dep, libzim_dep, icu_dep, docopt_dep]
 tests = [
     'metadata-test',
     'zimcheck-test'
