@@ -386,7 +386,9 @@ Return value:
       See DIR/dump_errors.log for the listing of the errors.
 )";
 
-typedef std::map<std::string, docopt::value> Options;
+
+// Older version of docopt doesn't define Options
+using Options = std::map<std::string, docopt::value>;
 
 int subcmdInfo(ZimDumper &app, Options &args)
 {

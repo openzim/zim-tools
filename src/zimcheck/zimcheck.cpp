@@ -76,6 +76,9 @@ Examples:
  zimcheck -M --favicon wikipedia.zim)";
 
 
+// Older version of docopt doesn't define Options
+using Options = std::map<std::string, docopt::value>;
+
 template<class T>
 std::string stringify(const T& x)
 {
@@ -97,7 +100,7 @@ int zimcheck(const std::vector<const char*>& args) {
         args_string.emplace_back(arg);
     }
 
-    docopt::Options parsed_args;
+    Options parsed_args;
     try {
       parsed_args = docopt::docopt_parse(
         USAGE,
@@ -112,7 +115,7 @@ int zimcheck(const std::vector<const char*>& args) {
     return zimcheck(parsed_args);
 }
 
-int zimcheck(const docopt::Options& args)
+int zimcheck(const Options& args)
 {
     // To calculate the total time taken by the program to run.
     const auto starttime = std::chrono::steady_clock::now();

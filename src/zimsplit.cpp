@@ -180,10 +180,10 @@ int main(int argc, char* argv[])
   {
     std::ostringstream versions;
     printVersions(versions);
-    std::map<std::string, docopt::value> args = docopt::docopt(USAGE,
-                                                               {argv + 1, argv + argc},
-                                                               true,
-                                                               versions.str());
+    auto args = docopt::docopt(USAGE,
+                              {argv + 1, argv + argc},
+                              true,
+                              versions.str());
 
     std::string prefix = args["<file>"].asString();
     if (args["--prefix"])
