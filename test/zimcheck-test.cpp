@@ -131,41 +131,39 @@ struct CapturedStderr : CapturedStdStream
 int zimcheck (const std::vector<const char*>& args);
 
 const std::string zimcheck_help_message(
-  "\n"
-  "zimcheck checks the quality of a ZIM file.\n\n"
-  "Usage: zimcheck [options] zimfile\n"
-  "options:\n"
-  "-A , --all             run all tests. Default if no flags are given.\n"
-  "-0 , --empty           Empty content\n"
-  "-C , --checksum        Internal CheckSum Test\n"
-  "-I , --integrity       Low-level correctness/integrity checks\n"
-  "-M , --metadata        MetaData Entries\n"
-  "-F , --favicon         Favicon\n"
-  "-P , --main            Main page\n"
-  "-R , --redundant       Redundant data check\n"
-  "-U , --url_internal    URL check - Internal URLs\n"
-  "-X , --url_external    URL check - External URLs\n"
-  "-D , --details         Details of error\n"
-  "-B , --progress        Print progress report\n"
-  "-J , --json            Output in JSON format\n"
-  "-H , --help            Displays Help\n"
-  "-V , --version         Displays software version\n"
-  "-L , --redirect_loop   Checks for the existence of redirect loops\n"
-  "-W , --threads         count of threads to utilize (default: 1)\n"
-  "examples:\n"
-  "zimcheck -A wikipedia.zim\n"
-  "zimcheck --checksum --redundant wikipedia.zim\n"
-  "zimcheck -F -R wikipedia.zim\n"
-  "zimcheck -M --favicon wikipedia.zim\n"
-);
+R"(Zimcheck checks the quality of a ZIM file.
+
+Usage:
+  zimcheck [options] [ZIMFILE]
+
+Options:
+ -A --all             run all tests. Default if no flags are given.
+ -0 --empty           Empty content
+ -C --checksum        Internal CheckSum Test
+ -I --integrity       Low-level correctness/integrity checks
+ -M --metadata        MetaData Entries
+ -F --favicon         Favicon
+ -P --main            Main page
+ -R --redundant       Redundant data check
+ -U --url_internal    URL check - Internal URLs
+ -X --url_external    URL check - External URLs
+ -D --details         Details of error
+ -B --progress        Print progress report
+ -J --json            Output in JSON format
+ -H --help            Displays Help
+ -V --version         Displays software version
+ -L --redirect_loop   Checks for the existence of redirect loops
+ -W=<nb_thread> --threads=<nb_thread>  count of threads to utilize [default: 1]
+
+Examples:
+ zimcheck -A wikipedia.zim
+ zimcheck --checksum --redundant wikipedia.zim
+ zimcheck -F -R wikipedia.zim
+ zimcheck -M --favicon wikipedia.zim
+)");
 
 TEST(zimcheck, help)
 {
-    {
-      CapturedStdout zimcheck_output;
-      ASSERT_EQ(-1, zimcheck({"zimcheck", "-h"}));
-      ASSERT_EQ(zimcheck_help_message, std::string(zimcheck_output));
-    }
     {
       CapturedStdout zimcheck_output;
       ASSERT_EQ(-1, zimcheck({"zimcheck", "-H"}));
@@ -182,11 +180,6 @@ TEST(zimcheck, version)
 {
     std::string version = "zim-tools " + std::string(VERSION);
 
-    {
-      CapturedStdout zimcheck_output;
-      ASSERT_EQ(0, zimcheck({"zimcheck", "-v"}));
-      ASSERT_EQ(version, getLine(std::string(zimcheck_output)));
-    }
     {
       CapturedStdout zimcheck_output;
       ASSERT_EQ(0, zimcheck({"zimcheck", "-V"}));
@@ -261,7 +254,7 @@ TEST(zimcheck, integrity_goodzimfile)
     );
 
     test_zimcheck_single_option(
-        {"-i", "-I", "--integrity"},
+        {"-I", "--integrity"},
         GOOD_ZIMFILE,
         0,
         expected_output,
@@ -281,7 +274,7 @@ TEST(zimcheck, checksum_goodzimfile)
     );
 
     test_zimcheck_single_option(
-        {"-c", "-C", "--checksum"},
+        {"-C", "--checksum"},
         GOOD_ZIMFILE,
         0,
         expected_output,
@@ -301,7 +294,7 @@ TEST(zimcheck, metadata_goodzimfile)
     );
 
     test_zimcheck_single_option(
-        {"-m", "-M", "--metadata"},
+        {"-M", "--metadata"},
         GOOD_ZIMFILE,
         0,
         expected_output,
@@ -321,7 +314,7 @@ TEST(zimcheck, favicon_goodzimfile)
     );
 
     test_zimcheck_single_option(
-        {"-f", "-F", "--favicon"},
+        {"-F", "--favicon"},
         GOOD_ZIMFILE,
         0,
         expected_output,
@@ -341,7 +334,7 @@ TEST(zimcheck, mainpage_goodzimfile)
     );
 
     test_zimcheck_single_option(
-        {"-p", "-P", "--main"},
+        {"-P", "--main"},
         GOOD_ZIMFILE,
         0,
         expected_output,
@@ -363,8 +356,8 @@ TEST(zimcheck, article_content_goodzimfile)
     test_zimcheck_single_option(
         {
           "-0", "--empty",              // Any of these options triggers
-          "-u", "-U", "--url_internal", // checking of the article contents.
-          "-x", "-X", "--url_external"  // For a good ZIM file there is no
+          "-U", "--url_internal", // checking of the article contents.
+          "-X", "--url_external"  // For a good ZIM file there is no
         },                              // difference in the output.
         GOOD_ZIMFILE,
         0,
@@ -387,7 +380,7 @@ TEST(zimcheck, redundant_articles_goodzimfile)
     );
 
     test_zimcheck_single_option(
-        {"-r", "-R", "--redundant"},
+        {"-R", "--redundant"},
         GOOD_ZIMFILE,
         0,
         expected_output,
@@ -407,7 +400,7 @@ TEST(zimcheck, redirect_loop_goodzimfile)
   );
 
   test_zimcheck_single_option(
-    {"-l", "-L", "--redirect_loop"},
+    {"-L", "--redirect_loop"},
     GOOD_ZIMFILE,
     0,
     expected_output,
@@ -442,7 +435,7 @@ TEST(zimcheck, nooptions_goodzimfile)
 TEST(zimcheck, all_checks_goodzimfile)
 {
     test_zimcheck_single_option(
-        {"-a", "-A", "--all"},
+        {"-A", "--all"},
         GOOD_ZIMFILE,
         0,
         ALL_CHECKS_OUTPUT_ON_GOODZIMFILE,
@@ -455,8 +448,8 @@ TEST(zimcheck, invalid_option)
     {
       CapturedStdout zimcheck_output;
       CapturedStderr zimcheck_stderr;
-      ASSERT_EQ(1, zimcheck({"zimcheck", "-z", GOOD_ZIMFILE}));
-      ASSERT_EQ("Unknown option `-z'\n", std::string(zimcheck_stderr));
+      ASSERT_EQ(1, zimcheck({"zimcheck", "-Z", GOOD_ZIMFILE}));
+      ASSERT_EQ("Unexpected argument: -Z, data/zimfiles/good.zim\n", std::string(zimcheck_stderr));
       ASSERT_EQ(zimcheck_help_message, std::string(zimcheck_output));
     }
 }
@@ -467,7 +460,7 @@ TEST(zimcheck, invalid_long_option)
       CapturedStdout zimcheck_output;
       CapturedStderr zimcheck_stderr;
       ASSERT_EQ(1, zimcheck({"zimcheck", "--oops", GOOD_ZIMFILE}));
-      ASSERT_EQ("Unknown option `--oops'\n", std::string(zimcheck_stderr));
+      ASSERT_EQ("Unexpected argument: --oops, data/zimfiles/good.zim\n", std::string(zimcheck_stderr));
       ASSERT_EQ(zimcheck_help_message, std::string(zimcheck_output));
     }
 }
@@ -523,7 +516,7 @@ TEST(zimcheck, bad_checksum)
     );
 
     test_zimcheck_single_option(
-        {"-c", "-C", "--checksum"},
+        {"-C", "--checksum"},
         BAD_CHECKSUM_ZIMFILE,
         1,
         expected_output,
@@ -549,7 +542,7 @@ TEST(zimcheck, metadata_poorzimfile)
     );
 
     test_zimcheck_single_option(
-        {"-m", "-M", "--metadata"},
+        {"-M", "--metadata"},
         POOR_ZIMFILE,
         1,
         expected_stdout,
@@ -571,7 +564,7 @@ TEST(zimcheck, favicon_poorzimfile)
     );
 
     test_zimcheck_single_option(
-        {"-f", "-F", "--favicon"},
+        {"-F", "--favicon"},
         POOR_ZIMFILE,
         1,
         expected_stdout,
@@ -593,7 +586,7 @@ TEST(zimcheck, mainpage_poorzimfile)
     );
 
     test_zimcheck_single_option(
-        {"-p", "-P", "--main"},
+        {"-P", "--main"},
         POOR_ZIMFILE,
         1,
         expected_stdout,
@@ -642,7 +635,7 @@ TEST(zimcheck, internal_url_check_poorzimfile)
     );
 
     test_zimcheck_single_option(
-        {"-u", "-U", "--url_internal"},
+        {"-U", "--url_internal"},
         POOR_ZIMFILE,
         1,
         expected_stdout,
@@ -666,7 +659,7 @@ TEST(zimcheck, external_url_check_poorzimfile)
     );
 
     test_zimcheck_single_option(
-        {"-x", "-X", "--url_external"},
+        {"-X", "--url_external"},
         POOR_ZIMFILE,
         1,
         expected_stdout,
@@ -690,7 +683,7 @@ TEST(zimcheck, redundant_poorzimfile)
     );
 
     test_zimcheck_single_option(
-        {"-r", "-R", "--redundant"},
+        {"-R", "--redundant"},
         POOR_ZIMFILE,
         0,
         expected_stdout,
@@ -717,7 +710,7 @@ TEST(zimcheck, redirect_loop_poorzimfile)
   );
 
   test_zimcheck_single_option(
-    {"-l", "-L", "--redirect_loop"},
+    {"-L", "--redirect_loop"},
     POOR_ZIMFILE,
     1,
     expected_output,
@@ -784,7 +777,7 @@ TEST(zimcheck, nooptions_poorzimfile)
 TEST(zimcheck, all_checks_poorzimfile)
 {
     test_zimcheck_single_option(
-        {"-a", "-A", "--all"},
+        {"-A", "--all"},
         POOR_ZIMFILE,
         1,
         ALL_CHECKS_OUTPUT_ON_POORZIMFILE,

@@ -229,7 +229,7 @@ int ZimDumper::listEntriesByNamespace(const std::string ns, bool details)
     return ret;
 }
 
-void write_to_error_directory(const std::string& base, const std::string relpath, const char *content, ssize_t size)
+void write_to_error_directory(const std::string& base, const std::string relpath, const char *content, size_t size)
 {
     createdir(ERRORSDIR, base);
     std::string url = relpath;
@@ -247,7 +247,7 @@ void write_to_error_directory(const std::string& base, const std::string relpath
         std::cerr << "Error opening file " + fullpath + " cause: " + ::strerror(errno) << std::endl;
         return ;
     }
-    if (write(fd, content, size) != size) {
+    if ((size_t) write(fd, content, size) != size) {
       close(fd);
       std::cerr << "Failed writing: " << fullpath << " - " << ::strerror(errno) << std::endl;
     }
@@ -266,7 +266,7 @@ void write_to_error_directory(const std::string& base, const std::string relpath
 #endif
 }
 
-inline void write_to_file(const std::string &base, const std::string& path, const char* data, ssize_t size) {
+inline void write_to_file(const std::string &base, const std::string& path, const char* data, size_t size) {
     std::string fullpath = base + path;
 #ifdef _WIN32
     std::wstring wpath = utf8ToUtf16(fullpath);
@@ -279,7 +279,7 @@ inline void write_to_file(const std::string &base, const std::string& path, cons
         write_to_error_directory(base, path, data, size);
         return ;
     }
-    if (write(fd, data, size) != size) {
+    if ((size_t) write(fd, data, size) != size) {
       write_to_error_directory(base, path, data, size);
     }
     close(fd);
@@ -386,7 +386,9 @@ Return value:
       See DIR/dump_errors.log for the listing of the errors.
 )";
 
-typedef std::map<std::string, docopt::value> Options;
+
+// Older version of docopt doesn't define Options
+using Options = std::map<std::string, docopt::value>;
 
 int subcmdInfo(ZimDumper &app, Options &args)
 {

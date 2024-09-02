@@ -20,7 +20,6 @@
 
 #include "tools.h"
 
-#include <dirent.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <cerrno>
@@ -31,7 +30,6 @@
 #include <stdexcept>
 #include <vector>
 #include <memory>
-#include <unistd.h>
 #include <algorithm>
 #include <regex>
 #include <array>
@@ -39,6 +37,7 @@
 #ifdef _WIN32
 #define SEPARATOR "\\"
 #else
+#include <unistd.h>
 #define SEPARATOR "/"
 #endif
 
