@@ -1,3 +1,9 @@
+zim-tools 3.5.0
+===============
+
+ * Add support of new Debian based distribution (@kelson42 #424)
+ * Add MW Windows base CI/CD (@mgauthier #425)
+
 zim-tools 3.4.2
 ===============
 
