@@ -257,8 +257,8 @@ TEST(tools, normalize_link)
 
     // #439: normalized link reading off end of buffer
     // small-string-opt sizes, so sanitizers and valgrind don't pick this up
-    EXPECT_EQ(normalize_link("%", "/"), "/");
-    EXPECT_EQ(normalize_link("%1", ""), "");
+    ASSERT_EQ(normalize_link("%", "/"), "/");
+    ASSERT_EQ(normalize_link("%1", ""), "");
 
     // ../test/tools-test.cpp:260: Failure
     // Expected equality of these values:
@@ -274,8 +274,8 @@ TEST(tools, normalize_link)
 
     // test outside of small-string-opt
     // valgrind will pick up on the error in this one
-    EXPECT_EQ(normalize_link("qrstuvwxyz%", "/abcdefghijklmnop"), "/abcdefghijklmnop/qrstuvwxyz");
-    EXPECT_EQ(normalize_link("qrstuvwxyz%1", "/abcdefghijklmnop"), "/abcdefghijklmnop/qrstuvwxyz");
+    ASSERT_EQ(normalize_link("qrstuvwxyz%", "/abcdefghijklmnop"), "/abcdefghijklmnop/qrstuvwxyz");
+    ASSERT_EQ(normalize_link("qrstuvwxyz%1", "/abcdefghijklmnop"), "/abcdefghijklmnop/qrstuvwxyz");
 }
 
 TEST(tools, addler32)
