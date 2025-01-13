@@ -8,11 +8,12 @@ endif
 
 inc = include_directories(extra_include)
 
-if compiler.get_id() == 'gcc' and host_machine.system() == 'linux'
-  # C++ std::thread is implemented using pthread on linux by gcc
-  thread_dep = dependency('threads')
-else
-  thread_dep = dependency('', required:false)
+zimcheck_deps = [libzim_dep, icu_dep, docopt_dep]
+
+# C++ std::thread is implemented using pthread on Linux by GCC, and on FreeBSD
+# for both GCC and LLVM.
+if (host_machine.system() == 'linux' and compiler.get_id() == 'gcc') or host_machine.system() == 'freebsd'
+  zimcheck_deps += dependency('threads')
 endif
 
 executable('zimcheck',
@@ -23,7 +24,5 @@ executable('zimcheck',
   '../tools.cpp',
   '../metadata.cpp',
   include_directories : inc,
-  dependencies: [libzim_dep, icu_dep, thread_dep, docopt_dep],
+  dependencies: zimcheck_deps,
   install: true)
-
-
