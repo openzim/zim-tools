@@ -404,23 +404,24 @@ std::string normalize_link(const std::string& input, const std::string& baseUrl)
     output.reserve(baseUrl.size() + input.size() + 1);
 
     bool check_rel = false;
-    const char* p = input.c_str();
+    auto p = input.cbegin();
     if ( *(p) == '/') {
       // This is an absolute url.
       p++;
     } else {
       //This is a relative url, use base url
       output = baseUrl;
-      if (!output.empty() && output.back() != '/')
+      if (!output.empty() && output.back() != '/') {
           output += '/';
+      }
       check_rel = true;
     }
 
     //URL Decoding.
-    while (*p)
+    while (p < input.cend())
     {
         if ( check_rel ) {
-            if (strncmp(p, "../", 3) == 0) {
+            if (std::strncmp(&*p, "../", 3) == 0) {
                 // We must go "up"
                 // Remove the '/' at the end of output.
                 output.resize(output.size()-1);
@@ -432,7 +433,7 @@ std::string normalize_link(const std::string& input, const std::string& baseUrl)
                 check_rel = false;
                 continue;
             }
-            if (strncmp(p, "./", 2) == 0) {
+            if (std::strncmp(&*p, "./", 2) == 0) {
                 // We must simply skip this part
                 // Simply move after the ".".
                 p += 2;
@@ -449,8 +450,13 @@ std::string normalize_link(const std::string& input, const std::string& baseUrl)
 
         if ( *p == '%')
         {
-            char ch;
-            sscanf(p+1, "%2hhx", &ch);
+            if( (p+3) >= input.cend()){
+                // if the %XX token would go off the end of the string, just break
+                break;
+            }
+            // hhx only officially supports hex unsigned char
+            unsigned char ch = 0;
+            std::sscanf(&*(p+1), "%2hhx", &ch);
             output += ch;
             p += 3;
             continue;

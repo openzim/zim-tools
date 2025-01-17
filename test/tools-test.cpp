@@ -236,6 +236,10 @@ TEST(tools, isOutofBounds)
 
 TEST(tools, normalize_link)
 {
+    ASSERT_EQ(normalize_link("", ""), "");
+    ASSERT_EQ(normalize_link("/", ""), "");
+    ASSERT_EQ(normalize_link("", "/"), "/");
+
     ASSERT_EQ(normalize_link("/a", "/b"), "a");
 
     // not absolute
@@ -250,6 +254,28 @@ TEST(tools, normalize_link)
 
     // URI-decoding is performed
     ASSERT_EQ(normalize_link("/%41%62c", "/"), "Abc");
+
+    // #439: normalized link reading off end of buffer
+    // small-string-opt sizes, so sanitizers and valgrind don't pick this up
+    ASSERT_EQ(normalize_link("%", "/"), "/");
+    ASSERT_EQ(normalize_link("%1", ""), "");
+
+    // ../test/tools-test.cpp:260: Failure
+    // Expected equality of these values:
+    //   normalize_link("%", "/")
+    //     Which is: "/\01bc"
+    //   "/"
+    //
+    // ../test/tools-test.cpp:261: Failure
+    // Expected equality of these values:
+    //   normalize_link("%1", "")
+    //     Which is: "\x1" "1bc"
+    //   ""
+
+    // test outside of small-string-opt
+    // valgrind will pick up on the error in this one
+    ASSERT_EQ(normalize_link("qrstuvwxyz%", "/abcdefghijklmnop"), "/abcdefghijklmnop/qrstuvwxyz");
+    ASSERT_EQ(normalize_link("qrstuvwxyz%1", "/abcdefghijklmnop"), "/abcdefghijklmnop/qrstuvwxyz");
 }
 
 TEST(tools, addler32)
@@ -400,7 +426,6 @@ TEST(tools, getLinks)
       "abcd href = qwerty src={123} xyz",
       ""
     );
-
 }
 #undef EXPECT_LINKS
 
