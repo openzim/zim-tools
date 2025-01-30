@@ -260,6 +260,9 @@ TEST(tools, normalize_link)
     ASSERT_EQ(normalize_link("%", "/"), "/");
     ASSERT_EQ(normalize_link("%1", ""), "");
 
+    EXPECT_EQ(normalize_link("%26", ""), "&");
+    EXPECT_EQ(normalize_link("%27", "/"), "/\'");
+
     // ../test/tools-test.cpp:260: Failure
     // Expected equality of these values:
     //   normalize_link("%", "/")
