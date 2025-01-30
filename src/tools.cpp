@@ -450,8 +450,10 @@ std::string normalize_link(const std::string& input, const std::string& baseUrl)
 
         if ( *p == '%')
         {
-            if( (p+3) >= input.cend()){
+            if( (p+2) >= input.cend()){
                 // if the %XX token would go off the end of the string, just break
+                // string::end() returns an iterator pointing to the null terminator
+                // of the underlying c-string (guarenteed as of C++11)
                 break;
             }
             // hhx only officially supports hex unsigned char
