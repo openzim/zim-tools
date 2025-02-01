@@ -24,8 +24,12 @@
 #include <gumbo.h>
 #include <string>
 
+std::string getFileContent(const std::string& path);
+
 std::string extractRedirectUrlFromHtml(const GumboVector* head_children);
 
 std::string generateDate();
+
+std::string getMimeTypeForFile(const std::string& basedir, const std::string& filename);
 
 #endif  // OPENZIM_ZIMWRITERFS_TOOLS_H

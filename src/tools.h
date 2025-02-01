@@ -168,8 +168,6 @@ class CopyItem : public zim::writer::Item         //Article class that will be p
     }
 };
 
-std::string getMimeTypeForFile(const std::string& basedir, const std::string& filename);
-std::string getFileContent(const std::string& path);
 std::string decodeUrl(const std::string& encodedUrl);
 
 // Assuming that basePath and targetPath are relative to the same location

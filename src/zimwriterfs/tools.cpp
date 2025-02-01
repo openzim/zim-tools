@@ -19,9 +19,7 @@
  */
 
 #include "tools.h"
-#include "../tools.h"
 
-#include <memory>
 #include <string.h>
 #include <sstream>
 #include <fstream>
