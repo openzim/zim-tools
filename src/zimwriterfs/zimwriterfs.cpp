@@ -235,7 +235,7 @@ void usage()
   std::cout << "Example:" << std::endl;
   std::cout
       << "\tzimwriterfs --welcome=index.html --illustration=illustration.png --language=fra --title=foobar --description=mydescription \\\n\t\t\
---creator=Wikipedia --publisher=Kiwix ./my_project_html_directory my_project.zim"
+--creator=Wikipedia --publisher=Kiwix --name tests_fra_my-project ./my_project_html_directory tests_fra_my-project_202412.zim"
       << std::endl;
   std::cout << std::endl;
 
