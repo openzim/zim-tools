@@ -151,7 +151,7 @@ void create(const std::string& originFilename, const std::string& outFilename, b
     // We have to adapt the content to drop the namespace.
 
     auto path = entry.getPath();
-    if (path[0] == 'Z' || path[0] == 'X' || path[0] == 'M') {
+    if (path[0] == 'Z' || path[0] == 'X' || path[0] == 'M' || path[0] == 'W') {
       // Index is recreated by zimCreator. Do not add it
       continue;
     }
