@@ -35,6 +35,7 @@
 
 #include "version.h"
 #include "tools.h"
+#include "mimetypes.h"
 
 #include <fcntl.h>
 #ifdef _WIN32
@@ -333,7 +334,7 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
         auto redirectItem = entry.getItem(true);
         std::string redirectPath = redirectItem.getPath();
         redirectPath = computeRelativePath(path, redirectPath);
-        if (symlinkdump == false && redirectItem.getMimetype() == "text/html") {
+        if (symlinkdump == false && redirectItem.getMimetype() == mimeTextHtml) {
             writeHttpRedirect(directory, relative_path, path, redirectPath);
         } else {
 #ifdef _WIN32

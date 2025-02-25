@@ -30,7 +30,7 @@ executable('zimsplit', 'zimsplit.cpp',
   dependencies: [libzim_dep, docopt_dep],
   install: true)
 
-executable('zimrecreate', ['zimrecreate.cpp', 'tools.cpp'],
+executable('zimrecreate', ['zimrecreate.cpp', 'tools.cpp', 'mimetypes.cpp'],
   dependencies: libzim_dep,
   install: true)
 

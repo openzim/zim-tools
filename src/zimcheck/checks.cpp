@@ -1,4 +1,6 @@
 #define ZIM_PRIVATE
+
+#include "../mimetypes.h"
 #include "checks.h"
 #include "../tools.h"
 #include "../concurrent_cache.h"
@@ -368,13 +370,13 @@ void ArticleChecker::check_item(const zim::Item& item)
     }
 
     std::string data;
-    if (checks.isEnabled(TestType::REDUNDANT) || item.getMimetype() == "text/html")
+    if (checks.isEnabled(TestType::REDUNDANT) || item.getMimetype() == mimeTextHtml)
         data = item.getData();
 
     if(checks.isEnabled(TestType::REDUNDANT))
         hash_main[adler32(data)].push_back( item.getIndex() );
 
-    if (item.getMimetype() != "text/html")
+    if (item.getMimetype() != mimeTextHtml)
         return;
 
     ArticleChecker::LinkCollection links;

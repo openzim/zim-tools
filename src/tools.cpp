@@ -18,6 +18,7 @@
  * MA 02110-1301, USA.
  */
 
+#include "mimetypes.h"
 #include "tools.h"
 
 #include <string.h>
@@ -589,6 +590,6 @@ std::string httpRedirectHtml(const std::string& redirectUrl)
 }
 
 bool guess_is_front_article(const std::string& mimetype) {
-  return ( mimetype.find("text/html") == 0
+  return ( mimetype.find(mimeTextHtml) == 0
         && mimetype.find("raw=true") == std::string::npos);
 }

@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <sstream>
 
+#include "mimetypes.h"
 #include "tools.h"
 #include "version.h"
 
@@ -66,8 +67,8 @@ class PatchItem : public zim::writer::Item
     std::unique_ptr<zim::writer::ContentProvider> getContentProvider() const
     {
         auto mimetype = getMimeType();
-        if ( mimetype.find("text/html") == std::string::npos
-          && mimetype.find("text/css") == std::string::npos) {
+        if ( mimetype.find(mimeTextHtml) == std::string::npos
+          && mimetype.find(mimeTextCss) == std::string::npos) {
             return std::unique_ptr<zim::writer::ContentProvider>(new ItemProvider(item));
         }
 
@@ -132,7 +133,7 @@ void create(const std::string& originFilename, const std::string& outFilename, b
     }
     auto metadata = origin.getMetadata(metakey);
     auto metaProvider = std::unique_ptr<zim::writer::ContentProvider>(new zim::writer::StringProvider(metadata));
-    zimCreator.addMetadata(metakey, std::move(metaProvider), "text/plain");
+    zimCreator.addMetadata(metakey, std::move(metaProvider), std::string{mimeTextPlain});
   }
 
 

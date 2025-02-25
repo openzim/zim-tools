@@ -19,6 +19,7 @@
  */
 
 #include "zimcreatorfs.h"
+#include "../mimetypes.h"
 #include "../tools.h"
 #include "tools.h"
 
@@ -177,11 +178,11 @@ void ZimCreatorFS::addFile(const std::string& path)
   zim::writer::Hints hints;
 
   std::shared_ptr<zim::writer::Item> item;
-  if ( mimetype.find("text/html") != std::string::npos
-    || mimetype.find("text/css") != std::string::npos) {
+  if ( mimetype.find(mimeTextHtml) != std::string::npos
+    || mimetype.find(mimeTextCss) != std::string::npos) {
     auto content = getFileContent(path);
 
-    if (mimetype.find("text/html") != std::string::npos) {
+    if (mimetype.find(mimeTextHtml) != std::string::npos) {
       hints[zim::writer::FRONT_ARTICLE] = 1;
       auto redirectUrl = parseAndAdaptHtml(content, title, url);
       if (!redirectUrl.empty()) {

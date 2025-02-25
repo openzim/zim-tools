@@ -1,6 +1,7 @@
 
 sources = [
   'zimwriterfs.cpp',
+  '../mimetypes.cpp',
   'tools.cpp',
   '../tools.cpp',
   '../metadata.cpp',
