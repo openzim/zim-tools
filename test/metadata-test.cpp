@@ -4,7 +4,7 @@
 
 std::string fakePNG()
 {
-  return "\x89PNG\r\n\x1a\n" + std::string(100, 'x');
+  return std::string{"\x89PNG\r\n\x1a\n"} + std::string(100, 'x');
 }
 
 TEST(Metadata, isDefaultConstructible)
