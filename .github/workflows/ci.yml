@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-13
+          - macos-14
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -104,13 +104,13 @@ jobs:
           - linux-x86_64-dyn
         include:
           - target: linux-x86_64-static
-            image_variant: focal
+            image_variant: jammy
             lib_postfix: '/x86_64-linux-gnu'
             arch_name: linux-x86_64
             run_test: true
             coverage: true
           - target: linux-x86_64-dyn
-            image_variant: focal
+            image_variant: jammy
             lib_postfix: '/x86_64-linux-gnu'
             arch_name: linux-x86_64
             run_test: true
@@ -119,7 +119,7 @@ jobs:
       HOME: /home/runner
     runs-on: ubuntu-22.04
     container:
-      image: "ghcr.io/kiwix/kiwix-build_ci_${{matrix.image_variant}}:2023-10-30"
+      image: "ghcr.io/kiwix/kiwix-build_ci_${{matrix.image_variant}}:2025-06-07"
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
