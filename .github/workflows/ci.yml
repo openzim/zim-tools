@@ -10,10 +10,7 @@ jobs:
   macOS:
     strategy:
       fail-fast: false
-      matrix:
-        os:
-          - macos-14
-    runs-on: ${{ matrix.os }}
+    runs-on: macos-15
 
     steps:
       - name: Checkout code
