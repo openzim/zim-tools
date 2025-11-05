@@ -11,70 +11,92 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - macos-14
-    runs-on: ${{ matrix.os }}
+        target:
+          - macos-aarch64-dyn
+          - macos-x86_64-dyn
+        include:
+          - target: macos-aarch64-dyn
+            arch_name: arm64-apple-macos
+            run_test: true
+          - target: macos-x86_64-dyn
+            arch_name: x86_64-apple-darwin
+            run_test: true
+    runs-on: macos-15
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Python 3.12
-        uses: actions/setup-python@v5
+      - name: Harden Runner
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # pin@v2
         with:
-          python-version: '3.12'
+          egress-policy: audit
+
+      - name: Checkout code
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # pin@v4
+
+      - name: Setup Python 3.13
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # pin@v5
+        with:
+          python-version: '3.13'
 
       - name: Install packages
         run: |
           brew update
-          brew unlink python3
-          # upgrade from python@3.12 to python@3.12.2 fails to overwrite those
-          rm -f /usr/local/bin/2to3 /usr/local/bin/2to3-3.12 /usr/local/bin/idle3 /usr/local/bin/idle3.12 /usr/local/bin/pydoc3 /usr/local/bin/pydoc3.12 /usr/local/bin/python3 /usr/local/bin/python3-config /usr/local/bin/python3.12 /usr/local/bin/python3.12-config
-          brew install gcovr ninja libmagic
+          brew install gcovr || brew link --overwrite python # ninja
 
       - name: Install Python modules
-        run: pip3 install meson==0.49.2 pytest
+        run: pip3 install meson pytest
 
       - name: Install dependencies
-        uses: kiwix/kiwix-build/actions/dl_deps_archive@main
+        uses: kiwix/kiwix-build/actions/dl_deps_archive@75cfff14d7eeff9d6975f35c54ca59960dff7d05 # pin@main
         with:
-          target_platform: macos-x86_64-dyn
+          target_platform: ${{ matrix.target }}
 
       - name: Compile
         shell: bash
         run: |
-          export PKG_CONFIG_PATH=$HOME/BUILD_x86_64-apple-darwin/INSTALL/lib/pkgconfig
-          export CPPFLAGS="-I$HOME/BUILD_x86_64-apple-darwin/INSTALL/include"
-          meson . build
+          MESON_CROSSFILE="$HOME/BUILD_${{matrix.arch_name}}/meson_cross_file.txt"
+          if [ -e $MESON_CROSSFILE ]; then
+            MESON_OPTION="$MESON_OPTION --cross-file $MESON_CROSSFILE -Dstatic-linkage=true"
+            cat $MESON_CROSSFILE
+          fi
+          export PKG_CONFIG_PATH=$HOME/BUILD_${{matrix.arch_name}}/INSTALL/lib/pkgconfig
+          export CPPFLAGS="-I$HOME/BUILD_${{matrix.arch_name}}/INSTALL/include"
+          meson . build ${MESON_OPTION}
           cd build
           ninja
+
+      - name: Test
+        if: matrix.run_test
+        shell: bash
+        run: |
+          export LD_LIBRARY_PATH=$HOME/BUILD_${{matrix.arch_name}}/INSTALL/lib:$HOME/BUILD_${{matrix.arch_name}}/INSTALL/lib64
+          cd build
+          meson test --verbose
 
   Windows:
     runs-on: windows-2022
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # pin@v4
 
       - name: Setup python 3.10
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # pin@v5
         with:
           python-version: '3.10'
 
       - name: Install packages
-        run:
-          choco install pkgconfiglite ninja
+        run: choco install pkgconfiglite ninja
 
       - name: Install python modules
         run: pip3 install meson
 
       - name: Setup MSVC compiler
-        uses: bus1/cabuild/action/msdevshell@v1
+        uses: bus1/cabuild/action/msdevshell@06ea2833eef61e9b0d0ce0d728416e617e4fb1fe # pin@v1
         with:
           architecture: x64
 
       - name: Install dependencies
-        uses: kiwix/kiwix-build/actions/dl_deps_archive@main
+        uses: kiwix/kiwix-build/actions/dl_deps_archive@75cfff14d7eeff9d6975f35c54ca59960dff7d05 # pin@main
         with:
           target_platform: win-x86_64-static
 
@@ -121,40 +143,40 @@ jobs:
     container:
       image: "ghcr.io/kiwix/kiwix-build_ci_${{matrix.image_variant}}:2025-06-07"
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    - name: Install dependencies
-      uses: kiwix/kiwix-build/actions/dl_deps_archive@main
-      with:
-        target_platform: ${{ matrix.target }}
-    - name: Compile
-      shell: bash
-      run: |
-        if [[ "${{matrix.target}}" =~ .*-static ]]; then
-          MESON_OPTION="-Dstatic-linkage=true"
-        fi
-        if [ -e "$HOME/BUILD_${{matrix.arch_name}}/meson_cross_file.txt" ]; then
-          MESON_OPTION="$MESON_OPTION --cross-file $HOME/BUILD_${{matrix.arch_name}}/meson_cross_file.txt"
-        fi
-        meson . build ${MESON_OPTION} -Db_coverage=true
-        cd build
-        ninja
-      env:
-        PKG_CONFIG_PATH: "${{env.HOME}}/BUILD_${{matrix.arch_name}}/INSTALL/lib/pkgconfig:${{env.HOME}}/BUILD_${{matrix.arch_name}}/INSTALL/lib${{matrix.lib_postfix}}/pkgconfig"
-        CPPFLAGS: "-I${{env.HOME}}/BUILD_${{matrix.arch_name}}/INSTALL/include"
-    - name: Test
-      if: matrix.run_test
-      shell: bash
-      run: |
-        cd build
-        meson test --verbose
-        if [[ "${{matrix.coverage}}" = "true" ]]; then
-          ninja coverage
-        fi
-      env:
-        LD_LIBRARY_PATH: "${{env.HOME}}/BUILD_${{matrix.arch_name}}/INSTALL/lib${{matrix.lib_postfix}}"
-    - name: Publish coverage
-      if: matrix.coverage
-      uses: codecov/codecov-action@v4
-      env:
-        CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
+      - name: Checkout code
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # pin@v4
+      - name: Install dependencies
+        uses: kiwix/kiwix-build/actions/dl_deps_archive@75cfff14d7eeff9d6975f35c54ca59960dff7d05 # pin@main
+        with:
+          target_platform: ${{ matrix.target }}
+      - name: Compile
+        shell: bash
+        run: |
+          if [[ "${{matrix.target}}" =~ .*-static ]]; then
+            MESON_OPTION="-Dstatic-linkage=true"
+          fi
+          if [ -e "$HOME/BUILD_${{matrix.arch_name}}/meson_cross_file.txt" ]; then
+            MESON_OPTION="$MESON_OPTION --cross-file $HOME/BUILD_${{matrix.arch_name}}/meson_cross_file.txt"
+          fi
+          meson . build ${MESON_OPTION} -Db_coverage=true
+          cd build
+          ninja
+        env:
+          PKG_CONFIG_PATH: "${{env.HOME}}/BUILD_${{matrix.arch_name}}/INSTALL/lib/pkgconfig:${{env.HOME}}/BUILD_${{matrix.arch_name}}/INSTALL/lib${{matrix.lib_postfix}}/pkgconfig"
+          CPPFLAGS: "-I${{env.HOME}}/BUILD_${{matrix.arch_name}}/INSTALL/include"
+      - name: Test
+        if: matrix.run_test
+        shell: bash
+        run: |
+          cd build
+          meson test --verbose
+          if [[ "${{matrix.coverage}}" = "true" ]]; then
+            ninja coverage
+          fi
+        env:
+          LD_LIBRARY_PATH: "${{env.HOME}}/BUILD_${{matrix.arch_name}}/INSTALL/lib${{matrix.lib_postfix}}"
+      - name: Publish coverage
+        if: matrix.coverage
+        uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # pin@v4
+        env:
+          CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
