@@ -27,13 +27,14 @@ rt_dep = dependency('rt', required:false)
 docopt_dep = dependency('docopt', static:static_linkage)
 icu_dep = dependency('icu-i18n', static:static_linkage)
 
-with_writer = host_machine.system() != 'windows'
+with_writer_and_mount = host_machine.system() != 'windows'
 
-if with_writer
+if with_writer_and_mount
   thread_dep = dependency('threads')
   zlib_dep = dependency('zlib', static:static_linkage)
   gumbo_dep = dependency('gumbo', static:static_linkage)
   magic_dep = dependency('libmagic', static:static_linkage, required:false)
+  libfuse_dep = dependency('fuse3', version : '>=3.1')
 
   # libmagic.pc has been introduced in version 5.39 of
   # File. Unfortunately Ubuntu 20.04 (Focal) still uses version
