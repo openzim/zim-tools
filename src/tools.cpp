@@ -377,7 +377,8 @@ bool isOutofBounds(const std::string& input, std::string base)
     //count nr of substrings ../
     int nrsteps = 0;
     std::string::size_type pos = 0;
-    while((pos = input.find("../", pos)) != std::string::npos) {
+    std::string::size_type queryPos = input.find("?");
+    while((pos = input.find("../", pos)) != std::string::npos && (pos <= queryPos || queryPos == std::string::npos)) {
         nrsteps++;
         pos += 3;
     }
