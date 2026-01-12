@@ -223,6 +223,19 @@ TEST(tools, uriKind)
     EXPECT_EQ(UriKind::OTHER, uriKind("style.css"));
 }
 
+TEST(tools, extractPathFromLink)
+{
+    EXPECT_EQ("/a/b/c.html", extractPathFromLink("/a/b/c.html"));
+    EXPECT_EQ("a/b/c.html", extractPathFromLink("a/b/c.html"));
+    EXPECT_EQ("/a/b/c.html", extractPathFromLink("https://example.org/a/b/c.html"));
+    EXPECT_EQ("/a/b/c.html", extractPathFromLink("/a/b/c.html?key=value"));
+    EXPECT_EQ("/a/b/c.html", extractPathFromLink("/a/b/c.html#fragment"));
+    EXPECT_EQ("/a/b/c.html", extractPathFromLink("/a/b/c.html?key=value#fragment"));
+    EXPECT_EQ("/a/b/c.html", extractPathFromLink("https://user:password@example.org/a/b/c.html?key=value"));
+    EXPECT_EQ("/a/b/c.html", extractPathFromLink("https://user:password@example.org/a/b/c.html#fragment"));
+    EXPECT_EQ("/a/b/c.html", extractPathFromLink("https://user:password@example.org/a/b/c.html?key=value#fragment"));
+}
+
 TEST(tools, isOutofBounds)
 {
     ASSERT_FALSE(isOutofBounds("", ""));
@@ -232,6 +245,7 @@ TEST(tools, isOutofBounds)
     ASSERT_FALSE(isOutofBounds("../", "/a"));
     ASSERT_TRUE(isOutofBounds("../../", "/a"));
     ASSERT_TRUE(isOutofBounds("../../../-/s/css_modules/ext.cite.ux-enhancements.css", "A/Blood_/"));
+    ASSERT_FALSE(isOutofBounds("../tool.html?path=../", "dir/"));
 }
 
 TEST(tools, normalize_link)
