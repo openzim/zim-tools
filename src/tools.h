@@ -194,6 +194,9 @@ void stripTitleInvalidChars(std::string& str);
 //Returns a vector of the links in a particular page. includes links under 'href' and 'src'
 std::vector<html_link> generic_getLinks(const std::string& page);
 
+// extract the path part of a URL
+std::string extractPathFromLink(const std::string& link);
+
 // checks if a relative path is out of bounds (relative to base)
 bool isOutofBounds(const std::string& input, std::string base);
 
