@@ -26,10 +26,10 @@
 #include <vector>
 #include <stdexcept>
 #include <sstream>
-
 #include <zim/writer/contentProvider.h>
 #include <zim/writer/item.h>
 #include <zim/item.h>
+
 
 /* Formatter for std::exception what() message:
  * throw std::runtime_error(
@@ -131,6 +131,8 @@ class ItemProvider : public zim::writer::ContentProvider
 // Guess if the item is a front article.
 // This is not a exact science, we use the mimetype to infer it.
 bool guess_is_front_article(const std::string& mimetype);
+bool isFontMimeType(const std::string& mimetype);
+
 
 
 class CopyItem : public zim::writer::Item         //Article class that will be passed to the zimwriter. Contains a zim::Article class, so it is easier to add a
@@ -208,4 +210,6 @@ std::string decodeHtmlEntities(const std::string& str);
 std::string normalize_link(const std::string& input, const std::string& baseUrl);
 
 std::string httpRedirectHtml(const std::string& redirectUrl);
+
+std::string asciitolower(const std::string& s);
 #endif  // OPENZIM_TOOLS_H
