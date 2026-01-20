@@ -31,6 +31,8 @@
 #include <zim/writer/item.h>
 #include <zim/item.h>
 
+extern std::map<std::string, std::string> extMimeTypes;
+
 /* Formatter for std::exception what() message:
  * throw std::runtime_error(
  *   Formatter() << "zimwriterfs: Unable to read" << filename << ": " << strerror(errno));

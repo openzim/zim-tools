@@ -41,6 +41,12 @@
 #define SEPARATOR "/"
 #endif
 
+std::map<std::string, std::string> extMimeTypes = {
+    {".ttf",  "font/ttf"},
+    {".otf",  "font/otf"},
+    {".woff", "font/woff"},
+    {".woff2","font/woff2"}
+};
 
 bool fileExists(const std::string& path)
 {
