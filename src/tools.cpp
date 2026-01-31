@@ -61,6 +61,17 @@ bool isDirectory(const std::string &path)
   return (filestatus.st_mode & S_IFMT) == S_IFDIR;
 }
 
+std::string getFileExtension(const std::string& path) {
+    const auto posOfLastDot = path.find_last_of(".");
+    if (posOfLastDot == std::string::npos) {
+        return "";
+    }
+    const auto partAfterLastDot = path.substr(posOfLastDot + 1);
+    return partAfterLastDot.find_first_of("/\\") == std::string::npos
+         ? partAfterLastDot
+         : "";
+}
+
 /* base64 */
 static const std::string base64_chars
     = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"

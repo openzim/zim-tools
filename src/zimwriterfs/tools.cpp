@@ -19,6 +19,7 @@
  */
 
 #include "tools.h"
+#include "../tools.h"
 
 #include <string.h>
 #include <sstream>
@@ -159,10 +160,11 @@ inline std::string inflateString(const std::string& str)
 
 inline bool seemsToBeHtml(const std::string& path)
 {
-  if (path.find_last_of(".") != std::string::npos) {
-    std::string mimeType = path.substr(path.find_last_of(".") + 1);
-    if (extMimeTypes.find(mimeType) != extMimeTypes.end()) {
-      return "text/html" == extMimeTypes[mimeType];
+  const auto extension = getFileExtension(path);
+  if (!extension.empty()) {
+    const auto it = extMimeTypes.find(extension);
+    if (it != extMimeTypes.end()) {
+      return "text/html" == it->second;
     }
   }
 
@@ -248,13 +250,13 @@ std::string getMimeTypeForFile(const std::string &directoryPath, const std::stri
   std::string mimeType;
 
   /* Try to get the mimeType from the file extension */
-  auto index_of_last_dot = filename.find_last_of(".");
-  if (index_of_last_dot != std::string::npos) {
-    auto extension = filename.substr(index_of_last_dot + 1);
+  const auto extension = getFileExtension(filename);
+  if (!extension.empty()){
     try {
       return extMimeTypes.at(extension);
     } catch (std::out_of_range&) {}
   }
+
 
   /* Try to get the mimeType from the cache */
   try {

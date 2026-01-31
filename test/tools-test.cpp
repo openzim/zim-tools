@@ -1,5 +1,4 @@
 #include "gtest/gtest.h"
-
 #include "../src/tools.h"
 #include <magic.h>
 #include <unordered_map>
@@ -466,4 +465,16 @@ TEST(tools, guessFrontArticle)
   ASSERT_FALSE(guess_is_front_article("plain/text"));
   ASSERT_FALSE(guess_is_front_article("some-text/html"));
   ASSERT_FALSE(guess_is_front_article("text/html;raw=true"));
+}
+
+TEST(CommonTools, GetFileExtension) {
+    EXPECT_EQ(getFileExtension("index.html"), "html");
+    EXPECT_EQ(getFileExtension("archive.tar.gz"), "gz");
+    EXPECT_EQ(getFileExtension("extensionCaseShouldBePreserved.JS"), "JS");
+    EXPECT_EQ(getFileExtension("empty_extension."), "");
+    EXPECT_EQ(getFileExtension("no_extension"),     "");
+    EXPECT_EQ(getFileExtension("./filename"),       "");
+    EXPECT_EQ(getFileExtension("repo.git/README"),  "");
+    EXPECT_EQ(getFileExtension(".\\filename"),       "");
+    EXPECT_EQ(getFileExtension("repo.git\\README"),  "");
 }
