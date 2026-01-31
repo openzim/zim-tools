@@ -467,3 +467,30 @@ TEST(tools, guessFrontArticle)
   ASSERT_FALSE(guess_is_front_article("some-text/html"));
   ASSERT_FALSE(guess_is_front_article("text/html;raw=true"));
 }
+
+TEST(CommonTools, AsciiToLower) {
+    EXPECT_EQ(asciitolower("Hello World!"), "hello world!");
+    EXPECT_EQ(asciitolower("AbC123!"), "abc123!");
+    EXPECT_EQ(asciitolower(""), "");
+    EXPECT_EQ(asciitolower("lower"), "lower");
+}
+
+TEST(CommonTools, GetFileExtension) {
+    EXPECT_EQ(getFileExtension("index.html"), "html");
+    EXPECT_EQ(getFileExtension("archive.tar.gz"), "gz");
+    EXPECT_EQ(getFileExtension("hiddenfile."), "");
+    EXPECT_EQ(getFileExtension("no_extension"), "");
+}
+
+TEST(CommonTools, SeemsToBeHtml) {
+    EXPECT_TRUE(seemsToBeHtml("index.html"));
+    EXPECT_TRUE(seemsToBeHtml("INDEX.HTM"));
+    EXPECT_FALSE(seemsToBeHtml("image.png"));
+    EXPECT_FALSE(seemsToBeHtml("document.pdf"));
+}
+
+TEST(CommonTools, GetMimeTypeForFile) {
+    EXPECT_EQ(getMimeTypeForFile("", "index.html"), "text/html");
+    EXPECT_EQ(getMimeTypeForFile("", "image.PNG"), "image/png");
+    EXPECT_EQ(getMimeTypeForFile("", "style.css"), "text/css");
+    EXPECT_EQ(getMimeTypeForFile("", "file.unknownext"), "application/octet-stream");
