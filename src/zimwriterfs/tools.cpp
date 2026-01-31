@@ -111,7 +111,7 @@ static std::map<std::string, std::string> _create_extMimeTypes()
   return extMimeTypes;
 }
 
-static std::map<std::string, std::string> extMimeTypes = _create_extMimeTypes();
+static const std::map<std::string, std::string> extMimeTypes = _create_extMimeTypes();
 
 static std::map<std::string, std::string> fileMimeTypes;
 
@@ -158,17 +158,15 @@ inline std::string inflateString(const std::string& str)
   return outstring;
 }
 
+std::string getMimeTypeFromExtension(const std::string& extension)
+{
+  const auto it = extMimeTypes.find(extension);
+  return it != extMimeTypes.end() ?  it->second : "";
+}
+
 inline bool seemsToBeHtml(const std::string& path)
 {
-  const auto extension = getFileExtension(path);
-  if (!extension.empty()) {
-    const auto it = extMimeTypes.find(extension);
-    if (it != extMimeTypes.end()) {
-      return "text/html" == it->second;
-    }
-  }
-
-  return false;
+  return getMimeTypeFromExtension(getFileExtension(path)) == "text/html";
 }
 
 std::string getFileContent(const std::string& path)
@@ -247,16 +245,11 @@ std::string generateDate()
 
 std::string getMimeTypeForFile(const std::string &directoryPath, const std::string& filename)
 {
-  std::string mimeType;
-
   /* Try to get the mimeType from the file extension */
-  const auto extension = getFileExtension(filename);
-  if (!extension.empty()){
-    try {
-      return extMimeTypes.at(extension);
-    } catch (std::out_of_range&) {}
+  std::string mimeType = getMimeTypeFromExtension(getFileExtension(filename));
+  if ( !mimeType.empty() ) {
+    return mimeType;
   }
-
 
   /* Try to get the mimeType from the cache */
   try {
