@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-
+#include "../src/zimwriterfs/tools.h"
 #include "../src/tools.h"
 #include <magic.h>
 #include <unordered_map>
@@ -473,4 +473,18 @@ TEST(CommonTools, AsciiToLower) {
     EXPECT_EQ(asciitolower("AbC123!"), "abc123!");
     EXPECT_EQ(asciitolower(""), "");
     EXPECT_EQ(asciitolower("lower"), "lower");
+}
+
+TEST(CommonTools, GetFileExtension) {
+    EXPECT_EQ(getFileExtension("index.html"), "html");
+    EXPECT_EQ(getFileExtension("archive.tar.gz"), "gz");
+    EXPECT_EQ(getFileExtension("hiddenfile."), "");
+    EXPECT_EQ(getFileExtension("no_extension"), "");
+}
+
+TEST(CommonTools, GetMimeTypeForFile) {
+    EXPECT_EQ(getMimeTypeForFile("", "index.html"), "text/html");
+    EXPECT_EQ(getMimeTypeForFile("", "image.PNG"), "image/png");
+    EXPECT_EQ(getMimeTypeForFile("", "style.css"), "text/css");
+    EXPECT_EQ(getMimeTypeForFile("", "file.unknownext"), "application/octet-stream");
 }
