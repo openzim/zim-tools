@@ -467,3 +467,10 @@ TEST(tools, guessFrontArticle)
   ASSERT_FALSE(guess_is_front_article("some-text/html"));
   ASSERT_FALSE(guess_is_front_article("text/html;raw=true"));
 }
+
+TEST(CommonTools, AsciiToLower) {
+    EXPECT_EQ(asciitolower("Hello World!"), "hello world!");
+    EXPECT_EQ(asciitolower("AbC123!"), "abc123!");
+    EXPECT_EQ(asciitolower(""), "");
+    EXPECT_EQ(asciitolower("lower"), "lower");
+}
