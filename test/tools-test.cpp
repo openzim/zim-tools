@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "../src/zimwriterfs/tools.h"
+#include "../src/zimwriterfs/tools.h"
 #include "../src/tools.h"
 #include <magic.h>
 #include <unordered_map>

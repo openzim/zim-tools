@@ -373,11 +373,7 @@ void ZimCreatorFS::adaptCss(std::string& data, const std::string& url) {
        otherwise not able to load same because of the
        same-origin security */
     std::string mimeType = getMimeTypeForFile(directoryPath, path);
-    if (mimeType == "application/font-ttf"
-        || mimeType == "application/font-woff"
-        || mimeType == "application/font-woff2"
-        || mimeType == "application/vnd.ms-opentype"
-        || mimeType == "application/vnd.ms-fontobject") {
+    if (isFontMimeType(mimeType)) {
       try {
         std::string fontContent = getFileContent(
             directoryPath + "/" + computeAbsolutePath(url, path));

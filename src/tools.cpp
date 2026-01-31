@@ -642,3 +642,16 @@ bool guess_is_front_article(const std::string& mimetype) {
   return ( mimetype.find("text/html") == 0
         && mimetype.find("raw=true") == std::string::npos);
 }
+
+bool isFontMimeType(const std::string& mimetype) {
+  std::string m = asciitolower(mimetype);
+     return m == "font/ttf"
+     ||  m == "font/woff"
+     ||  m == "font/woff2"
+     ||  m == "application/font-ttf"
+     ||  m == "application/font-woff"
+     ||  m == "application/font-woff2"
+     ||  m == "application/vnd.ms-opentype"
+     ||  m == "application/vnd.ms-fontobject"
+     ||  m == "application/x-font-ttf";
+}
