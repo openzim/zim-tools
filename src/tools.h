@@ -216,3 +216,4 @@ std::string getMimeTypeFromExtension(const std::string& extension);
 bool isFontMimeType(const std::string& mimetype);
 
 #endif  // OPENZIM_TOOLS_H
+
