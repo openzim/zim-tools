@@ -33,6 +33,7 @@
 #include <algorithm>
 #include <regex>
 #include <array>
+#include <map>
 
 #ifdef _WIN32
 #define SEPARATOR "\\"
@@ -41,6 +42,14 @@
 #define SEPARATOR "/"
 #endif
 
+
+std::string asciitolower(std::string s)
+{
+    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {
+        return ('A' <= c && c <= 'Z') ? c - ('Z' - 'z') : c;
+        });
+    return s;
+}
 
 bool fileExists(const std::string& path)
 {
@@ -498,12 +507,6 @@ UriKind specialUriSchemeKind(const std::string& s)
     return it != uriSchemes.end() ? it->second : UriKind::OTHER;
 }
 
-void asciitolower(std::string& s)
-{
-    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c){
-        return ('A' <= c && c <= 'Z') ? c - ('Z' - 'z') : c;
-    });
-}
 
 } // unnamed namespace
 
