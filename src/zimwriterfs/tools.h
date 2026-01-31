@@ -34,4 +34,6 @@ std::string getMimeTypeForFile(const std::string& basedir, const std::string& fi
 
 std::string getFileExtension(const std::string& path);
 
+std::string getMimeTypeFromExtension(const std::string& extension);
+
 #endif // OPENZIM_ZIMWRITERFS_TOOLS_H

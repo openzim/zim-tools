@@ -119,6 +119,15 @@ inline std::string inflateString(const std::string& str)
   return outstring;
 }
 
+std::string getMimeTypeFromExtension(const std::string& extension) {
+    std::string extLower = asciitolower(extension);
+    auto it = extMimeTypes.find(extLower);
+    if (it != extMimeTypes.end()) {
+        return it->second;
+    }
+    return "";
+}
+
 std::string getFileExtension(const std::string& path) {
     auto position = path.find_last_of(".");
     if (position == std::string::npos || position + 1 >= path.size()) {
@@ -129,13 +138,9 @@ std::string getFileExtension(const std::string& path) {
 
 inline bool seemsToBeHtml(const std::string& path)
 {
-    std::string extension = asciitolower(getFileExtension(path));
-    if (extMimeTypes.find(extension) != extMimeTypes.end()) {
-      return "text/html" == extMimeTypes[extension];
-    }
-  
-
-  return false;
+    std::string extension = getFileExtension(path);
+    std::string mime = getMimeTypeFromExtension(extension);
+    return mime == "text/html";
 }
 
 std::string getFileContent(const std::string& path)
@@ -212,36 +217,39 @@ std::string generateDate()
 }
 
 
-std::string getMimeTypeForFile(const std::string &directoryPath, const std::string& filename)
+std::string getMimeTypeForFile(const std::string& directoryPath, const std::string& filename)
 {
-  std::string mimeType;
+    std::string mimeType;
 
-  /* Try to get the mimeType from the file extension */
-    auto extension = asciitolower(getFileExtension(filename));
-    if (!extension.empty()){
-    try {
-      return extMimeTypes.at(extension);
-    } catch (std::out_of_range&) {}
-  }
-  
-
-  /* Try to get the mimeType from the cache */
-  try {
-    return fileMimeTypes.at(filename);
-  } catch (std::out_of_range&) {}
-
-  /* Try to get the mimeType with libmagic */
-  try {
-    std::string path = directoryPath + "/" + filename;
-    mimeType = std::string(magic_file(magic, path.c_str()));
-    if (mimeType.find(";") != std::string::npos) {
-      mimeType = mimeType.substr(0, mimeType.find(";"));
+    /* Try to get the mimeType from the file extension */
+    auto extension = (getFileExtension(filename));
+    if (!extension.empty()) {
+        std::string mime = getMimeTypeFromExtension(extension);
+        if (!mime.empty()) {
+            return mime;
+        }
     }
-    fileMimeTypes[filename] = mimeType;
-  } catch (...) { }
-  if (mimeType.empty()) {
-    return "application/octet-stream";
-  } else {
-    return mimeType;
-  }
+
+    /* Try to get the mimeType from the cache */
+    try {
+        return fileMimeTypes.at(filename);
+    }
+    catch (std::out_of_range&) {}
+
+    /* Try to get the mimeType with libmagic */
+    try {
+        std::string path = directoryPath + "/" + filename;
+        mimeType = std::string(magic_file(magic, path.c_str()));
+        if (mimeType.find(";") != std::string::npos) {
+            mimeType = mimeType.substr(0, mimeType.find(";"));
+        }
+        fileMimeTypes[filename] = mimeType;
+    }
+    catch (...) {}
+    if (mimeType.empty()) {
+        return "application/octet-stream";
+    }
+    else {
+        return mimeType;
+    }
 }
