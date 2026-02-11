@@ -363,12 +363,47 @@ std::vector<html_link> generic_getLinks(const std::string& page)
     return links;
 }
 
+std::string extractPathFromLink(const std::string& link)
+{
+    // Reminder: URL format for hyperrefs is: scheme://user:password@host:port/path?query#fragment
+    // Note: this function assumes that the provided URL is a hyperref and should only be applied on such URLs
+    // strip scheme
+    auto schemeI = link.find("://");
+    if (schemeI != std::string::npos) {
+        schemeI = schemeI + 3;
+    } else {
+        schemeI = 0;
+    }
+    // strip user+password
+    auto authorityEndI = link.find_first_of("/?#", schemeI);
+    auto passwordI = link.find("@", schemeI);
+    if (passwordI != std::string::npos && passwordI < authorityEndI) {
+        passwordI = passwordI + 1;
+    } else {
+        passwordI = schemeI;
+    }
+    // find path
+    auto firstSlashI = link.find("/", passwordI);
+    auto pathEndI = link.find_first_of("?#", passwordI);
+    // a path must start with a / if there is a :// in the URL
+    // if there is no ://, then the path, a path may start without a leading /, but does so immediately
+    std::string path;
+    if (schemeI == 0) {
+        path = link.substr(0, pathEndI);
+    } else {
+        path = link.substr(firstSlashI, pathEndI-firstSlashI);
+    }
+    return path;
+}
+
 bool isOutofBounds(const std::string& input, std::string base)
 {
     if (input.empty()) return false;
 
     if (!base.length() || base.back() != '/')
         base.push_back('/');
+
+    std::string path = extractPathFromLink(input);
 
     int nr = 0;
     if (base.front() != '/')
@@ -377,7 +412,7 @@ bool isOutofBounds(const std::string& input, std::string base)
     //count nr of substrings ../
     int nrsteps = 0;
     std::string::size_type pos = 0;
-    while((pos = input.find("../", pos)) != std::string::npos) {
+    while((pos = path.find("../", pos)) != std::string::npos) {
         nrsteps++;
         pos += 3;
     }
