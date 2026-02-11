@@ -73,7 +73,7 @@ jobs:
           meson test --verbose
 
   Windows:
-    runs-on: windows-2022
+    runs-on: windows-2025
 
     steps:
       - name: Checkout code
