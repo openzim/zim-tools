@@ -1,6 +1,5 @@
 #include "gtest/gtest.h"
 #include "../src/zimwriterfs/tools.h"
-#include "../src/zimwriterfs/tools.h"
 #include "../src/tools.h"
 #include <magic.h>
 #include <unordered_map>
@@ -481,6 +480,8 @@ TEST(CommonTools, GetFileExtension) {
     EXPECT_EQ(getFileExtension("archive.tar.gz"), "gz");
     EXPECT_EQ(getFileExtension("hiddenfile."), "");
     EXPECT_EQ(getFileExtension("no_extension"), "");
+    EXPECT_EQ(getFileExtension("./filename"), "");
+    EXPECT_EQ(getFileExtension("repo.git/README"), "");
 }
 
 TEST(CommonTools, GetMimeTypeForFile) {
