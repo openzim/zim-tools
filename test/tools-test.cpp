@@ -478,3 +478,11 @@ TEST(CommonTools, GetFileExtension) {
     EXPECT_EQ(getFileExtension(".\\filename"),       "");
     EXPECT_EQ(getFileExtension("repo.git\\README"),  "");
 }
+
+TEST(CommonTools, AsciiToLower) {
+    EXPECT_EQ(asciitolower(""), "");
+    EXPECT_EQ(asciitolower("Hello World!"), "hello world!");
+    EXPECT_EQ(asciitolower("AbC123!"), "abc123!");
+    EXPECT_EQ(asciitolower("ÄBÇ123!"), "ÄbÇ123!");
+    EXPECT_EQ(asciitolower("lower"), "lower");
+}

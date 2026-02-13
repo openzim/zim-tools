@@ -42,6 +42,14 @@
 #endif
 
 
+std::string asciitolower(std::string s)
+{
+    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {
+        return ('A' <= c && c <= 'Z') ? c - ('Z' - 'z') : c;
+        });
+    return s;
+}
+
 bool fileExists(const std::string& path)
 {
   bool flag = false;
@@ -509,12 +517,6 @@ UriKind specialUriSchemeKind(const std::string& s)
     return it != uriSchemes.end() ? it->second : UriKind::OTHER;
 }
 
-void asciitolower(std::string& s)
-{
-    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c){
-        return ('A' <= c && c <= 'Z') ? c - ('Z' - 'z') : c;
-    });
-}
 
 } // unnamed namespace
 
@@ -533,8 +535,7 @@ UriKind html_link::detectUriKind(const std::string& input_string)
          && input_string[k+2] == '/' )
         return UriKind::GENERIC_URI;
 
-    std::string scheme = input_string.substr(0, k);
-    asciitolower(scheme);
+    const std::string scheme = asciitolower(input_string.substr(0, k));
     return specialUriSchemeKind(scheme);
 }
 

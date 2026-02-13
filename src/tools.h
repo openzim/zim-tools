@@ -209,4 +209,7 @@ std::string decodeHtmlEntities(const std::string& str);
 std::string normalize_link(const std::string& input, const std::string& baseUrl);
 
 std::string httpRedirectHtml(const std::string& redirectUrl);
+
+std::string asciitolower(std::string s);
+
 #endif  // OPENZIM_TOOLS_H
