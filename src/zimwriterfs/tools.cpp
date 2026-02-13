@@ -19,6 +19,7 @@
  */
 
 #include "tools.h"
+#include "../tools.h"
 
 #include <string.h>
 #include <sstream>
@@ -29,88 +30,7 @@
 
 #include <zlib.h>
 #include <magic.h>
-
-/* Init file extensions hash */
-static std::map<std::string, std::string> _create_extMimeTypes()
-{
-  std::map<std::string, std::string> extMimeTypes;
-  extMimeTypes["HTML"] = "text/html";
-  extMimeTypes["html"] = "text/html";
-  extMimeTypes["HTM"] = "text/html";
-  extMimeTypes["htm"] = "text/html";
-  extMimeTypes["PNG"] = "image/png";
-  extMimeTypes["png"] = "image/png";
-  extMimeTypes["TIFF"] = "image/tiff";
-  extMimeTypes["tiff"] = "image/tiff";
-  extMimeTypes["TIF"] = "image/tiff";
-  extMimeTypes["tif"] = "image/tiff";
-  extMimeTypes["JPEG"] = "image/jpeg";
-  extMimeTypes["jpeg"] = "image/jpeg";
-  extMimeTypes["JPG"] = "image/jpeg";
-  extMimeTypes["jpg"] = "image/jpeg";
-  extMimeTypes["GIF"] = "image/gif";
-  extMimeTypes["gif"] = "image/gif";
-  extMimeTypes["SVG"] = "image/svg+xml";
-  extMimeTypes["svg"] = "image/svg+xml";
-  extMimeTypes["TXT"] = "text/plain";
-  extMimeTypes["txt"] = "text/plain";
-  extMimeTypes["XML"] = "text/xml";
-  extMimeTypes["xml"] = "text/xml";
-  extMimeTypes["EPUB"] = "application/epub+zip";
-  extMimeTypes["epub"] = "application/epub+zip";
-  extMimeTypes["PDF"] = "application/pdf";
-  extMimeTypes["pdf"] = "application/pdf";
-  extMimeTypes["OGG"] = "audio/ogg";
-  extMimeTypes["ogg"] = "audio/ogg";
-  extMimeTypes["OGV"] = "video/ogg";
-  extMimeTypes["ogv"] = "video/ogg";
-  extMimeTypes["JS"] = "application/javascript";
-  extMimeTypes["js"] = "application/javascript";
-  extMimeTypes["JSON"] = "application/json";
-  extMimeTypes["json"] = "application/json";
-  extMimeTypes["CSS"] = "text/css";
-  extMimeTypes["css"] = "text/css";
-  extMimeTypes["otf"] = "font/otf";
-  extMimeTypes["OTF"] = "font/otf";
-  extMimeTypes["sfnt"] = "font/sfnt";
-  extMimeTypes["SFNT"] = "font/sfnt";
-  extMimeTypes["eot"] = "application/vnd.ms-fontobject";
-  extMimeTypes["EOT"] = "application/vnd.ms-fontobject";
-  extMimeTypes["ttf"] = "font/ttf";
-  extMimeTypes["TTF"] = "font/ttf";
-  extMimeTypes["collection"] = "font/collection";
-  extMimeTypes["COLLECTION"] = "font/collection";
-  extMimeTypes["woff"] = "font/woff";
-  extMimeTypes["WOFF"] = "font/woff";
-  extMimeTypes["woff2"] = "font/woff2";
-  extMimeTypes["WOFF2"] = "font/woff2";
-  extMimeTypes["vtt"] = "text/vtt";
-  extMimeTypes["VTT"] = "text/vtt";
-  extMimeTypes["webm"] = "video/webm";
-  extMimeTypes["WEBM"] = "video/webm";
-  extMimeTypes["webp"] = "image/webp";
-  extMimeTypes["WEBP"] = "image/webp";
-  extMimeTypes["mp4"] = "video/mp4";
-  extMimeTypes["MP4"] = "video/mp4";
-  extMimeTypes["doc"] = "application/msword";
-  extMimeTypes["DOC"] = "application/msword";
-  extMimeTypes["docx"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-  extMimeTypes["DOCX"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-  extMimeTypes["ppt"] = "application/vnd.ms-powerpoint";
-  extMimeTypes["PPT"] = "application/vnd.ms-powerpoint";
-  extMimeTypes["odt"] = "application/vnd.oasis.opendocument.text";
-  extMimeTypes["ODT"] = "application/vnd.oasis.opendocument.text";
-  extMimeTypes["odp"] = "application/vnd.oasis.opendocument.text";
-  extMimeTypes["ODP"] = "application/vnd.oasis.opendocument.text";
-  extMimeTypes["zip"] = "application/zip";
-  extMimeTypes["ZIP"] = "application/zip";
-  extMimeTypes["wasm"] = "application/wasm";
-  extMimeTypes["WASM"] = "application/wasm";
-
-  return extMimeTypes;
-}
-
-static std::map<std::string, std::string> extMimeTypes = _create_extMimeTypes();
+#include <cctype>
 
 static std::map<std::string, std::string> fileMimeTypes;
 
@@ -157,16 +77,23 @@ inline std::string inflateString(const std::string& str)
   return outstring;
 }
 
+std::string getFileExtension(const std::string& path) {
+    const auto pos = path.find_last_of(".");
+    if (pos == std::string::npos) {
+        return "";
+    }
+    return path.substr(pos + 1);
+}
+
 inline bool seemsToBeHtml(const std::string& path)
 {
   if (path.find_last_of(".") != std::string::npos) {
-    std::string mimeType = path.substr(path.find_last_of(".") + 1);
-    if (extMimeTypes.find(mimeType) != extMimeTypes.end()) {
-      return "text/html" == extMimeTypes[mimeType];
-    }
+    std::string basedir = path.substr(0, path.find_last_of("/"));
+    std::string filename = path.substr(path.find_last_of("/") + 1);
+    return getMimeTypeForFile(basedir, filename) == "text/html";
   }
 
-  return false;
+  return getMimeTypeForFile("", path) == "text/html";
 }
 
 std::string getFileContent(const std::string& path)
@@ -248,12 +175,9 @@ std::string getMimeTypeForFile(const std::string &directoryPath, const std::stri
   std::string mimeType;
 
   /* Try to get the mimeType from the file extension */
-  auto index_of_last_dot = filename.find_last_of(".");
-  if (index_of_last_dot != std::string::npos) {
-    auto extension = filename.substr(index_of_last_dot + 1);
-    try {
-      return extMimeTypes.at(extension);
-    } catch (std::out_of_range&) {}
+  const std::string mime = getMimeTypeFromExtension(getFileExtension(filename));
+  if(!mime.empty()) {
+    return mime;
   }
 
   /* Try to get the mimeType from the cache */
