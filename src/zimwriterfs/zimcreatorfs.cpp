@@ -177,8 +177,7 @@ void ZimCreatorFS::addFile(const std::string& path)
   zim::writer::Hints hints;
 
   std::shared_ptr<zim::writer::Item> item;
-  if ( mimetype.find("text/html") != std::string::npos
-    || mimetype.find("text/css") != std::string::npos) {
+  if ( mimetype.find("text/html") != std::string::npos ) {
     auto content = getFileContent(path);
 
     if (mimetype.find("text/html") != std::string::npos) {
@@ -189,8 +188,6 @@ void ZimCreatorFS::addFile(const std::string& path)
         addRedirection(url, title, redirectUrl, hints);
         return;
       }
-    } else {
-      adaptCss(content, url);
     }
 
     item = zim::writer::StringItem::create(url, mimetype, title, hints, content);
@@ -333,64 +330,4 @@ std::string ZimCreatorFS::parseAndAdaptHtml(std::string& data, std::string& titl
     }
   }
   return "";
-}
-
-void ZimCreatorFS::adaptCss(std::string& data, const std::string& url) {
-  /* Rewrite url() values in the CSS */
-  size_t startPos = 0;
-  size_t endPos = 0;
-  std::string targetUrl;
-
-  while ((startPos = data.find("url(", endPos))
-         && startPos != std::string::npos) {
-
-    /* URL delimiters */
-    endPos = data.find(")", startPos);
-    startPos = startPos + (data[startPos + 4] == '\''
-                                   || data[startPos + 4] == '"'
-                               ? 5
-                               : 4);
-    endPos = endPos - (data[endPos - 1] == '\''
-                               || data[endPos - 1] == '"'
-                           ? 1
-                           : 0);
-    targetUrl = data.substr(startPos, endPos - startPos);
-    std::string startDelimiter = data.substr(startPos - 1, 1);
-    std::string endDelimiter = data.substr(endPos, 1);
-
-    if (targetUrl.substr(0, 5) == "data:") {
-      continue;
-    }
-
-    /* Deal with URL with arguments (using '? ') */
-    std::string path = targetUrl;
-    size_t markPos = targetUrl.find("?");
-    if (markPos != std::string::npos) {
-      path = targetUrl.substr(0, markPos);
-    }
-
-    /* Embeded fonts need to be inline because Kiwix is
-       otherwise not able to load same because of the
-       same-origin security */
-    std::string mimeType = getMimeTypeForFile(directoryPath, path);
-    if (mimeType == "application/font-ttf"
-        || mimeType == "application/font-woff"
-        || mimeType == "application/font-woff2"
-        || mimeType == "application/vnd.ms-opentype"
-        || mimeType == "application/vnd.ms-fontobject") {
-      try {
-        std::string fontContent = getFileContent(
-            directoryPath + "/" + computeAbsolutePath(url, path));
-        replaceStringInPlaceOnce(
-            data,
-            startDelimiter + targetUrl + endDelimiter,
-            startDelimiter + "data:" + mimeType + ";base64,"
-                + base64_encode(reinterpret_cast<const unsigned char*>(
-                                    fontContent.c_str()),
-                                fontContent.length())
-                + endDelimiter);
-      } catch (...) {
-      }
-    }
-  }
 }
