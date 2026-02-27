@@ -42,6 +42,14 @@
 #endif
 
 
+std::string asciitolower(std::string s)
+{
+    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {
+        return ('A' <= c && c <= 'Z') ? c - ('Z' - 'z') : c;
+        });
+    return s;
+}
+
 bool fileExists(const std::string& path)
 {
   bool flag = false;
@@ -59,6 +67,17 @@ bool isDirectory(const std::string &path)
   struct stat filestatus;
   stat(path.c_str(), &filestatus);
   return (filestatus.st_mode & S_IFMT) == S_IFDIR;
+}
+
+std::string getFileExtension(const std::string& path) {
+    const auto posOfLastDot = path.find_last_of(".");
+    if (posOfLastDot == std::string::npos) {
+        return "";
+    }
+    const auto partAfterLastDot = path.substr(posOfLastDot + 1);
+    return partAfterLastDot.find_first_of("/\\") == std::string::npos
+         ? partAfterLastDot
+         : "";
 }
 
 /* base64 */
@@ -498,12 +517,6 @@ UriKind specialUriSchemeKind(const std::string& s)
     return it != uriSchemes.end() ? it->second : UriKind::OTHER;
 }
 
-void asciitolower(std::string& s)
-{
-    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c){
-        return ('A' <= c && c <= 'Z') ? c - ('Z' - 'z') : c;
-    });
-}
 
 } // unnamed namespace
 
@@ -522,8 +535,7 @@ UriKind html_link::detectUriKind(const std::string& input_string)
          && input_string[k+2] == '/' )
         return UriKind::GENERIC_URI;
 
-    std::string scheme = input_string.substr(0, k);
-    asciitolower(scheme);
+    const std::string scheme = asciitolower(input_string.substr(0, k));
     return specialUriSchemeKind(scheme);
 }
 

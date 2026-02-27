@@ -179,6 +179,7 @@ std::string computeAbsolutePath(const std::string& path,
                                 const std::string& relativePath);
 bool fileExists(const std::string& path);
 bool isDirectory(const std::string &path);
+std::string getFileExtension(const std::string& path);
 
 std::string base64_encode(unsigned char const* bytes_to_encode,
                           unsigned int in_len);
@@ -208,4 +209,7 @@ std::string decodeHtmlEntities(const std::string& str);
 std::string normalize_link(const std::string& input, const std::string& baseUrl);
 
 std::string httpRedirectHtml(const std::string& redirectUrl);
+
+std::string asciitolower(std::string s);
+
 #endif  // OPENZIM_TOOLS_H
