@@ -42,7 +42,6 @@ class ZimCreatorFS : public zim::writer::Creator
   const std::string & basedir() const { return directoryPath; }
   const std::string & canonicalBaseDir() const { return canonical_basedir; }
   std::string parseAndAdaptHtml(std::string& data, std::string& title, const std::string& url);
-  void adaptCss(std::string& data, const std::string& url);
 
   void addMetadata(const std::string& key, const std::string& content) {
     if ( !content.empty() ) {
