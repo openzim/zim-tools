@@ -257,6 +257,17 @@ struct GumboOutputDestructor {
   GumboOutput* output;
 };
 
+inline bool isValidTitle(const std::string& title, size_t min_length)
+{
+  static const std::regex alphanumeric_regex("[a-zA-Z0-9]");
+  /* 1. Ensure the title has at least 3 characters */
+  bool isLongEnough = title.length() >= min_length;
+  /* 2. Ensure the title contains at least one alphanumeric character */
+  /* (not all special chars) */
+  bool hasAlphanumeric = std::regex_search(title, alphanumeric_regex);
+  return isLongEnough && hasAlphanumeric;
+}
+
 std::string ZimCreatorFS::parseAndAdaptHtml(std::string& data, std::string& title, const std::string& url)
 {
   GumboOutput* output = gumbo_parse(data.c_str());
@@ -327,6 +338,11 @@ std::string ZimCreatorFS::parseAndAdaptHtml(std::string& data, std::string& titl
         }
         std::replace(title.begin(), title.end(), '_', ' ');
       }
+    }
+    if (!isValidTitle(title, 3)){
+      std::cerr << "Warning: Generated title is invalid for URL: " << url
+                << std::endl;
+      title = "Unknown title";  // or some other default title
     }
   }
   return "";
