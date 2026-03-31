@@ -271,6 +271,7 @@ std::string httpRedirectHtml(const std::string& redirectUrl);
 
 std::string asciitolower(std::string s);
 
+// Return the count of graphemes in the provided text string
 size_t getTextLength(const std::string& utf8EncodedString);
 
 #endif  // OPENZIM_TOOLS_H
