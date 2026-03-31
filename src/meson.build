@@ -15,15 +15,15 @@ if target_machine.system() != 'windows'
 endif
 
 executable('zimdump', 'zimdump.cpp', 'tools.cpp',
-  dependencies: [libzim_dep, docopt_dep],
+  dependencies: [libzim_dep, docopt_dep, icu_uc_dep, icu_dep],
   install: true)
 
 executable('zimdiff', ['zimdiff.cpp', 'tools.cpp'],
-  dependencies: libzim_dep,
+  dependencies: [libzim_dep, icu_uc_dep, icu_dep],
   install: true)
 
 executable('zimpatch', ['zimpatch.cpp', 'tools.cpp'],
-  dependencies: libzim_dep,
+  dependencies: [libzim_dep, icu_uc_dep, icu_dep],
   install: true)
 
 executable('zimsplit', 'zimsplit.cpp',
@@ -31,7 +31,7 @@ executable('zimsplit', 'zimsplit.cpp',
   install: true)
 
 executable('zimrecreate', ['zimrecreate.cpp', 'tools.cpp'],
-  dependencies: libzim_dep,
+  dependencies: [libzim_dep, icu_uc_dep, icu_dep],
   install: true)
 
 subdir('zimcheck')

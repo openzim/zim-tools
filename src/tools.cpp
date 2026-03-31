@@ -33,6 +33,8 @@
 #include <algorithm>
 #include <regex>
 #include <array>
+#include <unicode/brkiter.h>
+#include <unicode/utypes.h>
 #include <unicode/unistr.h>
 
 #ifdef _WIN32
@@ -680,6 +682,23 @@ size_t getTextLength(const std::string& utf8EncodedString)
   // This is broken
   // icu::StringPiece stringPiece(utf8EncodedString);
   // This is not
-  icu::StringPiece stringPiece(utf8EncodedString.data(), static_cast<int32_t>(utf8EncodedString.size()));
-  return icu::UnicodeString::fromUTF8(stringPiece).length();
+  icu::StringPiece stringPiece(utf8EncodedString.data(),
+                               static_cast<int32_t>(utf8EncodedString.size()));
+  icu::UnicodeString ustr = icu::UnicodeString::fromUTF8(stringPiece);
+
+  UErrorCode status = U_ZERO_ERROR;
+  std::unique_ptr<icu::BreakIterator> bi(
+      icu::BreakIterator::createCharacterInstance(icu::Locale::getRoot(), status));
+
+  if (!U_SUCCESS(status)) {
+    return ustr.length();  // Fallback to codepoint count
+  }
+
+  bi->setText(ustr);
+
+  size_t count = 0;
+  while (bi->next() != icu::BreakIterator::DONE) {
+    ++count;
+  }
+  return count;
 }
