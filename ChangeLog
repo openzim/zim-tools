@@ -1,3 +1,12 @@
+zim-tools 3.7.0
+===============
+
+ * zimwriterfs: Better handling of file extension (case) (@veloman-yunkan #494)
+ * zimcheck: Properly check the `M/Counter` value (@Pranavjeet-Naidu #497)
+ * Zimcheck: switch to new API for illustrations (@veloman-yunkan #476)
+ * Various updates in the CI (@kelson42 #472 #483 #493)
+ * Requires now libzim 9.4, instead of 9.2 (@kelson42 #480)
+
 zim-tools 3.6.0
 ===============
 
