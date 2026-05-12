@@ -170,6 +170,7 @@ void ErrorLogger::setTestResult(TestType type, bool status) {
 
 void ErrorLogger::addMsg(MsgId msgid, const MsgParams& msgParams)
 {
+    std::lock_guard<std::mutex> lock(this->print_mutex);
   const MsgInfo& m = msgTable.at(msgid);
   setTestResult(m.check, false);
   reportMsgs[size_t(m.check)].push_back({msgid, msgParams});

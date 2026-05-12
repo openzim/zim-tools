@@ -4,6 +4,7 @@
 #include <vector>
 #include <iostream>
 #include <bitset>
+#include <mutex>
 
 #include <mustache.hpp>
 
@@ -82,6 +83,8 @@ class ErrorLogger {
 
     // testStatus[i] corresponds to the status of i'th test
     std::bitset<size_t(TestType::COUNT)> testStatus;
+
+    std::mutex print_mutex;
 
     mutable JSON::OutputStream jsonOutputStream;
 
