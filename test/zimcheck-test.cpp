@@ -147,7 +147,6 @@ Options:
  -R --redundant       Redundant data check
  -U --url_internal    URL check - Internal URLs
  -X --url_external    URL check - External URLs
- -D --details         Details of error
  -B --progress        Print progress report
  -J --json            Output in JSON format
  -H --help            Displays Help

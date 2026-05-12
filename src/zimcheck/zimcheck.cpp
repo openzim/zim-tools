@@ -61,7 +61,6 @@ Options:
  -R --redundant       Redundant data check
  -U --url_internal    URL check - Internal URLs
  -X --url_external    URL check - External URLs
- -D --details         Details of error
  -B --progress        Print progress report
  -J --json            Output in JSON format
  -H --help            Displays Help
@@ -126,7 +125,6 @@ int zimcheck(const Options& args)
 
     bool run_all = false;
     EnabledTests enabled_tests;
-    bool error_details = false;
     bool no_args = true;
     bool json = false;
     int thread_count = 1;
@@ -175,8 +173,6 @@ int zimcheck(const Options& args)
         } else if (arg.first == "--redirect_loop" && arg.second.asBool()) {
             enabled_tests.enable(TestType::REDIRECT);
             no_args = false;
-        } else if (arg.first == "--details") {
-            error_details = arg.second.asBool();
         } else if (arg.first == "--json") {
             json = arg.second.asBool();
         } else if (arg.first == "--threads") {
