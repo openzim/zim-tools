@@ -32,6 +32,10 @@ Most famous tools are:
   opened with a ZIM reader; [Kiwix](https://kiwix.org) is one example,
   but there are [others](https://openzim.org/wiki/ZIM_Readers).
 
+* `zimfuse` creates a filesystem FUSE module that enables access to 
+  the content of a [ZIM](https://openzim.org) file, allowing users to 
+  view entries as files.
+
 A few other tools are provided as well but are of less value for most
 of the usages.
 
@@ -60,6 +64,8 @@ need to be available:
 * [Z](https://zlib.net/) (package `zlib1g-dev` on Debian/Ubuntu)
 * [Gumbo](https://github.com/google/gumbo-parser) (package `libgumbo-dev` on Debian/Ubuntu)
 * [ICU](http://site.icu-project.org/) (package `libicu-dev` on Debian/Ubuntu)
+
+`zimfuse` relies on [FUSE](https://github.com/libfuse/libfuse) (package `fuse3` on Debian/Ubuntu)
 
 These dependencies may or may not be packaged by your operating
 system. They may also be packaged but only in an older version. The

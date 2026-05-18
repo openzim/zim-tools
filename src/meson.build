@@ -36,6 +36,7 @@ executable('zimrecreate', ['zimrecreate.cpp', 'tools.cpp'],
 
 subdir('zimcheck')
 
-if with_writer
+if with_writer_and_mount
   subdir('zimwriterfs')
+  subdir('zimfuse')
 endif
