@@ -212,4 +212,5 @@ std::string httpRedirectHtml(const std::string& redirectUrl);
 
 std::string asciitolower(std::string s);
 
+size_t getTextLength(const std::string& utf8EncodedString);
 #endif  // OPENZIM_TOOLS_H

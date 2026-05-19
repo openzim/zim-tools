@@ -486,3 +486,26 @@ TEST(CommonTools, AsciiToLower) {
     EXPECT_EQ(asciitolower("ÄBÇ123!"), "ÄbÇ123!");
     EXPECT_EQ(asciitolower("lower"), "lower");
 }
+
+TEST(CommonTools, getTextLength)
+{
+  // Basic ASCII
+  EXPECT_EQ(getTextLength(""), 0u);
+  EXPECT_EQ(getTextLength("hello"), 5u);
+
+  // Multi-byte UTF-8 (1 codepoint each)
+  EXPECT_EQ(getTextLength("café"), 4u);
+  EXPECT_EQ(getTextLength("日本語"), 3u);
+
+  // BUG TEST: Hindi "में" = 1 grapheme, 3 codepoints
+  EXPECT_EQ(getTextLength("में"), 1u);
+
+  // ZWJ emoji: 👨‍👩‍👧 = 1 grapheme, 5 codepoints
+  EXPECT_EQ(getTextLength("\U0001F468\u200D\U0001F469\u200D\U0001F467"), 1u);
+
+  // Emoji + skin tone: 👋🏽 = 1 grapheme, 2 codepoints
+  EXPECT_EQ(getTextLength("\U0001F44B\U0001F3FD"), 1u);
+
+  // Mixed: "café में" = 6 graphemes
+  EXPECT_EQ(getTextLength("café में"), 6u);
+}

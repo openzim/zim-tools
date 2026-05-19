@@ -8,7 +8,7 @@ endif
 
 inc = include_directories(extra_include)
 
-zimcheck_deps = [libzim_dep, icu_dep, docopt_dep]
+zimcheck_deps = [libzim_dep, icu_uc_dep, icu_dep, docopt_dep]
 
 # C++ std::thread is implemented using pthread on Linux by GCC, and on FreeBSD
 # for both GCC and LLVM.
