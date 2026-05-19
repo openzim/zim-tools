@@ -7,6 +7,7 @@
 #include <mutex>
 
 #include <mustache.hpp>
+#include <cassert>
 
 #include "json_tools.h"
 #include "../progress.h"
@@ -78,8 +79,7 @@ class ErrorLogger {
       MsgParams msgParams;
     };
 
-    // reportMsgs[i] holds messages for the i'th test/check
-    std::vector<std::vector<MsgIdWithParams>> reportMsgs;
+    bool logStreamOpen = false;
 
     // testStatus[i] corresponds to the status of i'th test
     std::bitset<size_t(TestType::COUNT)> testStatus;
@@ -97,6 +97,9 @@ class ErrorLogger {
 
     void infoMsg(const std::string& msg) const;
 
+    void startLogStream();
+    void endLogStream();
+
     template<class T>
     void addInfo(const std::string& key, const T& value) {
       if ( jsonOutputStream.enabled() ) {
@@ -106,7 +109,6 @@ class ErrorLogger {
 
     void setTestResult(TestType type, bool status);
     void addMsg(MsgId msgid, const MsgParams& msgParams);
-    void report(bool error_details) const;
     bool overallStatus() const;
 };
 

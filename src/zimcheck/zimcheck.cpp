@@ -219,6 +219,7 @@ int zimcheck(const Options& args)
         if (should_run_full_test) {
             zim::Archive archive( filename );
             error.addInfo("file_uuid",  stringify(archive.getUuid()));
+            error.startLogStream();
 
             //Test 1: Internal Checksum
             if(enabled_tests.isEnabled(TestType::CHECKSUM)) {
@@ -276,11 +277,17 @@ int zimcheck(const Options& args)
 
             if ( enabled_tests.isEnabled(TestType::REDIRECT))
                 test_redirect_loop(archive, error);
+
+            error.endLogStream();
+        }
+        else
+        {
+            error.startLogStream();
+            error.endLogStream();
         }
 
         const bool overallStatus = error.overallStatus();
         error.addInfo("status", overallStatus);
-        error.report(error_details);
         if( overallStatus )
         {
             error.infoMsg("[INFO] Overall Test Status: Pass");

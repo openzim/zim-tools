@@ -26,17 +26,17 @@ std::unordered_map<LogTag, std::string> tagToStr = {
 };
 
 std::unordered_map<TestType, std::pair<LogTag, std::string>> errormapping = {
-    { TestType::CHECKSUM,      {LogTag::ERROR, "Invalid checksum"}},
-    { TestType::INTEGRITY,     {LogTag::ERROR, "Invalid low-level structure"}},
-    { TestType::EMPTY,         {LogTag::ERROR, "Empty articles"}},
-    { TestType::METADATA,      {LogTag::ERROR, "Metadata errors"}},
+    { TestType::CHECKSUM,      {LogTag::ERROR, "Checksum"}},
+    { TestType::INTEGRITY,     {LogTag::ERROR, "Integrity"}},
+    { TestType::EMPTY,         {LogTag::ERROR, "Empty Article"}},
+    { TestType::METADATA,      {LogTag::ERROR, "Metadata"}},
     { TestType::FAVICON,       {LogTag::ERROR, "Favicon"}},
-    { TestType::MAIN_PAGE,     {LogTag::ERROR, "Missing mainpage"}},
-    { TestType::REDUNDANT,     {LogTag::WARNING, "Redundant data found"}},
-    { TestType::URL_INTERNAL,  {LogTag::ERROR, "Invalid internal links found"}},
-    { TestType::URL_EXTERNAL,  {LogTag::ERROR, "Invalid external links found"}},
-    { TestType::URL_EMPTY,     {LogTag::WARNING, "Empty links found"}},
-    { TestType::REDIRECT,      {LogTag::ERROR, "Redirect loop(s) exist"}},
+    { TestType::MAIN_PAGE,     {LogTag::ERROR, "Main Page"}},
+    { TestType::REDUNDANT,     {LogTag::WARNING, "Redundant Data"}},
+    { TestType::URL_INTERNAL,  {LogTag::ERROR, "Internal URL"}},
+    { TestType::URL_EXTERNAL,  {LogTag::ERROR, "External URL"}},
+    { TestType::URL_EMPTY,     {LogTag::WARNING, "Empty link"}},
+    { TestType::REDIRECT,      {LogTag::ERROR, "Redirect Loop"}},
 };
 
 struct MsgInfo
@@ -145,16 +145,22 @@ JSON::OutputStream& operator<<(JSON::OutputStream& out, EnabledTests checks)
 }
 
 ErrorLogger::ErrorLogger(bool _jsonOutputMode)
-  : reportMsgs(size_t(TestType::COUNT))
-  , jsonOutputStream(_jsonOutputMode ? &std::cout : nullptr)
+  : jsonOutputStream(_jsonOutputMode ? &std::cout : nullptr)
 {
     testStatus.set();
-    jsonOutputStream << JSON::startObject;
+    if (jsonOutputStream.enabled()) {
+        jsonOutputStream << JSON::startObject;
+    }
 }
 
 ErrorLogger::~ErrorLogger()
 {
-    jsonOutputStream << JSON::endObject;
+    if (logStreamOpen) {
+        endLogStream();
+    }
+    if (jsonOutputStream.enabled()) {
+        jsonOutputStream << JSON::endObject;
+    }
 }
 
 void ErrorLogger::infoMsg(const std::string& msg) const {
@@ -163,17 +169,36 @@ void ErrorLogger::infoMsg(const std::string& msg) const {
   }
 }
 
+void ErrorLogger::startLogStream() {
+    if ( jsonOutputStream.enabled() && !logStreamOpen ) {
+         jsonOutputStream << JSON::property("logs", JSON::startArray);
+         logStreamOpen = true;
+     }
+}
+
+void ErrorLogger::endLogStream() {
+    if ( jsonOutputStream.enabled() && logStreamOpen ) {
+         jsonOutputStream << JSON::endArray;
+         logStreamOpen = false;
+     }
+}
+
 void ErrorLogger::setTestResult(TestType type, bool status) {
     testStatus[size_t(type)] = status;
 }
 
 void ErrorLogger::addMsg(MsgId msgid, const MsgParams& msgParams)
 {
-    std::lock_guard<std::mutex> lock(this->print_mutex);
+  std::lock_guard<std::mutex> lock(this->print_mutex);
   const MsgInfo& m = msgTable.at(msgid);
   setTestResult(m.check, false);
-  reportMsgs[size_t(m.check)].push_back({msgid, msgParams});
 
+  if (jsonOutputStream.enabled()) {
+     jsonOutput({msgid, msgParams});
+  } else {
+     auto &p = errormapping[m.check];
+     std::cout << "[" + tagToStr[p.first] + "] " << p.second <<": " << expand({msgid, msgParams}) << std::endl;
+  }
 }
 
 std::string ErrorLogger::expand(const MsgIdWithParams& msg)
@@ -194,29 +219,6 @@ void ErrorLogger::jsonOutput(const MsgIdWithParams& msg) const {
     jsonOutputStream << JSON::property(kv.first, kv.second);
   }
   jsonOutputStream << JSON::endObject;
-}
-
-void ErrorLogger::report(bool error_details) const {
-    if ( jsonOutputStream.enabled() ) {
-        jsonOutputStream << JSON::property("logs", JSON::startArray);
-        for ( size_t i = 0; i < size_t(TestType::COUNT); ++i ) {
-            for (const auto& msg: reportMsgs[i]) {
-                jsonOutput(msg);
-            }
-        }
-        jsonOutputStream << JSON::endArray;
-    } else {
-        for ( size_t i = 0; i < size_t(TestType::COUNT); ++i ) {
-            const auto& testmsg = reportMsgs[i];
-            if ( !testStatus[i] ) {
-                auto &p = errormapping[TestType(i)];
-                std::cout << "[" + tagToStr[p.first] + "] " << p.second << ":" << std::endl;
-                for (auto& msg: testmsg) {
-                    std::cout << "  " << expand(msg) << std::endl;
-                }
-            }
-        }
-    }
 }
 
 bool ErrorLogger::overallStatus() const {
