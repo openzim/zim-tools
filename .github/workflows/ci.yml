@@ -139,7 +139,7 @@ jobs:
             coverage: true
     env:
       HOME: /home/runner
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     container:
       image: "ghcr.io/kiwix/kiwix-build_ci_${{matrix.image_variant}}:2025-06-07"
     steps:
