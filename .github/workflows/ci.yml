@@ -21,7 +21,7 @@ jobs:
           - target: macos-x86_64-dyn
             arch_name: x86_64-apple-darwin
             run_test: true
-    runs-on: macos-15
+    runs-on: macos-26
 
     steps:
       - name: Harden Runner
@@ -73,7 +73,7 @@ jobs:
           meson test --verbose
 
   Windows:
-    runs-on: windows-2025
+    runs-on: windows-2025-vs2026
 
     steps:
       - name: Checkout code
@@ -139,7 +139,7 @@ jobs:
             coverage: true
     env:
       HOME: /home/runner
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     container:
       image: "ghcr.io/kiwix/kiwix-build_ci_${{matrix.image_variant}}:2025-06-07"
     steps:
