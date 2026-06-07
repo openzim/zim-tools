@@ -21,7 +21,7 @@ jobs:
           - target: macos-x86_64-dyn
             arch_name: x86_64-apple-darwin
             run_test: true
-    runs-on: macos-15
+    runs-on: macos-26
 
     steps:
       - name: Harden Runner
