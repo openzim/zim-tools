@@ -61,6 +61,8 @@ Options:
  -R --redundant       Redundant data check
  -U --url_internal    URL check - Internal URLs
  -X --url_external    URL check - External URLs
+ --report-all-internal  Report all internal URL errors per HTML article
+ --report-all-external  Report all external URL errors per HTML article
  -B --progress        Print progress report
  -J --json            Output in JSON format
  -H --help            Displays Help
@@ -128,6 +130,7 @@ int zimcheck(const Options& args)
     bool no_args = true;
     bool json = false;
     int thread_count = 1;
+    LinkReportOptions report_options;
 
     std::string filename = "";
     ProgressBar progress(1);
@@ -170,6 +173,10 @@ int zimcheck(const Options& args)
         } else if (arg.first == "--url_external" && arg.second.asBool()) {
             enabled_tests.enable(TestType::URL_EXTERNAL);
             no_args = false;
+        } else if (arg.first == "--report-all-internal" && arg.second.asBool()) {
+            report_options.allInternal = true;
+        } else if (arg.first == "--report-all-external" && arg.second.asBool()) {
+            report_options.allExternal = true;
         } else if (arg.first == "--redirect_loop" && arg.second.asBool()) {
             enabled_tests.enable(TestType::REDIRECT);
             no_args = false;
@@ -203,9 +210,18 @@ int zimcheck(const Options& args)
     try
     {
         error.addInfo("checks", enabled_tests);
+        if (report_options.allInternal)
+            error.addInfo("report_all_internal", true);
+        if (report_options.allExternal)
+            error.addInfo("report_all_external", true);
         error.addInfo("file_name",  filename);
         error.infoMsg("[INFO] Checking zim file " + filename);
         error.infoMsg("[INFO] Zimcheck version is " + std::string(VERSION));
+
+        if (report_options.allInternal && !enabled_tests.isEnabled(TestType::URL_INTERNAL))
+            error.infoMsg("[WARNING] --report-all-internal has no effect without --url_internal");
+        if (report_options.allExternal && !enabled_tests.isEnabled(TestType::URL_EXTERNAL))
+            error.infoMsg("[WARNING] --report-all-external has no effect without --url_external");
 
         //Test 0: Low-level ZIM-file structure integrity checks
         bool should_run_full_test = true;
@@ -273,7 +289,7 @@ int zimcheck(const Options& args)
                  enabled_tests.isEnabled(TestType::URL_EXTERNAL) ||
                  enabled_tests.isEnabled(TestType::REDUNDANT) ||
                  enabled_tests.isEnabled(TestType::EMPTY) )
-              test_articles(archive, error, progress, enabled_tests, thread_count);
+              test_articles(archive, error, progress, enabled_tests, report_options, thread_count);
 
             if ( enabled_tests.isEnabled(TestType::REDIRECT))
                 test_redirect_loop(archive, error);
