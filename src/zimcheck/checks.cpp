@@ -296,11 +296,13 @@ public: // types
     typedef std::vector<html_link> LinkCollection;
 
 public: // functions
-    ArticleChecker(const zim::Archive& _archive, ErrorLogger& _reporter, ProgressBar& _progress, EnabledTests _checks)
+    ArticleChecker(const zim::Archive& _archive, ErrorLogger& _reporter, ProgressBar& _progress,
+                   EnabledTests _checks, LinkReportOptions _reportOptions)
         : archive(_archive)
         , reporter(_reporter)
         , progress(_progress)
         , checks(_checks)
+        , reportOptions(_reportOptions)
         , linkStatusCache(64*1024)
     {
         progress.reset(archive.getEntryCount());
@@ -334,6 +336,7 @@ private: // data
     ErrorLogger& reporter;
     ProgressBar& progress;
     const EnabledTests checks;
+    const LinkReportOptions reportOptions;
 
     // All article with the same hash will be recorded in the same bucket of
     // this hash table.
@@ -445,7 +448,8 @@ void ArticleChecker::check_internal_links(zim::Item item, const GroupedLinkColle
             for (const auto &olink : p.second)
                 links.push_back({"value", olink});
             reporter.addMsg(MsgId::DANGLING_LINKS, {{"path", path}, {"normalized_link", link}, {"links", links}});
-            break;
+            if (!reportOptions.allInternal)
+                break;
         }
     }
 }
@@ -458,7 +462,8 @@ void ArticleChecker::check_external_links(zim::Item item, const LinkCollection& 
         if (l.attribute == "src" && l.isExternalUrl())
         {
             reporter.addMsg(MsgId::EXTERNAL_LINK, {{"link", l.link}, {"path", path}});
-            break;
+            if (!reportOptions.allExternal)
+                break;
         }
     }
 }
@@ -675,8 +680,9 @@ private: // data
 } // unnamed namespace
 
 void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressBar& progress,
-                   const EnabledTests checks, int thread_count) {
-    ArticleChecker articleChecker(archive, reporter, progress, checks);
+                   const EnabledTests checks, const LinkReportOptions report_options,
+                   int thread_count) {
+    ArticleChecker articleChecker(archive, reporter, progress, checks, report_options);
     reporter.infoMsg("[INFO] Verifying Articles' content...");
 
     TaskDispatcher td(&articleChecker, thread_count);
