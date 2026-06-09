@@ -67,19 +67,40 @@ make__poor__zim()
     cd "$tmpdir"/small_zimfile_data
     touch empty.html
     mv favicon.png image.png
-    sed -i -e 's!favicon.png!image.png!' main.html
+    sed -e 's!favicon.png!image.png!' main.html > main.html.tmp && mv main.html.tmp main.html
     sed -e 's!A/article1.html!!' main.html > empty_link.html
     sed -e 's!I/image\.png!http://a.io/pic.png!' main.html > external_image_http.html
     sed -e 's!I/image\.png!https://a.io/pic.png!' main.html > external_image_https.html
     sed -e 's!I/image\.png!//a.io/pic.png!' main.html > external_image_protocol_relative.html
-    sed -e 's/article1/non_existent/' main.html > dangling_link.html
+    cat > dangling_link.html <<'EOF'
+<!DOCTYPE html>
+<html>
+  <head><meta charset="UTF-8"><title>dangling</title></head>
+  <body>
+    <a href="A/non_existent.html">bad 1</a>
+    <a href="A/z_missing2.html">bad 2</a>
+  </body>
+</html>
+EOF
+    cat > multi_external_src.html <<'EOF'
+<!DOCTYPE html>
+<html>
+  <head><meta charset="UTF-8"><title>multi external</title></head>
+  <body>
+    <img src="http://a.io/one.png">
+    <img src="http://a.io/two.png">
+  </body>
+</html>
+EOF
     sed -e 's!A/article1!../../oops!' main.html > outofbounds_link.html
-    command_set="sed -e '6 a <meta http-equiv=refresh content=\"0;URL=redirect_loop.html\">' main.html"
-    eval $command_set > redirect_loop.html
-    command_set2="sed -e '6 a <meta http-equiv=refresh content=\"0;URL=redirect_loop3.html\">' main.html"
-    eval $command_set2 > redirect_loop2.html
-    command_set3="sed -e '6 a <meta http-equiv=refresh content=\"0;URL=redirect_loop2.html\">' main.html"
-    eval $command_set > redirect_loop3.html
+    insert_refresh_meta()
+    {
+      awk -v url="$1" 'NR==6{print; print "<meta http-equiv=refresh content=\"0;URL=" url "\">"; next}1' main.html
+    }
+    insert_refresh_meta redirect_loop.html > redirect_loop.html
+    insert_refresh_meta redirect_loop3.html > redirect_loop2.html
+    # Historically redirect_loop3.html used redirect_loop.html as target (see command_set typo).
+    insert_refresh_meta redirect_loop.html > redirect_loop3.html
     cp article1.html redundant_article.html
   )
   zimwriterfs --withoutFTIndex \
