@@ -69,7 +69,7 @@ TEST(zimfilechecks, test_articles)
     ErrorLogger logger;
     ProgressBar progress(1);
     EnabledTests all_checks; all_checks.enableAll();
-    test_articles(archive, logger, progress, all_checks);
+    test_articles(archive, logger, progress, all_checks, {});
 
     ASSERT_TRUE(logger.overallStatus());
 }
@@ -147,6 +147,8 @@ Options:
  -R --redundant       Redundant data check
  -U --url_internal    URL check - Internal URLs
  -X --url_external    URL check - External URLs
+ --report-all-internal  Report all internal URL errors per HTML article
+ --report-all-external  Report all external URL errors per HTML article
  -B --progress        Print progress report
  -J --json            Output in JSON format
  -H --help            Displays Help
@@ -615,7 +617,7 @@ TEST(zimcheck, internal_url_check_poorzimfile)
     const std::string expected_stdout(
       "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
       "[INFO] Zimcheck version is " VERSION "\n"
-      "[WARNING] Integrity check is skipped. Any detected errors may in fact be due to corrupted/invalid data.\n"
+      "[WARNING] Integrity check is skipped. Any detected errors may in fact be due to corrupted/invalid data." "\n"
       "[INFO] Verifying Articles' content..." "\n"
       "[ERROR] Internal URL: Dangling link(s) in article 'dangling_link.html':" "\n"
       "  - 'A/non_existent.html' (resolves to 'A/non_existent.html')" "\n"
@@ -640,11 +642,12 @@ TEST(zimcheck, external_url_check_poorzimfile)
     const std::string expected_stdout(
       "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
       "[INFO] Zimcheck version is " VERSION "\n"
-      "[WARNING] Integrity check is skipped. Any detected errors may in fact be due to corrupted/invalid data.\n"
+      "[WARNING] Integrity check is skipped. Any detected errors may in fact be due to corrupted/invalid data." "\n"
       "[INFO] Verifying Articles' content..." "\n"
       "[ERROR] External URL: http://a.io/pic.png is an external dependence in article external_image_http.html" "\n"
       "[ERROR] External URL: https://a.io/pic.png is an external dependence in article external_image_https.html" "\n"
       "[ERROR] External URL: //a.io/pic.png is an external dependence in article external_image_protocol_relative.html" "\n"
+      "[ERROR] External URL: http://a.io/one.png is an external dependence in article multi_external_src.html" "\n"
       "[INFO] Overall Test Status: Fail" "\n"
       "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
     );
@@ -656,6 +659,123 @@ TEST(zimcheck, external_url_check_poorzimfile)
         expected_stdout,
         EMPTY_STDERR
     );
+}
+
+TEST(zimcheck, report_all_internal_poorzimfile)
+{
+    const std::string expected_stdout(
+      "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
+      "[INFO] Zimcheck version is " VERSION "\n"
+      "[WARNING] Integrity check is skipped. Any detected errors may in fact be due to corrupted/invalid data." "\n"
+      "[INFO] Verifying Articles' content..." "\n"
+      "[ERROR] Internal URL: Dangling link(s) in article 'dangling_link.html':" "\n"
+      "  - 'A/non_existent.html' (resolves to 'A/non_existent.html')" "\n"
+      "\n"
+      "[ERROR] Internal URL: Dangling link(s) in article 'dangling_link.html':" "\n"
+      "  - 'A/z_missing2.html' (resolves to 'A/z_missing2.html')" "\n"
+      "\n"
+      "[WARNING] Empty link: Found 1 empty links in article: empty_link.html" "\n"
+      "[ERROR] Internal URL: ../../oops.html is out of bounds. Article: outofbounds_link.html" "\n"
+      "[INFO] Overall Test Status: Fail" "\n"
+      "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
+    );
+
+    CapturedStdout zimcheck_output;
+    ASSERT_EQ(1, zimcheck({"zimcheck", "-U", "--report-all-internal", POOR_ZIMFILE}));
+    ASSERT_EQ(expected_stdout, std::string(zimcheck_output));
+}
+
+TEST(zimcheck, report_all_external_poorzimfile)
+{
+    const std::string expected_stdout(
+      "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
+      "[INFO] Zimcheck version is " VERSION "\n"
+      "[WARNING] Integrity check is skipped. Any detected errors may in fact be due to corrupted/invalid data." "\n"
+      "[INFO] Verifying Articles' content..." "\n"
+      "[ERROR] External URL: http://a.io/pic.png is an external dependence in article external_image_http.html" "\n"
+      "[ERROR] External URL: https://a.io/pic.png is an external dependence in article external_image_https.html" "\n"
+      "[ERROR] External URL: //a.io/pic.png is an external dependence in article external_image_protocol_relative.html" "\n"
+      "[ERROR] External URL: http://a.io/one.png is an external dependence in article multi_external_src.html" "\n"
+      "[ERROR] External URL: http://a.io/two.png is an external dependence in article multi_external_src.html" "\n"
+      "[INFO] Overall Test Status: Fail" "\n"
+      "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
+    );
+
+    CapturedStdout zimcheck_output;
+    ASSERT_EQ(1, zimcheck({"zimcheck", "-X", "--report-all-external", POOR_ZIMFILE}));
+    ASSERT_EQ(expected_stdout, std::string(zimcheck_output));
+}
+
+TEST(zimcheck, report_all_internal_warns)
+{
+    const std::string expected_stdout(
+      "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
+      "[INFO] Zimcheck version is " VERSION "\n"
+      "[WARNING] --report-all-internal has no effect without --url_internal" "\n"
+      "[WARNING] Integrity check is skipped. Any detected errors may in fact be due to corrupted/invalid data." "\n"
+      "[INFO] Verifying Internal Checksum..." "\n"
+      "[INFO] Overall Test Status: Pass" "\n"
+      "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
+    );
+
+    CapturedStdout zimcheck_output;
+    ASSERT_EQ(0, zimcheck({"zimcheck", "-C", "--report-all-internal", GOOD_ZIMFILE}));
+    ASSERT_EQ(expected_stdout, std::string(zimcheck_output));
+}
+
+TEST(zimcheck, report_all_internal_json)
+{
+    CapturedStdout zimcheck_output;
+    ASSERT_EQ(1, zimcheck({"zimcheck", "-U", "--report-all-internal", "--json", POOR_ZIMFILE}));
+
+    ASSERT_EQ(
+      "{"                                                                   "\n"
+      "  \"zimcheck_version\" : \"" VERSION "\","                           "\n"
+      "  \"checks\" : ["                                                    "\n"
+      "    \"url_internal\""                                                "\n"
+      "  ],"                                                                "\n"
+      "  \"report_all_internal\" : true,"                                   "\n"
+      "  \"file_name\" : \"data/zimfiles/poor.zim\","                       "\n"
+      "  \"file_uuid\" : \"00000000-0000-0000-0000-000000000000\","         "\n"
+      "  \"logs\" : ["                                                      "\n"
+      "    {"                                                               "\n"
+      "      \"check\" : \"url_internal\","                                 "\n"
+      "      \"level\" : \"ERROR\","                                        "\n"
+      "      \"message\" : \"Dangling link(s) in article 'dangling_link.html':\\n  - 'A/non_existent.html' (resolves to 'A/non_existent.html')\\n\"," "\n"
+      "      \"links\" : ["                                                 "\n"
+      "        \"A/non_existent.html\""                                     "\n"
+      "      ],"                                                            "\n"
+      "      \"normalized_link\" : \"A/non_existent.html\","                "\n"
+      "      \"path\" : \"dangling_link.html\""                             "\n"
+      "    },"                                                              "\n"
+      "    {"                                                               "\n"
+      "      \"check\" : \"url_internal\","                                 "\n"
+      "      \"level\" : \"ERROR\","                                        "\n"
+      "      \"message\" : \"Dangling link(s) in article 'dangling_link.html':\\n  - 'A/z_missing2.html' (resolves to 'A/z_missing2.html')\\n\"," "\n"
+      "      \"links\" : ["                                                 "\n"
+      "        \"A/z_missing2.html\""                                       "\n"
+      "      ],"                                                            "\n"
+      "      \"normalized_link\" : \"A/z_missing2.html\","                  "\n"
+      "      \"path\" : \"dangling_link.html\""                             "\n"
+      "    },"                                                              "\n"
+      "    {"                                                               "\n"
+      "      \"check\" : \"url_empty\","                                    "\n"
+      "      \"level\" : \"WARNING\","                                      "\n"
+      "      \"message\" : \"Found 1 empty links in article: empty_link.html\"," "\n"
+      "      \"count\" : \"1\","                                            "\n"
+      "      \"path\" : \"empty_link.html\""                                "\n"
+      "    },"                                                              "\n"
+      "    {"                                                               "\n"
+      "      \"check\" : \"url_internal\","                                 "\n"
+      "      \"level\" : \"ERROR\","                                        "\n"
+      "      \"message\" : \"../../oops.html is out of bounds. Article: outofbounds_link.html\"," "\n"
+      "      \"link\" : \"../../oops.html\","                               "\n"
+      "      \"path\" : \"outofbounds_link.html\""                          "\n"
+      "    }"                                                               "\n"
+      "  ],"                                                                "\n"
+      "  \"status\" : false"                                                "\n"
+      "}"                                                                   "\n"
+      , std::string(zimcheck_output));
 }
 
 TEST(zimcheck, redundant_poorzimfile)
@@ -731,6 +851,7 @@ const std::string ALL_CHECKS_OUTPUT_ON_POORZIMFILE(
       "[ERROR] External URL: http://a.io/pic.png is an external dependence in article external_image_http.html" "\n"
       "[ERROR] External URL: https://a.io/pic.png is an external dependence in article external_image_https.html" "\n"
       "[ERROR] External URL: //a.io/pic.png is an external dependence in article external_image_protocol_relative.html" "\n"
+      "[ERROR] External URL: http://a.io/one.png is an external dependence in article multi_external_src.html" "\n"
       "[ERROR] Internal URL: ../../oops.html is out of bounds. Article: outofbounds_link.html" "\n"
       "[INFO] Searching for redundant articles..." "\n"
       "  Verifying Similar Articles for redundancies..." "\n"
@@ -905,6 +1026,13 @@ TEST(zimcheck, json_poorzimfile)
       "      \"message\" : \"//a.io/pic.png is an external dependence in article external_image_protocol_relative.html\"," "\n"
       "      \"link\" : \"//a.io/pic.png\","                           "\n"
       "      \"path\" : \"external_image_protocol_relative.html\""                             "\n"
+      "    },"                                                              "\n"
+      "    {"                                                               "\n"
+      "      \"check\" : \"url_external\","                                 "\n"
+      "      \"level\" : \"ERROR\","                                        "\n"
+      "      \"message\" : \"http://a.io/one.png is an external dependence in article multi_external_src.html\"," "\n"
+      "      \"link\" : \"http://a.io/one.png\","                           "\n"
+      "      \"path\" : \"multi_external_src.html\""                        "\n"
       "    },"                                                              "\n"
       "    {"                                                               "\n"
       "      \"check\" : \"url_internal\","                                 "\n"
