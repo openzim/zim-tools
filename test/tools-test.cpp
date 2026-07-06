@@ -342,7 +342,7 @@ std::string links2Str(const std::vector<html_link>& links)
 }
 
 #define EXPECT_LINKS(html, expectedStr) \
-        ASSERT_EQ(links2Str(generic_getLinks(html)), expectedStr)
+        EXPECT_EQ(links2Str(generic_getLinks(html)), expectedStr)
 
 TEST(tools, getLinks)
 {
@@ -387,8 +387,6 @@ TEST(tools, getLinks)
       "{ src, https://example.com/getlogo?w=640&h=480 }"
     );
 
-    // Known issue - HTML is not parsed and therefore false links
-    //               may be returned
     EXPECT_LINKS(
       R"(
 <html>
@@ -414,11 +412,71 @@ TEST(tools, getLinks)
       "{ src, /css/stylesheet.css }"                      "\n"
       "{ href, /favicon.ico }"                            "\n"
       "{ src, ../img/welcome.png }"                       "\n"
-      "{ href, commented_out_link.htm }"                  "\n"
-      "{ src, commented_out_image.png }"                  "\n"
-      "{ href, not_a_link_in_example_code_block.htm }"    "\n"
-      "{ src, not_a_link_in_example_code_block.png }"     "\n"
       "{ href, https://kiwix.org }"
+    );
+
+    EXPECT_LINKS(
+      R"(<div>
+          <!--
+            < a href="pseudolink_in_a_comment_with_an_unmatched_lt_char.htm"
+          -->
+          <a href="real_link.html"></a>
+      </div>)",
+
+      // links
+      "{ href, real_link.html }"
+    );
+
+    EXPECT_LINKS(
+      R"(<div>
+          <!--
+            > a href="pseudolink_in_a_comment_with_an_unmatched_gt_char.htm"
+          -->
+          <a href="real_link.html"></a>
+      </div>)",
+
+      // links
+      "{ href, real_link.html }"
+    );
+
+    EXPECT_LINKS(
+      R"(<div>
+          <!--
+            > <a href="pseudolink_in_a_comment_with_gt_before_lt.htm"
+          -->
+          <a href="real_link.html"></a>
+      </div>)",
+
+      // links
+      "{ href, real_link.html }"
+    );
+
+    EXPECT_LINKS(
+      R"(<script>
+          console.log("<a href='pseudolink_inside_a_script_tag1'>");
+         </script>
+         <script id="whatever">
+          console.log("<a href='pseudolink_inside_a_script_tag2'>");
+         </script>
+         <a href="real_link.html"></a>
+      )",
+
+      // links
+      "{ href, real_link.html }"
+    );
+
+    EXPECT_LINKS(
+      R"(<script>
+          if ( 1 > 0 ) console.log("unmatched > inside a script tag");
+         </script>
+         <script id="whatever">
+          if ( 1 > 0 ) console.log("unmatched > inside a script tag");
+         </script>
+         <a href="real_link.html"></a>
+      )",
+
+      // links
+      "{ href, real_link.html }"
     );
 
     // Despite HTML not being properly parsed, not every href or src followed

@@ -342,6 +342,28 @@ std::string decodeHtmlEntities(const std::string& str)
   return result;
 }
 
+namespace
+{
+
+const char* strSkipTillRightAfter(const char* p, const char* s)
+{
+    const int slen = strlen(s);
+    for ( ; *p ; ++p) {
+        if ( strncmp(p, s, slen) == 0 ) {
+            return p + slen;
+        }
+    }
+    return p;
+}
+
+bool isScriptTag(const char* p)
+{
+  return strncmp(p, "<script", 7) == 0
+      && (p[7] == '>' || p[7] == ' ');
+}
+
+} // unnamed namespace
+
 std::vector<html_link> generic_getLinks(const std::string& page)
 {
     const char* p = page.c_str();
@@ -349,7 +371,37 @@ std::vector<html_link> generic_getLinks(const std::string& page)
     std::vector<html_link> links;
     std::string attr;
 
+    // The difference of the counts of the '<' and '>' characters preceding
+    // the current position. In a valid HTML without comments it should only
+    // take values 0 or 1.
+    int ltgtBalance = 0;
+
     while (*p) {
+        if ( *p == '<' ) {
+          if (strncmp(p, "<!--", 4) == 0) {
+            p = strSkipTillRightAfter(p, "-->");
+            continue;
+          }
+          if (isScriptTag(p)) {
+            p = strSkipTillRightAfter(p, "</script>");
+            continue;
+          }
+
+          ++ltgtBalance;
+          ++p;
+          continue;
+        }
+        if ( *p == '>' ) {
+          --ltgtBalance;
+          ++p;
+          continue;
+        }
+
+        if ( ltgtBalance != 1 ) {
+          ++p;
+          continue;
+        }
+
         if (strncmp(p, " href", 5) == 0) {
             attr = "href";
             p += 5;
