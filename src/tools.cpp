@@ -342,6 +342,22 @@ std::string decodeHtmlEntities(const std::string& str)
   return result;
 }
 
+namespace
+{
+
+const char* strSkipTillRightAfter(const char* p, const char* s)
+{
+    const int slen = strlen(s);
+    for ( ; *p ; ++p) {
+        if ( strncmp(p, s, slen) == 0 ) {
+            return p + slen;
+        }
+    }
+    return p;
+}
+
+} // unnamed namespace
+
 std::vector<html_link> generic_getLinks(const std::string& page)
 {
     const char* p = page.c_str();
@@ -356,6 +372,11 @@ std::vector<html_link> generic_getLinks(const std::string& page)
 
     while (*p) {
         if ( *p == '<' ) {
+          if (strncmp(p, "<!--", 4) == 0) {
+            p = strSkipTillRightAfter(p, "-->");
+            continue;
+          }
+
           ++ltgtBalance;
           ++p;
           continue;
