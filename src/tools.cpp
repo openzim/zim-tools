@@ -349,7 +349,28 @@ std::vector<html_link> generic_getLinks(const std::string& page)
     std::vector<html_link> links;
     std::string attr;
 
+    // The difference of the counts of the '<' and '>' characters preceding
+    // the current position. In a valid HTML without comments it should only
+    // take values 0 or 1.
+    int ltgtBalance = 0;
+
     while (*p) {
+        if ( *p == '<' ) {
+          ++ltgtBalance;
+          ++p;
+          continue;
+        }
+        if ( *p == '>' ) {
+          --ltgtBalance;
+          ++p;
+          continue;
+        }
+
+        if ( ltgtBalance != 1 ) {
+          ++p;
+          continue;
+        }
+
         if (strncmp(p, " href", 5) == 0) {
             attr = "href";
             p += 5;

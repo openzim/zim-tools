@@ -387,8 +387,6 @@ TEST(tools, getLinks)
       "{ src, https://example.com/getlogo?w=640&h=480 }"
     );
 
-    // Known issue - HTML is not parsed and therefore false links
-    //               may be returned
     EXPECT_LINKS(
       R"(
 <html>
@@ -414,10 +412,6 @@ TEST(tools, getLinks)
       "{ src, /css/stylesheet.css }"                      "\n"
       "{ href, /favicon.ico }"                            "\n"
       "{ src, ../img/welcome.png }"                       "\n"
-      "{ href, commented_out_link.htm }"                  "\n"
-      "{ src, commented_out_image.png }"                  "\n"
-      "{ href, not_a_link_in_example_code_block.htm }"    "\n"
-      "{ src, not_a_link_in_example_code_block.png }"     "\n"
       "{ href, https://kiwix.org }"
     );
 
