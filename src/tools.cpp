@@ -356,6 +356,12 @@ const char* strSkipTillRightAfter(const char* p, const char* s)
     return p;
 }
 
+bool isScriptTag(const char* p)
+{
+  return strncmp(p, "<script", 7) == 0
+      && (p[7] == '>' || p[7] == ' ');
+}
+
 } // unnamed namespace
 
 std::vector<html_link> generic_getLinks(const std::string& page)
@@ -374,6 +380,10 @@ std::vector<html_link> generic_getLinks(const std::string& page)
         if ( *p == '<' ) {
           if (strncmp(p, "<!--", 4) == 0) {
             p = strSkipTillRightAfter(p, "-->");
+            continue;
+          }
+          if (isScriptTag(p)) {
+            p = strSkipTillRightAfter(p, "</script>");
             continue;
           }
 

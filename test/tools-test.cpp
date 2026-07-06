@@ -451,6 +451,33 @@ TEST(tools, getLinks)
       "{ href, real_link.html }"
     );
 
+    EXPECT_LINKS(
+      R"(<script>
+          console.log("<a href='pseudolink_inside_a_script_tag1'>");
+         </script>
+         <script id="whatever">
+          console.log("<a href='pseudolink_inside_a_script_tag2'>");
+         </script>
+         <a href="real_link.html"></a>
+      )",
+
+      // links
+      "{ href, real_link.html }"
+    );
+
+    EXPECT_LINKS(
+      R"(<script>
+          if ( 1 > 0 ) console.log("unmatched > inside a script tag");
+         </script>
+         <script id="whatever">
+          if ( 1 > 0 ) console.log("unmatched > inside a script tag");
+         </script>
+         <a href="real_link.html"></a>
+      )",
+
+      // links
+      "{ href, real_link.html }"
+    );
 
     // Despite HTML not being properly parsed, not every href or src followed
     // by an equality sign (with optional whitespace in between) results in a
