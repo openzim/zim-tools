@@ -342,7 +342,7 @@ std::string links2Str(const std::vector<html_link>& links)
 }
 
 #define EXPECT_LINKS(html, expectedStr) \
-        ASSERT_EQ(links2Str(generic_getLinks(html)), expectedStr)
+        EXPECT_EQ(links2Str(generic_getLinks(html)), expectedStr)
 
 TEST(tools, getLinks)
 {
@@ -414,6 +414,43 @@ TEST(tools, getLinks)
       "{ src, ../img/welcome.png }"                       "\n"
       "{ href, https://kiwix.org }"
     );
+
+    EXPECT_LINKS(
+      R"(<div>
+          <!--
+            < a href="pseudolink_in_a_comment_with_an_unmatched_lt_char.htm"
+          -->
+          <a href="real_link.html"></a>
+      </div>)",
+
+      // links
+      "{ href, real_link.html }"
+    );
+
+    EXPECT_LINKS(
+      R"(<div>
+          <!--
+            > a href="pseudolink_in_a_comment_with_an_unmatched_gt_char.htm"
+          -->
+          <a href="real_link.html"></a>
+      </div>)",
+
+      // links
+      "{ href, real_link.html }"
+    );
+
+    EXPECT_LINKS(
+      R"(<div>
+          <!--
+            > <a href="pseudolink_in_a_comment_with_gt_before_lt.htm"
+          -->
+          <a href="real_link.html"></a>
+      </div>)",
+
+      // links
+      "{ href, real_link.html }"
+    );
+
 
     // Despite HTML not being properly parsed, not every href or src followed
     // by an equality sign (with optional whitespace in between) results in a
