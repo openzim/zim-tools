@@ -243,7 +243,7 @@ struct OutOfBoundsURL : std::runtime_error
 // - Attempts to ascend above the top level are treated as an error rather than
 //   as a no-op (an OutOfBoundsURL exception is thrown)
 // - Absolute path URLs result in an AbsolutePathURL exception
-std::string resolveLinkTarget(const std::string& url, const std::string& zimPath);
+std::string resolveLinkTarget(std::string url, const std::string& zimPath);
 
 ////////////////////////////////////////////////////////////////////////////////
 // End of stuff related to internal link resolution

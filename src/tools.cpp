@@ -447,101 +447,75 @@ int adler32(const std::string& buf)
     return (s2 << 16) | s1;
 }
 
+
 namespace
 {
 
-// "abc/def/xyz"  -->  "abc/def"
-// "abc/def/"     -->  "abc/def"
+// "abc/def/xyz"  -->  "abc/def/"
+// "abc/def/"     -->  "abc/def/"
 // "abc"          -->  ""
-// "/abc"         -->  ""
-// "/"            -->  ""
+// "/abc"         -->  "/"
+// "/"            -->  "/"
 std::string getBasePath(const std::string& zimPath)
 {
     const auto pos = zimPath.find_last_of('/');
     return pos == std::string::npos
          ? std::string()
-         : zimPath.substr(0, pos);
+         : zimPath.substr(0, pos + 1);
+}
+
+void stripFragmentAndOrSearchComponent(std::string& url)
+{
+    // strip the fragment and/or search components, if any
+    auto endOfPathComponent = url.find_last_of("#?");
+    if ( endOfPathComponent != std::string::npos ) {
+      url.resize(endOfPathComponent);
+    }
 }
 
 } // unnamed namespace
 
-std::string resolveLinkTarget(const std::string& input, const std::string& zimPath)
+std::string resolveLinkTarget(std::string url, const std::string& zimPath)
 {
-    const std::string baseUrl = getBasePath(zimPath);
-    std::string output;
-    output.reserve(baseUrl.size() + input.size() + 1);
+    stripFragmentAndOrSearchComponent(url);
+    if (url.empty()) {
+      return zimPath;
+    }
 
-    bool check_rel = false;
-    auto p = input.cbegin();
-    if ( *(p) == '/') {
-      throw AbsolutePathURL(input);
-    } else {
-      //This is a relative url, use base url
-      output = baseUrl;
-      if (!output.empty() && output.back() != '/') {
-          output += '/';
+    if ( url.front() == '/' ) {
+      throw AbsolutePathURL(url);
+    }
+
+    const auto basePath = getBasePath(zimPath);
+    url = basePath + decodeUrl(url);
+
+    std::vector<std::string> pathComponents;
+    bool urlEndsWithDotSegment = false;
+    for ( const auto& p : split(url, '/') ) {
+      urlEndsWithDotSegment = false;
+      if ( p == ".") {
+        urlEndsWithDotSegment = true;
+        continue;
+      } else if ( p == ".." ) {
+        if ( pathComponents.empty() ) {
+          throw OutOfBoundsURL(url);
+        }
+        urlEndsWithDotSegment = true;
+        pathComponents.pop_back();
+      } else {
+        pathComponents.push_back(p);
       }
-      check_rel = true;
     }
 
-    //URL Decoding.
-    while (p < input.cend())
-    {
-        if ( check_rel ) {
-            if (std::strncmp(&*p, "../", 3) == 0) {
-                // We must go "up"
-                // Remove the '/' at the end of output.
-                output.resize(output.size()-1);
-                // Remove the last part.
-                auto pos = output.find_last_of('/');
-                output.resize(pos==output.npos?0:pos);
-                // Move after the "..".
-                p += 2;
-                check_rel = false;
-                continue;
-            }
-            if (std::strncmp(&*p, "./", 2) == 0) {
-                // We must simply skip this part
-                // Simply move after the ".".
-                p += 2;
-                check_rel = false;
-                continue;
-            }
-        }
-
-        if ( *p == '#' || *p == '?') {
-            // For our purposes we can safely discard the query and/or fragment
-            // components of the URL
-            break;
-        }
-
-        if ( *p == '%')
-        {
-            if( (p+2) >= input.cend()){
-                // if the %XX token would go off the end of the string, just break
-                // string::end() returns an iterator pointing to the null terminator
-                // of the underlying c-string (guarenteed as of C++11)
-                break;
-            }
-            // hhx only officially supports hex unsigned char
-            unsigned char ch = 0;
-            std::sscanf(&*(p+1), "%2hhx", &ch);
-            output += ch;
-            p += 3;
-            continue;
-        }
-
-        if ( *p == '/') {
-            check_rel = true;
-            if (output.empty()) {
-                // Do not add '/' at beginning of output
-                p++;
-                continue;
-            }
-        }
-        output += *(p++);
+    std::string resolvedUrl;
+    const char* sep = "";
+    for ( const auto& p : pathComponents ) {
+      resolvedUrl += sep;
+      resolvedUrl += p;
+      sep = "/";
     }
-    return output;
+
+    return urlEndsWithDotSegment ? resolvedUrl + sep : resolvedUrl;
 }
 
 namespace
