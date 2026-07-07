@@ -9,8 +9,8 @@ bool isVerbose() { return false; }
 
 TEST(CommonTools, isDirectory)
 {
-  ASSERT_FALSE(isDirectory("data/minimal-content/favicon.png"));
-  ASSERT_TRUE(isDirectory("data/minimal-content"));
+  EXPECT_FALSE(isDirectory("data/minimal-content/favicon.png"));
+  EXPECT_TRUE(isDirectory("data/minimal-content"));
 }
 
 TEST(CommonTools, base64_encode)
@@ -224,43 +224,43 @@ TEST(tools, uriKind)
 
 TEST(tools, isOutofBounds)
 {
-    ASSERT_FALSE(isOutofBounds("", ""));
-    ASSERT_TRUE(isOutofBounds("../../..", ""));
-    ASSERT_TRUE(isOutofBounds("../", ""));
-    ASSERT_FALSE(isOutofBounds("../", "/a/b"));
-    ASSERT_FALSE(isOutofBounds("../", "/a"));
-    ASSERT_TRUE(isOutofBounds("../../", "/a"));
-    ASSERT_TRUE(isOutofBounds("../../../-/s/css_modules/ext.cite.ux-enhancements.css", "A/Blood_/"));
+    EXPECT_FALSE(isOutofBounds("", ""));
+    EXPECT_TRUE(isOutofBounds("../../..", ""));
+    EXPECT_TRUE(isOutofBounds("../", ""));
+    EXPECT_FALSE(isOutofBounds("../", "/a/b"));
+    EXPECT_FALSE(isOutofBounds("../", "/a"));
+    EXPECT_TRUE(isOutofBounds("../../", "/a"));
+    EXPECT_TRUE(isOutofBounds("../../../-/s/css_modules/ext.cite.ux-enhancements.css", "A/Blood_/"));
 }
 
 TEST(tools, normalize_link)
 {
-    ASSERT_EQ(normalize_link("", ""), "");
-    ASSERT_EQ(normalize_link("/", ""), "");
-    ASSERT_EQ(normalize_link("", "/"), "/");
+    EXPECT_EQ(normalize_link("", ""), "");
+    EXPECT_EQ(normalize_link("/", ""), "");
+    EXPECT_EQ(normalize_link("", "/"), "/");
 
-    ASSERT_EQ(normalize_link("/a", "/b"), "a");
+    EXPECT_EQ(normalize_link("/a", "/b"), "a");
 
     // not absolute
-    ASSERT_EQ(normalize_link("a", "/b"), "/b/a");
-    ASSERT_EQ(normalize_link("../a", "/b/c"), "/b/a");
-    ASSERT_EQ(normalize_link(".././a", "/b/c"), "/b/a");
-    ASSERT_EQ(normalize_link("../a/b/aa#localanchor", "/b/c"), "/b/a/b/aa");
-    ASSERT_EQ(normalize_link("../a/b/aa?localanchor", "/b/c"), "/b/a/b/aa");
+    EXPECT_EQ(normalize_link("a", "/b"), "/b/a");
+    EXPECT_EQ(normalize_link("../a", "/b/c"), "/b/a");
+    EXPECT_EQ(normalize_link(".././a", "/b/c"), "/b/a");
+    EXPECT_EQ(normalize_link("../a/b/aa#localanchor", "/b/c"), "/b/a/b/aa");
+    EXPECT_EQ(normalize_link("../a/b/aa?localanchor", "/b/c"), "/b/a/b/aa");
 
-    ASSERT_EQ(normalize_link("a", ""), "a");
-    ASSERT_EQ(normalize_link("./a", ""), "a");
+    EXPECT_EQ(normalize_link("a", ""), "a");
+    EXPECT_EQ(normalize_link("./a", ""), "a");
 
     // URI-decoding is performed
-    ASSERT_EQ(normalize_link("/%41%62c", "/"), "Abc");
+    EXPECT_EQ(normalize_link("/%41%62c", "/"), "Abc");
 
     // #439: normalized link reading off end of buffer
     // small-string-opt sizes, so sanitizers and valgrind don't pick this up
-    ASSERT_EQ(normalize_link("%", "/"), "/");
-    ASSERT_EQ(normalize_link("%1", ""), "");
+    EXPECT_EQ(normalize_link("%", "/"), "/");
+    EXPECT_EQ(normalize_link("%1", ""), "");
 
-    ASSERT_EQ(normalize_link("%26", ""), "&");
-    ASSERT_EQ(normalize_link("%27", "/"), "/\'");
+    EXPECT_EQ(normalize_link("%26", ""), "&");
+    EXPECT_EQ(normalize_link("%27", "/"), "/\'");
 
     // ../test/tools-test.cpp:260: Failure
     // Expected equality of these values:
@@ -276,55 +276,55 @@ TEST(tools, normalize_link)
 
     // test outside of small-string-opt
     // valgrind will pick up on the error in this one
-    ASSERT_EQ(normalize_link("qrstuvwxyz%", "/abcdefghijklmnop"), "/abcdefghijklmnop/qrstuvwxyz");
-    ASSERT_EQ(normalize_link("qrstuvwxyz%1", "/abcdefghijklmnop"), "/abcdefghijklmnop/qrstuvwxyz");
+    EXPECT_EQ(normalize_link("qrstuvwxyz%", "/abcdefghijklmnop"), "/abcdefghijklmnop/qrstuvwxyz");
+    EXPECT_EQ(normalize_link("qrstuvwxyz%1", "/abcdefghijklmnop"), "/abcdefghijklmnop/qrstuvwxyz");
 }
 
 TEST(tools, addler32)
 {
-    ASSERT_EQ(adler32("sdfkhewruhwe8"), 640746832);
-    ASSERT_EQ(adler32("sdifjsdf"), 251593550);
-    ASSERT_EQ(adler32("q"), 7471218);
-    ASSERT_EQ(adler32(""), 1);
+    EXPECT_EQ(adler32("sdfkhewruhwe8"), 640746832);
+    EXPECT_EQ(adler32("sdifjsdf"), 251593550);
+    EXPECT_EQ(adler32("q"), 7471218);
+    EXPECT_EQ(adler32(""), 1);
 }
 
 TEST(tools, decodeHtmlEntities)
 {
-    ASSERT_EQ(decodeHtmlEntities(""),   "");
+    EXPECT_EQ(decodeHtmlEntities(""),   "");
 
     // Supported HTML character references
-    ASSERT_EQ(decodeHtmlEntities("&amp;"),  "&");
-    ASSERT_EQ(decodeHtmlEntities("&apos;"), "'");
-    ASSERT_EQ(decodeHtmlEntities("&quot;"), "\"");
-    ASSERT_EQ(decodeHtmlEntities("&lt;"),   "<");
-    ASSERT_EQ(decodeHtmlEntities("&gt;"),   ">");
+    EXPECT_EQ(decodeHtmlEntities("&amp;"),  "&");
+    EXPECT_EQ(decodeHtmlEntities("&apos;"), "'");
+    EXPECT_EQ(decodeHtmlEntities("&quot;"), "\"");
+    EXPECT_EQ(decodeHtmlEntities("&lt;"),   "<");
+    EXPECT_EQ(decodeHtmlEntities("&gt;"),   ">");
 
     // All other HTML character references
     // (https://html.spec.whatwg.org/multipage/syntax.html#character-references)
     // are NOT currently supported
-    ASSERT_EQ(decodeHtmlEntities("&nbsp;"), "&nbsp;");
+    EXPECT_EQ(decodeHtmlEntities("&nbsp;"), "&nbsp;");
 
     // Capitalized versions of supported ones do NOT work
-    ASSERT_EQ(decodeHtmlEntities("&AMP;"), "&AMP;");
-    ASSERT_EQ(decodeHtmlEntities("&aMP;"), "&aMP;");
+    EXPECT_EQ(decodeHtmlEntities("&AMP;"), "&AMP;");
+    EXPECT_EQ(decodeHtmlEntities("&aMP;"), "&aMP;");
 
     // HTML entities of the form &#dd...; and/or &#xhh...; are NOT decoded
-    ASSERT_EQ(decodeHtmlEntities("&#65;"),  "&#65;" ); // should be "A"
-    ASSERT_EQ(decodeHtmlEntities("&#x41;"), "&#x41;"); // should be "A"
+    EXPECT_EQ(decodeHtmlEntities("&#65;"),  "&#65;" ); // should be "A"
+    EXPECT_EQ(decodeHtmlEntities("&#x41;"), "&#x41;"); // should be "A"
 
     // Handling of "incomplete" entity
-    ASSERT_EQ(decodeHtmlEntities("&amp"), "&amp");
+    EXPECT_EQ(decodeHtmlEntities("&amp"), "&amp");
 
     // No double decoding
-    ASSERT_EQ(decodeHtmlEntities("&amp;lt;"), "&lt;");
+    EXPECT_EQ(decodeHtmlEntities("&amp;lt;"), "&lt;");
 
-    ASSERT_EQ(decodeHtmlEntities("&lt;&gt;"), "<>");
+    EXPECT_EQ(decodeHtmlEntities("&lt;&gt;"), "<>");
 
-    ASSERT_EQ(decodeHtmlEntities("1&lt;2"),   "1<2");
+    EXPECT_EQ(decodeHtmlEntities("1&lt;2"),   "1<2");
 
-    ASSERT_EQ(decodeHtmlEntities("3&5&gt;3/5"), "3&5>3/5");
+    EXPECT_EQ(decodeHtmlEntities("3&5&gt;3/5"), "3&5>3/5");
 
-    ASSERT_EQ(
+    EXPECT_EQ(
         decodeHtmlEntities("Q&amp;A stands for &quot;Questions and answers&quot;"),
         "Q&A stands for \"Questions and answers\""
     );
@@ -518,11 +518,11 @@ TEST(tools, httpRedirectHtml)
 
 TEST(tools, guessFrontArticle)
 {
-  ASSERT_TRUE(guess_is_front_article("text/html"));
-  ASSERT_TRUE(guess_is_front_article("text/html;charset=utf8"));
-  ASSERT_FALSE(guess_is_front_article("plain/text"));
-  ASSERT_FALSE(guess_is_front_article("some-text/html"));
-  ASSERT_FALSE(guess_is_front_article("text/html;raw=true"));
+  EXPECT_TRUE(guess_is_front_article("text/html"));
+  EXPECT_TRUE(guess_is_front_article("text/html;charset=utf8"));
+  EXPECT_FALSE(guess_is_front_article("plain/text"));
+  EXPECT_FALSE(guess_is_front_article("some-text/html"));
+  EXPECT_FALSE(guess_is_front_article("text/html;raw=true"));
 }
 
 TEST(CommonTools, GetFileExtension) {
