@@ -255,8 +255,20 @@ TEST(tools, resolveLinkTarget)
     EXPECT_EQ(resolveLinkTarget("a", ""), "a");
     EXPECT_EQ(resolveLinkTarget("./a", ""), "a");
 
+    EXPECT_EQ(resolveLinkTarget("abc./xyz", ""), "abc./xyz");
+    EXPECT_EQ(resolveLinkTarget("abc../xyz", ""), "abc../xyz");
+    EXPECT_EQ(resolveLinkTarget("ab.cd./xyz", "/QW/ERT"), "/QW/ERT/ab.cd./xyz");
+    EXPECT_EQ(resolveLinkTarget("a..b../xyz", "/QW/ERT"), "/QW/ERT/a..b../xyz");
+    EXPECT_EQ(resolveLinkTarget("x/y",  "/AS/DF" ), "/AS/DF/x/y");
+    EXPECT_EQ(resolveLinkTarget("x/y",  "AS.DF./qwerty"), "AS.DF./qwerty/x/y");
+    EXPECT_EQ(resolveLinkTarget("x/y",  "/A.S../qwerty"), "/A.S../qwerty/x/y");
+
     // URI-decoding is performed
     EXPECT_EQ(resolveLinkTarget("pqrst/%41%62c", "WXYZ"), "WXYZ/pqrst/Abc");
+
+    // '%2e" is URI-encoded '.'; check that path resolution is performed
+    // on the URI-decoded version of the URL
+    EXPECT_EQ(resolveLinkTarget("%2e%2e/a", "/b/c"), "/b/a");
 
     // #439: normalized link reading off end of buffer
     // small-string-opt sizes, so sanitizers and valgrind don't pick this up
