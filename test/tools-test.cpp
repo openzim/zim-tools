@@ -231,6 +231,10 @@ TEST(tools, isOutofBounds)
     EXPECT_FALSE(isOutofBounds("../", "/a"));
     EXPECT_TRUE(isOutofBounds("../../", "/a"));
     EXPECT_TRUE(isOutofBounds("../../../-/s/css_modules/ext.cite.ux-enhancements.css", "A/Blood_/"));
+
+    // URL with fragment and/or search components as the first argument
+    EXPECT_FALSE(isOutofBounds("faq#q=../../../../xyz", "/en"));
+    EXPECT_FALSE(isOutofBounds("faq?q=../../../../xyz", "/en"));
 }
 
 TEST(tools, resolveLinkTarget)
