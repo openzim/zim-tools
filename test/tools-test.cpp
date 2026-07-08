@@ -423,6 +423,21 @@ TEST(tools, resolveLinkTarget)
     // URLs with fragment and/or search components
     EXPECT_EQ(resolveLinkTarget("faq#q=../../../../xyz", "/en/"), "/en/faq");
     EXPECT_EQ(resolveLinkTarget("faq?q=../../../../xyz", "/en/"), "/en/faq");
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Demonstrating pitfalls with base path
+    ////////////////////////////////////////////////////////////////////////////
+
+    // ZIM format allows arbitrary strings to be used as entry paths.
+    // If the base path appears to contain parent directory
+    // (../) or same directory (./) entries
+    // those are eliminated too or can result in out-of-bounds error
+    EXPECT_EQ(resolveLinkTarget("smoke", "home/../chimney/"), "chimney/smoke");
+    EXPECT_EQ(resolveLinkTarget("crow", "/home/../chimney/"), "/chimney/crow");
+    EXPECT_EQ(resolveLinkTarget("a/s/m", "/dot/./org/"), "/dot/org/a/s/m");
+    EXPECT_EQ(resolveLinkTarget("asm", "./org/./.././o/r/g/"), "o/r/g/asm");
+    EXPECT_THROW(resolveLinkTarget("oops", "/a/../../../b/"), OutOfBoundsURL);
+    EXPECT_THROW(resolveLinkTarget("oops", "a/../../b/"), OutOfBoundsURL);
 }
 
 TEST(tools, addler32)
