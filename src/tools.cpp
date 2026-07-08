@@ -469,7 +469,7 @@ int adler32(const std::string& buf)
     return (s2 << 16) | s1;
 }
 
-std::string normalize_link(const std::string& input, const std::string& baseUrl)
+std::string resolveLinkTarget(const std::string& input, const std::string& baseUrl)
 {
     std::string output;
     output.reserve(baseUrl.size() + input.size() + 1);

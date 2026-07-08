@@ -422,7 +422,7 @@ void ArticleChecker::check_internal_links(zim::Item item, const LinkCollection& 
             continue;
         }
 
-        auto normalized = normalize_link(l.link, baseUrl);
+        auto normalized = resolveLinkTarget(l.link, baseUrl);
         groupedLinks[normalized].push_back(l.link);
     }
 

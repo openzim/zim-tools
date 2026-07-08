@@ -206,7 +206,7 @@ std::string decodeHtmlEntities(const std::string& str);
 
 //Removes extra spaces from URLs. Usually done by the browser, so web authors sometimes tend to ignore it.
 //Converts the %20 to space.Essential for comparing URLs.
-std::string normalize_link(const std::string& input, const std::string& baseUrl);
+std::string resolveLinkTarget(const std::string& input, const std::string& basePath);
 
 std::string httpRedirectHtml(const std::string& redirectUrl);
 

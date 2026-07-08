@@ -233,51 +233,51 @@ TEST(tools, isOutofBounds)
     EXPECT_TRUE(isOutofBounds("../../../-/s/css_modules/ext.cite.ux-enhancements.css", "A/Blood_/"));
 }
 
-TEST(tools, normalize_link)
+TEST(tools, resolveLinkTarget)
 {
-    EXPECT_EQ(normalize_link("", ""), "");
-    EXPECT_EQ(normalize_link("/", ""), "");
-    EXPECT_EQ(normalize_link("", "/"), "/");
+    EXPECT_EQ(resolveLinkTarget("", ""), "");
+    EXPECT_EQ(resolveLinkTarget("/", ""), "");
+    EXPECT_EQ(resolveLinkTarget("", "/"), "/");
 
-    EXPECT_EQ(normalize_link("/a", "/b"), "a");
+    EXPECT_EQ(resolveLinkTarget("/a", "/b"), "a");
 
     // not absolute
-    EXPECT_EQ(normalize_link("a", "/b"), "/b/a");
-    EXPECT_EQ(normalize_link("../a", "/b/c"), "/b/a");
-    EXPECT_EQ(normalize_link(".././a", "/b/c"), "/b/a");
-    EXPECT_EQ(normalize_link("../a/b/aa#localanchor", "/b/c"), "/b/a/b/aa");
-    EXPECT_EQ(normalize_link("../a/b/aa?localanchor", "/b/c"), "/b/a/b/aa");
+    EXPECT_EQ(resolveLinkTarget("a", "/b"), "/b/a");
+    EXPECT_EQ(resolveLinkTarget("../a", "/b/c"), "/b/a");
+    EXPECT_EQ(resolveLinkTarget(".././a", "/b/c"), "/b/a");
+    EXPECT_EQ(resolveLinkTarget("../a/b/aa#localanchor", "/b/c"), "/b/a/b/aa");
+    EXPECT_EQ(resolveLinkTarget("../a/b/aa?localanchor", "/b/c"), "/b/a/b/aa");
 
-    EXPECT_EQ(normalize_link("a", ""), "a");
-    EXPECT_EQ(normalize_link("./a", ""), "a");
+    EXPECT_EQ(resolveLinkTarget("a", ""), "a");
+    EXPECT_EQ(resolveLinkTarget("./a", ""), "a");
 
     // URI-decoding is performed
-    EXPECT_EQ(normalize_link("/%41%62c", "/"), "Abc");
+    EXPECT_EQ(resolveLinkTarget("/%41%62c", "/"), "Abc");
 
     // #439: normalized link reading off end of buffer
     // small-string-opt sizes, so sanitizers and valgrind don't pick this up
-    EXPECT_EQ(normalize_link("%", "/"), "/");
-    EXPECT_EQ(normalize_link("%1", ""), "");
+    EXPECT_EQ(resolveLinkTarget("%", "/"), "/");
+    EXPECT_EQ(resolveLinkTarget("%1", ""), "");
 
-    EXPECT_EQ(normalize_link("%26", ""), "&");
-    EXPECT_EQ(normalize_link("%27", "/"), "/\'");
+    EXPECT_EQ(resolveLinkTarget("%26", ""), "&");
+    EXPECT_EQ(resolveLinkTarget("%27", "/"), "/\'");
 
     // ../test/tools-test.cpp:260: Failure
     // Expected equality of these values:
-    //   normalize_link("%", "/")
+    //   resolveLinkTarget("%", "/")
     //     Which is: "/\01bc"
     //   "/"
     //
     // ../test/tools-test.cpp:261: Failure
     // Expected equality of these values:
-    //   normalize_link("%1", "")
+    //   resolveLinkTarget("%1", "")
     //     Which is: "\x1" "1bc"
     //   ""
 
     // test outside of small-string-opt
     // valgrind will pick up on the error in this one
-    EXPECT_EQ(normalize_link("qrstuvwxyz%", "/abcdefghijklmnop"), "/abcdefghijklmnop/qrstuvwxyz");
-    EXPECT_EQ(normalize_link("qrstuvwxyz%1", "/abcdefghijklmnop"), "/abcdefghijklmnop/qrstuvwxyz");
+    EXPECT_EQ(resolveLinkTarget("qrstuvwxyz%", "/abcdefghijklmnop"), "/abcdefghijklmnop/qrstuvwxyz");
+    EXPECT_EQ(resolveLinkTarget("qrstuvwxyz%1", "/abcdefghijklmnop"), "/abcdefghijklmnop/qrstuvwxyz");
 }
 
 TEST(tools, addler32)
@@ -367,7 +367,7 @@ TEST(tools, getLinks)
     );
 
     // URI-decoding is NOT performed on extracted links
-    // (that's normalize_link()'s job)
+    // (that's resolveLinkTarget()'s job)
     EXPECT_LINKS(
       "<audio controls src ='/music/It&apos;s%20only%20love.ogg'></audio>",
       "{ src, /music/It's%20only%20love.ogg }"
