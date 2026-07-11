@@ -26,11 +26,11 @@
 #include <fstream>
 #include <iostream>
 #include <iomanip>
+#include <regex>
 #include <map>
 
 #include <zlib.h>
 #include <magic.h>
-
 
 static const std::map<std::string, std::string> extMimeTypes = {
     {"html",       "text/html"},
@@ -153,6 +153,21 @@ std::string getFileContent(const std::string& path)
   throw(errno);
 }
 
+std::string extractRedirectUrlFromHtmlHeadValue(const std::string& refresh_value)
+{
+  std::string url;
+  static const std::regex refresh_regex(R"(^\s*([0-9.]+)\s*(?:[;,]\s*(?:url *=)?\s*(["']?)(.*?)\2)?\s*$)", std::regex::icase);
+
+  std::smatch match;
+  if (std::regex_match(refresh_value, match, refresh_regex)) {
+    if (match[3].matched && !match[3].str().empty()) {
+      url = match[3].str();
+    }
+  }
+
+  return url;
+}
+
 std::string extractRedirectUrlFromHtml(const GumboVector* head_children)
 {
   std::string url;
@@ -169,16 +184,10 @@ std::string extractRedirectUrlFromHtml(const GumboVector* head_children)
           if ((attribute
                = gumbo_get_attribute(&child->v.element.attributes, "content"))
               != NULL) {
-            std::string targetUrl = attribute->value;
-            std::size_t found = targetUrl.find("URL=") != std::string::npos
-                                    ? targetUrl.find("URL=")
-                                    : targetUrl.find("url=");
-            if (found != std::string::npos) {
-              url = targetUrl.substr(found + 4);
-            } else {
+            url = extractRedirectUrlFromHtmlHeadValue(attribute->value);
+            if (url.empty()) {
               throw std::string(
-                  "Unable to find the redirect/refresh target url from the "
-                  "HTML DOM");
+                "Unable to find the redirect/refresh target URL in the HTML DOM");
             }
           }
         }
