@@ -204,9 +204,33 @@ int adler32(const std::string& buf);
 
 std::string decodeHtmlEntities(const std::string& str);
 
-//Removes extra spaces from URLs. Usually done by the browser, so web authors sometimes tend to ignore it.
-//Converts the %20 to space.Essential for comparing URLs.
-std::string resolveLinkTarget(const std::string& input, const std::string& basePath);
+
+////////////////////////////////////////////////////////////////////////////////
+// Stuff related to internal link resolution
+////////////////////////////////////////////////////////////////////////////////
+
+struct AbsolutePathURL : std::runtime_error
+{
+  explicit AbsolutePathURL(const std::string& url)
+    : runtime_error("Absolute path URL: " + url)
+  {}
+};
+
+// Returns a normalized version of an internal URL (relative to the given base
+// path)
+//
+// Given an internal URL inside a resource under the specified base path (which
+// denotes the parent "directory" of the said resource)
+// resolveLinkTarget(url, basePath) computes the target resource of that URL
+// (assuming that the base path is an already fully resolved normalized path).
+//
+// Absolute path URLs result in an AbsolutePathURL exception
+std::string resolveLinkTarget(const std::string& url, const std::string& basePath);
+
+////////////////////////////////////////////////////////////////////////////////
+// End of stuff related to internal link resolution
+////////////////////////////////////////////////////////////////////////////////
+
 
 std::string httpRedirectHtml(const std::string& redirectUrl);
 

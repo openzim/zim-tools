@@ -477,8 +477,7 @@ std::string resolveLinkTarget(const std::string& input, const std::string& baseU
     bool check_rel = false;
     auto p = input.cbegin();
     if ( *(p) == '/') {
-      // This is an absolute url.
-      p++;
+      throw AbsolutePathURL(input);
     } else {
       //This is a relative url, use base url
       output = baseUrl;

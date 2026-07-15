@@ -50,6 +50,7 @@ std::unordered_map<MsgId, MsgInfo> msgTable = {
   { MsgId::MAIN_PAGE,        { TestType::MAIN_PAGE, "Main Page Index stored in Archive Header: {{&main_page_index}}" } },
   { MsgId::EMPTY_ENTRY,      { TestType::EMPTY, "Entry {{&path}} is empty" } },
   { MsgId::OUTOFBOUNDS_LINK, { TestType::URL_INTERNAL, "{{&link}} is out of bounds. Article: {{&path}}" } },
+  { MsgId::ABSPATH_LINK,     { TestType::URL_INTERNAL, "{{&link}} is an absolute path link. Article: {{&path}}" } },
   { MsgId::DANGLING_LINKS,   { TestType::URL_INTERNAL, "Dangling link(s) in article '{{&path}}':\n{{#links}}  - '{{&value}}' (resolves to '{{&normalized_link}}')\n{{/links}}" } },
   { MsgId::EXTERNAL_LINK,    { TestType::URL_EXTERNAL, "{{&link}} is an external dependence in article {{&path}}" } },
   { MsgId::EMPTY_LINKS,      { TestType::URL_EMPTY, "Found {{&count}} empty links in article: {{&path}}" } },
@@ -422,8 +423,15 @@ void ArticleChecker::check_internal_links(zim::Item item, const LinkCollection& 
             continue;
         }
 
-        auto normalized = resolveLinkTarget(l.link, baseUrl);
-        groupedLinks[normalized].push_back(l.link);
+        std::string resolved;
+        try {
+            resolved = resolveLinkTarget(l.link, baseUrl);
+        } catch ( const AbsolutePathURL& ) {
+            reporter.addMsg(MsgId::ABSPATH_LINK, {{"link", l.link}, {"path", path}});
+            continue;
+        }
+
+        groupedLinks[resolved].push_back(l.link);
     }
 
     if (nremptylinks)

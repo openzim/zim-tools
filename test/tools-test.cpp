@@ -236,10 +236,10 @@ TEST(tools, isOutofBounds)
 TEST(tools, resolveLinkTarget)
 {
     EXPECT_EQ(resolveLinkTarget("", ""), "");
-    EXPECT_EQ(resolveLinkTarget("/", ""), "");
+    EXPECT_THROW(resolveLinkTarget("/", ""), AbsolutePathURL);
     EXPECT_EQ(resolveLinkTarget("", "/"), "/");
 
-    EXPECT_EQ(resolveLinkTarget("/a", "/b"), "a");
+    EXPECT_THROW(resolveLinkTarget("/a", "/b"), AbsolutePathURL);
 
     // not absolute
     EXPECT_EQ(resolveLinkTarget("a", "/b"), "/b/a");
@@ -252,7 +252,7 @@ TEST(tools, resolveLinkTarget)
     EXPECT_EQ(resolveLinkTarget("./a", ""), "a");
 
     // URI-decoding is performed
-    EXPECT_EQ(resolveLinkTarget("/%41%62c", "/"), "Abc");
+    EXPECT_EQ(resolveLinkTarget("pqrst/%41%62c", "WXYZ"), "WXYZ/pqrst/Abc");
 
     // #439: normalized link reading off end of buffer
     // small-string-opt sizes, so sanitizers and valgrind don't pick this up
