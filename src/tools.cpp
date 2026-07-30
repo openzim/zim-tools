@@ -451,8 +451,8 @@ int adler32(const std::string& buf)
 namespace
 {
 
-// "abc/def/xyz"  -->  "abc/def/"
-// "abc/def/"     -->  "abc/def/"
+// "abc/def/xyz"  -->  "abc/def"
+// "abc/def/"     -->  "abc/def"
 // "abc"          -->  ""
 // "/abc"         -->  "/"
 // "/"            -->  "/"
@@ -461,7 +461,35 @@ std::string getBasePath(const std::string& zimPath)
     const auto pos = zimPath.find_last_of('/');
     return pos == std::string::npos
          ? std::string()
-         : zimPath.substr(0, pos + 1);
+         : zimPath.substr(0, pos == 0 ? 1 : pos);
+}
+
+bool dropLastSegmentOfThePath(std::string& path)
+{
+    if ( path.empty() )
+        return false;
+
+    const auto i = path.find_last_of("/");
+    if ( i == std::string::npos ) {
+        // "abc"  -->  ""
+        path.clear();
+    } else if ( i == 0 ) {
+        // "/abc" -->  "/"
+        // "/"    -->  ""
+        path.resize(path == "/" ? 0 : 1);
+    } else {
+        // "abc/def/xyz" --> "abc/def
+        // "abc/def/"    --> "abc/def
+        // "abc/def"     --> "abc
+        path.resize(i);
+    }
+    return true;
+}
+
+// Determine the separator to be used if the path has to be extended
+const char* getPathSeparatorFor(const std::string& path)
+{
+    return path.empty() || path == "/" ? "" : "/";
 }
 
 void stripFragmentAndOrSearchComponent(std::string& url)
@@ -492,35 +520,29 @@ std::string InternalLinkResolver::resolveLinkTarget(std::string url) const
       throw AbsolutePathURL(url);
     }
 
-    url = basePath + decodeUrl(url);
+    url = decodeUrl(url);
 
-    std::vector<std::string> pathComponents;
-    bool urlEndsWithDotSegment = false;
+    std::string resolvedPath = basePath;
+    const char* pathTerminator = "";
+    const char* pathSeparator  = getPathSeparatorFor(resolvedPath);
     for ( const auto& p : split(url, '/') ) {
-      urlEndsWithDotSegment = false;
       if ( p == ".") {
-        urlEndsWithDotSegment = true;
+        pathSeparator = pathTerminator = getPathSeparatorFor(resolvedPath);
         continue;
       } else if ( p == ".." ) {
-        if ( pathComponents.empty() ) {
+        if ( !dropLastSegmentOfThePath(resolvedPath) ) {
           throw OutOfBoundsURL(url);
         }
-        urlEndsWithDotSegment = true;
-        pathComponents.pop_back();
+        pathSeparator = pathTerminator = getPathSeparatorFor(resolvedPath);
       } else {
-        pathComponents.push_back(p);
+        resolvedPath += pathSeparator;
+        resolvedPath += p;
+        pathTerminator = "";
+        pathSeparator  = "/";
       }
     }
 
-    std::string resolvedUrl;
-    const char* sep = "";
-    for ( const auto& p : pathComponents ) {
-      resolvedUrl += sep;
-      resolvedUrl += p;
-      sep = "/";
-    }
-
-    return urlEndsWithDotSegment ? resolvedUrl + sep : resolvedUrl;
+    return resolvedPath + pathTerminator;
 }
 
 std::string resolveLinkTarget(std::string url, const std::string& zimPath) {
