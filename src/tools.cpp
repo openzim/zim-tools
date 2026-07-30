@@ -469,8 +469,27 @@ int adler32(const std::string& buf)
     return (s2 << 16) | s1;
 }
 
-std::string resolveLinkTarget(const std::string& input, const std::string& baseUrl)
+namespace
 {
+
+// "abc/def/xyz"  -->  "abc/def"
+// "abc/def/"     -->  "abc/def"
+// "abc"          -->  ""
+// "/abc"         -->  ""
+// "/"            -->  ""
+std::string getBasePath(const std::string& zimPath)
+{
+    const auto pos = zimPath.find_last_of('/');
+    return pos == std::string::npos
+         ? std::string()
+         : zimPath.substr(0, pos);
+}
+
+} // unnamed namespace
+
+std::string resolveLinkTarget(const std::string& input, const std::string& zimPath)
+{
+    const std::string baseUrl = getBasePath(zimPath);
     std::string output;
     output.reserve(baseUrl.size() + input.size() + 1);
 

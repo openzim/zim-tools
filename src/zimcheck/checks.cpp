@@ -425,7 +425,7 @@ void ArticleChecker::check_internal_links(zim::Item item, const LinkCollection& 
 
         std::string resolved;
         try {
-            resolved = resolveLinkTarget(l.link, baseUrl);
+            resolved = resolveLinkTarget(l.link, path);
         } catch ( const AbsolutePathURL& ) {
             reporter.addMsg(MsgId::ABSPATH_LINK, {{"link", l.link}, {"path", path}});
             continue;

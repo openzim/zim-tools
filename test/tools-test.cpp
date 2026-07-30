@@ -239,61 +239,205 @@ TEST(tools, isOutofBounds)
 
 TEST(tools, resolveLinkTarget)
 {
-    EXPECT_EQ(resolveLinkTarget("", ""), "");
-    EXPECT_THROW(resolveLinkTarget("/", ""), AbsolutePathURL);
-    EXPECT_EQ(resolveLinkTarget("", "/"), "/");
-
+    EXPECT_THROW(resolveLinkTarget("/", ""),    AbsolutePathURL);
     EXPECT_THROW(resolveLinkTarget("/a", "/b"), AbsolutePathURL);
 
-    // not absolute
-    EXPECT_EQ(resolveLinkTarget("a", "/b"), "/b/a");
-    EXPECT_EQ(resolveLinkTarget("../a", "/b/c"), "/b/a");
-    EXPECT_EQ(resolveLinkTarget(".././a", "/b/c"), "/b/a");
-    EXPECT_EQ(resolveLinkTarget("../a/b/aa#localanchor", "/b/c"), "/b/a/b/aa");
-    EXPECT_EQ(resolveLinkTarget("../a/b/aa?localanchor", "/b/c"), "/b/a/b/aa");
+    EXPECT_EQ(resolveLinkTarget("",        ""), "");
+    EXPECT_EQ(resolveLinkTarget("?q=who",  ""), "");
+    EXPECT_EQ(resolveLinkTarget("#intro",  ""), "");
+    EXPECT_EQ(resolveLinkTarget(".",       ""), "");
+    EXPECT_EQ(resolveLinkTarget(".xyz",    ""), ".xyz");
+    EXPECT_EQ(resolveLinkTarget("./",      ""), "");
+    EXPECT_EQ(resolveLinkTarget("./xyz",   ""), "xyz");
+    EXPECT_EQ(resolveLinkTarget("xyz",     ""), "xyz");
+    EXPECT_EQ(resolveLinkTarget("./x/y/z", ""), "x/y/z");
+    EXPECT_EQ(resolveLinkTarget("x/y/z",   ""), "x/y/z");
+    EXPECT_EQ(resolveLinkTarget(".//",     ""), "/");
+    EXPECT_EQ(resolveLinkTarget(".//xy",   ""), "/xy");
+    EXPECT_THROW(resolveLinkTarget("./..", ""), OutOfBoundsURL);
+    EXPECT_THROW(resolveLinkTarget("..",   ""), OutOfBoundsURL);
+    EXPECT_THROW(resolveLinkTarget("../",  ""), OutOfBoundsURL);
 
-    EXPECT_EQ(resolveLinkTarget("a", ""), "a");
-    EXPECT_EQ(resolveLinkTarget("./a", ""), "a");
+    EXPECT_EQ(resolveLinkTarget("",        "/"), "/");
+    EXPECT_EQ(resolveLinkTarget("?page=1", "/"), "/");
+    EXPECT_EQ(resolveLinkTarget("#note3",  "/"), "/");
+    EXPECT_EQ(resolveLinkTarget(".",       "/"), "/");
+    EXPECT_EQ(resolveLinkTarget(".xyz",    "/"), "/.xyz");
+    EXPECT_EQ(resolveLinkTarget("./",      "/"), "/");
+    EXPECT_EQ(resolveLinkTarget("./xyz",   "/"), "/xyz");
+    EXPECT_EQ(resolveLinkTarget(".//",     "/"), "//");
+    EXPECT_EQ(resolveLinkTarget(".//xy",   "/"), "//xy");
+    EXPECT_EQ(resolveLinkTarget("./..",    "/"), "");
+    EXPECT_EQ(resolveLinkTarget("./../",   "/"), "");
+    EXPECT_EQ(resolveLinkTarget("./..xyz", "/"), "/..xyz");
+    EXPECT_EQ(resolveLinkTarget("..",      "/"), "");
+    EXPECT_EQ(resolveLinkTarget("..xyz",   "/"), "/..xyz");
+    EXPECT_EQ(resolveLinkTarget("../",     "/"), "");
+    EXPECT_EQ(resolveLinkTarget("../.",    "/"), "");
+    EXPECT_EQ(resolveLinkTarget(".././",   "/"), "");
+    EXPECT_EQ(resolveLinkTarget(".././x",  "/"), "x");
+    EXPECT_EQ(resolveLinkTarget("../.xyz", "/"), ".xyz");
+    EXPECT_EQ(resolveLinkTarget("../xyz",  "/"), "xyz");
+    EXPECT_EQ(resolveLinkTarget("..//",    "/"), "/");
+    EXPECT_EQ(resolveLinkTarget("..//x",   "/"), "/x");
+    EXPECT_THROW(resolveLinkTarget("../..", "/"), OutOfBoundsURL);
 
+    EXPECT_EQ(resolveLinkTarget("",        "b/c/def"), "b/c/def");
+    EXPECT_EQ(resolveLinkTarget("?login",  "b/c/def"), "b/c/def");
+    EXPECT_EQ(resolveLinkTarget("#a/b/c",  "b/c/def"), "b/c/def");
+    EXPECT_EQ(resolveLinkTarget(".",       "b/c/def"), "b/c/");
+    EXPECT_EQ(resolveLinkTarget(".xyz",    "b/c/def"), "b/c/.xyz");
+    EXPECT_EQ(resolveLinkTarget("./",      "b/c/def"), "b/c/");
+    EXPECT_EQ(resolveLinkTarget("./xyz",   "b/c/def"), "b/c/xyz");
+    EXPECT_EQ(resolveLinkTarget(".//",     "b/c/def"), "b/c//");
+    EXPECT_EQ(resolveLinkTarget(".//xy",   "b/c/def"), "b/c//xy");
+    EXPECT_EQ(resolveLinkTarget("./..",    "b/c/def"), "b/");
+    EXPECT_EQ(resolveLinkTarget("./../",   "b/c/def"), "b/");
+    EXPECT_EQ(resolveLinkTarget("./..xyz", "b/c/def"), "b/c/..xyz");
+    EXPECT_EQ(resolveLinkTarget("..",      "b/c/def"), "b/");
+    EXPECT_EQ(resolveLinkTarget("..xyz",   "b/c/def"), "b/c/..xyz");
+    EXPECT_EQ(resolveLinkTarget("../",     "b/c/def"), "b/");
+    EXPECT_EQ(resolveLinkTarget("../.",    "b/c/def"), "b/");
+    EXPECT_EQ(resolveLinkTarget(".././",   "b/c/def"), "b/");
+    EXPECT_EQ(resolveLinkTarget(".././x",  "b/c/def"), "b/x");
+    EXPECT_EQ(resolveLinkTarget("../.xyz", "b/c/def"), "b/.xyz");
+    EXPECT_EQ(resolveLinkTarget("../xyz",  "b/c/def"), "b/xyz");
+    EXPECT_EQ(resolveLinkTarget("..//",    "b/c/def"), "b//");
+    EXPECT_EQ(resolveLinkTarget("..//x",   "b/c/def"), "b//x");
+    EXPECT_EQ(resolveLinkTarget("../..",   "b/c/def"), "");
+    EXPECT_EQ(resolveLinkTarget("../../",  "b/c/def"), "");
+    EXPECT_EQ(resolveLinkTarget("../..//", "b/c/def"), "/");
+    EXPECT_THROW(resolveLinkTarget("../../..", "b/c/def"), OutOfBoundsURL);
+
+    EXPECT_EQ(resolveLinkTarget("",        "b/c/"), "b/c/");
+    EXPECT_EQ(resolveLinkTarget("?x=9&y=1","b/c/"), "b/c/");
+    EXPECT_EQ(resolveLinkTarget("#sec5.2", "b/c/"), "b/c/");
+    EXPECT_EQ(resolveLinkTarget(".",       "b/c/"), "b/c/");
+    EXPECT_EQ(resolveLinkTarget(".xyz",    "b/c/"), "b/c/.xyz");
+    EXPECT_EQ(resolveLinkTarget("./",      "b/c/"), "b/c/");
+    EXPECT_EQ(resolveLinkTarget("./xyz",   "b/c/"), "b/c/xyz");
+    EXPECT_EQ(resolveLinkTarget(".//",     "b/c/"), "b/c//");
+    EXPECT_EQ(resolveLinkTarget(".//xy",   "b/c/"), "b/c//xy");
+    EXPECT_EQ(resolveLinkTarget("./..",    "b/c/"), "b/");
+    EXPECT_EQ(resolveLinkTarget("./../",   "b/c/"), "b/");
+    EXPECT_EQ(resolveLinkTarget("./..xyz", "b/c/"), "b/c/..xyz");
+    EXPECT_EQ(resolveLinkTarget("..",      "b/c/"), "b/");
+    EXPECT_EQ(resolveLinkTarget("..xyz",   "b/c/"), "b/c/..xyz");
+    EXPECT_EQ(resolveLinkTarget("../",     "b/c/"), "b/");
+    EXPECT_EQ(resolveLinkTarget("../.",    "b/c/"), "b/");
+    EXPECT_EQ(resolveLinkTarget(".././",   "b/c/"), "b/");
+    EXPECT_EQ(resolveLinkTarget(".././x",  "b/c/"), "b/x");
+    EXPECT_EQ(resolveLinkTarget("../.xyz", "b/c/"), "b/.xyz");
+    EXPECT_EQ(resolveLinkTarget("../xyz",  "b/c/"), "b/xyz");
+    EXPECT_EQ(resolveLinkTarget("..//",    "b/c/"), "b//");
+    EXPECT_EQ(resolveLinkTarget("..//x",   "b/c/"), "b//x");
+    EXPECT_EQ(resolveLinkTarget("../..",   "b/c/"), "");
+    EXPECT_EQ(resolveLinkTarget("../../",  "b/c/"), "");
+    EXPECT_EQ(resolveLinkTarget("../..//", "b/c/"), "/");
+    EXPECT_THROW(resolveLinkTarget("../../..", "b/c/"), OutOfBoundsURL);
+
+    EXPECT_EQ(resolveLinkTarget("",        "/b/c/uiop"), "/b/c/uiop");
+    EXPECT_EQ(resolveLinkTarget("?lang=en","/b/c/uiop"), "/b/c/uiop");
+    EXPECT_EQ(resolveLinkTarget("#home",   "/b/c/uiop"), "/b/c/uiop");
+    EXPECT_EQ(resolveLinkTarget(".",       "/b/c/uiop"), "/b/c/");
+    EXPECT_EQ(resolveLinkTarget(".xyz",    "/b/c/uiop"), "/b/c/.xyz");
+    EXPECT_EQ(resolveLinkTarget("./",      "/b/c/uiop"), "/b/c/");
+    EXPECT_EQ(resolveLinkTarget("./xyz",   "/b/c/uiop"), "/b/c/xyz");
+    EXPECT_EQ(resolveLinkTarget(".//",     "/b/c/uiop"), "/b/c//");
+    EXPECT_EQ(resolveLinkTarget(".//xy",   "/b/c/uiop"), "/b/c//xy");
+    EXPECT_EQ(resolveLinkTarget("./..",    "/b/c/uiop"), "/b/");
+    EXPECT_EQ(resolveLinkTarget("./../",   "/b/c/uiop"), "/b/");
+    EXPECT_EQ(resolveLinkTarget("./..xyz", "/b/c/uiop"), "/b/c/..xyz");
+    EXPECT_EQ(resolveLinkTarget("..",      "/b/c/uiop"), "/b/");
+    EXPECT_EQ(resolveLinkTarget("..xyz",   "/b/c/uiop"), "/b/c/..xyz");
+    EXPECT_EQ(resolveLinkTarget("../",     "/b/c/uiop"), "/b/");
+    EXPECT_EQ(resolveLinkTarget("../.",    "/b/c/uiop"), "/b/");
+    EXPECT_EQ(resolveLinkTarget(".././",   "/b/c/uiop"), "/b/");
+    EXPECT_EQ(resolveLinkTarget(".././x",  "/b/c/uiop"), "/b/x");
+    EXPECT_EQ(resolveLinkTarget("../.xyz", "/b/c/uiop"), "/b/.xyz");
+    EXPECT_EQ(resolveLinkTarget("../xyz",  "/b/c/uiop"), "/b/xyz");
+    EXPECT_EQ(resolveLinkTarget("..//",    "/b/c/uiop"), "/b//");
+    EXPECT_EQ(resolveLinkTarget("..//x",   "/b/c/uiop"), "/b//x");
+    EXPECT_EQ(resolveLinkTarget("../..",   "/b/c/uiop"), "/");
+    EXPECT_EQ(resolveLinkTarget("../../",  "/b/c/uiop"), "/");
+    EXPECT_EQ(resolveLinkTarget("../..//", "/b/c/uiop"), "//");
+    EXPECT_EQ(resolveLinkTarget("../../..", "/b/c/uiop"), "");
+
+    EXPECT_EQ(resolveLinkTarget("../a/b/aa#localanchor", "/b/c"), "/a/b/aa");
+    EXPECT_EQ(resolveLinkTarget("../a/b/aa?localanchor", "/b/c"), "/a/b/aa");
+
+    // Link resolution gets rid of ./ and/or ../ but not // in the URL
+    EXPECT_EQ(resolveLinkTarget("../one/./two//three", "/zero/uno"), "/one/two//three");
+
+    // Link resolution is not confused by spurious occurrences of ./ and ../
     EXPECT_EQ(resolveLinkTarget("abc./xyz", ""), "abc./xyz");
     EXPECT_EQ(resolveLinkTarget("abc../xyz", ""), "abc../xyz");
-    EXPECT_EQ(resolveLinkTarget("ab.cd./xyz", "/QW/ERT"), "/QW/ERT/ab.cd./xyz");
-    EXPECT_EQ(resolveLinkTarget("a..b../xyz", "/QW/ERT"), "/QW/ERT/a..b../xyz");
-    EXPECT_EQ(resolveLinkTarget("x/y",  "/AS/DF" ), "/AS/DF/x/y");
-    EXPECT_EQ(resolveLinkTarget("x/y",  "AS.DF./qwerty"), "AS.DF./qwerty/x/y");
-    EXPECT_EQ(resolveLinkTarget("x/y",  "/A.S../qwerty"), "/A.S../qwerty/x/y");
+    EXPECT_EQ(resolveLinkTarget("ab.cd./xyz", "/QW/E/RT"), "/QW/E/ab.cd./xyz");
+    EXPECT_EQ(resolveLinkTarget("a..b../xyz", "/QW/E/RT"), "/QW/E/a..b../xyz");
+    EXPECT_EQ(resolveLinkTarget("x/y",  "/AS/DF/GHJ" ), "/AS/DF/x/y");
+    EXPECT_EQ(resolveLinkTarget("x/y",  "AS.DF./qwerty"), "AS.DF./x/y");
+    EXPECT_EQ(resolveLinkTarget("x/y",  "/A.S../qwerty"), "/A.S../x/y");
 
-    // URI-decoding is performed
-    EXPECT_EQ(resolveLinkTarget("pqrst/%41%62c", "WXYZ"), "WXYZ/pqrst/Abc");
+    // A series of adjacent slashes is considered as a chain of empty-named
+    // "directories" in the path
+    EXPECT_EQ(resolveLinkTarget("../leaf", "/top///bottom"), "/top//leaf");
+    EXPECT_EQ(resolveLinkTarget("../../leaf", "/top///bottom"), "/top/leaf");
+    EXPECT_EQ(resolveLinkTarget("../../../leaf", "/top///bottom"), "/leaf");
+    EXPECT_EQ(resolveLinkTarget("../../../../leaf", "/top///bottom"), "leaf");
+    EXPECT_EQ(resolveLinkTarget("lib//../python", "/usr"), "/lib/python");
+
+    // URI-decoding is performed on the first but not second argument
+    EXPECT_EQ(resolveLinkTarget("./%64%65%66", "/%41%62c/"), "/%41%62c/def");
 
     // '%2e" is URI-encoded '.'; check that path resolution is performed
     // on the URI-decoded version of the URL
-    EXPECT_EQ(resolveLinkTarget("%2e%2e/a", "/b/c"), "/b/a");
+    EXPECT_EQ(resolveLinkTarget("%2e%2e/a", "/b/c/d"), "/b/a");
 
-    // #439: normalized link reading off end of buffer
-    // small-string-opt sizes, so sanitizers and valgrind don't pick this up
-    EXPECT_EQ(resolveLinkTarget("%", "/"), "/");
-    EXPECT_EQ(resolveLinkTarget("%1", ""), "");
+    // '%2f" is URI-encoded '/'; check that absolute URL detection is performed
+    // before URI-decoding of the URL
+    EXPECT_EQ(resolveLinkTarget("%2fa", "/b/"), "/b//a");
+
+    EXPECT_EQ(resolveLinkTarget("%", ""),  "%");
+    EXPECT_EQ(resolveLinkTarget("%1", ""), "%1");
 
     EXPECT_EQ(resolveLinkTarget("%26", ""), "&");
-    EXPECT_EQ(resolveLinkTarget("%27", "/"), "/\'");
+    EXPECT_EQ(resolveLinkTarget("%27", ""), "\'");
 
-    // ../test/tools-test.cpp:260: Failure
-    // Expected equality of these values:
-    //   resolveLinkTarget("%", "/")
-    //     Which is: "/\01bc"
-    //   "/"
-    //
-    // ../test/tools-test.cpp:261: Failure
-    // Expected equality of these values:
-    //   resolveLinkTarget("%1", "")
-    //     Which is: "\x1" "1bc"
-    //   ""
+    ///////////////////////////////////////////////////////////////////////
+    // Testing of detection of out-of-bounds URLS
+    ///////////////////////////////////////////////////////////////////////
 
-    // test outside of small-string-opt
-    // valgrind will pick up on the error in this one
-    EXPECT_EQ(resolveLinkTarget("qrstuvwxyz%", "/abcdefghijklmnop"), "/abcdefghijklmnop/qrstuvwxyz");
-    EXPECT_EQ(resolveLinkTarget("qrstuvwxyz%1", "/abcdefghijklmnop"), "/abcdefghijklmnop/qrstuvwxyz");
+    EXPECT_THROW(resolveLinkTarget("../../..", ""), OutOfBoundsURL);
+    EXPECT_THROW(resolveLinkTarget("../", ""), OutOfBoundsURL);
+    EXPECT_EQ(resolveLinkTarget("../", "/a/b/"), "/a/");
+    EXPECT_EQ(resolveLinkTarget("..", "a/"), "");
+    EXPECT_THROW(resolveLinkTarget("../..", "a/"), OutOfBoundsURL);
+    EXPECT_EQ(resolveLinkTarget("../", "/a/"), "/");
+    EXPECT_EQ(resolveLinkTarget("../..", "/a/"), "");
+    EXPECT_THROW(resolveLinkTarget("../../..", "/a/"), OutOfBoundsURL);
+    EXPECT_THROW(resolveLinkTarget("../../../-/s/css_modules/ext.cite.ux-enhancements.css", "A/Blood_/"), OutOfBoundsURL);
+
+    EXPECT_EQ(resolveLinkTarget("css/..", ""), "");
+    EXPECT_EQ(resolveLinkTarget("css/../js", ""), "js");
+    EXPECT_THROW(resolveLinkTarget("css/../..", ""), OutOfBoundsURL);
+    EXPECT_THROW(resolveLinkTarget("../..", "css/"), OutOfBoundsURL);
+    EXPECT_THROW(resolveLinkTarget("css/../../js", ""), OutOfBoundsURL);
+    EXPECT_THROW(resolveLinkTarget("../../js", "css/"), OutOfBoundsURL);
+    EXPECT_THROW(resolveLinkTarget("css/../js/../..", ""), OutOfBoundsURL);
+    EXPECT_THROW(resolveLinkTarget("../js/../..", "css/"), OutOfBoundsURL);
+    EXPECT_THROW(resolveLinkTarget("css/../../..", ""), OutOfBoundsURL);
+
+    // Make sure that URLs that are both absolute-path and out-of-bounds
+    // result in an AbsolutePathURL exception
+    EXPECT_THROW(resolveLinkTarget("/../../b",   "1/23/456/"), AbsolutePathURL);
+    EXPECT_THROW(resolveLinkTarget("/a/../../b", "1/23/456/"), AbsolutePathURL);
+    EXPECT_THROW(resolveLinkTarget("/../../b",   "1/23/"),     AbsolutePathURL);
+    EXPECT_THROW(resolveLinkTarget("/a/../../b", "1/23/"),     AbsolutePathURL);
+
+    // Out-of-bounds URL detection should not be confused by
+    // URLs with fragment and/or search components
+    EXPECT_EQ(resolveLinkTarget("faq#q=../../../../xyz", "/en/"), "/en/faq");
+    EXPECT_EQ(resolveLinkTarget("faq?q=../../../../xyz", "/en/"), "/en/faq");
 }
 
 TEST(tools, addler32)

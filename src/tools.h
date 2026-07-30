@@ -216,16 +216,37 @@ struct AbsolutePathURL : std::runtime_error
   {}
 };
 
-// Returns a normalized version of an internal URL (relative to the given base
-// path)
+struct OutOfBoundsURL : std::runtime_error
+{
+  explicit OutOfBoundsURL(const std::string& url)
+    : runtime_error("Out-of-bounds URL: " + url)
+  {}
+};
+
+// Returns the target ZIM-path of an internal URL (relative to the given
+// ZIM-path)
 //
-// Given an internal URL inside a resource under the specified base path (which
-// denotes the parent "directory" of the said resource)
-// resolveLinkTarget(url, basePath) computes the target resource of that URL
-// (assuming that the base path is an already fully resolved normalized path).
+// Given an internal URL inside a resource at the specified ZIM path
+// resolveLinkTarget(url, zimPath) computes the target resource of that URL
+// (assuming that zimPath is an already fully resolved normalized path).
 //
-// Absolute path URLs result in an AbsolutePathURL exception
-std::string resolveLinkTarget(const std::string& url, const std::string& basePath);
+// The rules of resolution are those from Section 5 of RFC3986 (with a couple
+// of exceptions) under the following assumption. A ZIM-path ZIMPATH in a
+// ZIM-file ZIMFILE.zim is considered as part of an imaginary full URL
+// zim://ZIMFILE.zim/ZIMPATH (the zim: scheme can be alternatively replaced
+// with http:, as if the content of the ZIM-file is served directly at
+// http://ZIMFILE.zim/, ZIMFILE.zim playing the role of the host component). If
+// a relative URL RELURL in the context of the resource at that ZIM-path
+// resolves (following the rules of RFC3986 with the exceptions discussed later
+// on) to zim://ZIMFILE.zim/RESOLVEDPATH (or, for the alternative approach, to
+// http://ZIMFILE.zim/RESOLVEDPATH) then the result of
+// resolveLinkTarget(RELURL, ZIMPATH) is RESOLVEDPATH.
+//
+// Differences from RFC3986 are the following:
+// - Attempts to ascend above the top level are treated as an error rather than
+//   as a no-op (an OutOfBoundsURL exception is thrown)
+// - Absolute path URLs result in an AbsolutePathURL exception
+std::string resolveLinkTarget(const std::string& url, const std::string& zimPath);
 
 ////////////////////////////////////////////////////////////////////////////////
 // End of stuff related to internal link resolution
