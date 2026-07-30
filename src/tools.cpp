@@ -434,28 +434,6 @@ std::vector<html_link> generic_getLinks(const std::string& page)
     return links;
 }
 
-bool isOutofBounds(const std::string& input, std::string base)
-{
-    if (input.empty()) return false;
-
-    if (!base.length() || base.back() != '/')
-        base.push_back('/');
-
-    int nr = 0;
-    if (base.front() != '/')
-        nr++;
-
-    //count nr of substrings ../
-    int nrsteps = 0;
-    std::string::size_type pos = 0;
-    while((pos = input.find("../", pos)) != std::string::npos) {
-        nrsteps++;
-        pos += 3;
-    }
-
-    return nrsteps >= (nr + std::count(base.cbegin(), base.cend(), '/'));
-}
-
 int adler32(const std::string& buf)
 {
     unsigned int s1 = 1;

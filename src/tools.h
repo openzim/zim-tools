@@ -195,9 +195,6 @@ void stripTitleInvalidChars(std::string& str);
 //Returns a vector of the links in a particular page. includes links under 'href' and 'src'
 std::vector<html_link> generic_getLinks(const std::string& page);
 
-// checks if a relative path is out of bounds (relative to base)
-bool isOutofBounds(const std::string& input, std::string base);
-
 //Adler32 Hash Function. Used to hash the BLOB data obtained from each article, for redundancy checks.
 //Please note that the adler32 hash function has a high number of collisions, and that the hash match is not taken as final.
 int adler32(const std::string& buf);

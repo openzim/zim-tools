@@ -222,21 +222,6 @@ TEST(tools, uriKind)
     EXPECT_EQ(UriKind::OTHER, uriKind("style.css"));
 }
 
-TEST(tools, isOutofBounds)
-{
-    EXPECT_FALSE(isOutofBounds("", ""));
-    EXPECT_TRUE(isOutofBounds("../../..", ""));
-    EXPECT_TRUE(isOutofBounds("../", ""));
-    EXPECT_FALSE(isOutofBounds("../", "/a/b"));
-    EXPECT_FALSE(isOutofBounds("../", "/a"));
-    EXPECT_TRUE(isOutofBounds("../../", "/a"));
-    EXPECT_TRUE(isOutofBounds("../../../-/s/css_modules/ext.cite.ux-enhancements.css", "A/Blood_/"));
-
-    // URL with fragment and/or search components as the first argument
-    EXPECT_FALSE(isOutofBounds("faq#q=../../../../xyz", "/en"));
-    EXPECT_FALSE(isOutofBounds("faq?q=../../../../xyz", "/en"));
-}
-
 TEST(tools, resolveLinkTarget)
 {
     EXPECT_THROW(resolveLinkTarget("/", ""),    AbsolutePathURL);
