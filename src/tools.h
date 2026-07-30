@@ -243,7 +243,24 @@ struct OutOfBoundsURL : std::runtime_error
 // - Attempts to ascend above the top level are treated as an error rather than
 //   as a no-op (an OutOfBoundsURL exception is thrown)
 // - Absolute path URLs result in an AbsolutePathURL exception
+//
+// Also see InternalLinkResolver below.
 std::string resolveLinkTarget(std::string url, const std::string& zimPath);
+
+// InternalLinkResolver is a slightly more efficient way of resolving multiple
+// links for the same ZIM resource. resolveLinkTarget() is equivalent
+// to InternalLinkResolver(zimPath).resolveLinkTarget(url).
+class InternalLinkResolver
+{
+public: // functions
+  explicit InternalLinkResolver(const std::string& zimPath);
+
+  std::string resolveLinkTarget(std::string url) const;
+
+private: // data
+  std::string zimEntryPath;
+  std::string basePath;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // End of stuff related to internal link resolution

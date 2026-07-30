@@ -400,6 +400,7 @@ void ArticleChecker::check_item(const zim::Item& item)
 void ArticleChecker::check_internal_links(zim::Item item, const LinkCollection& links)
 {
     const auto path = item.getPath();
+    InternalLinkResolver linkResolver(path);
 
     ArticleChecker::GroupedLinkCollection groupedLinks;
     int nremptylinks = 0;
@@ -416,7 +417,7 @@ void ArticleChecker::check_internal_links(zim::Item item, const LinkCollection& 
 
         std::string resolved;
         try {
-            resolved = resolveLinkTarget(l.link, path);
+            resolved = linkResolver.resolveLinkTarget(l.link);
         } catch ( const AbsolutePathURL& ) {
             reporter.addMsg(MsgId::ABSPATH_LINK, {{"link", l.link}, {"path", path}});
             continue;

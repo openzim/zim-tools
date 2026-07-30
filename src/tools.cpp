@@ -475,18 +475,23 @@ void stripFragmentAndOrSearchComponent(std::string& url)
 
 } // unnamed namespace
 
-std::string resolveLinkTarget(std::string url, const std::string& zimPath)
+InternalLinkResolver::InternalLinkResolver(const std::string& zimPath)
+: zimEntryPath(zimPath)
+, basePath(getBasePath(zimPath))
+{
+}
+
+std::string InternalLinkResolver::resolveLinkTarget(std::string url) const
 {
     stripFragmentAndOrSearchComponent(url);
     if (url.empty()) {
-      return zimPath;
+      return zimEntryPath;
     }
 
     if ( url.front() == '/' ) {
       throw AbsolutePathURL(url);
     }
 
-    const auto basePath = getBasePath(zimPath);
     url = basePath + decodeUrl(url);
 
     std::vector<std::string> pathComponents;
@@ -516,6 +521,12 @@ std::string resolveLinkTarget(std::string url, const std::string& zimPath)
     }
 
     return urlEndsWithDotSegment ? resolvedUrl + sep : resolvedUrl;
+}
+
+std::string resolveLinkTarget(std::string url, const std::string& zimPath) {
+  InternalLinkResolver resolver(zimPath);
+
+  return resolver.resolveLinkTarget(url);
 }
 
 namespace
