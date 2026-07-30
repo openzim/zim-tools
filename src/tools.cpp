@@ -525,7 +525,11 @@ std::string InternalLinkResolver::resolveLinkTarget(std::string url) const
     std::string resolvedPath = basePath;
     const char* pathTerminator = "";
     const char* pathSeparator  = getPathSeparatorFor(resolvedPath);
-    for ( const auto& p : split(url, '/') ) {
+    const char* const urlEnd = url.data() + url.size();
+    for (const char* segStart = url.data(); segStart <= urlEnd; ) {
+      const char* const segEnd = std::find(segStart, urlEnd, '/');
+      const std::string_view p(segStart, segEnd - segStart);
+      segStart = segEnd + 1;
       if ( p == ".") {
         pathSeparator = pathTerminator = getPathSeparatorFor(resolvedPath);
         continue;
