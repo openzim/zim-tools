@@ -202,17 +202,25 @@ TEST(tools, uriKind)
     EXPECT_EQ(UriKind::DATA, uriKind("data:text/plain;charset=UTF-8,data"));
     EXPECT_EQ(UriKind::DATA, uriKind("DATA:text/plain;charset=UTF-8,data"));
 
-    EXPECT_EQ(UriKind::OTHER, uriKind("http:example.com"));
-    EXPECT_EQ(UriKind::OTHER, uriKind("http:/example.com"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("http:example.com"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("http:/example.com"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("ftp:/download.kiwix.org/zim/"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("custom:path"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("CUSTOM:path"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("web+demo:path"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("web-demo:path"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("web.demo:path"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("sendmailto:someone@example.com"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("intel:+0123456789"));
+
     EXPECT_EQ(UriKind::OTHER, uriKind("git@github.com:openzim/zim-tools.git"));
+    EXPECT_EQ(UriKind::OTHER, uriKind("1custom:path"));
+    EXPECT_EQ(UriKind::OTHER, uriKind("custom_scheme:path"));
     EXPECT_EQ(UriKind::OTHER, uriKind("/redirect?url=http://example.com"));
     EXPECT_EQ(UriKind::OTHER, uriKind("redirect?url=http://example.com"));
     EXPECT_EQ(UriKind::OTHER, uriKind("auth.php#returnurl=https://example.com"));
     EXPECT_EQ(UriKind::OTHER, uriKind("/api/v1/http://example.com"));
     EXPECT_EQ(UriKind::OTHER, uriKind("img/file:///etc/passwd"));
-    EXPECT_EQ(UriKind::OTHER, uriKind("ftp:/download.kiwix.org/zim/"));
-    EXPECT_EQ(UriKind::OTHER, uriKind("sendmailto:someone@example.com"));
-    EXPECT_EQ(UriKind::OTHER, uriKind("intel:+0123456789"));
     EXPECT_EQ(UriKind::OTHER, uriKind("showlocation.cgi?geo:12.34,56.78"));
     EXPECT_EQ(UriKind::OTHER, uriKind("/xyz/javascript:console.log('hello, world!')"));
 

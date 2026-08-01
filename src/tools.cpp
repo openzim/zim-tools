@@ -576,6 +576,21 @@ UriKind specialUriSchemeKind(const std::string& s)
     return it != uriSchemes.end() ? it->second : UriKind::OTHER;
 }
 
+bool isValidUriScheme(const std::string& s)
+{
+    const auto isAlpha = [](const char c) {
+        return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
+    };
+
+    if (s.empty() || !isAlpha(s.front()))
+        return false;
+
+    return std::all_of(s.begin() + 1, s.end(), [&isAlpha](const char c) {
+        return isAlpha(c) || ('0' <= c && c <= '9')
+               || c == '+' || c == '-' || c == '.';
+    });
+}
+
 
 } // unnamed namespace
 
@@ -589,13 +604,17 @@ UriKind html_link::detectUriKind(const std::string& input_string)
             return UriKind::OTHER;
     }
 
+    const std::string scheme = input_string.substr(0, k);
+    if ( !isValidUriScheme(scheme) )
+        return UriKind::OTHER;
+
     if ( k + 2 < input_string.size()
          && input_string[k+1] == '/'
          && input_string[k+2] == '/' )
         return UriKind::GENERIC_URI;
 
-    const std::string scheme = asciitolower(input_string.substr(0, k));
-    return specialUriSchemeKind(scheme);
+    const UriKind uriKind = specialUriSchemeKind(asciitolower(scheme));
+    return uriKind == UriKind::OTHER ? UriKind::GENERIC_URI : uriKind;
 }
 
 namespace
