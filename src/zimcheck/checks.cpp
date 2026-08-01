@@ -50,6 +50,7 @@ std::unordered_map<MsgId, MsgInfo> msgTable = {
   { MsgId::MAIN_PAGE,        { TestType::MAIN_PAGE, "Main Page Index stored in Archive Header: {{&main_page_index}}" } },
   { MsgId::EMPTY_ENTRY,      { TestType::EMPTY, "Entry {{&path}} is empty" } },
   { MsgId::OUTOFBOUNDS_LINK, { TestType::URL_INTERNAL, "{{&link}} is out of bounds. Article: {{&path}}" } },
+  { MsgId::ABSPATH_LINK,     { TestType::URL_INTERNAL, "{{&link}} is an absolute path link. Article: {{&path}}" } },
   { MsgId::DANGLING_LINKS,   { TestType::URL_INTERNAL, "Dangling link(s) in article '{{&path}}':\n{{#links}}  - '{{&value}}' (resolves to '{{&normalized_link}}')\n{{/links}}" } },
   { MsgId::EXTERNAL_LINK,    { TestType::URL_EXTERNAL, "{{&link}} is an external dependence in article {{&path}}" } },
   { MsgId::EMPTY_LINKS,      { TestType::URL_EMPTY, "Found {{&count}} empty links in article: {{&path}}" } },
@@ -399,9 +400,7 @@ void ArticleChecker::check_item(const zim::Item& item)
 void ArticleChecker::check_internal_links(zim::Item item, const LinkCollection& links)
 {
     const auto path = item.getPath();
-    auto baseUrl = path;
-    auto pos = baseUrl.find_last_of('/');
-    baseUrl.resize( pos==baseUrl.npos ? 0 : pos );
+    InternalLinkResolver linkResolver(path);
 
     ArticleChecker::GroupedLinkCollection groupedLinks;
     int nremptylinks = 0;
@@ -416,14 +415,18 @@ void ArticleChecker::check_internal_links(zim::Item item, const LinkCollection& 
         if (l.isInternalUrl() == false) continue;
 
 
-        if (isOutofBounds(l.link, baseUrl))
-        {
+        std::string resolved;
+        try {
+            resolved = linkResolver.resolveLinkTarget(l.link);
+        } catch ( const AbsolutePathURL& ) {
+            reporter.addMsg(MsgId::ABSPATH_LINK, {{"link", l.link}, {"path", path}});
+            continue;
+        } catch ( const OutOfBoundsURL& ) {
             reporter.addMsg(MsgId::OUTOFBOUNDS_LINK, {{"link", l.link}, {"path", path}});
             continue;
         }
 
-        auto normalized = normalize_link(l.link, baseUrl);
-        groupedLinks[normalized].push_back(l.link);
+        groupedLinks[resolved].push_back(l.link);
     }
 
     if (nremptylinks)

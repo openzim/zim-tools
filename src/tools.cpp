@@ -434,28 +434,6 @@ std::vector<html_link> generic_getLinks(const std::string& page)
     return links;
 }
 
-bool isOutofBounds(const std::string& input, std::string base)
-{
-    if (input.empty()) return false;
-
-    if (!base.length() || base.back() != '/')
-        base.push_back('/');
-
-    int nr = 0;
-    if (base.front() != '/')
-        nr++;
-
-    //count nr of substrings ../
-    int nrsteps = 0;
-    std::string::size_type pos = 0;
-    while((pos = input.find("../", pos)) != std::string::npos) {
-        nrsteps++;
-        pos += 3;
-    }
-
-    return nrsteps >= (nr + std::count(base.cbegin(), base.cend(), '/'));
-}
-
 int adler32(const std::string& buf)
 {
     unsigned int s1 = 1;
@@ -469,83 +447,112 @@ int adler32(const std::string& buf)
     return (s2 << 16) | s1;
 }
 
-std::string normalize_link(const std::string& input, const std::string& baseUrl)
+
+namespace
 {
-    std::string output;
-    output.reserve(baseUrl.size() + input.size() + 1);
 
-    bool check_rel = false;
-    auto p = input.cbegin();
-    if ( *(p) == '/') {
-      // This is an absolute url.
-      p++;
+// "abc/def/xyz"  -->  "abc/def"
+// "abc/def/"     -->  "abc/def"
+// "abc"          -->  ""
+// "/abc"         -->  "/"
+// "/"            -->  "/"
+std::string getBasePath(const std::string& zimPath)
+{
+    const auto pos = zimPath.find_last_of('/');
+    return pos == std::string::npos
+         ? std::string()
+         : zimPath.substr(0, pos == 0 ? 1 : pos);
+}
+
+bool dropLastSegmentOfThePath(std::string& path)
+{
+    if ( path.empty() )
+        return false;
+
+    const auto i = path.find_last_of("/");
+    if ( i == std::string::npos ) {
+        // "abc"  -->  ""
+        path.clear();
+    } else if ( i == 0 ) {
+        // "/abc" -->  "/"
+        // "/"    -->  ""
+        path.resize(path == "/" ? 0 : 1);
     } else {
-      //This is a relative url, use base url
-      output = baseUrl;
-      if (!output.empty() && output.back() != '/') {
-          output += '/';
+        // "abc/def/xyz" --> "abc/def
+        // "abc/def/"    --> "abc/def
+        // "abc/def"     --> "abc
+        path.resize(i);
+    }
+    return true;
+}
+
+// Determine the separator to be used if the path has to be extended
+const char* getPathSeparatorFor(const std::string& path)
+{
+    return path.empty() || path == "/" ? "" : "/";
+}
+
+void stripFragmentAndOrSearchComponent(std::string& url)
+{
+    // strip the fragment and/or search components, if any
+    auto endOfPathComponent = url.find_last_of("#?");
+    if ( endOfPathComponent != std::string::npos ) {
+      url.resize(endOfPathComponent);
+    }
+}
+
+} // unnamed namespace
+
+InternalLinkResolver::InternalLinkResolver(const std::string& zimPath)
+: zimEntryPath(zimPath)
+, basePath(getBasePath(zimPath))
+{
+}
+
+std::string InternalLinkResolver::resolveLinkTarget(std::string url) const
+{
+    stripFragmentAndOrSearchComponent(url);
+    if (url.empty()) {
+      return zimEntryPath;
+    }
+
+    if ( url.front() == '/' ) {
+      throw AbsolutePathURL(url);
+    }
+
+    url = decodeUrl(url);
+
+    std::string resolvedPath = basePath;
+    const char* pathTerminator = "";
+    const char* pathSeparator  = getPathSeparatorFor(resolvedPath);
+    const char* const urlEnd = url.data() + url.size();
+    for (const char* segStart = url.data(); segStart <= urlEnd; ) {
+      const char* const segEnd = std::find(segStart, urlEnd, '/');
+      const std::string_view p(segStart, segEnd - segStart);
+      segStart = segEnd + 1;
+      if ( p == ".") {
+        pathSeparator = pathTerminator = getPathSeparatorFor(resolvedPath);
+        continue;
+      } else if ( p == ".." ) {
+        if ( !dropLastSegmentOfThePath(resolvedPath) ) {
+          throw OutOfBoundsURL(url);
+        }
+        pathSeparator = pathTerminator = getPathSeparatorFor(resolvedPath);
+      } else {
+        resolvedPath += pathSeparator;
+        resolvedPath += p;
+        pathTerminator = "";
+        pathSeparator  = "/";
       }
-      check_rel = true;
     }
 
-    //URL Decoding.
-    while (p < input.cend())
-    {
-        if ( check_rel ) {
-            if (std::strncmp(&*p, "../", 3) == 0) {
-                // We must go "up"
-                // Remove the '/' at the end of output.
-                output.resize(output.size()-1);
-                // Remove the last part.
-                auto pos = output.find_last_of('/');
-                output.resize(pos==output.npos?0:pos);
-                // Move after the "..".
-                p += 2;
-                check_rel = false;
-                continue;
-            }
-            if (std::strncmp(&*p, "./", 2) == 0) {
-                // We must simply skip this part
-                // Simply move after the ".".
-                p += 2;
-                check_rel = false;
-                continue;
-            }
-        }
+    return resolvedPath + pathTerminator;
+}
 
-        if ( *p == '#' || *p == '?') {
-            // For our purposes we can safely discard the query and/or fragment
-            // components of the URL
-            break;
-        }
+std::string resolveLinkTarget(std::string url, const std::string& zimPath) {
+  InternalLinkResolver resolver(zimPath);
 
-        if ( *p == '%')
-        {
-            if( (p+2) >= input.cend()){
-                // if the %XX token would go off the end of the string, just break
-                // string::end() returns an iterator pointing to the null terminator
-                // of the underlying c-string (guarenteed as of C++11)
-                break;
-            }
-            // hhx only officially supports hex unsigned char
-            unsigned char ch = 0;
-            std::sscanf(&*(p+1), "%2hhx", &ch);
-            output += ch;
-            p += 3;
-            continue;
-        }
-
-        if ( *p == '/') {
-            check_rel = true;
-            if (output.empty()) {
-                // Do not add '/' at beginning of output
-                p++;
-                continue;
-            }
-        }
-        output += *(p++);
-    }
-    return output;
+  return resolver.resolveLinkTarget(url);
 }
 
 namespace

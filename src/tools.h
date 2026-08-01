@@ -195,18 +195,77 @@ void stripTitleInvalidChars(std::string& str);
 //Returns a vector of the links in a particular page. includes links under 'href' and 'src'
 std::vector<html_link> generic_getLinks(const std::string& page);
 
-// checks if a relative path is out of bounds (relative to base)
-bool isOutofBounds(const std::string& input, std::string base);
-
 //Adler32 Hash Function. Used to hash the BLOB data obtained from each article, for redundancy checks.
 //Please note that the adler32 hash function has a high number of collisions, and that the hash match is not taken as final.
 int adler32(const std::string& buf);
 
 std::string decodeHtmlEntities(const std::string& str);
 
-//Removes extra spaces from URLs. Usually done by the browser, so web authors sometimes tend to ignore it.
-//Converts the %20 to space.Essential for comparing URLs.
-std::string normalize_link(const std::string& input, const std::string& baseUrl);
+
+////////////////////////////////////////////////////////////////////////////////
+// Stuff related to internal link resolution
+////////////////////////////////////////////////////////////////////////////////
+
+struct AbsolutePathURL : std::runtime_error
+{
+  explicit AbsolutePathURL(const std::string& url)
+    : runtime_error("Absolute path URL: " + url)
+  {}
+};
+
+struct OutOfBoundsURL : std::runtime_error
+{
+  explicit OutOfBoundsURL(const std::string& url)
+    : runtime_error("Out-of-bounds URL: " + url)
+  {}
+};
+
+// Returns the target ZIM-path of an internal URL (relative to the given
+// ZIM-path)
+//
+// Given an internal URL inside a resource at the specified ZIM path
+// resolveLinkTarget(url, zimPath) computes the target resource of that URL
+// (assuming that zimPath is an already fully resolved normalized path).
+//
+// The rules of resolution are those from Section 5 of RFC3986 (with a couple
+// of exceptions) under the following assumption. A ZIM-path ZIMPATH in a
+// ZIM-file ZIMFILE.zim is considered as part of an imaginary full URL
+// zim://ZIMFILE.zim/ZIMPATH (the zim: scheme can be alternatively replaced
+// with http:, as if the content of the ZIM-file is served directly at
+// http://ZIMFILE.zim/, ZIMFILE.zim playing the role of the host component). If
+// a relative URL RELURL in the context of the resource at that ZIM-path
+// resolves (following the rules of RFC3986 with the exceptions discussed later
+// on) to zim://ZIMFILE.zim/RESOLVEDPATH (or, for the alternative approach, to
+// http://ZIMFILE.zim/RESOLVEDPATH) then the result of
+// resolveLinkTarget(RELURL, ZIMPATH) is RESOLVEDPATH.
+//
+// Differences from RFC3986 are the following:
+// - Attempts to ascend above the top level are treated as an error rather than
+//   as a no-op (an OutOfBoundsURL exception is thrown)
+// - Absolute path URLs result in an AbsolutePathURL exception
+//
+// Also see InternalLinkResolver below.
+std::string resolveLinkTarget(std::string url, const std::string& zimPath);
+
+// InternalLinkResolver is a slightly more efficient way of resolving multiple
+// links for the same ZIM resource. resolveLinkTarget() is equivalent
+// to InternalLinkResolver(zimPath).resolveLinkTarget(url).
+class InternalLinkResolver
+{
+public: // functions
+  explicit InternalLinkResolver(const std::string& zimPath);
+
+  std::string resolveLinkTarget(std::string url) const;
+
+private: // data
+  std::string zimEntryPath;
+  std::string basePath;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// End of stuff related to internal link resolution
+////////////////////////////////////////////////////////////////////////////////
+
 
 std::string httpRedirectHtml(const std::string& redirectUrl);
 
