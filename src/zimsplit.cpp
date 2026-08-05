@@ -92,7 +92,7 @@ class ZimSplitter
 
     void close_file() {
         if (currentPartSize > maxPartSize) {
-           std::cout << "WARNING: Part " << part_name << " is bigger that max part size."
+           std::cout << "WARNING: Part " << part_name << " is bigger than max part size."
             << " (" << currentPartSize << ">" << maxPartSize << ")" << std::endl;
         }
         ofile.close();
