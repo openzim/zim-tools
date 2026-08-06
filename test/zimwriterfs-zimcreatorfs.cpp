@@ -178,3 +178,22 @@ TEST(ZimCreatorFSTest, ParseRedirect)
       }, std::runtime_error);
     }
 }
+
+// verify the functionalities of isValidTitle function
+TEST(ZimCreatorFSTest, ValidateTitle)
+{
+  EXPECT_TRUE(isValidTitle("Valid Title", 3));
+
+  EXPECT_FALSE(isValidTitle("", 3));
+
+  EXPECT_FALSE(isValidTitle("ab", 3));
+
+  EXPECT_TRUE(isValidTitle("Title123", 3));
+
+  EXPECT_TRUE(isValidTitle("Title!@#", 3));
+
+  EXPECT_TRUE(isValidTitle("Títlé123", 3));
+
+  EXPECT_FALSE(isValidTitle("!!!!!", 3));
+}
+
