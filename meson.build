@@ -25,6 +25,7 @@ with_xapian_support = compiler.has_header_symbol(
 find_library_in_compiler = meson.version().version_compare('>=0.31.0')
 rt_dep = dependency('rt', required:false)
 docopt_dep = dependency('docopt', static:static_linkage)
+icu_uc_dep = dependency('icu-uc', static:static_linkage)
 icu_dep = dependency('icu-i18n', static:static_linkage)
 
 with_writer = host_machine.system() != 'windows'
