@@ -72,7 +72,8 @@ make__poor__zim()
     sed -e 's!I/image\.png!http://a.io/pic.png!' main.html > external_image_http.html
     sed -e 's!I/image\.png!https://a.io/pic.png!' main.html > external_image_https.html
     sed -e 's!I/image\.png!//a.io/pic.png!' main.html > external_image_protocol_relative.html
-    sed -e 's/article1/non_existent/' main.html > dangling_link.html
+    sed -e 's/article1/non_existent/; s/article2/removed/' main.html > dangling_link.html
+    sed -e 's!I/image\.png!http://a.io/img.png!; s!A/article2\.html!http://example.com/!' main.html > multi_external_src.html
     sed -e 's!A/article1!../../oops!' main.html > outofbounds_link.html
     sed -e 's!A/article1!/A/article1!' main.html > abspath_link.html
     command_set="sed -e '6 a <meta http-equiv=refresh content=\"0;URL=redirect_loop.html\">' main.html"
