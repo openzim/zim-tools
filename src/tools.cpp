@@ -359,12 +359,27 @@ const char* strSkipTillRightAfter(const char* p, const char* s)
     return p;
 }
 
+inline const char* skipWhitespace(const char* p)
+{
+    while (*p == ' ')
+        ++p;
+
+    return p;
+}
+
+std::string getStringBeforeNext(const char* p, char c) {
+    const char* const s = p;
+    // XXX: don't run beyond end of string
+    while(*p != c)
+        p++;
+    return std::string(s, p);
+}
+
 } // unnamed namespace
 
 std::vector<html_link> generic_getLinks(const std::string& page)
 {
     const char* p = page.c_str();
-    const char* linkStart;
     std::vector<html_link> links;
     std::string attr;
 
@@ -415,23 +430,17 @@ std::vector<html_link> generic_getLinks(const std::string& page)
             continue;
         }
 
-        while (*p == ' ')
-            p += 1 ;
+        p = skipWhitespace(p);
         if (*(p++) != '=')
             continue;
-        while (*p == ' ')
-            p += 1;
-        char delimiter = *p++;
+        p = skipWhitespace(p);
+        const char delimiter = *p++;
         if (delimiter != '\'' && delimiter != '"')
             continue;
 
-        linkStart = p;
-        // [TODO] Handle escape char
-        while(*p != delimiter)
-            p++;
-        const std::string link(linkStart, p);
+        const auto link = getStringBeforeNext(p, delimiter);
         links.push_back(html_link(attr, decodeHtmlEntities(link)));
-        p += 1;
+        p += link.size() + 1;
     }
     return links;
 }
