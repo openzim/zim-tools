@@ -30,7 +30,18 @@
 
 #define BUFFER_SIZE 4096
 
-#define DEFAULT_PART_SIZE 2147483648
+const zim::size_type DEFAULT_PART_SIZE = 2147483648;
+
+uint64_t asUint64(const std::string& str) {
+    std::istringstream iss(str);
+    int64_t ret;
+    iss >> ret;
+    if(iss.fail() || !iss.eof() || ret < 0) {
+        const auto msg = "invalid uint64_t value: " + str;
+        throw std::invalid_argument(msg);
+    }
+    return ret;
+}
 
 class ZimSplitter
 {
@@ -81,7 +92,7 @@ class ZimSplitter
 
     void close_file() {
         if (currentPartSize > maxPartSize) {
-           std::cout << "WARNING: Part " << part_name << " is bigger that max part size."
+           std::cout << "WARNING: Part " << part_name << " is bigger than max part size."
             << " (" << currentPartSize << ">" << maxPartSize << ")" << std::endl;
         }
         ofile.close();
@@ -191,7 +202,7 @@ int main(int argc, char* argv[])
 
     zim::size_type size = DEFAULT_PART_SIZE;
     if (args["--size"])
-        size = args["--size"].asLong();
+        size = asUint64(args["--size"].asString());
 
     // initalize app
     ZimSplitter app(args["<file>"].asString(), prefix, size);
