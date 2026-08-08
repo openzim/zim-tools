@@ -26,6 +26,7 @@
 
 std::string getFileContent(const std::string& path);
 
+std::string extractRedirectUrlFromHtmlHeadValue(const std::string& refresh_value);
 std::string extractRedirectUrlFromHtml(const GumboVector* head_children);
 
 std::string generateDate();

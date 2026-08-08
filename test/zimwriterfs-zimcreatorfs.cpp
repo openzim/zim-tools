@@ -24,6 +24,7 @@
 #include "gtest/gtest.h"
 
 #include "../src/zimwriterfs/zimcreatorfs.h"
+#include "../src/zimwriterfs/tools.h"
 #include "../src/tools.h"
 
 
@@ -177,4 +178,15 @@ TEST(ZimCreatorFSTest, ParseRedirect)
             );
       }, std::runtime_error);
     }
+}
+
+
+TEST(ZimwriterfsTools, extractRedirectUrlFromHtmlHeadValue)
+{
+  EXPECT_EQ(extractRedirectUrlFromHtmlHeadValue("0;URL=../../../../404.html"), "../../../../404.html");
+  EXPECT_EQ(extractRedirectUrlFromHtmlHeadValue(" 0 ; URL=home "), "home");
+  EXPECT_EQ(extractRedirectUrlFromHtmlHeadValue(" 22 ;url=homepage.html "), "homepage.html");
+  EXPECT_EQ(extractRedirectUrlFromHtmlHeadValue(" 22 ,url ='https://www.kiwix.org/' "), "https://www.kiwix.org/");
+  EXPECT_EQ(extractRedirectUrlFromHtmlHeadValue("0.5;url=\"//kiwix.org/privacy\" "), "//kiwix.org/privacy");
+  EXPECT_EQ(extractRedirectUrlFromHtmlHeadValue("0;./Elizabeth_II"), "./Elizabeth_II");
 }

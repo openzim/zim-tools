@@ -300,8 +300,8 @@ std::string ZimCreatorFS::parseAndAdaptHtml(std::string& data, std::string& titl
       std::string targetUrl;
       try {
         targetUrl = extractRedirectUrlFromHtml(head_children);
-      } catch (std::string& error) {
-        std::cerr << error << std::endl;
+      } catch (const std::runtime_error& error) {
+        std::cerr << error.what() << std::endl;
       }
       if (!targetUrl.empty()) {
         auto redirectUrl = computeAbsolutePath(url, decodeUrl(targetUrl));
