@@ -549,6 +549,8 @@ TEST(tools, getLinks)
   <head>
     <link src = "/css/stylesheet.css" rel="stylesheet">
     <link rel="icon" href   =    '/favicon.ico'>
+    <script defer crossorigin="anonymous" src="/js/analytics.js"></script>
+    <!-- <script src="/js/tracker.js"></script> -->
   </head>
   <body>
     <img src="../img/welcome.png">
@@ -561,14 +563,17 @@ TEST(tools, getLinks)
       &lt;img src="not_a_link_in_example_code_block.png"&gt;
     </pre>
     Powered by <a target="_blank" href="https://kiwix.org">Kiwix</a>.
+    <script src='/js/footer.js'></script>
   </body>
 </html>
 )",
       // links
       "{ src, /css/stylesheet.css }"                      "\n"
       "{ href, /favicon.ico }"                            "\n"
+      "{ src, /js/analytics.js }"                         "\n"
       "{ src, ../img/welcome.png }"                       "\n"
-      "{ href, https://kiwix.org }"
+      "{ href, https://kiwix.org }"                       "\n"
+      "{ src, /js/footer.js }"
     );
 
     EXPECT_LINKS(
