@@ -381,7 +381,6 @@ std::vector<html_link> generic_getLinks(const std::string& page)
 {
     const char* p = page.c_str();
     std::vector<html_link> links;
-    std::string attr;
 
     // The difference of the counts of the '<' and '>' characters preceding
     // the current position. In a valid HTML without comments it should only
@@ -419,11 +418,12 @@ std::vector<html_link> generic_getLinks(const std::string& page)
           continue;
         }
 
+        html_link::AttributeKind attr;
         if (strncmp(p, " href", 5) == 0) {
-            attr = "href";
+            attr = html_link::HREF;
             p += 5;
         } else if (strncmp(p, " src", 4) == 0) {
-            attr = "src";
+            attr = html_link::SRC;
             p += 4;
         } else {
             p += 1;

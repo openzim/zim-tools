@@ -491,7 +491,8 @@ std::string links2Str(const std::vector<html_link>& links)
     std::ostringstream oss;
     const char* sep = "";
     for ( const auto& l : links ) {
-        oss << sep << "{ " << l.attribute << ", " << l.link << " }";
+        const char* attr = l.attribute == html_link::SRC ? "src" : "href";
+        oss << sep << "{ " << attr << ", " << l.link << " }";
         sep = "\n";
     }
     return oss.str();
