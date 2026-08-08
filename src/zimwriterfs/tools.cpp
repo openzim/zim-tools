@@ -186,7 +186,7 @@ std::string extractRedirectUrlFromHtml(const GumboVector* head_children)
               != NULL) {
             url = extractRedirectUrlFromHtmlHeadValue(attribute->value);
             if (url.empty()) {
-              throw std::string(
+              throw std::runtime_error(
                 "Unable to find the redirect/refresh target URL in the HTML DOM");
             }
           }
