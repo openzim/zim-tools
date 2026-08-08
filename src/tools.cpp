@@ -359,12 +359,6 @@ const char* strSkipTillRightAfter(const char* p, const char* s)
     return p;
 }
 
-bool isScriptTag(const char* p)
-{
-  return strncmp(p, "<script", 7) == 0
-      && (p[7] == '>' || p[7] == ' ');
-}
-
 } // unnamed namespace
 
 std::vector<html_link> generic_getLinks(const std::string& page)
@@ -378,6 +372,7 @@ std::vector<html_link> generic_getLinks(const std::string& page)
     // the current position. In a valid HTML without comments it should only
     // take values 0 or 1.
     int ltgtBalance = 0;
+    bool processingAScriptTag = false;
 
     while (*p) {
         if ( *p == '<' ) {
@@ -385,18 +380,22 @@ std::vector<html_link> generic_getLinks(const std::string& page)
             p = strSkipTillRightAfter(p, "-->");
             continue;
           }
-          if (isScriptTag(p)) {
-            p = strSkipTillRightAfter(p, "</script>");
-            continue;
-          }
-
           ++ltgtBalance;
           ++p;
+          if ( strncmp(p, "script", 6) == 0 && (p[6] == '>' || p[6] == ' ') ) {
+            processingAScriptTag = true;
+            p += 6;
+          }
           continue;
         }
         if ( *p == '>' ) {
           --ltgtBalance;
-          ++p;
+          if ( processingAScriptTag ) {
+            p = strSkipTillRightAfter(p, "</script>");
+            processingAScriptTag = false;
+          } else {
+            ++p;
+          }
           continue;
         }
 
