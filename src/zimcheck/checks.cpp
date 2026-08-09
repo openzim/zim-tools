@@ -297,11 +297,12 @@ public: // types
     typedef std::vector<html_link> LinkCollection;
 
 public: // functions
-    ArticleChecker(const zim::Archive& _archive, ErrorLogger& _reporter, ProgressBar& _progress, EnabledTests _checks)
+    ArticleChecker(const zim::Archive& _archive, ErrorLogger& _reporter, ProgressBar& _progress,
+                   const ZimCheckOptions& _options)
         : archive(_archive)
         , reporter(_reporter)
         , progress(_progress)
-        , checks(_checks)
+        , options(_options)
         , linkStatusCache(64*1024)
     {
         progress.reset(archive.getEntryCount());
@@ -334,7 +335,7 @@ private: // data
     const zim::Archive& archive;
     ErrorLogger& reporter;
     ProgressBar& progress;
-    const EnabledTests checks;
+    const ZimCheckOptions options;
 
     // All article with the same hash will be recorded in the same bucket of
     // this hash table.
@@ -360,7 +361,7 @@ void ArticleChecker::check(zim::Entry entry)
 void ArticleChecker::check_item(const zim::Item& item)
 {
     if (item.getSize() == 0) {
-        if (checks.isEnabled(TestType::EMPTY)) {
+        if (options.enabledTests.isEnabled(TestType::EMPTY)) {
             const auto path = item.getPath();
             const char ns = archive.hasNewNamespaceScheme() ? 'C' : path[0];
             if (ns == 'C' || ns=='A' || ns == 'I') {
@@ -371,27 +372,27 @@ void ArticleChecker::check_item(const zim::Item& item)
     }
 
     std::string data;
-    if (checks.isEnabled(TestType::REDUNDANT) || item.getMimetype() == "text/html")
+    if (options.enabledTests.isEnabled(TestType::REDUNDANT) || item.getMimetype() == "text/html")
         data = item.getData();
 
-    if(checks.isEnabled(TestType::REDUNDANT))
+    if(options.enabledTests.isEnabled(TestType::REDUNDANT))
         hash_main[adler32(data)].push_back( item.getIndex() );
 
     if (item.getMimetype() != "text/html")
         return;
 
     ArticleChecker::LinkCollection links;
-    if (checks.isEnabled(TestType::URL_INTERNAL) ||
-        checks.isEnabled(TestType::URL_EXTERNAL)) {
+    if (options.enabledTests.isEnabled(TestType::URL_INTERNAL) ||
+        options.enabledTests.isEnabled(TestType::URL_EXTERNAL)) {
         links = generic_getLinks(data);
     }
 
-    if(checks.isEnabled(TestType::URL_INTERNAL))
+    if(options.enabledTests.isEnabled(TestType::URL_INTERNAL))
     {
         check_internal_links(item, links);
     }
 
-    if (checks.isEnabled(TestType::URL_EXTERNAL))
+    if (options.enabledTests.isEnabled(TestType::URL_EXTERNAL))
     {
         check_external_links(item, links);
     }
@@ -676,8 +677,8 @@ private: // data
 } // unnamed namespace
 
 void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressBar& progress,
-                   const EnabledTests checks, int thread_count) {
-    ArticleChecker articleChecker(archive, reporter, progress, checks);
+                   const ZimCheckOptions& options, int thread_count) {
+    ArticleChecker articleChecker(archive, reporter, progress, options);
     reporter.infoMsg("[INFO] Verifying Articles' content...");
 
     TaskDispatcher td(&articleChecker, thread_count);
@@ -686,7 +687,7 @@ void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressB
     }
     td.finish();
 
-    if (checks.isEnabled(TestType::REDUNDANT))
+    if (options.enabledTests.isEnabled(TestType::REDUNDANT))
     {
         articleChecker.detect_redundant_articles();
     }

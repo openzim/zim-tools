@@ -69,7 +69,9 @@ TEST(zimfilechecks, test_articles)
     ErrorLogger logger;
     ProgressBar progress(1);
     EnabledTests all_checks; all_checks.enableAll();
-    test_articles(archive, logger, progress, all_checks);
+    ZimCheckOptions options;
+    options.enabledTests = all_checks;
+    test_articles(archive, logger, progress, options);
 
     ASSERT_TRUE(logger.overallStatus());
 }

@@ -110,7 +110,7 @@ int zimcheck(const std::vector<const char*>& args) {
 		std::cerr << error.what() << std::endl;
 		std::cout << USAGE << std::endl;
 		return 1;
-	}    
+	}
     return zimcheck(parsed_args);
 }
 
@@ -124,7 +124,8 @@ int zimcheck(const Options& args)
     // program to execute the different parts of the program.
 
     bool run_all = false;
-    EnabledTests enabled_tests;
+    ZimCheckOptions options;
+    EnabledTests& enabled_tests = options.enabledTests;
     bool no_args = true;
     bool json = false;
     int thread_count = 1;
@@ -133,7 +134,7 @@ int zimcheck(const Options& args)
     ProgressBar progress(1);
 
     StatusCode status_code = PASS;
-    
+
     for(auto const& arg: args) {
         if (arg.first == "--all" && arg.second.asBool()) {
             run_all = true;
@@ -184,7 +185,7 @@ int zimcheck(const Options& args)
             return 0;
         }
     }
-    
+
     if (filename.empty()) {
         std::cerr << "No file provided as argument" << std::endl;
         std::cout << USAGE << std::endl;
@@ -273,7 +274,7 @@ int zimcheck(const Options& args)
                  enabled_tests.isEnabled(TestType::URL_EXTERNAL) ||
                  enabled_tests.isEnabled(TestType::REDUNDANT) ||
                  enabled_tests.isEnabled(TestType::EMPTY) )
-              test_articles(archive, error, progress, enabled_tests, thread_count);
+              test_articles(archive, error, progress, options, thread_count);
 
             if ( enabled_tests.isEnabled(TestType::REDIRECT))
                 test_redirect_loop(archive, error);

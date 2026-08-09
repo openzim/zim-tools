@@ -50,6 +50,10 @@ class EnabledTests {
     bool isEnabled(TestType tt) const { return tests[size_t(tt)]; }
 };
 
+struct ZimCheckOptions {
+  EnabledTests enabledTests;
+};
+
 enum class MsgId
 {
   CHECKSUM,
@@ -119,7 +123,7 @@ void test_metadata(const zim::Archive& archive, ErrorLogger& reporter);
 void test_favicon(const zim::Archive& archive, ErrorLogger& reporter);
 void test_mainpage(const zim::Archive& archive, ErrorLogger& reporter);
 void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressBar& progress,
-                   const EnabledTests enabled_tests, int thread_count=1);
+                   const ZimCheckOptions& options, int thread_count=1);
 void test_redirect_loop(const zim::Archive& archive, ErrorLogger& reporter);
 
 #endif
