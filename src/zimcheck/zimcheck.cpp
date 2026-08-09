@@ -61,6 +61,7 @@ Options:
  -R --redundant       Redundant data check
  -U --url_internal    URL check - Internal URLs
  -X --url_external    URL check - External URLs
+ -Q --quick           Report at most one error of each type per ZIM entry
  -B --progress        Print progress report
  -J --json            Output in JSON format
  -H --help            Displays Help
@@ -110,7 +111,7 @@ int zimcheck(const std::vector<const char*>& args) {
 		std::cerr << error.what() << std::endl;
 		std::cout << USAGE << std::endl;
 		return 1;
-	}    
+	}
     return zimcheck(parsed_args);
 }
 
@@ -124,7 +125,8 @@ int zimcheck(const Options& args)
     // program to execute the different parts of the program.
 
     bool run_all = false;
-    EnabledTests enabled_tests;
+    ZimCheckOptions options;
+    EnabledTests& enabled_tests = options.enabledTests;
     bool no_args = true;
     bool json = false;
     int thread_count = 1;
@@ -133,7 +135,7 @@ int zimcheck(const Options& args)
     ProgressBar progress(1);
 
     StatusCode status_code = PASS;
-    
+
     for(auto const& arg: args) {
         if (arg.first == "--all" && arg.second.asBool()) {
             run_all = true;
@@ -170,6 +172,8 @@ int zimcheck(const Options& args)
         } else if (arg.first == "--url_external" && arg.second.asBool()) {
             enabled_tests.enable(TestType::URL_EXTERNAL);
             no_args = false;
+        } else if (arg.first == "--quick" && arg.second.asBool()) {
+            options.quick = true;
         } else if (arg.first == "--redirect_loop" && arg.second.asBool()) {
             enabled_tests.enable(TestType::REDIRECT);
             no_args = false;
@@ -184,7 +188,7 @@ int zimcheck(const Options& args)
             return 0;
         }
     }
-    
+
     if (filename.empty()) {
         std::cerr << "No file provided as argument" << std::endl;
         std::cout << USAGE << std::endl;
@@ -203,6 +207,8 @@ int zimcheck(const Options& args)
     try
     {
         error.addInfo("checks", enabled_tests);
+        if (options.quick)
+            error.addInfo("quick", true);
         error.addInfo("file_name",  filename);
         error.infoMsg("[INFO] Checking zim file " + filename);
         error.infoMsg("[INFO] Zimcheck version is " + std::string(VERSION));
@@ -273,7 +279,7 @@ int zimcheck(const Options& args)
                  enabled_tests.isEnabled(TestType::URL_EXTERNAL) ||
                  enabled_tests.isEnabled(TestType::REDUNDANT) ||
                  enabled_tests.isEnabled(TestType::EMPTY) )
-              test_articles(archive, error, progress, enabled_tests, thread_count);
+              test_articles(archive, error, progress, options, thread_count);
 
             if ( enabled_tests.isEnabled(TestType::REDIRECT))
                 test_redirect_loop(archive, error);
