@@ -81,11 +81,12 @@ enum class UriKind : int
 class html_link
 {
 public:
-    const std::string attribute;
+    enum AttributeKind { HREF, SRC };
+    const AttributeKind attribute;
     const std::string link;
     const UriKind     uriKind;
 
-    html_link(const std::string& _attr, const std::string& _link)
+    html_link(AttributeKind _attr, const std::string& _link)
         : attribute(_attr)
         , link(_link)
         , uriKind(detectUriKind(_link))

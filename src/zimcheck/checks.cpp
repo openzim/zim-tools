@@ -460,7 +460,7 @@ void ArticleChecker::check_external_links(zim::Item item, const LinkCollection& 
     const auto path = item.getPath();
     for (const auto &l: links)
     {
-        if (l.attribute == "src" && l.isExternalUrl())
+        if (l.attribute == html_link::SRC && l.isExternalUrl())
         {
             reporter.addMsg(MsgId::EXTERNAL_LINK, {{"link", l.link}, {"path", path}});
             if (options.quick)

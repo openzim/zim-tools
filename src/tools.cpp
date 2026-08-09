@@ -359,10 +359,20 @@ const char* strSkipTillRightAfter(const char* p, const char* s)
     return p;
 }
 
-bool isScriptTag(const char* p)
+inline const char* skipWhitespace(const char* p)
 {
-  return strncmp(p, "<script", 7) == 0
-      && (p[7] == '>' || p[7] == ' ');
+    while (*p == ' ')
+        ++p;
+
+    return p;
+}
+
+std::string getStringBeforeNext(const char* p, char c) {
+    const char* const s = p;
+    // XXX: don't run beyond end of string
+    while(*p != c)
+        p++;
+    return std::string(s, p);
 }
 
 } // unnamed namespace
@@ -370,14 +380,13 @@ bool isScriptTag(const char* p)
 std::vector<html_link> generic_getLinks(const std::string& page)
 {
     const char* p = page.c_str();
-    const char* linkStart;
     std::vector<html_link> links;
-    std::string attr;
 
     // The difference of the counts of the '<' and '>' characters preceding
     // the current position. In a valid HTML without comments it should only
     // take values 0 or 1.
     int ltgtBalance = 0;
+    bool processingAScriptTag = false;
 
     while (*p) {
         if ( *p == '<' ) {
@@ -385,18 +394,22 @@ std::vector<html_link> generic_getLinks(const std::string& page)
             p = strSkipTillRightAfter(p, "-->");
             continue;
           }
-          if (isScriptTag(p)) {
-            p = strSkipTillRightAfter(p, "</script>");
-            continue;
-          }
-
           ++ltgtBalance;
           ++p;
+          if ( strncmp(p, "script", 6) == 0 && (p[6] == '>' || p[6] == ' ') ) {
+            processingAScriptTag = true;
+            p += 6;
+          }
           continue;
         }
         if ( *p == '>' ) {
           --ltgtBalance;
-          ++p;
+          if ( processingAScriptTag ) {
+            p = strSkipTillRightAfter(p, "</script>");
+            processingAScriptTag = false;
+          } else {
+            ++p;
+          }
           continue;
         }
 
@@ -405,34 +418,29 @@ std::vector<html_link> generic_getLinks(const std::string& page)
           continue;
         }
 
+        html_link::AttributeKind attr;
         if (strncmp(p, " href", 5) == 0) {
-            attr = "href";
+            attr = html_link::HREF;
             p += 5;
         } else if (strncmp(p, " src", 4) == 0) {
-            attr = "src";
+            attr = html_link::SRC;
             p += 4;
         } else {
             p += 1;
             continue;
         }
 
-        while (*p == ' ')
-            p += 1 ;
+        p = skipWhitespace(p);
         if (*(p++) != '=')
             continue;
-        while (*p == ' ')
-            p += 1;
-        char delimiter = *p++;
+        p = skipWhitespace(p);
+        const char delimiter = *p++;
         if (delimiter != '\'' && delimiter != '"')
             continue;
 
-        linkStart = p;
-        // [TODO] Handle escape char
-        while(*p != delimiter)
-            p++;
-        const std::string link(linkStart, p);
+        const auto link = getStringBeforeNext(p, delimiter);
         links.push_back(html_link(attr, decodeHtmlEntities(link)));
-        p += 1;
+        p += link.size() + 1;
     }
     return links;
 }
