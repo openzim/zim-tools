@@ -52,6 +52,7 @@ class EnabledTests {
 
 struct ZimCheckOptions {
   EnabledTests enabledTests;
+  bool quick = false;
 };
 
 enum class MsgId

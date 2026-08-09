@@ -449,6 +449,8 @@ void ArticleChecker::check_internal_links(zim::Item item, const GroupedLinkColle
             for (const auto &olink : p.second)
                 links.push_back({"value", olink});
             reporter.addMsg(MsgId::DANGLING_LINKS, {{"path", path}, {"normalized_link", link}, {"links", links}});
+            if (options.quick)
+                break;
         }
     }
 }
@@ -461,6 +463,8 @@ void ArticleChecker::check_external_links(zim::Item item, const LinkCollection& 
         if (l.attribute == "src" && l.isExternalUrl())
         {
             reporter.addMsg(MsgId::EXTERNAL_LINK, {{"link", l.link}, {"path", path}});
+            if (options.quick)
+                break;
         }
     }
 }

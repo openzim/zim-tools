@@ -149,6 +149,7 @@ Options:
  -R --redundant       Redundant data check
  -U --url_internal    URL check - Internal URLs
  -X --url_external    URL check - External URLs
+ -Q --quick           Report at most one error of each type per ZIM entry
  -B --progress        Print progress report
  -J --json            Output in JSON format
  -H --help            Displays Help
@@ -664,6 +665,110 @@ TEST(zimcheck, external_url_check_poorzimfile)
         expected_stdout,
         EMPTY_STDERR
     );
+}
+
+TEST(zimcheck, quick_internal_poorzimfile)
+{
+    const std::string expected_stdout(
+      "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
+      "[INFO] Zimcheck version is " VERSION "\n"
+      "[WARNING] Integrity check is skipped. Any detected errors may in fact be due to corrupted/invalid data." "\n"
+      "[INFO] Verifying Articles' content..." "\n"
+      "[ERROR] Internal URL: /A/article1.html is an absolute path link. Article: abspath_link.html" "\n"
+      "[ERROR] Internal URL: Dangling link(s) in article 'dangling_link.html':" "\n"
+      "  - 'A/non_existent.html' (resolves to 'A/non_existent.html')" "\n"
+      "\n"
+      "[WARNING] Empty link: Found 1 empty links in article: empty_link.html" "\n"
+      "[ERROR] Internal URL: ../../oops.html is out of bounds. Article: outofbounds_link.html" "\n"
+      "[INFO] Overall Test Status: Fail" "\n"
+      "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
+    );
+
+    for (const char* quick_flag : {"--quick", "-Q"})
+    {
+        CapturedStdout zimcheck_output;
+        ASSERT_EQ(1, zimcheck({"zimcheck", "-U", quick_flag, POOR_ZIMFILE}));
+        ASSERT_EQ(expected_stdout, std::string(zimcheck_output));
+    }
+}
+
+TEST(zimcheck, quick_external_poorzimfile)
+{
+    const std::string expected_stdout(
+      "[INFO] Checking zim file data/zimfiles/poor.zim" "\n"
+      "[INFO] Zimcheck version is " VERSION "\n"
+      "[WARNING] Integrity check is skipped. Any detected errors may in fact be due to corrupted/invalid data." "\n"
+      "[INFO] Verifying Articles' content..." "\n"
+      "[ERROR] External URL: http://a.io/pic.png is an external dependence in article external_image_http.html" "\n"
+      "[ERROR] External URL: https://a.io/pic.png is an external dependence in article external_image_https.html" "\n"
+      "[ERROR] External URL: //a.io/pic.png is an external dependence in article external_image_protocol_relative.html" "\n"
+      "[ERROR] External URL: http://a.io/img.png is an external dependence in article multi_external_src.html" "\n"
+      "[INFO] Overall Test Status: Fail" "\n"
+      "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
+    );
+
+    for (const char* quick_flag : {"--quick", "-Q"})
+    {
+        CapturedStdout zimcheck_output;
+        ASSERT_EQ(1, zimcheck({"zimcheck", "-X", quick_flag, POOR_ZIMFILE}));
+        ASSERT_EQ(expected_stdout, std::string(zimcheck_output));
+    }
+}
+
+TEST(zimcheck, quick_json)
+{
+    const std::string expected_json(
+      "{"                                                                   "\n"
+      "  \"zimcheck_version\" : \"" VERSION "\","                           "\n"
+      "  \"checks\" : ["                                                    "\n"
+      "    \"url_internal\""                                                "\n"
+      "  ],"                                                                "\n"
+      "  \"quick\" : true,"                                                 "\n"
+      "  \"file_name\" : \"data/zimfiles/poor.zim\","                       "\n"
+      "  \"file_uuid\" : \"00000000-0000-0000-0000-000000000000\","         "\n"
+      "  \"logs\" : ["                                                      "\n"
+      "    {"                                                               "\n"
+      "      \"check\" : \"url_internal\","                                 "\n"
+      "      \"level\" : \"ERROR\","                                        "\n"
+      "      \"message\" : \"/A/article1.html is an absolute path link. Article: abspath_link.html\"," "\n"
+      "      \"link\" : \"/A/article1.html\","                              "\n"
+      "      \"path\" : \"abspath_link.html\""                              "\n"
+      "    },"                                                              "\n"
+      "    {"                                                               "\n"
+      "      \"check\" : \"url_internal\","                                 "\n"
+      "      \"level\" : \"ERROR\","                                        "\n"
+      "      \"message\" : \"Dangling link(s) in article 'dangling_link.html':\\n  - 'A/non_existent.html' (resolves to 'A/non_existent.html')\\n\"," "\n"
+      "      \"links\" : ["                                                 "\n"
+      "        \"A/non_existent.html\""                                     "\n"
+      "      ],"                                                            "\n"
+      "      \"normalized_link\" : \"A/non_existent.html\","                "\n"
+      "      \"path\" : \"dangling_link.html\""                             "\n"
+      "    },"                                                              "\n"
+      "    {"                                                               "\n"
+      "      \"check\" : \"url_empty\","                                    "\n"
+      "      \"level\" : \"WARNING\","                                      "\n"
+      "      \"message\" : \"Found 1 empty links in article: empty_link.html\"," "\n"
+      "      \"count\" : \"1\","                                            "\n"
+      "      \"path\" : \"empty_link.html\""                                "\n"
+      "    },"                                                              "\n"
+      "    {"                                                               "\n"
+      "      \"check\" : \"url_internal\","                                 "\n"
+      "      \"level\" : \"ERROR\","                                        "\n"
+      "      \"message\" : \"../../oops.html is out of bounds. Article: outofbounds_link.html\"," "\n"
+      "      \"link\" : \"../../oops.html\","                               "\n"
+      "      \"path\" : \"outofbounds_link.html\""                          "\n"
+      "    }"                                                               "\n"
+      "  ],"                                                                "\n"
+      "  \"status\" : false"                                                "\n"
+      "}"                                                                   "\n"
+    );
+
+    for (const char* quick_flag : {"--quick", "-Q"})
+    {
+        CapturedStdout zimcheck_output;
+        ASSERT_EQ(1, zimcheck({"zimcheck", "-U", quick_flag, "--json", POOR_ZIMFILE}));
+        ASSERT_EQ(expected_json, std::string(zimcheck_output));
+    }
 }
 
 TEST(zimcheck, redundant_poorzimfile)

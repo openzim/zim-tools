@@ -61,6 +61,7 @@ Options:
  -R --redundant       Redundant data check
  -U --url_internal    URL check - Internal URLs
  -X --url_external    URL check - External URLs
+ -Q --quick           Report at most one error of each type per ZIM entry
  -B --progress        Print progress report
  -J --json            Output in JSON format
  -H --help            Displays Help
@@ -171,6 +172,8 @@ int zimcheck(const Options& args)
         } else if (arg.first == "--url_external" && arg.second.asBool()) {
             enabled_tests.enable(TestType::URL_EXTERNAL);
             no_args = false;
+        } else if (arg.first == "--quick" && arg.second.asBool()) {
+            options.quick = true;
         } else if (arg.first == "--redirect_loop" && arg.second.asBool()) {
             enabled_tests.enable(TestType::REDIRECT);
             no_args = false;
@@ -204,6 +207,8 @@ int zimcheck(const Options& args)
     try
     {
         error.addInfo("checks", enabled_tests);
+        if (options.quick)
+            error.addInfo("quick", true);
         error.addInfo("file_name",  filename);
         error.infoMsg("[INFO] Checking zim file " + filename);
         error.infoMsg("[INFO] Zimcheck version is " + std::string(VERSION));
