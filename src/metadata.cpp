@@ -37,6 +37,8 @@ namespace
 const bool MANDATORY = true;
 const bool OPTIONAL  = false;
 
+const auto TEXT_PLAIN = Metadata::MimeType::TEXT_PLAIN;
+
 const std::string LANGS_REGEXP = "^\\w{3}(,\\w{3})*$";
 const std::string DATE_REGEXP = R"(^\d\d\d\d-\d\d-\d\d$)";
 const std::string PNG_REGEXP = "^\x89\x50\x4e\x47\x0d\x0a\x1a\x0a";
@@ -46,6 +48,20 @@ bool searchRegex(const std::string& regexStr, const std::string& text)
 {
   const std::regex regex(regexStr);
   return std::regex_search(text.begin(), text.end(), regex);
+}
+
+bool checkMimeType(std::string mimeType, Metadata::MimeType expectedMimeType)
+{
+  mimeType = asciitolower(mimeType);
+  switch(expectedMimeType) {
+  case Metadata::MimeType::TEXT_PLAIN:
+    return mimeType == "text/plain" || mimeType == "text/plain;charset=utf-8";
+
+  case Metadata::MimeType::PNG:
+    return mimeType == "image/png";
+  }
+
+  return false;
 }
 
 class MetadataComplexCheckBase
@@ -158,14 +174,14 @@ bool Metadata::has(const std::string& name) const
   return data.find(name) != data.end();
 }
 
-const std::string& Metadata::operator[](const std::string& name) const
+const Metadata::ValueWithMimeType& Metadata::operator[](const std::string& name) const
 {
   return data.at(name);
 }
 
-void Metadata::set(const std::string& name, const std::string& value)
+void Metadata::set(const std::string& name, const std::string& value, const std::string& mimeType)
 {
-  data[name] = value;
+  data[name] = {value, mimeType};
 }
 
 bool Metadata::valid() const
@@ -190,7 +206,8 @@ Metadata::Errors Metadata::checkSimpleConstraints() const
   Errors errors;
   for ( const auto& nv : data ) {
     const auto& name = nv.first;
-    const auto& value = nv.second;
+    const auto& value = nv.second.value;
+    const auto& mimetype = nv.second.mimeType;
     try {
       const auto& rmr = getReservedMetadataRecord(name);
       if ( rmr.minLength != 0 && getTextLength(value) < rmr.minLength ) {
@@ -206,6 +223,9 @@ Metadata::Errors Metadata::checkSimpleConstraints() const
       if ( !rmr.regex.empty() && !searchRegex(rmr.regex, value) ) {
         const std::string regex = escapeNonPrintableChars(rmr.regex);
         errors.push_back(name + " doesn't match regex: " + regex);
+      }
+      if ( !checkMimeType(mimetype, rmr.mimeType) ) {
+        errors.push_back(name + " has wrong MIME type: " + mimetype);
       }
     } catch ( const std::out_of_range& ) {
       // ignore non-reserved metadata

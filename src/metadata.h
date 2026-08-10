@@ -29,9 +29,18 @@ namespace zim
 
 class Metadata
 {
-  typedef std::map<std::string, std::string> KeyValueMap;
+public: // types
+  struct ValueWithMimeType
+  {
+    std::string value;
+    std::string mimeType;
+  };
+
+private: // types
+  typedef std::map<std::string, ValueWithMimeType> KeyValueMap;
 
 public: // types
+  enum class MimeType { TEXT_PLAIN, PNG };
   struct ReservedMetadataRecord
   {
     const std::string name;
@@ -39,6 +48,7 @@ public: // types
     const size_t      minLength;
     const size_t      maxLength;
     const std::string regex;
+    const MimeType    mimeType;
   };
 
   typedef std::vector<ReservedMetadataRecord> ReservedMetadataTable;
@@ -51,9 +61,9 @@ public: // data
   static const ReservedMetadataTable& reservedMetadataInfo;
 
 public: // functions
-  void set(const std::string& name, const std::string& value);
+  void set(const std::string& name, const std::string& value, const std::string& mimeType = "text/plain");
   bool has(const std::string& name) const;
-  const std::string& operator[](const std::string& name) const;
+  const ValueWithMimeType& operator[](const std::string& name) const;
 
   bool valid() const;
   Errors check() const;

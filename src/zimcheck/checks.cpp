@@ -261,7 +261,8 @@ void test_metadata(const zim::Archive& archive, ErrorLogger& reporter) {
     reporter.infoMsg("[INFO] Checking metadata...");
     zim::Metadata metadata;
     for ( const auto& key : archive.getMetadataKeys() ) {
-        metadata.set(key, archive.getMetadata(key));
+        const auto mi = archive.getMetadataItem(key);
+        metadata.set(key, mi.getData(), mi.getMimetype());
     }
     for (const auto &error : metadata.check()) {
         reporter.addMsg(MsgId::METADATA, {{"error", error}});
