@@ -202,17 +202,21 @@ TEST(tools, uriKind)
     EXPECT_EQ(UriKind::DATA, uriKind("data:text/plain;charset=UTF-8,data"));
     EXPECT_EQ(UriKind::DATA, uriKind("DATA:text/plain;charset=UTF-8,data"));
 
-    EXPECT_EQ(UriKind::OTHER, uriKind("http:example.com"));
-    EXPECT_EQ(UriKind::OTHER, uriKind("http:/example.com"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("http:example.com"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("http:/example.com"));
     EXPECT_EQ(UriKind::OTHER, uriKind("git@github.com:openzim/zim-tools.git"));
     EXPECT_EQ(UriKind::OTHER, uriKind("/redirect?url=http://example.com"));
     EXPECT_EQ(UriKind::OTHER, uriKind("redirect?url=http://example.com"));
     EXPECT_EQ(UriKind::OTHER, uriKind("auth.php#returnurl=https://example.com"));
     EXPECT_EQ(UriKind::OTHER, uriKind("/api/v1/http://example.com"));
     EXPECT_EQ(UriKind::OTHER, uriKind("img/file:///etc/passwd"));
-    EXPECT_EQ(UriKind::OTHER, uriKind("ftp:/download.kiwix.org/zim/"));
-    EXPECT_EQ(UriKind::OTHER, uriKind("sendmailto:someone@example.com"));
-    EXPECT_EQ(UriKind::OTHER, uriKind("intel:+0123456789"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("ftp:/download.kiwix.org/zim/"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("sendmailto:someone@example.com"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("intel:+0123456789"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("custom-scheme:opaque-value"));
+    EXPECT_EQ(UriKind::GENERIC_URI, uriKind("My2+scheme.value:opaque-value"));
+    EXPECT_EQ(UriKind::OTHER, uriKind("\xC3\xA9scheme:value"));
+    EXPECT_EQ(UriKind::OTHER, uriKind("custom\xC3\xA9:value"));
     EXPECT_EQ(UriKind::OTHER, uriKind("showlocation.cgi?geo:12.34,56.78"));
     EXPECT_EQ(UriKind::OTHER, uriKind("/xyz/javascript:console.log('hello, world!')"));
 
@@ -221,6 +225,42 @@ TEST(tools, uriKind)
     EXPECT_EQ(UriKind::OTHER, uriKind("../img/logo.png"));
     EXPECT_EQ(UriKind::OTHER, uriKind("style.css"));
 }
+
+#define EXPECT_INTERNAL_LINK(url) \
+    do { \
+        EXPECT_FALSE(html_link(html_link::HREF, (url)).isExternalUrl()); \
+        EXPECT_FALSE(html_link(html_link::SRC, (url)).isExternalUrl()); \
+    } while (false)
+
+#define EXPECT_EXTERNAL_LINK(url) \
+    do { \
+        EXPECT_TRUE(html_link(html_link::HREF, (url)).isExternalUrl()); \
+        EXPECT_TRUE(html_link(html_link::SRC, (url)).isExternalUrl()); \
+    } while (false)
+
+TEST(tools, linkClassification)
+{
+    EXPECT_INTERNAL_LINK("data:text/plain,payload");
+    EXPECT_INTERNAL_LINK("../css/dark.css");
+    EXPECT_INTERNAL_LINK("/js/light.js");
+    EXPECT_INTERNAL_LINK("goodbye");
+    EXPECT_INTERNAL_LINK("git@github.com:openzim/zim-tools.git");
+    EXPECT_INTERNAL_LINK("/redirect?url=http://example.com");
+    EXPECT_INTERNAL_LINK("redirect?url=http://example.com");
+    EXPECT_INTERNAL_LINK("?page=2");
+    EXPECT_INTERNAL_LINK("#footnote1e100");
+    EXPECT_INTERNAL_LINK("auth.php#returnurl=https://example.com");
+    EXPECT_INTERNAL_LINK("/api/v1/http://example.com");
+    EXPECT_INTERNAL_LINK("img/file:///etc/passwd");
+
+    EXPECT_EXTERNAL_LINK("custom-scheme:opaque-value");
+    EXPECT_EXTERNAL_LINK("http://example.com");
+    EXPECT_EXTERNAL_LINK("mailto:someone@example.com");
+    EXPECT_EXTERNAL_LINK("//example.com/welcome");
+}
+
+#undef EXPECT_INTERNAL_LINK
+#undef EXPECT_EXTERNAL_LINK
 
 TEST(tools, resolveLinkTarget)
 {
