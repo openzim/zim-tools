@@ -37,6 +37,8 @@ namespace
 const bool MANDATORY = true;
 const bool OPTIONAL  = false;
 
+const auto TEXT_PLAIN = Metadata::MimeType::TEXT_PLAIN;
+
 const std::string LANGS_REGEXP = "^\\w{3}(,\\w{3})*$";
 const std::string DATE_REGEXP = R"(^\d\d\d\d-\d\d-\d\d$)";
 const std::string PNG_REGEXP = "^\x89\x50\x4e\x47\x0d\x0a\x1a\x0a";

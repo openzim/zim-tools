@@ -32,6 +32,7 @@ class Metadata
   typedef std::map<std::string, std::string> KeyValueMap;
 
 public: // types
+  enum class MimeType { TEXT_PLAIN, PNG };
   struct ReservedMetadataRecord
   {
     const std::string name;
@@ -39,6 +40,7 @@ public: // types
     const size_t      minLength;
     const size_t      maxLength;
     const std::string regex;
+    const MimeType    mimeType;
   };
 
   typedef std::vector<ReservedMetadataRecord> ReservedMetadataTable;
