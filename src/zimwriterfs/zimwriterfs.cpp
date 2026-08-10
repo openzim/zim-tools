@@ -102,7 +102,7 @@ zim::Metadata makeMetadata() {
   metadata.set("Date",            generateDate());
   if ( !illustration.empty() )  {
     const auto data = getFileContent(directoryPath + "/" + illustration);
-    metadata.set("Illustration_48x48@1", data);
+    metadata.set("Illustration_48x48@1", data, "image/png");
   }
 
   return metadata;
@@ -127,9 +127,9 @@ void addMetadata(ZimCreatorFS& zimCreator, const zim::Metadata& metadata)
 {
   for ( const auto& kv : metadata ) {
     if (kv.first == "Illustration_48x48@1") {
-      zimCreator.addIllustration(48, kv.second);
+      zimCreator.addIllustration(48, kv.second.value);
     } else {
-      zimCreator.addMetadata(kv.first, kv.second);
+      zimCreator.addMetadata(kv.first, kv.second.value);
     }
   }
 }

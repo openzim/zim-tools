@@ -30,6 +30,6 @@ const Metadata::ReservedMetadataTable reservedMetadataInfoTable = {
 METADATA_ASSERT("LongDescription shouldn't be shorter than Description")
 {
   return !data.has("LongDescription") ||
-    data["LongDescription"].size() == 0 ||
-    data["LongDescription"].size() >= data["Description"].size();
+    data["LongDescription"].value.size() == 0 ||
+    data["LongDescription"].value.size() >= data["Description"].value.size();
 }

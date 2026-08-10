@@ -64,7 +64,7 @@ TEST(Metadata, detectsAbsenceOfMandatoryEntries)
   m.set("Title", "Chief Executive Officer");
   m.set("Publisher", "Zangak");
   m.set("Language", "py3");
-  m.set("Illustration_48x48@1", fakePNG());
+  m.set("Illustration_48x48@1", fakePNG(), "image/png");
 
   ASSERT_TRUE(m.valid());
   ASSERT_TRUE(m.check().empty());
@@ -81,7 +81,7 @@ zim::Metadata makeValidMetadata()
   m.set("Title", "Chief Executive Officer");
   m.set("Publisher", "Zangak");
   m.set("Language", "py3");
-  m.set("Illustration_48x48@1", fakePNG());
+  m.set("Illustration_48x48@1", fakePNG(), "image/png");
 
   return m;
 }
@@ -89,7 +89,7 @@ zim::Metadata makeValidMetadata()
 TEST(Metadata, nonReservedMetadataIsNotAProblem)
 {
   zim::Metadata m = makeValidMetadata();
-  m.set("NonReservedMetadata", "");
+  m.set("NonReservedMetadata", "", "application/javascript");
   ASSERT_TRUE(m.valid());
 }
 
@@ -131,6 +131,7 @@ TEST(Metadata, regexpConstraints)
         "Date doesn't match regex: ^\\d\\d\\d\\d-\\d\\d-\\d\\d$"
       })
   );
+
   m.set("Date", "1234-56-78"); // Yes, such a date is considered valid
                                // by the current simple regex
   ASSERT_TRUE(m.valid());
@@ -146,10 +147,47 @@ TEST(Metadata, regexpConstraints)
   m.set("Language", "fre,nch");
   ASSERT_TRUE(m.valid());
 
-  m.set("Illustration_48x48@1", "zimdata/favicon.png");
+  m.set("Illustration_48x48@1", "zimdata/favicon.png", "image/png");
   ASSERT_EQ(m.check(),
       zim::Metadata::Errors({
         "Illustration_48x48@1 doesn't match regex: ^\\x89PNG\\x0d\\x0a\\x1a\\x0a"
+      })
+  );
+}
+
+TEST(Metadata, mimeTypeChecking)
+{
+  zim::Metadata m = makeValidMetadata();
+  m.set("License", "Driver's", "text/plain;charset=ASCII");
+  ASSERT_EQ(m.check(),
+      zim::Metadata::Errors({
+        "License has wrong MIME type: text/plain;charset=ASCII"
+      })
+  );
+
+  m.set("License", "Driver's", "image/png");
+  ASSERT_EQ(m.check(),
+      zim::Metadata::Errors({
+        "License has wrong MIME type: image/png"
+      })
+  );
+
+  m.set("License", "Driver's", "text/plain");
+  ASSERT_TRUE(m.valid());
+
+  m.set("License", "Driver's", "TEXT/PLAIN");
+  ASSERT_TRUE(m.valid());
+
+  m.set("License", "Driver's", "text/plain;charset=UTF-8");
+  ASSERT_TRUE(m.valid());
+
+  m.set("License", "Driver's", "text/plain;charset=utf-8");
+  ASSERT_TRUE(m.valid());
+
+  m.set("Illustration_48x48@1", fakePNG(), "text/plain");
+  ASSERT_EQ(m.check(),
+      zim::Metadata::Errors({
+        "Illustration_48x48@1 has wrong MIME type: text/plain"
       })
   );
 }
@@ -159,15 +197,15 @@ TEST(Metadata, pngRegexp)
   const std::string PNG_HEADER = "\x89PNG\r\n\x1a\n";
   zim::Metadata m = makeValidMetadata();
   {
-    m.set("Illustration_48x48@1", PNG_HEADER + 'A');
+    m.set("Illustration_48x48@1", PNG_HEADER + 'A', "image/png");
     ASSERT_TRUE(m.valid());
   }
   {
-    m.set("Illustration_48x48@1", PNG_HEADER + '\n');
+    m.set("Illustration_48x48@1", PNG_HEADER + '\n', "image/png");
     ASSERT_TRUE(m.valid());
   }
   {
-    m.set("Illustration_48x48@1", PNG_HEADER + '\0');
+    m.set("Illustration_48x48@1", PNG_HEADER + '\0', "image/png");
     ASSERT_TRUE(m.valid());
   }
 }
@@ -222,7 +260,7 @@ TEST(Metadata, complexChecksAreRunOnlyIfMandatoryMetadataRequirementsAreMet)
   //m.set("Title", "");
   m.set("Publisher", "Kiwix");
   m.set("Language", "bod,yla,ngu,age");
-  m.set("Illustration_48x48@1", fakePNG());
+  m.set("Illustration_48x48@1", fakePNG(), "image/png");
 
   ASSERT_FALSE(m.valid());
   ASSERT_EQ(m.check(),
@@ -284,7 +322,7 @@ TEST(Metadata, counterRegexp){
 
   // fails because 'charset=utf-8;' doesn't have a valid MIME type format or a '=' count
   ASSERT_INVALID_COUNTER("image/svg+xml=8; charset=utf-8;");
-  
+
   // simplified test: profile URL leakage
   // fails because quotes and colons are not allowed in the MIME type section
   ASSERT_INVALID_COUNTER("image/svg+xml; profile=\"https://www.mediawiki.org...\"=67381;");
@@ -303,11 +341,11 @@ TEST(Metadata, counterRegexp){
 
   // Realistic cases: Valid real-world MIME types using [a-zA-Z0-9.\-+]
 
-  // Contains '+' 
+  // Contains '+'
   ASSERT_VALID_COUNTER("image/svg+xml=8");
   ASSERT_VALID_COUNTER("application/ld+json=10");
 
-  // Contains '-' 
+  // Contains '-'
   ASSERT_VALID_COUNTER("application/x-www-form-urlencoded=42");
   ASSERT_VALID_COUNTER("text/x-c++src=3"); // Contains both '-' and '+'
 
