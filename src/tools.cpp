@@ -569,6 +569,16 @@ std::string resolveLinkTarget(std::string url, const std::string& zimPath) {
 namespace
 {
 
+bool isAsciiAlpha(const char c)
+{
+    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+}
+
+bool isAsciiAlphaNumeric(const char c)
+{
+    return isAsciiAlpha(c) || (c >= '0' && c <= '9');
+}
+
 UriKind specialUriSchemeKind(const std::string& s)
 {
     static const std::map<std::string, UriKind> uriSchemes = {
@@ -623,7 +633,7 @@ static bool isReservedUrlChar(const char c)
 
 bool needsEscape(const char c, const bool encodeReserved)
 {
-  if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))
+  if (isAsciiAlphaNumeric(c))
     return false;
 
   if (isReservedUrlChar(c))
