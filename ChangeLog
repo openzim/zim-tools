@@ -1,9 +1,24 @@
+zim-tools 3.8.0
+===============
+
+ * zimsplit: Fixed (large) --size option (@veloman-yunkan #520)
+ * zimcheck: Validation of MIME type for reserved metada (@veloman-yunkan #530)
+ * zimcheck: Improve memory mgmt around message logging (@Pranavjeet-Naidu #500)
+ * zimcheck: Introduce --quick option to avoid reporting all link error for each page (@Pranavjeet-Naidu #505)
+ * zimcheck: Overhaul of link normalization to fix many links related bug (@veloman-yunkan #510 #511)
+ * zimcheck: Count graphemes instead of unicode code point in metadata length checks (@Pranavjeet-Naidu #499)
+ * zimcheck: Properly parse all <script> src attributes (@veloman-yunkan #525)
+ * zimcheck: Classify arbitrary URI schemes as external (@tomatotomata #518)
+ * zimwriterfs: Improve the refresh URL parsing (@kelson42 #515)
+ * Update CI/CD workflows (@veloman-yunkan #532, @kelson42 #503)
+ * Compilation relies now solely on libmagic.pc (@kelson42 #504)
+
 zim-tools 3.7.0
 ===============
 
  * zimwriterfs: Better handling of file extension (case) (@veloman-yunkan #494)
  * zimcheck: Properly check the `M/Counter` value (@Pranavjeet-Naidu #497)
- * Zimcheck: switch to new API for illustrations (@veloman-yunkan #476)
+ * zimcheck: switch to new API for illustrations (@veloman-yunkan #476)
  * Various updates in the CI (@kelson42 #472 #483 #493)
  * Requires now libzim 9.4, instead of 9.2 (@kelson42 #480)
 
