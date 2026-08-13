@@ -43,7 +43,7 @@ jobs:
           brew install gcovr || brew link --overwrite python # ninja
 
       - name: Install Python modules
-        run: pip3 install meson pytest
+        run: pip3 install meson==1.11.2 pytest
 
       - name: Install dependencies
         uses: kiwix/kiwix-build/actions/dl_deps_archive@75cfff14d7eeff9d6975f35c54ca59960dff7d05 # pin@main
@@ -88,7 +88,7 @@ jobs:
         run: choco install pkgconfiglite ninja
 
       - name: Install python modules
-        run: pip3 install meson
+        run: pip3 install meson==1.11.2
 
       - name: Setup MSVC compiler
         uses: bus1/cabuild/action/msdevshell@06ea2833eef61e9b0d0ce0d728416e617e4fb1fe # pin@v1
