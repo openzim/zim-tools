@@ -569,6 +569,28 @@ std::string resolveLinkTarget(std::string url, const std::string& zimPath) {
 namespace
 {
 
+bool isAsciiAlpha(const char c)
+{
+    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+}
+
+bool isAsciiAlphaNumeric(const char c)
+{
+    return isAsciiAlpha(c) || (c >= '0' && c <= '9');
+}
+
+bool isValidUriScheme(const std::string& scheme)
+{
+    if (scheme.empty() || !isAsciiAlpha(scheme.front())) {
+        return false;
+    }
+
+    return std::all_of(
+        scheme.begin() + 1,
+        scheme.end(),
+        [](const char c) { return isAsciiAlphaNumeric(c) || c == '+' || c == '-' || c == '.'; });
+}
+
 UriKind specialUriSchemeKind(const std::string& s)
 {
     static const std::map<std::string, UriKind> uriSchemes = {
@@ -584,7 +606,7 @@ UriKind specialUriSchemeKind(const std::string& s)
     };
 
     const auto it = uriSchemes.find(s);
-    return it != uriSchemes.end() ? it->second : UriKind::OTHER;
+    return it != uriSchemes.end() ? it->second : UriKind::GENERIC_URI;
 }
 
 
@@ -600,12 +622,16 @@ UriKind html_link::detectUriKind(const std::string& input_string)
             return UriKind::OTHER;
     }
 
+    const std::string raw_scheme = input_string.substr(0, k);
+    if (!isValidUriScheme(raw_scheme)) {
+        return UriKind::OTHER;
+    }
     if ( k + 2 < input_string.size()
          && input_string[k+1] == '/'
          && input_string[k+2] == '/' )
         return UriKind::GENERIC_URI;
 
-    const std::string scheme = asciitolower(input_string.substr(0, k));
+    const std::string scheme = asciitolower(raw_scheme);
     return specialUriSchemeKind(scheme);
 }
 
@@ -623,7 +649,7 @@ static bool isReservedUrlChar(const char c)
 
 bool needsEscape(const char c, const bool encodeReserved)
 {
-  if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))
+  if (isAsciiAlphaNumeric(c))
     return false;
 
   if (isReservedUrlChar(c))

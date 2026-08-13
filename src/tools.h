@@ -71,7 +71,7 @@ enum class UriKind : int
     NEWS,           // news:comp.os.linux.announce
     URN,            // urn:nbn:de:bsz:24-digibib-bsz3530416370
 
-    GENERIC_URI,    // Generic URI with scheme and authority: <scheme>://.....
+    GENERIC_URI,    // Generic URI with a scheme: <scheme>:... or <scheme>://.....
     PROTOCOL_RELATIVE, // Protocol-relative URL: //<host>/<path>/<to>/<resource>
 
     OTHER           // not a valid URI (though it can be a valid relative
