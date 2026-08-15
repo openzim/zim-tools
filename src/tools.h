@@ -23,6 +23,7 @@
 
 #include <map>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <stdexcept>
 #include <sstream>
@@ -102,7 +103,7 @@ public:
         return uriKind == UriKind::OTHER;
     }
 
-    static UriKind detectUriKind(const std::string& input_string);
+    static UriKind detectUriKind(std::string_view input_string);
 };
 
 // Few helper class to help copy a item from a archive to another one.
@@ -131,7 +132,7 @@ class ItemProvider : public zim::writer::ContentProvider
 
 // Guess if the item is a front article.
 // This is not a exact science, we use the mimetype to infer it.
-bool guess_is_front_article(const std::string& mimetype);
+bool guess_is_front_article(std::string_view mimetype);
 
 
 class CopyItem : public zim::writer::Item         //Article class that will be passed to the zimwriter. Contains a zim::Article class, so it is easier to add a
@@ -180,17 +181,17 @@ std::string computeAbsolutePath(const std::string& path,
                                 const std::string& relativePath);
 bool fileExists(const std::string& path);
 bool isDirectory(const std::string &path);
-std::string getFileExtension(const std::string& path);
+std::string getFileExtension(std::string_view path);
 
 std::string base64_encode(unsigned char const* bytes_to_encode,
                           unsigned int in_len);
 
 void replaceStringInPlaceOnce(std::string& subject,
-                              const std::string& search,
-                              const std::string& replace);
+                              std::string_view search,
+                              std::string_view replace);
 void replaceStringInPlace(std::string& subject,
-                          const std::string& search,
-                          const std::string& replace);
+                          std::string_view search,
+                          std::string_view replace);
 void stripTitleInvalidChars(std::string& str);
 
 //Returns a vector of the links in a particular page. includes links under 'href' and 'src'
@@ -273,6 +274,6 @@ std::string httpRedirectHtml(const std::string& redirectUrl);
 std::string asciitolower(std::string s);
 
 // Return the count of graphemes in the provided text string
-size_t getTextLength(const std::string& utf8EncodedString);
+size_t getTextLength(std::string_view utf8EncodedString);
 
 #endif  // OPENZIM_TOOLS_H

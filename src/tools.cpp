@@ -72,14 +72,14 @@ bool isDirectory(const std::string &path)
   return (filestatus.st_mode & S_IFMT) == S_IFDIR;
 }
 
-std::string getFileExtension(const std::string& path) {
+std::string getFileExtension(std::string_view path) {
     const auto posOfLastDot = path.find_last_of(".");
-    if (posOfLastDot == std::string::npos) {
+    if (posOfLastDot == std::string_view::npos) {
         return "";
     }
     const auto partAfterLastDot = path.substr(posOfLastDot + 1);
-    return partAfterLastDot.find_first_of("/\\") == std::string::npos
-         ? partAfterLastDot
+    return partAfterLastDot.find_first_of("/\\") == std::string_view::npos
+         ? std::string(partAfterLastDot)
          : "";
 }
 
@@ -265,8 +265,8 @@ std::string computeAbsolutePath(const std::string& path,
 
 
 void replaceStringInPlaceOnce(std::string& subject,
-                              const std::string& search,
-                              const std::string& replace)
+                              std::string_view search,
+                              std::string_view replace)
 {
   size_t pos = subject.find(search, 0);
   if (pos != std::string::npos) {
@@ -275,8 +275,8 @@ void replaceStringInPlaceOnce(std::string& subject,
 }
 
 void replaceStringInPlace(std::string& subject,
-                          const std::string& search,
-                          const std::string& replace)
+                          std::string_view search,
+                          std::string_view replace)
 {
   if (search.empty())
     return;
@@ -612,17 +612,17 @@ UriKind specialUriSchemeKind(const std::string& s)
 
 } // unnamed namespace
 
-UriKind html_link::detectUriKind(const std::string& input_string)
+UriKind html_link::detectUriKind(std::string_view input_string)
 {
     const auto k = input_string.find_first_of(":/?#");
-    if ( k == std::string::npos || input_string[k] != ':' ) {
+    if ( k == std::string_view::npos || input_string[k] != ':' ) {
         if ( k == 0 && input_string.substr(0, 2) == "//" )
             return UriKind::PROTOCOL_RELATIVE;
         else
             return UriKind::OTHER;
     }
 
-    const std::string raw_scheme = input_string.substr(0, k);
+    const std::string raw_scheme(input_string.substr(0, k));
     if (!isValidUriScheme(raw_scheme)) {
         return UriKind::OTHER;
     }
@@ -696,12 +696,12 @@ std::string httpRedirectHtml(const std::string& redirectUrl)
     return ss.str();
 }
 
-bool guess_is_front_article(const std::string& mimetype) {
+bool guess_is_front_article(std::string_view mimetype) {
   return ( mimetype.find("text/html") == 0
-        && mimetype.find("raw=true") == std::string::npos);
+        && mimetype.find("raw=true") == std::string_view::npos);
 }
 
-size_t getTextLength(const std::string& utf8EncodedString)
+size_t getTextLength(std::string_view utf8EncodedString)
 {
   // For some unknown reason implicite convertion from std::string to icu::StringPiece
   // is broken on Windows.
