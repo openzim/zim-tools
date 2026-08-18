@@ -11,8 +11,11 @@ ZIM file to split
 \fB\-o\fR PREFIX
 Prefix of output file parts
 .TP
-\fB\-s\fR SIZE
-Size of each file parts
+\fB\-\-size=\fISIZE\fR
+Maximum size of each part. SIZE must be a positive integer, optionally followed
+by a decimal unit (KB, MB, GB, TB, PB, or EB) or a binary unit (KiB, MiB, GiB,
+TiB, PiB, or EiB). A value without a unit is interpreted as bytes. The default
+is 2GiB.
 .TP
 \fB\-\-force\fR
 create ZIM parts even if it is impossible to have all part size smaller than requested

@@ -27,21 +27,11 @@
 #include <docopt/docopt.h>
 
 #include "version.h"
+#include "zimsplit_size.h"
 
 #define BUFFER_SIZE 4096
 
 const zim::size_type DEFAULT_PART_SIZE = 2147483648;
-
-uint64_t asUint64(const std::string& str) {
-    std::istringstream iss(str);
-    int64_t ret;
-    iss >> ret;
-    if(iss.fail() || !iss.eof() || ret < 0) {
-        const auto msg = "invalid uint64_t value: " + str;
-        throw std::invalid_argument(msg);
-    }
-    return ret;
-}
 
 class ZimSplitter
 {
@@ -174,12 +164,13 @@ static const char USAGE[] = R"(
     zimsplit splits smartly a ZIM file in smaller parts.
 
 Usage:
-    zimsplit [--prefix=PREFIX] [--force] [--size=N] <file>
+    zimsplit [--prefix=PREFIX] [--force] [--size=SIZE] <file>
     zimsplit --version
 
 Options:
     --prefix=PREFIX     Prefix of output file parts. Default: <file>
-    --size=N            The file size for each part. Default: 2GB
+    --size=SIZE         Maximum part size in bytes, or with a decimal unit (KB, MB, ...)
+                        or binary unit (KiB, MiB, ...). Default: 2GiB
     --force             Create zim parts even if it is impossible to have all part size smaller than requested
     -h, --help          Show this help message
     --version           Show zimsplit version.
@@ -202,7 +193,7 @@ int main(int argc, char* argv[])
 
     zim::size_type size = DEFAULT_PART_SIZE;
     if (args["--size"])
-        size = asUint64(args["--size"].asString());
+        size = parseByteSize(args["--size"].asString());
 
     // initalize app
     ZimSplitter app(args["<file>"].asString(), prefix, size);
