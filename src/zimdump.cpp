@@ -36,50 +36,18 @@
 #include "version.h"
 #include "tools.h"
 
-#include <fcntl.h>
-#ifdef _WIN32
-# define SEPARATOR "\\"
-# include <io.h>
-# include <windows.h>
-#else
-# define SEPARATOR "/"
+#include <filesystem>
+#ifndef _WIN32
 #include <unistd.h>
 #endif
-
 #define ERRORSDIR "_exceptions/"
 
 
-#ifdef _WIN32
-std::wstring utf8ToUtf16(const std::string& string) {
-  auto size = MultiByteToWideChar(CP_UTF8, 0,
-                string.c_str(), -1, nullptr, 0);
-  auto wdata = std::wstring(size, 0);
-  auto ret = MultiByteToWideChar(CP_UTF8, 0,
-                string.c_str(), -1, wdata.data(), size);
-  if (0 == ret) {
-    std::ostringstream oss;
-    oss << "Cannot convert string to wchar : " << GetLastError();
-    throw std::runtime_error(oss.str());
-  }
-  return wdata;
-}
-#endif
-
 inline static void createdir(const std::string &path, const std::string &base)
 {
-    std::size_t position = 0;
-    while(position != std::string::npos) {
-        position = path.find('/', position+1);
-        if (position != std::string::npos) {
-            std::string fulldir = base + SEPARATOR + path.substr(0, position);
-            #if defined(_WIN32)
-            std::wstring wfulldir = utf8ToUtf16(fulldir);
-            CreateDirectoryW(wfulldir.c_str(), NULL);
-            #else
-              ::mkdir(fulldir.c_str(), 0777);
-            #endif
-        }
-    }
+    std::filesystem::path fullpath = std::filesystem::u8path(base) / std::filesystem::u8path(path).relative_path();
+    std::error_code ec;
+    std::filesystem::create_directories(fullpath, ec);
 }
 
 class ZimDumper
@@ -238,68 +206,49 @@ void write_to_error_directory(const std::string& base, const std::string relpath
     while ((p = url.find('/')) != std::string::npos)
         url.replace(p, 1, "%2f");
 
-#ifdef _WIN32
-    auto fullpath = std::string(base + ERRORSDIR + url);
-    std::wstring wpath = utf8ToUtf16(fullpath);
-    auto fd = _wopen(wpath.c_str(), _O_WRONLY | _O_CREAT | _O_TRUNC, S_IWRITE);
+    std::filesystem::path fullpath = std::filesystem::u8path(base) / ERRORSDIR / std::filesystem::u8path(url).relative_path();
+    std::ofstream stream(fullpath, std::ios::out | std::ios::binary);
 
-    if (fd == -1) {
-        std::cerr << "Error opening file " + fullpath + " cause: " + ::strerror(errno) << std::endl;
-        return ;
+    if (!stream) {
+        std::cerr << "Error opening file " << fullpath.string() << " cause: " << ::strerror(errno) << std::endl;
+        return;
     }
-    if ((size_t) write(fd, content, size) != size) {
-      close(fd);
-      std::cerr << "Failed writing: " << fullpath << " - " << ::strerror(errno) << std::endl;
-    }
-#else
-    std::ofstream stream(base + ERRORSDIR + url);
 
     stream.write(content, size);
-
-    if (stream.fail() || stream.bad()) {
-        std::cerr << "Error writing file to errors dir. " << (base + ERRORSDIR + url) << std::endl;
-        throw std::runtime_error(
-          std::string("Error writing file to errors dir. ") + (base + ERRORSDIR + url));
+    if (!stream) {
+        std::cerr << "Error writing file to errors dir. " << fullpath.string() << std::endl;
+        throw std::runtime_error("Error writing file to errors dir. " + fullpath.string());
     } else {
-        std::cerr << "Wrote " << (base + relpath) << " to " << (base + ERRORSDIR + url) << std::endl;
+        std::cerr << "Wrote " << (base + relpath) << " to " << fullpath.string() << std::endl;
     }
-#endif
 }
 
 inline void write_to_file(const std::string &base, const std::string& path, const char* data, size_t size) {
-    std::string fullpath = base + path;
-#ifdef _WIN32
-    std::wstring wpath = utf8ToUtf16(fullpath);
-    auto fd = _wopen(wpath.c_str(), _O_WRONLY | _O_CREAT | _O_TRUNC, S_IWRITE);
-#else
-    auto fd = open(fullpath.c_str(), O_WRONLY | O_CREAT | O_TRUNC,
-                              S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-#endif
-    if (fd == -1) {
+    std::filesystem::path fullpath = std::filesystem::u8path(base) / std::filesystem::u8path(path).relative_path();
+    std::ofstream stream(fullpath, std::ios::out | std::ios::binary);
+
+    if (!stream) {
         write_to_error_directory(base, path, data, size);
-        return ;
+        return;
     }
-    if ((size_t) write(fd, data, size) != size) {
-      write_to_error_directory(base, path, data, size);
+    
+    stream.write(data, size);
+    if (!stream) {
+        write_to_error_directory(base, path, data, size);
     }
-    close(fd);
 }
 
 void ZimDumper::writeHttpRedirect(const std::string& directory, const std::string& outputPath, const std::string& currentEntryPath, std::string redirectPath)
 {
     const auto content = httpRedirectHtml(redirectPath);
-    write_to_file(directory + SEPARATOR, outputPath, content.c_str(), content.size());
+    write_to_file(directory, outputPath, content.c_str(), content.size());
 }
 
 void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::function<bool (const char c)> nsfilter)
 {
   unsigned int truncatedFiles = 0;
-#if defined(_WIN32)
-    std::wstring wdir = utf8ToUtf16(directory);
-    CreateDirectoryW(wdir.c_str(), NULL);
-#else
-  ::mkdir(directory.c_str(), 0777);
-#endif
+  std::error_code ec;
+  std::filesystem::create_directories(std::filesystem::u8path(directory), ec);
 
   std::vector<std::string> pathcache;
   for (auto& entry:m_archive.iterEfficient()) {
@@ -327,7 +276,7 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
     std::stringstream ss;
     ss << dir << filename;
     std::string relative_path = ss.str();
-    std::string full_path = directory + SEPARATOR + relative_path;
+    std::filesystem::path fullpath = std::filesystem::u8path(directory) / std::filesystem::u8path(relative_path).relative_path();
 
     if (entry.isRedirect()) {
         auto redirectItem = entry.getItem(true);
@@ -338,17 +287,17 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
         } else {
 #ifdef _WIN32
             auto blob = redirectItem.getData();
-            write_to_file(directory + SEPARATOR, relative_path, blob.data(), blob.size());
+            write_to_file(directory, relative_path, blob.data(), blob.size());
 #else
-            if (symlink(redirectPath.c_str(), full_path.c_str()) != 0) {
+            if (symlink(redirectPath.c_str(), fullpath.string().c_str()) != 0) {
               throw std::runtime_error(
-                std::string("Error creating symlink from ") + full_path + " to " + redirectPath);
+                std::string("Error creating symlink from ") + fullpath.string() + " to " + redirectPath);
             }
 #endif
         }
     } else {
       auto blob = entry.getItem().getData();
-      write_to_file(directory + SEPARATOR, relative_path, blob.data(), blob.size());
+      write_to_file(directory, relative_path, blob.data(), blob.size());
     }
   }
 }

@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "../src/tools.h"
+#include "../src/zimwriterfs/tools.h"
 #include <magic.h>
 #include <unordered_map>
 
@@ -11,6 +12,19 @@ TEST(CommonTools, isDirectory)
 {
   EXPECT_FALSE(isDirectory("data/minimal-content/favicon.png"));
   EXPECT_TRUE(isDirectory("data/minimal-content"));
+}
+
+TEST(CommonTools, fileExists)
+{
+  EXPECT_TRUE(fileExists("data/minimal-content/favicon.png"));
+  EXPECT_FALSE(fileExists("data/minimal-content"));
+  EXPECT_FALSE(fileExists("data/minimal-content/non_existent_file.png"));
+}
+
+TEST(CommonTools, getMimeTypeForFile)
+{
+  EXPECT_EQ(getMimeTypeForFile("data/minimal-content", "favicon.png"), "image/png");
+  EXPECT_EQ(getMimeTypeForFile("data/minimal-content", "nonexistentnoext"), "application/octet-stream");
 }
 
 TEST(CommonTools, base64_encode)
