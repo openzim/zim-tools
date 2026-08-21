@@ -37,12 +37,7 @@
 #include <unicode/utypes.h>
 #include <unicode/unistr.h>
 
-#ifdef _WIN32
-#define SEPARATOR "\\"
-#else
-#include <unistd.h>
-#define SEPARATOR "/"
-#endif
+#include <filesystem>
 
 
 std::string asciitolower(std::string s)
@@ -55,21 +50,14 @@ std::string asciitolower(std::string s)
 
 bool fileExists(const std::string& path)
 {
-  bool flag = false;
-  std::fstream fin;
-  fin.open(path.c_str(), std::ios::in);
-  if (fin.is_open()) {
-    flag = true;
-  }
-  fin.close();
-  return flag;
+  std::error_code ec;
+  return std::filesystem::is_regular_file(std::filesystem::u8path(path), ec);
 }
 
 bool isDirectory(const std::string &path)
 {
-  struct stat filestatus;
-  stat(path.c_str(), &filestatus);
-  return (filestatus.st_mode & S_IFMT) == S_IFDIR;
+  std::error_code ec;
+  return std::filesystem::is_directory(std::filesystem::u8path(path), ec);
 }
 
 std::string getFileExtension(std::string_view path) {
@@ -164,11 +152,11 @@ static std::string removeLastPathElement(const std::string& path,
                                   const bool removePostSeparator)
 {
   std::string newPath = path;
-  size_t offset = newPath.find_last_of(SEPARATOR);
+  size_t offset = newPath.find_last_of('/');
 
   if (removePreSeparator && offset == newPath.length() - 1) {
     newPath = newPath.substr(0, offset);
-    offset = newPath.find_last_of(SEPARATOR);
+    offset = newPath.find_last_of('/');
   }
   newPath = removePostSeparator ? newPath.substr(0, offset)
                                 : newPath.substr(0, offset + 1);
