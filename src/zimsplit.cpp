@@ -58,6 +58,7 @@ class ZimSplitter
         ifile(fname, std::ios::binary),
         currentPartSize(0)
       {
+        validatePartSize(maxPartSize, archive.getFilesize());
         batch_buffer = new char[BUFFER_SIZE];
     }
 
@@ -170,7 +171,8 @@ Usage:
 Options:
     --prefix=PREFIX     Prefix of output file parts. Default: <file>
     --size=SIZE         Maximum part size in bytes, or with a decimal unit (KB, MB, ...)
-                        or binary unit (KiB, MiB, ...). Default: 2GiB
+                        or binary unit (KiB, MiB, ...). Units are case-insensitive.
+                        SIZE must be smaller than the input file. Default: 2GiB
     --force             Create zim parts even if it is impossible to have all part size smaller than requested
     -h, --help          Show this help message
     --version           Show zimsplit version.

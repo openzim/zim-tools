@@ -29,6 +29,27 @@
 namespace
 {
 
+bool equalsIgnoreAsciiCase(std::string_view lhs, std::string_view rhs)
+{
+  if (lhs.size() != rhs.size()) {
+    return false;
+  }
+
+  const auto toLowerAscii = [](char character) {
+    return character >= 'A' && character <= 'Z'
+               ? static_cast<char>(character + ('a' - 'A'))
+               : character;
+  };
+
+  for (std::string_view::size_type index = 0; index < lhs.size(); ++index) {
+    if (toLowerAscii(lhs[index]) != toLowerAscii(rhs[index])) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 uint64_t getUnitMultiplier(std::string_view unit)
 {
   static constexpr std::array<std::pair<std::string_view, uint64_t>, 14>
@@ -50,7 +71,7 @@ uint64_t getUnitMultiplier(std::string_view unit)
       }};
 
   for (const auto& multiplier : multipliers) {
-    if (multiplier.first == unit) {
+    if (equalsIgnoreAsciiCase(multiplier.first, unit)) {
       return multiplier.second;
     }
   }
@@ -62,20 +83,18 @@ uint64_t getUnitMultiplier(std::string_view unit)
 
 uint64_t parseByteSize(std::string_view value)
 {
-  const auto unitOffset = value.find_first_not_of("0123456789");
-  const auto number = value.substr(0, unitOffset);
-  const auto unit = unitOffset == std::string_view::npos
-                        ? std::string_view()
-                        : value.substr(unitOffset);
+  if (value.empty()) {
+    throw std::invalid_argument("invalid size value: ");
+  }
 
   uint64_t size = 0;
-  const auto parseResult
-      = std::from_chars(number.data(), number.data() + number.size(), size);
-  if (number.empty() || parseResult.ec != std::errc()
-      || parseResult.ptr != number.data() + number.size()) {
+  const auto end = value.data() + value.size();
+  const auto parseResult = std::from_chars(value.data(), end, size);
+  if (parseResult.ec != std::errc() || parseResult.ptr == value.data()) {
     throw std::invalid_argument("invalid size value: " + std::string(value));
   }
 
+  const std::string_view unit(parseResult.ptr, end - parseResult.ptr);
   const auto multiplier = getUnitMultiplier(unit);
   if (size == 0 || size > std::numeric_limits<uint64_t>::max() / multiplier) {
     throw std::invalid_argument("size must be positive and fit in uint64_t: "
@@ -83,4 +102,12 @@ uint64_t parseByteSize(std::string_view value)
   }
 
   return size * multiplier;
+}
+
+void validatePartSize(uint64_t partSize, uint64_t archiveSize)
+{
+  if (partSize >= archiveSize) {
+    throw std::invalid_argument(
+        "part size must be smaller than the input ZIM file");
+  }
 }

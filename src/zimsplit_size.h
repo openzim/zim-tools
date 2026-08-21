@@ -24,5 +24,6 @@
 #include <string_view>
 
 uint64_t parseByteSize(std::string_view value);
+void validatePartSize(uint64_t partSize, uint64_t archiveSize);
 
 #endif
