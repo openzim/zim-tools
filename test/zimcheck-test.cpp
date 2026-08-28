@@ -152,6 +152,7 @@ Options:
  -Q --quick           Report at most one error of each type per ZIM entry
  -B --progress        Print progress report
  -J --json            Output in JSON format
+    --meta            Report archive metadata after checks complete
  -H --help            Displays Help
  -V --version         Displays software version
  -L --redirect_loop   Checks for the existence of redirect loops
@@ -500,6 +501,26 @@ TEST(zimcheck, json_goodzimfile)
       "}" "\n"
       , std::string(zimcheck_output)
     );
+}
+
+TEST(zimcheck, json_archive_metadata)
+{
+    CapturedStdout zimcheck_output;
+    ASSERT_EQ(0, zimcheck({
+      "zimcheck",
+      "--json",
+      "--meta",
+      "data/zimfiles/good.zim"
+    }));
+
+    const std::string output = zimcheck_output;
+    EXPECT_NE(std::string::npos, output.find("\"archive_metadata\""));
+    EXPECT_NE(std::string::npos, output.find("\"uuid\""));
+    EXPECT_NE(std::string::npos, output.find("\"article_count\""));
+    EXPECT_NE(std::string::npos, output.find("\"media_count\""));
+    EXPECT_NE(std::string::npos, output.find("\"metadata\""));
+    EXPECT_NE(std::string::npos, output.find("\"illustrations\""));
+    EXPECT_NE(std::string::npos, output.find("\"base64\""));
 }
 
 TEST(zimcheck, bad_checksum)

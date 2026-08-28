@@ -64,6 +64,7 @@ Options:
  -Q --quick           Report at most one error of each type per ZIM entry
  -B --progress        Print progress report
  -J --json            Output in JSON format
+    --meta            Report archive metadata after checks complete
  -H --help            Displays Help
  -V --version         Displays software version
  -L --redirect_loop   Checks for the existence of redirect loops
@@ -78,6 +79,134 @@ Examples:
 
 // Older version of docopt doesn't define Options
 using Options = std::map<std::string, docopt::value>;
+
+template<class T>
+std::string stringify(const T& x);
+
+struct ArchiveMetadataReport
+{
+  struct MetadataItem
+  {
+    std::string name;
+    std::string value;
+  };
+
+  struct Illustration
+  {
+    std::string name;
+    std::string mimetype;
+    std::string data;
+  };
+
+  std::string id;
+  zim::entry_index_type articleCount;
+  zim::entry_index_type mediaCount;
+  std::vector<MetadataItem> metadata;
+  std::vector<Illustration> illustrations;
+  std::map<std::string, unsigned long long> counter;
+};
+
+ArchiveMetadataReport getArchiveMetadataReport(const zim::Archive& archive)
+{
+  ArchiveMetadataReport report{
+    stringify(archive.getUuid()),
+    archive.getArticleCount(),
+    archive.getMediaCount(),
+    {},
+    {},
+    {},
+  };
+
+  for (const auto& key : archive.getMetadataKeys()) {
+    const auto item = archive.getMetadataItem(key);
+    const std::string value = item.getData();
+    if (key.rfind("Illustration_", 0) == 0) {
+      report.illustrations.push_back({
+        key,
+        item.getMimetype(),
+        base64_encode(
+          reinterpret_cast<const unsigned char*>(value.data()),
+          value.size()
+        ),
+      });
+    } else {
+      report.metadata.push_back({key, value});
+    }
+
+    if (key == "Counter") {
+      std::istringstream counter(value);
+      std::string entry;
+      while (std::getline(counter, entry, ';')) {
+        const auto equals = entry.find('=');
+        if (equals == std::string::npos) {
+          continue;
+        }
+        try {
+          report.counter.emplace(
+            entry.substr(0, equals),
+            std::stoull(entry.substr(equals + 1))
+          );
+        } catch (const std::exception&) {
+          // Invalid Counter metadata is reported by the metadata check; omit
+          // only its parsed representation while preserving the raw value.
+        }
+      }
+    }
+  }
+
+  return report;
+}
+
+JSON::OutputStream& operator<<(JSON::OutputStream& out, const ArchiveMetadataReport& report)
+{
+  out << JSON::startObject;
+  out << JSON::property("uuid", report.id);
+  out << JSON::property("article_count", report.articleCount);
+  out << JSON::property("media_count", report.mediaCount);
+  out << JSON::property("metadata", JSON::startObject);
+  for (const auto& item : report.metadata) {
+    out << JSON::property(item.name, item.value);
+  }
+  out << JSON::endObject;
+  out << JSON::property("illustrations", JSON::startArray);
+  for (const auto& illustration : report.illustrations) {
+    out << JSON::startObject;
+    out << JSON::property("name", illustration.name);
+    out << JSON::property("mime_type", illustration.mimetype);
+    out << JSON::property("base64", illustration.data);
+    out << JSON::endObject;
+  }
+  out << JSON::endArray;
+  out << JSON::property("counter", JSON::startObject);
+  for (const auto& entry : report.counter) {
+    out << JSON::property(entry.first, entry.second);
+  }
+  out << JSON::endObject;
+  out << JSON::endObject;
+  return out;
+}
+
+void printArchiveMetadataReport(const ArchiveMetadataReport& report)
+{
+  std::cout << "[INFO] Archive metadata:" << std::endl;
+  std::cout << "  uuid: " << report.id << std::endl;
+  std::cout << "  article count: " << report.articleCount << std::endl;
+  std::cout << "  media count: " << report.mediaCount << std::endl;
+  std::cout << "  metadata:" << std::endl;
+  for (const auto& item : report.metadata) {
+    std::cout << "    " << item.name << ": " << item.value << std::endl;
+  }
+  for (const auto& illustration : report.illustrations) {
+    std::cout << "    " << illustration.name << " (" << illustration.mimetype
+              << "): " << illustration.data << std::endl;
+  }
+  if (!report.counter.empty()) {
+    std::cout << "  counter:" << std::endl;
+    for (const auto& entry : report.counter) {
+      std::cout << "    " << entry.first << ": " << entry.second << std::endl;
+    }
+  }
+}
 
 template<class T>
 std::string stringify(const T& x)
@@ -129,6 +258,7 @@ int zimcheck(const Options& args)
     EnabledTests& enabled_tests = options.enabledTests;
     bool no_args = true;
     bool json = false;
+    bool report_metadata = false;
     int thread_count = 1;
 
     std::string filename = "";
@@ -179,6 +309,8 @@ int zimcheck(const Options& args)
             no_args = false;
         } else if (arg.first == "--json") {
             json = arg.second.asBool();
+        } else if (arg.first == "--meta") {
+            report_metadata = arg.second.asBool();
         } else if (arg.first == "--threads") {
             thread_count = arg.second.asLong();
         } else if (arg.first == "ZIMFILE" && arg.second.isString()) {
@@ -285,6 +417,14 @@ int zimcheck(const Options& args)
                 test_redirect_loop(archive, error);
 
             error.endLogStream();
+            if (report_metadata) {
+                const auto report = getArchiveMetadataReport(archive);
+                if (json) {
+                    error.addInfo("archive_metadata", report);
+                } else {
+                    printArchiveMetadataReport(report);
+                }
+            }
         }
         else
         {
