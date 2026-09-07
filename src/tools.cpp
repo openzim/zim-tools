@@ -36,6 +36,7 @@
 #include <unicode/brkiter.h>
 #include <unicode/utypes.h>
 #include <unicode/unistr.h>
+#include <unordered_set>
 
 #ifdef _WIN32
 #define SEPARATOR "\\"
@@ -443,6 +444,96 @@ std::vector<html_link> generic_getLinks(const std::string& page)
         p += link.size() + 1;
     }
     return links;
+}
+
+namespace
+{
+
+std::string url_percent_decode(const std::string& input)
+{
+    auto hexVal = [](unsigned char c) -> int {
+        if (c >= '0' && c <= '9') return c - '0';
+        if (c >= 'a' && c <= 'f') return 10 + (c - 'a');
+        if (c >= 'A' && c <= 'F') return 10 + (c - 'A');
+        return -1;
+    };
+
+    std::string output;
+    output.reserve(input.size());
+    for (size_t i = 0; i < input.size(); ++i) {
+        if (input[i] == '%' && i + 2 < input.size()) {
+            const int hi = hexVal(static_cast<unsigned char>(input[i + 1]));
+            const int lo = hexVal(static_cast<unsigned char>(input[i + 2]));
+            if (hi >= 0 && lo >= 0) {
+                output.push_back(static_cast<char>((hi << 4) | lo));
+                i += 2;
+                continue;
+            }
+        }
+        output.push_back(input[i]);
+    }
+    return output;
+}
+
+} // unnamed namespace
+
+std::string extract_link_fragment(const std::string& url)
+{
+    const auto pos = url.find('#');
+    if (pos == std::string::npos)
+        return "";
+    return url_percent_decode(url.substr(pos + 1));
+}
+
+std::unordered_set<std::string> generic_getAnchorIds(const std::string& page)
+{
+    const char* p = page.c_str();
+    std::unordered_set<std::string> ids;
+
+    while (*p) {
+        size_t attrLen = 0;
+        if (strncmp(p, " id", 3) == 0 && (p[3] == ' ' || p[3] == '=')) {
+            attrLen = 3;
+        } else if (strncmp(p, " name", 5) == 0 && (p[5] == ' ' || p[5] == '=')) {
+            attrLen = 5;
+        } else {
+            p += 1;
+            continue;
+        }
+        p += attrLen;
+        while (*p == ' ') p++;
+        if (*p++ != '=') continue;
+        while (*p == ' ') p++;
+        char delimiter = *p++;
+        if (delimiter != '\'' && delimiter != '"') continue;
+        const char* valStart = p;
+        while (*p != delimiter) p++;
+        ids.insert(decodeHtmlEntities(std::string(valStart, p)));
+        p += 1;
+    }
+    return ids;
+}
+
+bool isOutofBounds(const std::string& input, std::string base)
+{
+    if (input.empty()) return false;
+
+    if (!base.length() || base.back() != '/')
+        base.push_back('/');
+
+    int nr = 0;
+    if (base.front() != '/')
+        nr++;
+
+    //count nr of substrings ../
+    int nrsteps = 0;
+    std::string::size_type pos = 0;
+    while((pos = input.find("../", pos)) != std::string::npos) {
+        nrsteps++;
+        pos += 3;
+    }
+
+    return nrsteps >= (nr + std::count(base.cbegin(), base.cend(), '/'));
 }
 
 int adler32(const std::string& buf)

@@ -7,6 +7,8 @@
 #include <cassert>
 #include <map>
 #include <unordered_map>
+#include <unordered_set>
+#include <optional>
 #include <list>
 #include <sstream>
 #include <atomic>
@@ -36,6 +38,7 @@ std::unordered_map<TestType, std::pair<LogTag, std::string>> errormapping = {
     { TestType::URL_INTERNAL,  {LogTag::ERROR, "Internal URL"}},
     { TestType::URL_EXTERNAL,  {LogTag::ERROR, "External URL"}},
     { TestType::URL_EMPTY,     {LogTag::WARNING, "Empty link"}},
+    { TestType::URL_ANCHOR,    {LogTag::WARNING, "Broken Anchor"}},
     { TestType::REDIRECT,      {LogTag::ERROR, "Redirect Loop"}},
 };
 
@@ -52,6 +55,7 @@ std::unordered_map<MsgId, MsgInfo> msgTable = {
   { MsgId::OUTOFBOUNDS_LINK, { TestType::URL_INTERNAL, "{{&link}} is out of bounds. Article: {{&path}}" } },
   { MsgId::ABSPATH_LINK,     { TestType::URL_INTERNAL, "{{&link}} is an absolute path link. Article: {{&path}}" } },
   { MsgId::DANGLING_LINKS,   { TestType::URL_INTERNAL, "Dangling link(s) in article '{{&path}}':\n{{#links}}  - '{{&value}}' (resolves to '{{&normalized_link}}')\n{{/links}}" } },
+  { MsgId::BROKEN_ANCHOR,    { TestType::URL_ANCHOR, "{{&link}} has a broken anchor. Article: {{&path}}" } },
   { MsgId::EXTERNAL_LINK,    { TestType::URL_EXTERNAL, "{{&link}} is an external dependence in article {{&path}}" } },
   { MsgId::EMPTY_LINKS,      { TestType::URL_EMPTY, "Found {{&count}} empty links in article: {{&path}}" } },
   { MsgId::REDUNDANT_ITEMS,  { TestType::REDUNDANT, "{{&path1}} and {{&path2}}" } },
@@ -82,6 +86,7 @@ const char* toStr(TestType tt) {
     case TestType::URL_INTERNAL: return "url_internal";
     case TestType::URL_EXTERNAL: return "url_external";
     case TestType::URL_EMPTY:    return "url_empty";
+    case TestType::URL_ANCHOR:   return "url_anchor";
     case TestType::REDIRECT:     return "redirect";
     default:  throw std::logic_error("Invalid TestType");
   };
@@ -305,6 +310,7 @@ public: // functions
         , progress(_progress)
         , options(_options)
         , linkStatusCache(64*1024)
+        , anchorIdsCache(64*1024)
     {
         progress.reset(archive.getEntryCount());
     }
@@ -332,6 +338,28 @@ private: // functions
       });
     }
 
+    bool has_anchor(const std::string& targetPath, const std::string& fragment)
+    {
+        if (fragment.empty())
+            return true;
+        const auto ids = anchorIdsCache.getOrPut(targetPath, [this, &targetPath]()
+            -> std::optional<std::unordered_set<std::string>> {
+            if (!archive.hasEntryByPath(targetPath))
+                return std::nullopt;
+            try {
+                const auto item = archive.getEntryByPath(targetPath).getItem();
+                if (item.getMimetype() != "text/html")
+                    return std::nullopt;
+                return generic_getAnchorIds(item.getData());
+            } catch (...) {
+                return std::nullopt;
+            }
+        });
+        if (!ids)
+            return true;
+        return ids->find(fragment) != ids->end();
+    }
+
 private: // data
     const zim::Archive& archive;
     ErrorLogger& reporter;
@@ -343,6 +371,7 @@ private: // data
     std::map<unsigned int, std::list<zim::entry_index_type>> hash_main;
 
     zim::ConcurrentCache<std::string, bool> linkStatusCache;
+    zim::ConcurrentCache<std::string, std::optional<std::unordered_set<std::string>>> anchorIdsCache;
 };
 
 void ArticleChecker::check(zim::Entry entry)
@@ -413,9 +442,17 @@ void ArticleChecker::check_internal_links(zim::Item item, const LinkCollection& 
             nremptylinks++;
             continue;
         }
-        if (l.link.front() == '#' || l.link.front() == '?') continue;
+        if (l.link.front() == '?') continue;
         if (l.isInternalUrl() == false) continue;
 
+        const auto fragment = extract_link_fragment(l.link);
+
+        if (l.link.front() == '#') {
+            if (!has_anchor(path, fragment)) {
+                reporter.addMsg(MsgId::BROKEN_ANCHOR, {{"link", l.link}, {"path", path}});
+            }
+            continue;
+        }
 
         std::string resolved;
         try {
@@ -429,6 +466,10 @@ void ArticleChecker::check_internal_links(zim::Item item, const LinkCollection& 
         }
 
         groupedLinks[resolved].push_back(l.link);
+
+        if (!fragment.empty() && is_valid_internal_link(resolved) && !has_anchor(resolved, fragment)) {
+            reporter.addMsg(MsgId::BROKEN_ANCHOR, {{"link", l.link}, {"path", path}});
+        }
     }
 
     if (nremptylinks)
