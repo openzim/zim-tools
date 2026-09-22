@@ -22,6 +22,7 @@ jobs:
           restrict-to: openzim/zim-tools
           dockerfile: docker/Dockerfile
           registries: ghcr.io
+          platforms: linux/amd64 linux/arm64
           build-args:
             VERSION={tag}
           credentials:
