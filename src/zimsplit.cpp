@@ -20,6 +20,7 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include <vector>
 
 #define ZIM_PRIVATE
 #include <zim/archive.h>
@@ -186,14 +187,14 @@ Options:
     --version           Show zimsplit version.
 )";
 
-int main(int argc, char* argv[])
+int zimsplit(const std::vector<const char*>& argv)
 {
   try
   {
     std::ostringstream versions;
     printVersions(versions);
     auto args = docopt::docopt(USAGE,
-                              {argv + 1, argv + argc},
+                              {argv.begin(), argv.end()},
                               true,
                               versions.str());
 
