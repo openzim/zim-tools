@@ -115,6 +115,23 @@ TEST(ZimSplitSize, ValidatesPartSizeAgainstArchive)
                            TOO_LARGE_PART_SIZE_ERROR);
 }
 
+TEST(ZimSplit, RejectsTooSmallSizeWithoutForce)
+{
+    CapturedStdout out;
+    CapturedStderr err;
+    int ret = zimsplit({"zimsplit", "--size", "1", "data/zimfiles/good.zim"});
+    EXPECT_NE(ret, 0);
+    EXPECT_EQ(std::string(err),
+              "Error: part size must be at least 104857600 bytes. Use --force to override.\n");
+    EXPECT_EQ(std::string(out), "");
+}
+
+TEST(ZimSplit, WarnsAndContinuesWithForce)
+{
+    int ret = zimsplit({"zimsplit", "--size", "1", "--force", "data/zimfiles/good.zim"});
+    EXPECT_EQ(ret, 0);
+}
+
 TEST(ZimSplit, RejectsInvalidSize)
 {
     CapturedStdout out;
