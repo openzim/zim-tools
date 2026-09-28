@@ -33,6 +33,8 @@
 #define BUFFER_SIZE 4096
 
 const zim::size_type DEFAULT_PART_SIZE = 2147483648;
+// 100MB practical lower limit for part size
+constexpr zim::size_type MIN_PRACTICAL_PART_SIZE = 100 * 1024 * 1024;
 
 class ZimSplitter
 {
@@ -208,7 +210,22 @@ int zimsplit(const std::vector<const char*>& args)
     const bool force = docoptArgs["--force"].asBool();
 
     // initalize app
+        // initalize app
     ZimSplitter app(docoptArgs["<file>"].asString(), prefix, size, force);
+
+    if (size < MIN_PRACTICAL_PART_SIZE) {
+        if (!force) {
+            std::cerr << "Error: part size must be at least "
+                      << MIN_PRACTICAL_PART_SIZE
+                      << " bytes (100MB). Use --force to override." << std::endl;
+            return -1;
+        } else {
+            std::cout << "Warning: part size (" << size
+                      << ") is smaller than the recommended minimum ("
+                      << MIN_PRACTICAL_PART_SIZE
+                      << " bytes). Parts may be smaller than expected." << std::endl;
+        }
+    }
 
     if (!force && !app.check()) {
         std::cout << "Creation of zim parts canceled because of previous errors." << std::endl;
