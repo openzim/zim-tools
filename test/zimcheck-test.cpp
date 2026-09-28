@@ -5,6 +5,7 @@
 #include "zim/zim.h"
 #include "zim/archive.h"
 #include "../src/zimcheck/checks.h"
+#include "testing_helpers.h"
 
 std::string getLine(std::string str) {
   std::istringstream f(str);
@@ -96,39 +97,6 @@ TEST(zimfilechecks, test_redirect_loop_fail)
   test_redirect_loop(archive_poor, logger);
   ASSERT_FALSE(logger.overallStatus());
 }
-
-class CapturedStdStream
-{
-  std::ostream& stream;
-  std::ostringstream buffer;
-  std::streambuf* const sbuf;
-public:
-  explicit CapturedStdStream(std::ostream& os)
-    : stream(os)
-    , sbuf(os.rdbuf())
-  {
-    stream.rdbuf(buffer.rdbuf());
-  }
-
-  CapturedStdStream(const CapturedStdStream&) = delete;
-
-  ~CapturedStdStream()
-  {
-    stream.rdbuf(sbuf);
-  }
-
-  operator std::string() const { return buffer.str(); }
-};
-
-struct CapturedStdout : CapturedStdStream
-{
-  CapturedStdout() : CapturedStdStream(std::cout) {}
-};
-
-struct CapturedStderr : CapturedStdStream
-{
-  CapturedStderr() : CapturedStdStream(std::cerr) {}
-};
 
 int zimcheck (const std::vector<const char*>& args);
 
