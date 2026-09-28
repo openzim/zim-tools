@@ -5,6 +5,7 @@
 #include "zim/zim.h"
 #include "zim/archive.h"
 #include "../src/zimcheck/checks.h"
+#include "testing_helpers.h"
 
 std::string getLine(std::string str) {
   std::istringstream f(str);
@@ -97,51 +98,6 @@ TEST(zimfilechecks, test_redirect_loop_fail)
   ASSERT_FALSE(logger.overallStatus());
 }
 
-class CapturedStdStream
-{
-  std::ostream& stream;
-  std::ostringstream buffer;
-  std::streambuf* const sbuf;
-public:
-  explicit CapturedStdStream(std::ostream& os)
-    : stream(os)
-    , sbuf(os.rdbuf())
-  {
-    stream.rdbuf(buffer.rdbuf());
-  }
-
-  CapturedStdStream(const CapturedStdStream&) = delete;
-
-  ~CapturedStdStream()
-  {
-    stream.rdbuf(sbuf);
-  }
-
-  operator std::string() const { return buffer.str(); }
-};
-
-struct CapturedStdout : CapturedStdStream
-{
-  CapturedStdout() : CapturedStdStream(std::cout) {}
-};
-
-struct CapturedStderr : CapturedStdStream
-{
-  CapturedStderr() : CapturedStdStream(std::cerr) {}
-};
-
-TEST(zimfilechecks, warning_does_not_fail_check)
-{
-  CapturedStdout output;
-  ErrorLogger logger;
-
-  logger.addMsg(MsgId::EMPTY_LINKS, {{"count", "1"}, {"path", "article.html"}});
-
-  EXPECT_EQ(std::string(output),
-            "[WARNING] Empty link: Found 1 empty links in article: article.html\n");
-  EXPECT_TRUE(logger.overallStatus());
-}
-
 int zimcheck (const std::vector<const char*>& args);
 
 const std::string zimcheck_help_message(
@@ -167,7 +123,6 @@ Options:
  -H --help            Displays Help
  -V --version         Displays software version
  -L --redirect_loop   Checks for the existence of redirect loops
- -T --mime_type       Filename extension and MIME type coherence
  -W=<nb_thread> --threads=<nb_thread>  count of threads to utilize [default: 1]
 
 Examples:
@@ -423,110 +378,6 @@ TEST(zimcheck, redirect_loop_goodzimfile)
   );
 }
 
-TEST(zimcheck, mime_type_goodzimfile)
-{
-    const std::string expected_output(
-      "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
-      "[INFO] Zimcheck version is " VERSION "\n"
-      "[WARNING] Integrity check is skipped. Any detected errors may in fact be due to corrupted/invalid data.\n"
-      "[INFO] Verifying Articles' content..." "\n"
-      "[INFO] Overall Test Status: Pass" "\n"
-      "[INFO] Total time taken by zimcheck: <3 seconds." "\n"
-    );
-
-    test_zimcheck_single_option(
-      {"-T", "--mime_type"},
-      GOOD_ZIMFILE,
-      0,
-      expected_output,
-      EMPTY_STDERR
-    );
-}
-
-TEST(zimfilechecks, mime_type_compatible)
-{
-    CapturedStdout output;
-    ErrorLogger logger;
-
-    test_mime_type("photo.JPEG", "IMAGE/JPEG", logger);
-    test_mime_type("index.html", "text/html;charset=utf-8", logger);
-    test_mime_type("script.js", "text/javascript", logger);
-    test_mime_type("legacy.js", "application/javascript", logger);
-    test_mime_type("feed.xml", "application/xml", logger);
-    test_mime_type("legacy.xml", "text/xml", logger);
-    test_mime_type("sound.ogg", "application/ogg", logger);
-    test_mime_type("audio.ogg", "audio/ogg", logger);
-    test_mime_type("video.ogg", "video/ogg", logger);
-    test_mime_type("slides.odp", "application/vnd.oasis.opendocument.presentation", logger);
-    test_mime_type("README", "text/plain", logger);
-    test_mime_type(".jpg", "image/png", logger);
-    EXPECT_TRUE(std::string(output).empty());
-    EXPECT_TRUE(logger.overallStatus());
-}
-
-TEST(zimfilechecks, mime_type_mismatch)
-{
-    CapturedStdout output;
-    ErrorLogger logger;
-
-    test_mime_type("photo.jpg", "image/png", logger);
-
-    EXPECT_EQ(std::string(output),
-          "[WARNING] MIME type: Entry photo.jpg has MIME type image/png, "
-          "which is incompatible with the .jpg extension\n");
-    EXPECT_TRUE(logger.overallStatus());
-}
-
-TEST(zimfilechecks, mime_type_json_mismatch)
-{
-    CapturedStdout output;
-    {
-        ErrorLogger logger(true);
-        logger.startLogStream();
-        test_mime_type("photo.jpg", "image/png", logger);
-        logger.endLogStream();
-    }
-
-    EXPECT_EQ(std::string(output),
-        "{"                                                               "\n"
-        "  \"logs\" : ["                                                 "\n"
-        "    {"                                                           "\n"
-        "      \"check\" : \"mime_type\","                              "\n"
-        "      \"level\" : \"WARNING\","                                "\n"
-        "      \"message\" : \"Entry photo.jpg has MIME type image/png, which is incompatible with the .jpg extension\"," "\n"
-        "      \"extension\" : \"jpg\","                                 "\n"
-        "      \"mime_type\" : \"image/png\","                           "\n"
-        "      \"path\" : \"photo.jpg\""                                 "\n"
-        "    }"                                                           "\n"
-        "  ]"                                                             "\n"
-        "}"                                                               "\n"
-      );
-}
-
-TEST(zimfilechecks, mime_type_unknown_extension_is_skipped)
-{
-  CapturedStdout output;
-  ErrorLogger logger;
-
-  test_mime_type("data.unknown", "application/octet-stream", logger);
-
-  EXPECT_TRUE(std::string(output).empty());
-  EXPECT_TRUE(logger.overallStatus());
-}
-
-TEST(zimfilechecks, mime_type_unknown_mime_is_warning)
-{
-  CapturedStdout output;
-  ErrorLogger logger;
-
-  test_mime_type("data.jpg", "application/octet-stream", logger);
-
-  EXPECT_EQ(std::string(output),
-      "[WARNING] MIME type: Entry data.jpg has undocumented MIME type "
-      "application/octet-stream for the .jpg extension\n");
-  EXPECT_TRUE(logger.overallStatus());
-}
-
 const std::string ALL_CHECKS_OUTPUT_ON_GOODZIMFILE(
       "[INFO] Checking zim file data/zimfiles/good.zim" "\n"
       "[INFO] Zimcheck version is " VERSION "\n"
@@ -607,8 +458,7 @@ TEST(zimcheck, json_goodzimfile)
       "    \"url_internal\","                                       "\n"
       "    \"url_external\","                                       "\n"
       "    \"url_empty\","                                          "\n"
-      "    \"redirect\","                                           "\n"
-      "    \"mime_type\""                                           "\n"
+      "    \"redirect\""                                            "\n"
       "  ],"                                                        "\n"
       "  \"file_name\" : \"data/zimfiles/good.zim\","               "\n"
       "  \"file_uuid\" : \"00000000-0000-0000-0000-000000000000\"," "\n"
@@ -1053,8 +903,7 @@ TEST(zimcheck, json_poorzimfile)
       "    \"url_internal\","                                               "\n"
       "    \"url_external\","                                               "\n"
       "    \"url_empty\","                                                  "\n"
-      "    \"redirect\","                                                   "\n"
-      "    \"mime_type\""                                                   "\n"
+      "    \"redirect\""                                                    "\n"
       "  ],"                                                                "\n"
       "  \"file_name\" : \"data/zimfiles/poor.zim\","                       "\n"
       "  \"file_uuid\" : \"00000000-0000-0000-0000-000000000000\","         "\n"
