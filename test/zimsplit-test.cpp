@@ -161,3 +161,31 @@ TEST(ZimSplit, TooLargePartSizeCanBeEnforced)
     int ret = zimsplit({"--size", "1GB", "--force", "data/zimfiles/good.zim"});
     EXPECT_EQ(ret, 0);
 }
+
+TEST(ZimSplit, TooSmallPartSizeIsRejectedByDefault)
+{
+    CapturedStdout out;
+    CapturedStderr err;
+    int ret = zimsplit({"--size", "1KiB", "data/zimfiles/good.zim"});
+    EXPECT_NE(ret, 0);
+    EXPECT_EQ(std::string(err),
+              "Error: part size must be at least 104857600 bytes. Use --force to override.\n");
+    EXPECT_EQ(std::string(out), "");
+}
+
+TEST(ZimSplit, TooSmallPartSizeCanBeEnforced)
+{
+    CapturedStdout out;
+    CapturedStderr err;
+    int ret = zimsplit({"--size", "1KiB", "--force", "data/zimfiles/good.zim"});
+    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(std::string(err), "");
+    EXPECT_EQ(std::string(out),
+      "Warning: part size (1024) is smaller than the recommended minimum (104857600 bytes).\n"
+      "opening new file data/zimfiles/good.zimaa\n"
+      "WARNING: Part data/zimfiles/good.zimaa is bigger than max part size. (2048>1024)\n"
+      "opening new file data/zimfiles/good.zimab\n"
+      "opening new file data/zimfiles/good.zimac\n"
+      "WARNING: Part data/zimfiles/good.zimac is bigger than max part size. (43922>1024)\n"
+    );
+}
