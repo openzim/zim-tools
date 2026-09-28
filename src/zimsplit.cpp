@@ -20,6 +20,7 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include <vector>
 
 #define ZIM_PRIVATE
 #include <zim/archive.h>
@@ -186,28 +187,28 @@ Options:
     --version           Show zimsplit version.
 )";
 
-int main(int argc, char* argv[])
+int zimsplit(const std::vector<const char*>& args)
 {
   try
   {
     std::ostringstream versions;
     printVersions(versions);
-    auto args = docopt::docopt(USAGE,
-                              {argv + 1, argv + argc},
+    auto docoptArgs = docopt::docopt(USAGE,
+                                {args.begin() + 1, args.end()},
                               true,
                               versions.str());
 
-    std::string prefix = args["<file>"].asString();
-    if (args["--prefix"])
-        prefix = args["--prefix"].asString();
+    std::string prefix = docoptArgs["<file>"].asString();
+    if (docoptArgs["--prefix"])
+        prefix = docoptArgs["--prefix"].asString();
 
     zim::size_type size = DEFAULT_PART_SIZE;
-    if (args["--size"])
-        size = parseByteSize(args["--size"].asString());
-    const bool force = args["--force"].asBool();
+    if (docoptArgs["--size"])
+        size = parseByteSize(docoptArgs["--size"].asString());
+    const bool force = docoptArgs["--force"].asBool();
 
     // initalize app
-    ZimSplitter app(args["<file>"].asString(), prefix, size, force);
+    ZimSplitter app(docoptArgs["<file>"].asString(), prefix, size, force);
 
     if (!force && !app.check()) {
         std::cout << "Creation of zim parts canceled because of previous errors." << std::endl;
