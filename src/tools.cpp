@@ -33,6 +33,7 @@
 #include <algorithm>
 #include <regex>
 #include <array>
+#include <map>
 #include <unicode/brkiter.h>
 #include <unicode/utypes.h>
 #include <unicode/unistr.h>
@@ -81,6 +82,57 @@ std::string getFileExtension(std::string_view path) {
     return partAfterLastDot.find_first_of("/\\") == std::string_view::npos
          ? std::string(partAfterLastDot)
          : "";
+}
+
+namespace
+{
+
+const std::map<std::string, std::string> extMimeTypes = {
+  {"html",       "text/html"},
+  {"htm",        "text/html"},
+  {"png",        "image/png"},
+  {"tiff",       "image/tiff"},
+  {"tif",        "image/tiff"},
+  {"jpeg",       "image/jpeg"},
+  {"jpg",        "image/jpeg"},
+  {"gif",        "image/gif"},
+  {"svg",        "image/svg+xml"},
+  {"txt",        "text/plain"},
+  {"xml",        "text/xml"},
+  {"epub",       "application/epub+zip"},
+  {"pdf",        "application/pdf"},
+  {"ogg",        "audio/ogg"},
+  {"ogv",        "video/ogg"},
+  {"js",         "application/javascript"},
+  {"json",       "application/json"},
+  {"css",        "text/css"},
+  {"otf",        "font/otf"},
+  {"sfnt",       "font/sfnt"},
+  {"eot",        "application/vnd.ms-fontobject"},
+  {"ttf",        "font/ttf"},
+  {"collection", "font/collection"},
+  {"woff",       "font/woff"},
+  {"woff2",      "font/woff2"},
+  {"vtt",        "text/vtt"},
+  {"webm",       "video/webm"},
+  {"webp",       "image/webp"},
+  {"mp4",        "video/mp4"},
+  {"doc",        "application/msword"},
+  {"docx",       "application/vnd.openxmlformats-officedocument.wordprocessingml.document"},
+  {"ppt",        "application/vnd.ms-powerpoint"},
+  {"odt",        "application/vnd.oasis.opendocument.text"},
+  {"odp",        "application/vnd.oasis.opendocument.text"},
+  {"zip",        "application/zip"},
+  {"wasm",       "application/wasm"}
+};
+
+} // unnamed namespace
+
+const std::string& getPreferredMimeTypeForExtension(std::string_view extension)
+{
+  static const std::string emptyMimeType;
+  const auto it = extMimeTypes.find(asciitolower(std::string(extension)));
+  return it == extMimeTypes.end() ? emptyMimeType : it->second;
 }
 
 /* base64 */
