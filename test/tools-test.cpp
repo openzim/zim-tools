@@ -31,6 +31,15 @@ TEST(CommonTools, base64_encode)
   EXPECT_EQ(txt, "/wB6");
 }
 
+TEST(CommonTools, preferredMimeTypeForExtension)
+{
+  EXPECT_EQ(getPreferredMimeTypeForExtension("js"), "application/javascript");
+  EXPECT_EQ(getPreferredMimeTypeForExtension("JPEG"), "image/jpeg");
+  EXPECT_EQ(getPreferredMimeTypeForExtension("ODP"),
+            "application/vnd.oasis.opendocument.text");
+  EXPECT_EQ(getPreferredMimeTypeForExtension("unknown"), "");
+}
+
 TEST(CommonTools, decodeUrl)
 {
   std::string src = "%00";
