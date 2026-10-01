@@ -130,6 +130,18 @@ struct CapturedStderr : CapturedStdStream
   CapturedStderr() : CapturedStdStream(std::cerr) {}
 };
 
+TEST(zimfilechecks, warning_does_not_fail_check)
+{
+  CapturedStdout output;
+  ErrorLogger logger;
+
+  logger.addMsg(MsgId::EMPTY_LINKS, {{"count", "1"}, {"path", "article.html"}});
+
+  EXPECT_EQ(std::string(output),
+            "[WARNING] Empty link: Found 1 empty links in article: article.html\n");
+  EXPECT_TRUE(logger.overallStatus());
+}
+
 int zimcheck (const std::vector<const char*>& args);
 
 const std::string zimcheck_help_message(

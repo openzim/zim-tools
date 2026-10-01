@@ -193,13 +193,16 @@ void ErrorLogger::addMsg(MsgId msgid, const MsgParams& msgParams)
 {
   std::lock_guard<std::mutex> lock(this->msgMutex);
   const MsgInfo& m = msgTable.at(msgid);
-  setTestResult(m.check, false);
+    const auto tag = errormapping.at(m.check).first;
+    if (tag == LogTag::ERROR) {
+        setTestResult(m.check, false);
+    }
 
   if (jsonOutputStream.enabled()) {
      jsonOutput({msgid, msgParams});
   } else {
      auto &p = errormapping.at(m.check);
-     std::cout << "[" + tagToStr.at(p.first) + "] " << p.second << ": " << expand({msgid, msgParams}) << std::endl;
+    std::cout << "[" + tagToStr.at(tag) + "] " << p.second << ": " << expand({msgid, msgParams}) << std::endl;
   }
 }
 
