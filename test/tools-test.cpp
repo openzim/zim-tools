@@ -785,6 +785,9 @@ TEST(CommonTools, GetFileExtension) {
     EXPECT_EQ(getFileExtension("extensionCaseShouldBePreserved.JS"), "JS");
     EXPECT_EQ(getFileExtension("empty_extension."), "");
     EXPECT_EQ(getFileExtension("no_extension"),     "");
+    EXPECT_EQ(getFileExtension(".profile"),         "");
+    EXPECT_EQ(getFileExtension("dir/.profile"),     "");
+    EXPECT_EQ(getFileExtension("dir/.profile.txt"), "txt");
     EXPECT_EQ(getFileExtension("./filename"),       "");
     EXPECT_EQ(getFileExtension("repo.git/README"),  "");
     EXPECT_EQ(getFileExtension(".\\filename"),       "");
