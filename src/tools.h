@@ -191,6 +191,10 @@ bool isDirectory(const std::string &path);
 std::string getFileExtension(std::string_view path);
 std::string cleanMimeType(const std::string& mimeTypeStr);
 const std::string& getPreferredMimeTypeForExtension(std::string_view extension);
+bool isMimeTypeExtensionKnown(std::string_view extension);
+bool isMimeTypeKnown(std::string_view mimeType);
+bool isMimeTypeCompatibleWithExtension(std::string_view extension,
+                                       std::string_view mimeType);
 
 std::string base64_encode(unsigned char const* bytes_to_encode,
                           unsigned int in_len);
