@@ -75,7 +75,33 @@ static std::map<std::string, std::string> fileMimeTypes;
 
 extern bool inflateHtmlFlag;
 
-extern magic_t magic;
+struct MagicInitializer {
+  magic_t magic = nullptr;
+
+  MagicInitializer() {
+    magic = magic_open(MAGIC_MIME);
+    if (magic && magic_load(magic, NULL) != 0) {
+      uninit();
+    }
+  }
+
+  ~MagicInitializer() {
+    uninit();
+  }
+
+  void uninit() {
+    if (magic) {
+      magic_close(magic);
+      magic = nullptr;
+    }
+  }
+};
+
+magic_t& getMagic()
+{
+  static MagicInitializer magicInitializer;
+  return magicInitializer.magic;
+}
 
 /* Decompress an STL string using zlib and return the original data. */
 inline std::string inflateString(const std::string& str)
