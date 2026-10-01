@@ -35,6 +35,7 @@ enum class TestType {
     URL_EXTERNAL,
     URL_EMPTY,
     REDIRECT,
+    MIME_TYPE,
 
     COUNT
 };
@@ -68,7 +69,9 @@ enum class MsgId
   EXTERNAL_LINK,
   REDUNDANT_ITEMS,
   REDIRECT_LOOP,
-  MISSING_FAVICON
+  MISSING_FAVICON,
+  MIME_TYPE_MISMATCH,
+  MIME_TYPE_UNKNOWN
 };
 
 using MsgParams = kainjow::mustache::object;
@@ -123,6 +126,8 @@ bool test_integrity(const std::string& filename, ErrorLogger& reporter);
 void test_metadata(const zim::Archive& archive, ErrorLogger& reporter);
 void test_favicon(const zim::Archive& archive, ErrorLogger& reporter);
 void test_mainpage(const zim::Archive& archive, ErrorLogger& reporter);
+void test_mime_type(const std::string& path, const std::string& mimeType,
+                    ErrorLogger& reporter);
 void test_articles(const zim::Archive& archive, ErrorLogger& reporter, ProgressBar& progress,
                    const ZimCheckOptions& options, int thread_count=1);
 void test_redirect_loop(const zim::Archive& archive, ErrorLogger& reporter);
