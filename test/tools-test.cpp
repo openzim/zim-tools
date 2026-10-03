@@ -68,6 +68,10 @@ TEST(CommonTools, mimeTypeCompatibleWithExtension)
   EXPECT_TRUE(isMimeTypeCompatibleWithExtension("js", "text/x-javascript"));
   EXPECT_TRUE(isMimeTypeCompatibleWithExtension("xml", "application/xml"));
   EXPECT_TRUE(isMimeTypeCompatibleWithExtension("ogg", "video/ogg"));
+  EXPECT_TRUE(isMimeTypeCompatibleWithExtension("oga", "audio/ogg"));
+  EXPECT_TRUE(isMimeTypeCompatibleWithExtension("spx", "application/ogg"));
+  EXPECT_FALSE(isMimeTypeCompatibleWithExtension("oga", "video/ogg"));
+  EXPECT_FALSE(isMimeTypeCompatibleWithExtension("spx", "video/ogg"));
   EXPECT_TRUE(isMimeTypeCompatibleWithExtension("unknown", "application/octet-stream"));
   EXPECT_FALSE(isMimeTypeCompatibleWithExtension("jpg", "image/png"));
 }
