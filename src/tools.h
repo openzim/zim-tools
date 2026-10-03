@@ -190,6 +190,7 @@ bool fileExists(const std::string& path);
 bool isDirectory(const std::string &path);
 std::string trimAsciiWhitespace(std::string value);
 std::string getFileExtension(std::string_view path);
+std::string cleanMimeType(const std::string& mimeTypeStr);
 const std::string& getPreferredMimeTypeForExtension(std::string_view extension);
 
 std::string base64_encode(unsigned char const* bytes_to_encode,

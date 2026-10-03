@@ -96,6 +96,13 @@ std::string getFileExtension(std::string_view path) {
          : "";
 }
 
+std::string cleanMimeType(const std::string& mimeTypeStr)
+{
+  const auto parameterStart = mimeTypeStr.find(';');
+  return asciitolower(
+      trimAsciiWhitespace(mimeTypeStr.substr(0, parameterStart)));
+}
+
 namespace
 {
 
