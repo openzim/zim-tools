@@ -209,10 +209,7 @@ std::string getMimeTypeForFile(const std::string &directoryPath, const std::stri
       const std::string path = directoryPath + "/" + filename;
       const char* magic_res = magic_file(magic, path.c_str());
       if (magic_res) {
-        mimeType = std::string(magic_res);
-        if (mimeType.find(";") != std::string::npos) {
-          mimeType = mimeType.substr(0, mimeType.find(";"));
-        }
+        mimeType = cleanMimeType(std::string(magic_res));
         fileMimeTypes[filename] = mimeType;
       }
     }

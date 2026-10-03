@@ -84,6 +84,18 @@ std::string getFileExtension(std::string_view path) {
          : "";
 }
 
+std::string cleanMimeType(const std::string& mimeTypeStr)
+{
+  const auto parameterStart = mimeTypeStr.find(';');
+  const auto baseMimeType = mimeTypeStr.substr(0, parameterStart);
+  const auto first = baseMimeType.find_first_not_of(" \t");
+  if (first == std::string::npos) {
+    return "";
+  }
+  const auto last = baseMimeType.find_last_not_of(" \t");
+  return asciitolower(baseMimeType.substr(first, last - first + 1));
+}
+
 namespace
 {
 
