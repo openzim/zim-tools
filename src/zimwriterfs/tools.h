@@ -36,4 +36,4 @@ magic_t& getMagic();
 
 std::string getMimeTypeForFile(const std::string& basedir, const std::string& filename);
 
-#endif  // OPENZIM_ZIMWRITERFS_TOOLS_H
+#endif  // OPENZIM_ZIMWRITERFS_TOOLS_H

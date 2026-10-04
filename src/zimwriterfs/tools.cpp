@@ -28,6 +28,7 @@
 #include <iomanip>
 #include <regex>
 #include <map>
+#include <filesystem>
 
 #include <zlib.h>
 #include <magic.h>
@@ -252,8 +253,8 @@ std::string getMimeTypeForFile(const std::string &directoryPath, const std::stri
   /* Try to get the mimeType with libmagic */
   try {
     if (magic_t& magic = getMagic()) {
-      const std::string path = directoryPath + "/" + filename;
-      const char* magic_res = magic_file(magic, path.c_str());
+      const std::filesystem::path path = std::filesystem::u8path(directoryPath) / std::filesystem::u8path(filename).relative_path();
+      const char* magic_res = magic_file(magic, path.u8string().c_str());
       if (magic_res) {
         mimeType = std::string(magic_res);
         if (mimeType.find(";") != std::string::npos) {
