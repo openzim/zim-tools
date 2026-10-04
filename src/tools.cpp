@@ -39,13 +39,6 @@
 
 #include <filesystem>
 
-#ifdef _WIN32
-#define SEPARATOR "\\"
-#else
-#include <unistd.h>
-#define SEPARATOR "/"
-#endif
-
 
 std::string asciitolower(std::string s)
 {
@@ -164,11 +157,11 @@ static std::string removeLastPathElement(const std::string& path,
                                   const bool removePostSeparator)
 {
   std::string newPath = path;
-  size_t offset = newPath.find_last_of(SEPARATOR);
+  size_t offset = newPath.find_last_of('/');
 
   if (removePreSeparator && offset == newPath.length() - 1) {
     newPath = newPath.substr(0, offset);
-    offset = newPath.find_last_of(SEPARATOR);
+    offset = newPath.find_last_of('/');
   }
   newPath = removePostSeparator ? newPath.substr(0, offset)
                                 : newPath.substr(0, offset + 1);
