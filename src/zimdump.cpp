@@ -36,50 +36,28 @@
 #include "version.h"
 #include "tools.h"
 
+#include <cerrno>
+#include <cstring>
+
 #include <fcntl.h>
+#include <filesystem>
 #ifdef _WIN32
 # define SEPARATOR "\\"
 # include <io.h>
 # include <windows.h>
 #else
 # define SEPARATOR "/"
-#include <unistd.h>
+# include <unistd.h>
 #endif
 
 #define ERRORSDIR "_exceptions/"
 
 
-#ifdef _WIN32
-std::wstring utf8ToUtf16(const std::string& string) {
-  auto size = MultiByteToWideChar(CP_UTF8, 0,
-                string.c_str(), -1, nullptr, 0);
-  auto wdata = std::wstring(size, 0);
-  auto ret = MultiByteToWideChar(CP_UTF8, 0,
-                string.c_str(), -1, wdata.data(), size);
-  if (0 == ret) {
-    std::ostringstream oss;
-    oss << "Cannot convert string to wchar : " << GetLastError();
-    throw std::runtime_error(oss.str());
-  }
-  return wdata;
-}
-#endif
-
 inline static void createdir(const std::string &path, const std::string &base)
 {
-    std::size_t position = 0;
-    while(position != std::string::npos) {
-        position = path.find('/', position+1);
-        if (position != std::string::npos) {
-            std::string fulldir = base + SEPARATOR + path.substr(0, position);
-            #if defined(_WIN32)
-            std::wstring wfulldir = utf8ToUtf16(fulldir);
-            CreateDirectoryW(wfulldir.c_str(), NULL);
-            #else
-              ::mkdir(fulldir.c_str(), 0777);
-            #endif
-        }
-    }
+    std::filesystem::path fullpath = std::filesystem::u8path(base) / std::filesystem::u8path(path).relative_path();
+    std::error_code ec;
+    std::filesystem::create_directories(fullpath, ec);
 }
 
 class ZimDumper
