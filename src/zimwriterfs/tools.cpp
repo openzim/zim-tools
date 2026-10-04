@@ -75,7 +75,33 @@ static std::map<std::string, std::string> fileMimeTypes;
 
 extern bool inflateHtmlFlag;
 
-extern magic_t magic;
+struct MagicInitializer {
+  magic_t magic = nullptr;
+
+  MagicInitializer() {
+    magic = magic_open(MAGIC_MIME);
+    if (magic && magic_load(magic, NULL) != 0) {
+      uninit();
+    }
+  }
+
+  ~MagicInitializer() {
+    uninit();
+  }
+
+  void uninit() {
+    if (magic) {
+      magic_close(magic);
+      magic = nullptr;
+    }
+  }
+};
+
+magic_t& getMagic()
+{
+  static MagicInitializer magicInitializer;
+  return magicInitializer.magic;
+}
 
 /* Decompress an STL string using zlib and return the original data. */
 inline std::string inflateString(const std::string& str)
@@ -225,12 +251,17 @@ std::string getMimeTypeForFile(const std::string &directoryPath, const std::stri
 
   /* Try to get the mimeType with libmagic */
   try {
-    std::string path = directoryPath + "/" + filename;
-    mimeType = std::string(magic_file(magic, path.c_str()));
-    if (mimeType.find(";") != std::string::npos) {
-      mimeType = mimeType.substr(0, mimeType.find(";"));
+    if (magic_t& magic = getMagic()) {
+      const std::string path = directoryPath + "/" + filename;
+      const char* magic_res = magic_file(magic, path.c_str());
+      if (magic_res) {
+        mimeType = std::string(magic_res);
+        if (mimeType.find(";") != std::string::npos) {
+          mimeType = mimeType.substr(0, mimeType.find(";"));
+        }
+        fileMimeTypes[filename] = mimeType;
+      }
     }
-    fileMimeTypes[filename] = mimeType;
   } catch (...) { }
   if (mimeType.empty()) {
     return "application/octet-stream";

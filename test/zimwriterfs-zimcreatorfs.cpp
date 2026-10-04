@@ -31,24 +31,6 @@
 // stub from zimwriterfs.cpp
 bool inflateHtmlFlag = false;
 bool isVerbose() { return false; }
-magic_t magic;
-
-class LibMagicInit
-{
-public:
-  LibMagicInit()
-  {
-    if (! done) {
-      magic = magic_open(MAGIC_MIME);
-      magic_load(magic, NULL);
-      done = true;
-    }
-  }
-private:
-  static bool done;
-};
-
-bool LibMagicInit::done = false;
 
 
 class TempFile
@@ -64,8 +46,6 @@ private:
 
 TEST(ZimCreatorFSTest, MinimalZim)
 {
-  LibMagicInit libmagic;
-
   std::string directoryPath = "data/minimal-content";
   ZimCreatorFS zimCreator(directoryPath);
   zimCreator.setMainPath("index.html");
@@ -92,8 +72,6 @@ TEST(ZimCreatorFSTest, MinimalZim)
 
 TEST(ZimCreatorFSTest, SymlinkShouldCreateRedirectEntry)
 {
-  LibMagicInit libmagic;
-
   std::string directoryPath = "data/with-symlink";
   ZimCreatorFS zimCreator(directoryPath);
   zimCreator.setMainPath("hello.html");

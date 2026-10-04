@@ -142,7 +142,6 @@ bool inflateHtmlFlag = false;
 
 pthread_mutex_t verboseMutex;
 
-magic_t magic;
 
 bool isVerbose()
 {
@@ -493,8 +492,7 @@ int main(int argc, char** argv)
   parse_args(argc, argv);
 
   /* Init */
-  magic = magic_open(MAGIC_MIME);
-  if (magic_load(magic, NULL) != 0) {
+  if (!getMagic()) {
     std::cerr << "Impossible to load magic file. Set `MAGIC` environment variable to a `magic` (or `magic.mgc`) file." << std::endl;
     if (! continue_without_magic) {
       exit(1);
@@ -516,7 +514,6 @@ int main(int argc, char** argv)
     exit(1);
   }
 
-  magic_close(magic);
   /* Destroy mutex */
   pthread_mutex_destroy(&verboseMutex);
 }

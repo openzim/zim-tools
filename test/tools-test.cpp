@@ -1,9 +1,8 @@
 #include "gtest/gtest.h"
 #include "../src/tools.h"
-#include <magic.h>
+#include "../src/zimwriterfs/tools.h"
 #include <unordered_map>
 
-magic_t magic;
 bool inflateHtmlFlag = false;
 bool isVerbose() { return false; }
 
@@ -11,6 +10,18 @@ TEST(CommonTools, isDirectory)
 {
   EXPECT_FALSE(isDirectory("data/minimal-content/favicon.png"));
   EXPECT_TRUE(isDirectory("data/minimal-content"));
+}
+
+TEST(CommonTools, getMimeTypeForFile)
+{
+  // Extension lookup: .png has a known entry in extMimeTypes
+  EXPECT_EQ(getMimeTypeForFile("data/minimal-content", "favicon.png"), "image/png");
+
+  // Extension wins over actual content: favicon.html contains PNG bytes but .html extension
+  EXPECT_EQ(getMimeTypeForFile("data/magic-mime-test", "favicon.html"), "text/html");
+
+  // libmagic fallback: no extension -> magic detects text/plain
+  EXPECT_EQ(getMimeTypeForFile("data/magic-mime-test", "textfile_noext"), "text/plain");
 }
 
 TEST(CommonTools, base64_encode)
