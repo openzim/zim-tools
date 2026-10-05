@@ -291,6 +291,18 @@ void ZimDumper::writeHttpRedirect(const std::string& directory, const std::strin
     write_to_file(directory + SEPARATOR, outputPath, content.c_str(), content.size());
 }
 
+static bool testSymlink(const std::string& sym, const std::string& target) {
+  char buf[256];
+  ssize_t n = readlink(sym.c_str(), buf, 255);
+  if (n > 0){
+    buf[n] = '\0';
+    if (target == buf) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::function<bool (const char c)> nsfilter)
 {
   unsigned int truncatedFiles = 0;
@@ -340,9 +352,12 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
             auto blob = redirectItem.getData();
             write_to_file(directory + SEPARATOR, relative_path, blob.data(), blob.size());
 #else
-            if (symlink(redirectPath.c_str(), full_path.c_str()) != 0) {
-              throw std::runtime_error(
-                std::string("Error creating symlink from ") + full_path + " to " + redirectPath);
+            //  There is a chance of symlink already created before. i.e. repeat run
+            if (!testSymlink(full_path, redirectPath)) {
+              if (symlink(redirectPath.c_str(), full_path.c_str()) != 0) {
+                throw std::runtime_error(
+                  std::string("Error creating symlink from ") + full_path + " to " + redirectPath);
+              }
             }
 #endif
         }
