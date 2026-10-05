@@ -83,6 +83,25 @@ make__poor__zim()
     command_set3="sed -e '6 a <meta http-equiv=refresh content=\"0;URL=redirect_loop2.html\">' main.html"
     eval $command_set > redirect_loop3.html
     cp article1.html redundant_article.html
+
+    cat > anchor_target.html <<'EOF'
+<!DOCTYPE html><html><body>
+  <h2 id="section">Section</h2>
+  <a name="legacy"></a>
+</body></html>
+EOF
+
+    cat > broken_anchor_same_page.html <<'EOF'
+<!DOCTYPE html><html><body>
+  <a href="#missing">bad same-page</a>
+</body></html>
+EOF
+
+    cat > broken_anchor_cross_page.html <<'EOF'
+<!DOCTYPE html><html><body>
+  <a href="anchor_target.html#missing">bad cross-page</a>
+</body></html>
+EOF
   )
   zimwriterfs --withoutFTIndex \
               --dont-check-arguments \

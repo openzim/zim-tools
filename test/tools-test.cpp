@@ -344,6 +344,14 @@ TEST(tools, resolveLinkTarget)
     EXPECT_EQ(resolveLinkTarget("../../",  "b/c/def"), "");
     EXPECT_EQ(resolveLinkTarget("../..//", "b/c/def"), "/");
     EXPECT_THROW(resolveLinkTarget("../../..", "b/c/def"), OutOfBoundsURL);
+    ASSERT_EQ(extract_link_fragment("page.html"), "");
+    ASSERT_EQ(extract_link_fragment("page.html#section"), "section");
+    ASSERT_EQ(extract_link_fragment("#top"), "top");
+    ASSERT_EQ(extract_link_fragment("page.html#"), "");
+    ASSERT_EQ(extract_link_fragment("page.html#foo%20bar"), "foo bar");
+    ASSERT_EQ(extract_link_fragment("page.html#%zz"), "%zz");
+    ASSERT_EQ(extract_link_fragment("page.html#%2G"), "%2G");
+    ASSERT_EQ(extract_link_fragment("page.html#%2f"), "/");
 
     EXPECT_EQ(resolveLinkTarget("",        "b/c/"), "b/c/");
     EXPECT_EQ(resolveLinkTarget("?x=9&y=1","b/c/"), "b/c/");
@@ -485,6 +493,20 @@ TEST(tools, resolveLinkTarget)
     EXPECT_EQ(resolveLinkTarget("asm", "./org/./.././o/r/g/"), "./org/./.././o/r/g/asm");
     EXPECT_EQ(resolveLinkTarget("oops", "/a/../../../b/"), "/a/../../../b/oops");
     EXPECT_EQ(resolveLinkTarget("oops", "a/../../b/"),  "a/../../b/oops");
+}
+
+TEST(tools, generic_getAnchorIds)
+{
+    const std::string html = R"(
+      <h2 id="section">Section</h2>
+      <a name="legacy"></a>
+      <p id='single-quotes'>x</p>
+    )";
+    auto ids = generic_getAnchorIds(html);
+    ASSERT_EQ(ids.count("section"), 1);
+    ASSERT_EQ(ids.count("legacy"), 1);
+    ASSERT_EQ(ids.count("single-quotes"), 1);
+    ASSERT_EQ(ids.size(), 3);
 }
 
 TEST(tools, addler32)
