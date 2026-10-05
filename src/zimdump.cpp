@@ -82,6 +82,19 @@ inline static void createdir(const std::string &path, const std::string &base)
     }
 }
 
+static std::string csv_escape(const std::string& field) {
+    if (field.find_first_of(",\"\n\r") == std::string::npos) {
+        return field;
+    }
+    std::string out = "\"";
+    for (char c : field) {
+        if (c == '"') out += '"';
+        out += c;
+    }
+    out += '"';
+    return out;
+}
+
 class ZimDumper
 {
     zim::Archive m_archive;
@@ -97,10 +110,11 @@ class ZimDumper
 
     void printInfo();
     int dumpEntry(const zim::Entry& entry);
-    int listEntries(bool info);
+    int listEntries(bool info, bool csv);
     int listEntry(const zim::Entry& entry);
+    void listEntryCSV(const zim::Entry& entry, bool printHeader);
     void listEntryT(const zim::Entry& entr);
-    int listEntriesByNamespace(const std::string ns, bool details);
+    int listEntriesByNamespace(const std::string ns, bool details, bool csv);
 
     zim::Entry getEntryByPath(const std::string &path);
     zim::Entry getEntryByNsAndPath(char ns, const std::string &path);
@@ -165,14 +179,26 @@ int ZimDumper::dumpEntry(const zim::Entry& entry)
     return 0;
 }
 
-int ZimDumper::listEntries(bool info)
+int ZimDumper::listEntries(bool info, bool csv)
 {
     int ret = 0;
+    bool first = true;
     for (auto& entry:m_archive.iterByPath()) {
-        if (info) {
-          ret = listEntry(entry);
+        if (csv && info) {
+            listEntryCSV(entry, first);
+            first = false;
+        } else if (info) {
+            ret = listEntry(entry);
         } else {
-          std::cout << entry.getPath() << '\n';
+            if (csv) {
+                if (first) {
+                    std::cout << "path\n";
+                    first = false;
+                }
+                std::cout << csv_escape(entry.getPath()) << '\n';
+            } else {
+                std::cout << entry.getPath() << '\n';
+            }
         }
      }
     return ret;
@@ -216,14 +242,51 @@ void ZimDumper::listEntryT(const zim::Entry& entry)
   std::cout << std::endl;
 }
 
-int ZimDumper::listEntriesByNamespace(const std::string ns, bool details)
+void ZimDumper::listEntryCSV(const zim::Entry& entry, bool printHeader)
+{
+    if (printHeader) {
+        std::cout << "path,title,index,type,mimetype,size,redirect_index,redirect_target,cluster_index,blob_index\n";
+    }
+
+    std::cout << csv_escape(entry.getPath()) << ','
+              << csv_escape(entry.getTitle()) << ','
+              << entry.getIndex() << ',';
+
+    if (entry.isRedirect()) {
+        auto redirectEntry = entry.getRedirectEntry();
+        std::cout << "redirect,,," 
+                  << redirectEntry.getIndex() << ','
+                  << csv_escape(redirectEntry.getPath()) << ",,\n";
+    } else {
+        auto item = entry.getItem();
+        std::cout << "item,"
+                  << csv_escape(item.getMimetype()) << ','
+                  << item.getSize() << ",,,"
+                  << item.getClusterIndex() << ','
+                  << item.getBlobIndex() << '\n';
+    }
+}
+
+int ZimDumper::listEntriesByNamespace(const std::string ns, bool details, bool csv)
 {
     int ret = 0;
+    bool first = true;
     for (auto& entry:m_archive.findByPath(ns)) {
-        if (details) {
-          ret = listEntry(entry);
+        if (csv && details) {
+            listEntryCSV(entry, first);
+            first = false;
+        } else if (details) {
+            ret = listEntry(entry);
         } else {
-          std::cout << entry.getPath() << '\n';
+            if (csv) {
+                if (first) {
+                    std::cout << "path\n";
+                    first = false;
+                }
+                std::cout << csv_escape(entry.getPath()) << '\n';
+            } else {
+                std::cout << entry.getPath() << '\n';
+            }
         }
     }
     return ret;
@@ -358,7 +421,7 @@ R"(
 zimdump tool is used to inspect a zim file and also to dump its contents into the filesystem.
 
 Usage:
-  zimdump list [--details] [--idx=INDEX|([--url=URL] [--ns=N])] [--] <file>
+  zimdump list [--details] [--csv] [--idx=INDEX|([--url=URL] [--ns=N])] [--] <file>
   zimdump dump --dir=DIR [--ns=N] [--redirect] [--] <file>
   zimdump show (--idx=INDEX|(--url=URL [--ns=N])) [--] <file>
   zimdump info [--ns=N] [--] <file>
@@ -374,6 +437,7 @@ Selectors:
 
 Options:
   --details    Show details about the articles. Else, list only the url of the article(s).
+  --csv        Output in CSV format. Best used with --details.
   --dir=DIR    Directory where to dump the article(s) content.
   --redirect   Use symlink to dump redirect articles. Else create html redirect file
   -h, --help   Show this help
@@ -460,24 +524,38 @@ int subcmdList(ZimDumper &app, Options &args)
     bool idx(args["--idx"]);
     bool url(args["--url"]);
     bool details = args["--details"].asBool();
+    bool csv = args["--csv"].asBool();
     bool ns(args["--ns"]);
 
     if (idx || url) {
         try {
-            // docopt guaranty us that we have `--idx` or `--url` (or nothing, but not both)
-            if (idx) {
-                return app.listEntry(app.getEntry(args["--idx"].asLong()));
+            auto getEntryHelper = [&]() {
+                if (idx) {
+                    return app.getEntry(args["--idx"].asLong());
+                } else {
+                    return app.getEntryByPath(args["--url"].asString());
+                }
+            };
+            zim::Entry entry = getEntryHelper();
+            
+            if (csv && details) {
+                app.listEntryCSV(entry, true);
+                return 0;
+            } else if (details) {
+                return app.listEntry(entry);
             } else {
-                return app.listEntry(app.getEntryByPath(args["--url"].asString()));
+                if (csv) std::cout << "path\n" << csv_escape(entry.getPath()) << '\n';
+                else std::cout << entry.getPath() << '\n';
+                return 0;
             }
         } catch(...) {
             std::cerr << "Entry not found" << std::endl;
             return -1;
         }
     } else if (ns){
-        return app.listEntriesByNamespace(args["--ns"].asString(), details);
+        return app.listEntriesByNamespace(args["--ns"].asString(), details, csv);
     } else {
-        return app.listEntries(details);
+        return app.listEntries(details, csv);
     }
 }
 
