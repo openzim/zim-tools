@@ -21,6 +21,7 @@
 #ifndef OPENZIM_TOOLS_H
 #define OPENZIM_TOOLS_H
 
+#include <algorithm>
 #include <map>
 #include <string>
 #include <string_view>
@@ -31,6 +32,12 @@
 #include <zim/writer/contentProvider.h>
 #include <zim/writer/item.h>
 #include <zim/item.h>
+
+template<typename T, typename U>
+bool contains(const std::vector<T>& values, const U& value)
+{
+  return std::find(values.begin(), values.end(), value) != values.end();
+}
 
 /* Formatter for std::exception what() message:
  * throw std::runtime_error(

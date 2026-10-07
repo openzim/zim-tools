@@ -6,6 +6,13 @@
 bool inflateHtmlFlag = false;
 bool isVerbose() { return false; }
 
+TEST(CommonTools, contains)
+{
+  const std::vector<std::string> values = {"one", "two"};
+  EXPECT_TRUE(contains(values, "two"));
+  EXPECT_FALSE(contains(values, "three"));
+}
+
 TEST(CommonTools, isDirectory)
 {
   EXPECT_FALSE(isDirectory("data/minimal-content/favicon.png"));
