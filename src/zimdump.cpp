@@ -310,7 +310,7 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
     if (position != std::string::npos) {
         dir = path.substr(0, position + 1);
         filename = path.substr(position + 1);
-        if (find(pathcache.begin(), pathcache.end(), dir) == pathcache.end()) {
+        if (!contains(pathcache, dir)) {
             createdir(dir, directory);
             pathcache.push_back(dir);
         }

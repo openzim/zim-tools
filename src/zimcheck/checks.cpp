@@ -37,6 +37,7 @@ std::unordered_map<TestType, std::pair<LogTag, std::string>> errormapping = {
     { TestType::URL_EXTERNAL,  {LogTag::ERROR, "External URL"}},
     { TestType::URL_EMPTY,     {LogTag::WARNING, "Empty link"}},
     { TestType::REDIRECT,      {LogTag::ERROR, "Redirect Loop"}},
+    { TestType::MIME_TYPE,     {LogTag::WARNING, "MIME type"}},
 };
 
 struct MsgInfo
@@ -46,18 +47,24 @@ struct MsgInfo
 };
 
 std::unordered_map<MsgId, MsgInfo> msgTable = {
-  { MsgId::CHECKSUM,         { TestType::CHECKSUM, "ZIM Archive Checksum in archive: {{&archive_checksum}}\n" } },
-  { MsgId::MAIN_PAGE,        { TestType::MAIN_PAGE, "Main Page Index stored in Archive Header: {{&main_page_index}}" } },
-  { MsgId::EMPTY_ENTRY,      { TestType::EMPTY, "Entry {{&path}} is empty" } },
-  { MsgId::OUTOFBOUNDS_LINK, { TestType::URL_INTERNAL, "{{&link}} is out of bounds. Article: {{&path}}" } },
-  { MsgId::ABSPATH_LINK,     { TestType::URL_INTERNAL, "{{&link}} is an absolute path link. Article: {{&path}}" } },
-  { MsgId::DANGLING_LINKS,   { TestType::URL_INTERNAL, "Dangling link(s) in article '{{&path}}':\n{{#links}}  - '{{&value}}' (resolves to '{{&normalized_link}}')\n{{/links}}" } },
-  { MsgId::EXTERNAL_LINK,    { TestType::URL_EXTERNAL, "{{&link}} is an external dependence in article {{&path}}" } },
-  { MsgId::EMPTY_LINKS,      { TestType::URL_EMPTY, "Found {{&count}} empty links in article: {{&path}}" } },
-  { MsgId::REDUNDANT_ITEMS,  { TestType::REDUNDANT, "{{&path1}} and {{&path2}}" } },
-  { MsgId::METADATA,         { TestType::METADATA, "{{&error}}" } },
-  { MsgId::REDIRECT_LOOP,    { TestType::REDIRECT, "Redirect loop exists from entry {{&entry_path}}\n"  } },
-  { MsgId::MISSING_FAVICON,  { TestType::FAVICON, "Favicon is missing" } }
+    { MsgId::CHECKSUM,         { TestType::CHECKSUM, "ZIM Archive Checksum in archive: {{&archive_checksum}}\n" } },
+    { MsgId::MAIN_PAGE,        { TestType::MAIN_PAGE, "Main Page Index stored in Archive Header: {{&main_page_index}}" } },
+    { MsgId::EMPTY_ENTRY,      { TestType::EMPTY, "Entry {{&path}} is empty" } },
+    { MsgId::OUTOFBOUNDS_LINK, { TestType::URL_INTERNAL, "{{&link}} is out of bounds. Article: {{&path}}" } },
+    { MsgId::ABSPATH_LINK,     { TestType::URL_INTERNAL, "{{&link}} is an absolute path link. Article: {{&path}}" } },
+    { MsgId::DANGLING_LINKS,   { TestType::URL_INTERNAL, "Dangling link(s) in article '{{&path}}':\n{{#links}}  - '{{&value}}' (resolves to '{{&normalized_link}}')\n{{/links}}" } },
+    { MsgId::EXTERNAL_LINK,    { TestType::URL_EXTERNAL, "{{&link}} is an external dependence in article {{&path}}" } },
+    { MsgId::EMPTY_LINKS,      { TestType::URL_EMPTY, "Found {{&count}} empty links in article: {{&path}}" } },
+    { MsgId::REDUNDANT_ITEMS,  { TestType::REDUNDANT, "{{&path1}} and {{&path2}}" } },
+    { MsgId::METADATA,         { TestType::METADATA, "{{&error}}" } },
+    { MsgId::REDIRECT_LOOP,    { TestType::REDIRECT, "Redirect loop exists from entry {{&entry_path}}\n"  } },
+    { MsgId::MISSING_FAVICON,  { TestType::FAVICON, "Favicon is missing" } },
+    { MsgId::MIME_TYPE_MISMATCH,
+        { TestType::MIME_TYPE,
+          "Entry {{&path}} has MIME type {{&mime_type}}, which is incompatible with the .{{&extension}} extension" } },
+    { MsgId::MIME_TYPE_UNKNOWN,
+        { TestType::MIME_TYPE,
+          "Entry {{&path}} has undocumented MIME type {{&mime_type}} for the .{{&extension}} extension" } }
 };
 
 using kainjow::mustache::mustache;
@@ -83,6 +90,7 @@ const char* toStr(TestType tt) {
     case TestType::URL_EXTERNAL: return "url_external";
     case TestType::URL_EMPTY:    return "url_empty";
     case TestType::REDIRECT:     return "redirect";
+    case TestType::MIME_TYPE:    return "mime_type";
     default:  throw std::logic_error("Invalid TestType");
   };
 }
@@ -193,13 +201,17 @@ void ErrorLogger::addMsg(MsgId msgid, const MsgParams& msgParams)
 {
   std::lock_guard<std::mutex> lock(this->msgMutex);
   const MsgInfo& m = msgTable.at(msgid);
-  setTestResult(m.check, false);
+    const auto tag = errormapping.at(m.check).first;
+    if (tag == LogTag::ERROR) {
+        setTestResult(m.check, false);
+    }
 
   if (jsonOutputStream.enabled()) {
-     jsonOutput({msgid, msgParams});
+        jsonOutput({msgid, msgParams});
   } else {
-     auto &p = errormapping.at(m.check);
-     std::cout << "[" + tagToStr.at(p.first) + "] " << p.second << ": " << expand({msgid, msgParams}) << std::endl;
+        auto &p = errormapping.at(m.check);
+    std::cout << "[" + tagToStr.at(tag) + "] " << p.second << ": "
+                            << expand({msgid, msgParams}) << std::endl;
   }
 }
 
@@ -214,7 +226,8 @@ void ErrorLogger::jsonOutput(const MsgIdWithParams& msg) const {
   const MsgInfo& m = msgTable.at(msg.msgId);
   jsonOutputStream << JSON::startObject;
   jsonOutputStream << JSON::property("check", m.check);
-  jsonOutputStream << JSON::property("level", tagToStr.at(errormapping.at(m.check).first));
+    jsonOutputStream << JSON::property(
+            "level", tagToStr.at(errormapping.at(m.check).first));
   jsonOutputStream << JSON::property("message", expand(msg));
 
   for ( const auto& kv : sortedMsgParams(msg.msgParams) ) {
@@ -289,6 +302,25 @@ void test_mainpage(const zim::Archive& archive, ErrorLogger& reporter) {
     }
 }
 
+void test_mime_type(const std::string& path, const std::string& mimeType,
+                    ErrorLogger& reporter)
+{
+    const auto extension = getFileExtension(path);
+    if (!extension.empty() && isMimeTypeExtensionKnown(extension)) {
+        if (!isMimeTypeKnown(mimeType)) {
+            reporter.addMsg(MsgId::MIME_TYPE_UNKNOWN,
+                            {{"path", path},
+                             {"mime_type", mimeType},
+                             {"extension", extension}});
+        } else if (!isMimeTypeCompatibleWithExtension(extension, mimeType)) {
+            reporter.addMsg(MsgId::MIME_TYPE_MISMATCH,
+                            {{"path", path},
+                             {"mime_type", mimeType},
+                             {"extension", extension}});
+        }
+    }
+}
+
 namespace
 {
 
@@ -320,6 +352,7 @@ private: // types
     typedef std::map<std::string, StringCollection> GroupedLinkCollection;
 
 private: // functions
+    void check_mime_type(const zim::Item& item);
     void check_item(const zim::Item& item);
     void check_internal_links(zim::Item item, const LinkCollection& links);
     void check_internal_links(zim::Item item, const GroupedLinkCollection& groupedLinks);
@@ -361,6 +394,8 @@ void ArticleChecker::check(zim::Entry entry)
 
 void ArticleChecker::check_item(const zim::Item& item)
 {
+    check_mime_type(item);
+
     if (item.getSize() == 0) {
         if (options.enabledTests.isEnabled(TestType::EMPTY)) {
             const auto path = item.getPath();
@@ -396,6 +431,13 @@ void ArticleChecker::check_item(const zim::Item& item)
     if (options.enabledTests.isEnabled(TestType::URL_EXTERNAL))
     {
         check_external_links(item, links);
+    }
+}
+
+void ArticleChecker::check_mime_type(const zim::Item& item)
+{
+    if (options.enabledTests.isEnabled(TestType::MIME_TYPE)) {
+        test_mime_type(item.getPath(), item.getMimetype(), reporter);
     }
 }
 

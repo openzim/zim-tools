@@ -6,6 +6,13 @@
 bool inflateHtmlFlag = false;
 bool isVerbose() { return false; }
 
+TEST(CommonTools, contains)
+{
+  const std::vector<std::string> values = {"one", "two"};
+  EXPECT_TRUE(contains(values, "two"));
+  EXPECT_FALSE(contains(values, "three"));
+}
+
 TEST(CommonTools, isDirectory)
 {
   EXPECT_FALSE(isDirectory("data/minimal-content/favicon.png"));
@@ -29,6 +36,44 @@ TEST(CommonTools, base64_encode)
   unsigned char data[] = { 0xff, 0x00, 0x7a };
   std::string txt = base64_encode(data, sizeof(data));
   EXPECT_EQ(txt, "/wB6");
+}
+
+TEST(CommonTools, preferredMimeTypeForExtension)
+{
+  EXPECT_EQ(getPreferredMimeTypeForExtension("js"), "application/javascript");
+  EXPECT_EQ(getPreferredMimeTypeForExtension("HTM"), "text/html");
+  EXPECT_EQ(getPreferredMimeTypeForExtension("TIF"), "image/tiff");
+  EXPECT_EQ(getPreferredMimeTypeForExtension("jFif"), "image/jpeg");
+  EXPECT_EQ(getPreferredMimeTypeForExtension("svgz"), "image/svg+xml");
+  EXPECT_EQ(getPreferredMimeTypeForExtension("mp4v"), "video/mp4");
+  EXPECT_EQ(getPreferredMimeTypeForExtension("ODP"),
+            "application/vnd.oasis.opendocument.presentation");
+  EXPECT_EQ(getPreferredMimeTypeForExtension("unknown"), "");
+}
+
+TEST(CommonTools, cleanMimeType)
+{
+  EXPECT_EQ(cleanMimeType("IMAGE/JPEG"), "image/jpeg");
+  EXPECT_EQ(cleanMimeType("text/html;charset=utf-8"), "text/html");
+  EXPECT_EQ(cleanMimeType("text/html ; charset=utf-8"), "text/html");
+  EXPECT_EQ(cleanMimeType("\t IMAGE/JPEG \t"), "image/jpeg");
+  EXPECT_EQ(cleanMimeType(" \t ; charset=utf-8"), "");
+}
+
+TEST(CommonTools, mimeTypeCompatibleWithExtension)
+{
+  EXPECT_TRUE(isMimeTypeCompatibleWithExtension("JPEG", "IMAGE/JPEG"));
+  EXPECT_TRUE(isMimeTypeCompatibleWithExtension("html", "text/html;charset=utf-8"));
+  EXPECT_TRUE(isMimeTypeCompatibleWithExtension("js", "text/javascript"));
+  EXPECT_TRUE(isMimeTypeCompatibleWithExtension("js", "text/x-javascript"));
+  EXPECT_TRUE(isMimeTypeCompatibleWithExtension("xml", "application/xml"));
+  EXPECT_TRUE(isMimeTypeCompatibleWithExtension("ogg", "video/ogg"));
+  EXPECT_TRUE(isMimeTypeCompatibleWithExtension("oga", "audio/ogg"));
+  EXPECT_TRUE(isMimeTypeCompatibleWithExtension("spx", "application/ogg"));
+  EXPECT_FALSE(isMimeTypeCompatibleWithExtension("oga", "video/ogg"));
+  EXPECT_FALSE(isMimeTypeCompatibleWithExtension("spx", "video/ogg"));
+  EXPECT_TRUE(isMimeTypeCompatibleWithExtension("unknown", "application/octet-stream"));
+  EXPECT_FALSE(isMimeTypeCompatibleWithExtension("jpg", "image/png"));
 }
 
 TEST(CommonTools, decodeUrl)
@@ -744,6 +789,9 @@ TEST(CommonTools, GetFileExtension) {
     EXPECT_EQ(getFileExtension("extensionCaseShouldBePreserved.JS"), "JS");
     EXPECT_EQ(getFileExtension("empty_extension."), "");
     EXPECT_EQ(getFileExtension("no_extension"),     "");
+    EXPECT_EQ(getFileExtension(".profile"),         "");
+    EXPECT_EQ(getFileExtension("dir/.profile"),     "");
+    EXPECT_EQ(getFileExtension("dir/.profile.txt"), "txt");
     EXPECT_EQ(getFileExtension("./filename"),       "");
     EXPECT_EQ(getFileExtension("repo.git/README"),  "");
     EXPECT_EQ(getFileExtension(".\\filename"),       "");

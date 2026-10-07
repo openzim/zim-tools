@@ -21,6 +21,7 @@
 #ifndef OPENZIM_TOOLS_H
 #define OPENZIM_TOOLS_H
 
+#include <algorithm>
 #include <map>
 #include <string>
 #include <string_view>
@@ -31,6 +32,12 @@
 #include <zim/writer/contentProvider.h>
 #include <zim/writer/item.h>
 #include <zim/item.h>
+
+template<typename T, typename U>
+bool contains(const std::vector<T>& values, const U& value)
+{
+  return std::find(values.begin(), values.end(), value) != values.end();
+}
 
 /* Formatter for std::exception what() message:
  * throw std::runtime_error(
@@ -182,6 +189,12 @@ std::string computeAbsolutePath(const std::string& path,
 bool fileExists(const std::string& path);
 bool isDirectory(const std::string &path);
 std::string getFileExtension(std::string_view path);
+std::string cleanMimeType(const std::string& mimeTypeStr);
+const std::string& getPreferredMimeTypeForExtension(std::string_view extension);
+bool isMimeTypeExtensionKnown(std::string_view extension);
+bool isMimeTypeKnown(std::string_view mimeType);
+bool isMimeTypeCompatibleWithExtension(std::string_view extension,
+                                       std::string_view mimeType);
 
 std::string base64_encode(unsigned char const* bytes_to_encode,
                           unsigned int in_len);
