@@ -217,19 +217,19 @@ int zimsplit(const std::vector<const char*>& args)
         if (!force) {
             std::cerr << "Error: part size must be at least "
                       << MIN_PRACTICAL_PART_SIZE
-                      << " bytes (100MB). Use --force to override." << std::endl;
+                      << " bytes. Use --force to override." << std::endl;
             return -1;
         } else {
             std::cout << "Warning: part size (" << size
                       << ") is smaller than the recommended minimum ("
                       << MIN_PRACTICAL_PART_SIZE
-                      << " bytes). Parts may be smaller than expected." << std::endl;
+                      << " bytes)." << std::endl;
         }
     }
 
     if (!force && !app.check()) {
-        std::cout << "Creation of zim parts canceled because of previous errors." << std::endl;
-        std::cout << "Use --force option to create zim parts anyway." << std::endl;
+        std::cerr << "Creation of zim parts canceled because of previous errors." << std::endl;
+        std::cerr << "Use --force option to create zim parts anyway." << std::endl;
         return -1;
     }
 
