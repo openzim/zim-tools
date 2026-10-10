@@ -304,6 +304,8 @@ void ZimDumper::dumpFiles(const std::string& directory, bool symlinkdump, std::f
   std::vector<std::string> pathcache;
   for (auto& entry:m_archive.iterEfficient()) {
     const std::string path = entry.getPath();
+    if (path.size() == 0)
+        continue;
     std::string dir = "";
     std::string filename = path;
     auto position = path.find_last_of('/');
