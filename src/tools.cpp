@@ -54,6 +54,18 @@ std::string asciitolower(std::string s)
     return s;
 }
 
+std::string trimAsciiWhitespace(std::string value)
+{
+  constexpr auto whitespace = " \t\n\r\f\v";
+  const auto first = value.find_first_not_of(whitespace);
+  if (first == std::string::npos) {
+    return "";
+  }
+
+  const auto last = value.find_last_not_of(whitespace);
+  return value.substr(first, last - first + 1);
+}
+
 bool fileExists(const std::string& path)
 {
   bool flag = false;

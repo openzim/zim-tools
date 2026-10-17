@@ -13,6 +13,13 @@ TEST(CommonTools, contains)
   EXPECT_FALSE(contains(values, "three"));
 }
 
+TEST(CommonTools, trimAsciiWhitespace)
+{
+  EXPECT_EQ(trimAsciiWhitespace(" \tvalue\n"), "value");
+  EXPECT_EQ(trimAsciiWhitespace("\r\n\f\v"), "");
+  EXPECT_EQ(trimAsciiWhitespace("unchanged"), "unchanged");
+}
+
 TEST(CommonTools, isDirectory)
 {
   EXPECT_FALSE(isDirectory("data/minimal-content/favicon.png"));

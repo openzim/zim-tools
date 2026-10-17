@@ -188,6 +188,7 @@ std::string computeAbsolutePath(const std::string& path,
                                 const std::string& relativePath);
 bool fileExists(const std::string& path);
 bool isDirectory(const std::string &path);
+std::string trimAsciiWhitespace(std::string value);
 std::string getFileExtension(std::string_view path);
 const std::string& getPreferredMimeTypeForExtension(std::string_view extension);
 

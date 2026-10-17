@@ -33,19 +33,6 @@ namespace
 constexpr auto partSizeTooLargeError
     = "part size must be smaller than the input ZIM file";
 
-void trimAsciiWhitespace(std::string& value)
-{
-  constexpr auto whitespace = " \t\n\r\f\v";
-  const auto first = value.find_first_not_of(whitespace);
-  if (first == std::string::npos) {
-    value.clear();
-    return;
-  }
-
-  const auto last = value.find_last_not_of(whitespace);
-  value = value.substr(first, last - first + 1);
-}
-
 uint64_t getUnitMultiplier(std::string unit)
 {
   static const std::array<std::pair<std::string, uint64_t>, 14>
@@ -80,7 +67,7 @@ uint64_t getUnitMultiplier(std::string unit)
 
 uint64_t parseByteSize(std::string value)
 {
-  trimAsciiWhitespace(value);
+  value = trimAsciiWhitespace(value);
   if (value.empty()) {
     throw std::invalid_argument("invalid size value: empty input");
   }
@@ -96,7 +83,7 @@ uint64_t parseByteSize(std::string value)
   }
 
   std::string unit(parseResult.ptr, end);
-  trimAsciiWhitespace(unit);
+  unit = trimAsciiWhitespace(unit);
   const auto multiplier = getUnitMultiplier(unit);
   if (size == 0) {
     throw std::invalid_argument("part size must be positive: " + value);
