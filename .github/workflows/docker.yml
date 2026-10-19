@@ -24,6 +24,9 @@ jobs:
           registries: ghcr.io
           build-args:
             VERSION={tag}
+          platforms: |
+            linux/amd64
+            linux/arm64
           credentials:
             GHCRIO_USERNAME=${{ secrets.GHCR_USERNAME }}
             GHCRIO_TOKEN=${{ secrets.GHCR_TOKEN }}
