@@ -67,6 +67,7 @@ Options:
  -H --help            Displays Help
  -V --version         Displays software version
  -L --redirect_loop   Checks for the existence of redirect loops
+ -T --mime_type       Filename extension and MIME type coherence
  -W=<nb_thread> --threads=<nb_thread>  count of threads to utilize [default: 1]
 
 Examples:
@@ -78,6 +79,16 @@ Examples:
 
 // Older version of docopt doesn't define Options
 using Options = std::map<std::string, docopt::value>;
+
+static void enable_mime_type_test(const Options& args,
+                                  EnabledTests& enabledTests,
+                                  bool& noArgs)
+{
+    if (args.at("--mime_type").asBool()) {
+        enabledTests.enable(TestType::MIME_TYPE);
+        noArgs = false;
+    }
+}
 
 template<class T>
 std::string stringify(const T& x)
@@ -189,6 +200,8 @@ int zimcheck(const Options& args)
         }
     }
 
+    enable_mime_type_test(args, enabled_tests, no_args);
+
     if (filename.empty()) {
         std::cerr << "No file provided as argument" << std::endl;
         std::cout << USAGE << std::endl;
@@ -278,7 +291,8 @@ int zimcheck(const Options& args)
             if ( enabled_tests.isEnabled(TestType::URL_INTERNAL) ||
                  enabled_tests.isEnabled(TestType::URL_EXTERNAL) ||
                  enabled_tests.isEnabled(TestType::REDUNDANT) ||
-                 enabled_tests.isEnabled(TestType::EMPTY) )
+                 enabled_tests.isEnabled(TestType::EMPTY) ||
+                 enabled_tests.isEnabled(TestType::MIME_TYPE) )
               test_articles(archive, error, progress, options, thread_count);
 
             if ( enabled_tests.isEnabled(TestType::REDIRECT))

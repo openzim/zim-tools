@@ -27,49 +27,9 @@
 #include <iostream>
 #include <iomanip>
 #include <regex>
-#include <map>
 
 #include <zlib.h>
 #include <magic.h>
-
-static const std::map<std::string, std::string> extMimeTypes = {
-    {"html",       "text/html"},
-    {"htm",        "text/html"},
-    {"png",        "image/png"},
-    {"tiff",       "image/tiff"},
-    {"tif",        "image/tiff"},
-    {"jpeg",       "image/jpeg"},
-    {"jpg",        "image/jpeg"},
-    {"gif",        "image/gif"},
-    {"svg",        "image/svg+xml"},
-    {"txt",        "text/plain"},
-    {"xml",        "text/xml"},
-    {"epub",       "application/epub+zip"},
-    {"pdf",        "application/pdf"},
-    {"ogg",        "audio/ogg"},
-    {"ogv",        "video/ogg"},
-    {"js",         "application/javascript"},
-    {"json",       "application/json"},
-    {"css",        "text/css"},
-    {"otf",        "font/otf"},
-    {"sfnt",       "font/sfnt"},
-    {"eot",        "application/vnd.ms-fontobject"},
-    {"ttf",        "font/ttf"},
-    {"collection", "font/collection"},
-    {"woff",       "font/woff"},
-    {"woff2",      "font/woff2"},
-    {"vtt",        "text/vtt"},
-    {"webm",       "video/webm"},
-    {"webp",       "image/webp"},
-    {"mp4",        "video/mp4"},
-    {"doc",        "application/msword"},
-    {"docx",       "application/vnd.openxmlformats-officedocument.wordprocessingml.document"},
-    {"ppt",        "application/vnd.ms-powerpoint"},
-    {"odt",        "application/vnd.oasis.opendocument.text"},
-    {"odp",        "application/vnd.oasis.opendocument.text"},
-    {"zip",        "application/zip"},
-    {"wasm",       "application/wasm"}
-};
 
 static std::map<std::string, std::string> fileMimeTypes;
 
@@ -142,15 +102,9 @@ inline std::string inflateString(const std::string& str)
   return outstring;
 }
 
-std::string getMimeTypeFromExtension(const std::string& extension)
-{
-  const auto it = extMimeTypes.find(asciitolower(extension));
-  return it != extMimeTypes.end() ?  it->second : "";
-}
-
 inline bool seemsToBeHtml(const std::string& path)
 {
-  return getMimeTypeFromExtension(getFileExtension(path)) == "text/html";
+  return getPreferredMimeTypeForExtension(getFileExtension(path)) == "text/html";
 }
 
 std::string getFileContent(const std::string& path)
@@ -239,7 +193,7 @@ std::string generateDate()
 std::string getMimeTypeForFile(const std::string &directoryPath, const std::string& filename)
 {
   /* Try to get the mimeType from the file extension */
-  std::string mimeType = getMimeTypeFromExtension(getFileExtension(filename));
+  std::string mimeType = getPreferredMimeTypeForExtension(getFileExtension(filename));
   if ( !mimeType.empty() ) {
     return mimeType;
   }
@@ -255,10 +209,7 @@ std::string getMimeTypeForFile(const std::string &directoryPath, const std::stri
       const std::string path = directoryPath + "/" + filename;
       const char* magic_res = magic_file(magic, path.c_str());
       if (magic_res) {
-        mimeType = std::string(magic_res);
-        if (mimeType.find(";") != std::string::npos) {
-          mimeType = mimeType.substr(0, mimeType.find(";"));
-        }
+        mimeType = cleanMimeType(std::string(magic_res));
         fileMimeTypes[filename] = mimeType;
       }
     }

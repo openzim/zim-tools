@@ -33,6 +33,7 @@
 #include <algorithm>
 #include <regex>
 #include <array>
+#include <map>
 #include <unicode/brkiter.h>
 #include <unicode/utypes.h>
 #include <unicode/unistr.h>
@@ -51,6 +52,18 @@ std::string asciitolower(std::string s)
         return ('A' <= c && c <= 'Z') ? c - ('Z' - 'z') : c;
         });
     return s;
+}
+
+std::string trimAsciiWhitespace(std::string value)
+{
+  constexpr auto whitespace = " \t\n\r\f\v";
+  const auto first = value.find_first_not_of(whitespace);
+  if (first == std::string::npos) {
+    return "";
+  }
+
+  const auto last = value.find_last_not_of(whitespace);
+  return value.substr(first, last - first + 1);
 }
 
 bool fileExists(const std::string& path)
@@ -74,13 +87,129 @@ bool isDirectory(const std::string &path)
 
 std::string getFileExtension(std::string_view path) {
     const auto posOfLastDot = path.find_last_of(".");
-    if (posOfLastDot == std::string_view::npos) {
+    // Accept both path syntaxes regardless of the host running the tool.
+    const auto posOfLastSeparator = path.find_last_of("/\\");
+    const auto posOfFilenameStart =
+        posOfLastSeparator == std::string_view::npos
+            ? 0
+            : posOfLastSeparator + 1;
+    if (posOfLastDot == std::string_view::npos
+        || posOfLastDot <= posOfFilenameStart) {
         return "";
     }
-    const auto partAfterLastDot = path.substr(posOfLastDot + 1);
-    return partAfterLastDot.find_first_of("/\\") == std::string_view::npos
-         ? std::string(partAfterLastDot)
-         : "";
+    return std::string(path.substr(posOfLastDot + 1));
+}
+
+std::string cleanMimeType(const std::string& mimeTypeStr)
+{
+  const auto parameterStart = mimeTypeStr.find(';');
+  return asciitolower(
+      trimAsciiWhitespace(mimeTypeStr.substr(0, parameterStart)));
+}
+
+namespace
+{
+
+struct MimeTypeMapping
+{
+  // The first MIME type is preferred by zimwriterfs; the rest are aliases
+  // accepted by zimcheck for existing archives.
+  std::vector<std::string_view> mimeTypes;
+  // Filename extensions conventionally associated with the MIME type.
+  std::vector<std::string_view> extensions;
+};
+
+const std::vector<MimeTypeMapping> mimeTypeMappings = {
+  {{"text/html"}, {"html", "htm"}},
+  {{"image/png"}, {"png"}},
+  {{"image/tiff"}, {"tiff", "tif"}},
+  {{"image/jpeg"}, {"jpe", "jpeg", "jpg", "pjpg", "jfif", "jfif-tbnl", "jif"}},
+  {{"image/gif"}, {"gif"}},
+  {{"image/svg+xml"}, {"svg", "svgz"}},
+  {{"text/plain"}, {"conf", "def", "diff", "in", "ksh", "list", "log", "pl", "text", "txt"}},
+  {{"text/xml", "application/xml"}, {"xml", "xpdl", "xsl"}},
+  {{"application/epub+zip"}, {"epub"}},
+  {{"application/pdf"}, {"pdf"}},
+  {{"audio/ogg", "application/ogg"}, {"oga", "spx"}},
+  {{"audio/ogg", "application/ogg", "video/ogg"}, {"ogg"}},
+  {{"video/ogg"}, {"ogv"}},
+  {{"application/javascript", "text/javascript", "application/ecmascript", "application/x-ecmascript",
+    "application/x-javascript", "text/ecmascript", "text/javascript1.0",
+    "text/javascript1.1", "text/javascript1.2", "text/javascript1.3",
+    "text/javascript1.4", "text/javascript1.5", "text/jscript",
+    "text/livescript", "text/x-ecmascript", "text/x-javascript"}, {"js"}},
+  {{"application/json", "text/json"}, {"json"}},
+  {{"text/css"}, {"css"}},
+  {{"font/otf"}, {"otf"}},
+  {{"font/sfnt"}, {"sfnt"}},
+  {{"application/vnd.ms-fontobject"}, {"eot"}},
+  {{"font/ttf"}, {"ttf"}},
+  {{"font/collection"}, {"collection"}},
+  {{"font/woff"}, {"woff"}},
+  {{"font/woff2"}, {"woff2"}},
+  {{"text/vtt"}, {"vtt"}},
+  {{"video/webm"}, {"webm"}},
+  {{"image/webp"}, {"webp"}},
+  {{"video/mp4"}, {"mp4", "mp4v", "mpg4"}},
+  {{"application/msword"}, {"doc", "dot", "wiz"}},
+  {{"application/vnd.openxmlformats-officedocument.wordprocessingml.document"}, {"docx"}},
+  {{"application/vnd.ms-powerpoint"}, {"pot", "ppa", "pps", "ppt", "pwz"}},
+  {{"application/vnd.oasis.opendocument.text"}, {"odt"}},
+  {{"application/vnd.oasis.opendocument.presentation"}, {"odp"}},
+  {{"application/zip"}, {"zip"}},
+  {{"application/wasm"}, {"wasm"}}
+};
+
+const std::map<std::string, std::string> extMimeTypes = [] {
+  std::map<std::string, std::string> result;
+  for (const auto& mapping : mimeTypeMappings) {
+    for (const auto extension : mapping.extensions) {
+      const auto insertion = result.emplace(extension, mapping.mimeTypes.front());
+      if (!insertion.second) {
+        throw std::logic_error("Duplicate MIME type extension: "
+                               + std::string(extension));
+      }
+    }
+  }
+  return result;
+}();
+
+} // unnamed namespace
+
+const std::string& getPreferredMimeTypeForExtension(std::string_view extension)
+{
+  static const std::string emptyMimeType;
+  const auto it = extMimeTypes.find(asciitolower(std::string(extension)));
+  return it == extMimeTypes.end() ? emptyMimeType : it->second;
+}
+
+bool isMimeTypeExtensionKnown(std::string_view extension)
+{
+  return !getPreferredMimeTypeForExtension(extension).empty();
+}
+
+bool isMimeTypeKnown(std::string_view mimeType)
+{
+  const auto baseMimeType = cleanMimeType(std::string(mimeType));
+  for (const auto& mapping : mimeTypeMappings) {
+    if (contains(mapping.mimeTypes, baseMimeType)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool isMimeTypeCompatibleWithExtension(std::string_view extension,
+                                       std::string_view mimeType)
+{
+  const auto normalizedExtension = asciitolower(std::string(extension));
+  const auto baseMimeType = cleanMimeType(std::string(mimeType));
+  for (const auto& mapping : mimeTypeMappings) {
+    if (contains(mapping.extensions, normalizedExtension)) {
+      return contains(mapping.mimeTypes, baseMimeType);
+    }
+  }
+  return true;
 }
 
 /* base64 */
