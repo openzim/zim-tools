@@ -304,13 +304,17 @@ std::string ZimCreatorFS::parseAndAdaptHtml(std::string& data, std::string& titl
         std::cerr << error.what() << std::endl;
       }
       if (!targetUrl.empty()) {
-        auto redirectUrl = computeAbsolutePath(url, decodeUrl(targetUrl));
-        auto redirectUrlPath = directoryPath + "/" + redirectUrl;
-        if (!fileExists(redirectUrlPath)) {
-          throw std::runtime_error("'" + url + "' HTML redirection target path '"
-                                   + redirectUrlPath + "' doesn't exist.");
+        // A fragment (#...) is an anchor inside a page, not part of the entry path.
+        auto pathPart = targetUrl.substr(0, targetUrl.find('#'));
+        if (!pathPart.empty()) {
+          auto redirectUrl = computeAbsolutePath(url, decodeUrl(pathPart));
+          auto redirectUrlPath = directoryPath + "/" + redirectUrl;
+          if (!fileExists(redirectUrlPath)) {
+            throw std::runtime_error("'" + url + "' HTML redirection target path '"
+                                     + redirectUrlPath + "' doesn't exist.");
+          }
+          return redirectUrl;
         }
-        return redirectUrl;
       }
 
       /* If no title, then compute one from the filename */
