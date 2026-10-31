@@ -514,13 +514,14 @@ TEST(zimcheck, json_archive_metadata)
     }));
 
     const std::string output = zimcheck_output;
-    EXPECT_NE(std::string::npos, output.find("\"archive_metadata\""));
-    EXPECT_NE(std::string::npos, output.find("\"uuid\""));
-    EXPECT_NE(std::string::npos, output.find("\"article_count\""));
-    EXPECT_NE(std::string::npos, output.find("\"media_count\""));
-    EXPECT_NE(std::string::npos, output.find("\"metadata\""));
-    EXPECT_NE(std::string::npos, output.find("\"illustrations\""));
-    EXPECT_NE(std::string::npos, output.find("\"base64\""));
+    const auto meta_pos = output.find("\"archive_metadata\"");
+    ASSERT_NE(std::string::npos, meta_pos);
+    EXPECT_NE(std::string::npos, output.find("\"uuid\"", meta_pos));
+    EXPECT_NE(std::string::npos, output.find("\"article_count\"", meta_pos));
+    EXPECT_NE(std::string::npos, output.find("\"media_count\"", meta_pos));
+    EXPECT_NE(std::string::npos, output.find("\"metadata\"", meta_pos));
+    EXPECT_NE(std::string::npos, output.find("\"illustrations\"", meta_pos));
+    EXPECT_NE(std::string::npos, output.find("\"base64\"", meta_pos));
 }
 
 TEST(zimcheck, bad_checksum)

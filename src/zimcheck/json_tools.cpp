@@ -52,12 +52,25 @@ void OutputStream::output(const char* s)
   auto& out = *m_out;
   out << '\"';
   for (const char* p = s; *p; ++p) {
-    if (*p == '\"' || *p == '\\') {
-      out << '\\' << *p;
-    } else if ( *p == '\n' ) {
+    unsigned char c = static_cast<unsigned char>(*p);
+    if (c == '\"' || c == '\\') {
+      out << '\\' << static_cast<char>(c);
+    } else if (c == '\n') {
       out << "\\n";
+    } else if (c == '\r') {
+      out << "\\r";
+    } else if (c == '\t') {
+      out << "\\t";
+    } else if (c == '\b') {
+      out << "\\b";
+    } else if (c == '\f') {
+      out << "\\f";
+    } else if (c < 0x20) {
+      char buf[7];
+      snprintf(buf, sizeof(buf), "\\u%04x", c);
+      out << buf;
     } else {
-      out << *p;
+      out << static_cast<char>(c);
     }
   }
   out << '\"';

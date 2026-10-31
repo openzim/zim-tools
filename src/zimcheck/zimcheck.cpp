@@ -154,6 +154,15 @@ ArchiveMetadataReport getArchiveMetadataReport(const zim::Archive& archive)
     }
   }
 
+  std::sort(report.metadata.begin(), report.metadata.end(),
+    [](const MetadataItem& a, const MetadataItem& b) {
+      return a.name < b.name;
+    });
+  std::sort(report.illustrations.begin(), report.illustrations.end(),
+    [](const Illustration& a, const Illustration& b) {
+      return a.name < b.name;
+    });
+
   return report;
 }
 
