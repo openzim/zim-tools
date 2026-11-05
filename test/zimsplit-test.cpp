@@ -2,8 +2,13 @@
 #include <limits>
 #include <stdexcept>
 
+#include <vector>
+#include "testing_helpers.h"
+
 #include "../src/zimsplit_size.h"
 #include "gtest/gtest.h"
+
+int zimsplit(const std::vector<const char*>& args);
 
 namespace
 {
@@ -108,4 +113,79 @@ TEST(ZimSplitSize, ValidatesPartSizeAgainstArchive)
                            TOO_LARGE_PART_SIZE_ERROR);
   EXPECT_INVALID_ARG_ERROR(validatePartSize(101, 100),
                            TOO_LARGE_PART_SIZE_ERROR);
+}
+
+TEST(ZimSplit, RejectsInvalidSize)
+{
+    CapturedStdout out;
+    CapturedStderr err;
+    int ret = zimsplit({"--size", "abc", "data/zimfiles/good.zim"});
+    EXPECT_NE(ret, 0);
+    EXPECT_EQ(std::string(err), "Error: invalid size value: abc\n");
+    EXPECT_EQ(std::string(out), "");
+}
+
+TEST(ZimSplit, RejectsZeroSize)
+{
+    CapturedStdout out;
+    CapturedStderr err;
+    int ret = zimsplit({"--size", "00MB", "data/zimfiles/good.zim"});
+    EXPECT_NE(ret, 0);
+    EXPECT_EQ(std::string(err), "Error: part size must be positive: 00MB\n");
+    EXPECT_EQ(std::string(out), "");
+}
+
+TEST(ZimSplit, NonexistentFile)
+{
+    CapturedStdout out;
+    CapturedStderr err;
+    int ret = zimsplit({"--size", "100000000", "data/zimfiles/nonexistent.zim"});
+    EXPECT_NE(ret, 0);
+    EXPECT_EQ(std::string(err), "Error: Error opening ZIM file: data/zimfiles/nonexistent.zim\n");
+    EXPECT_EQ(std::string(out), "");
+}
+
+TEST(ZimSplit, TooLargePartSizeIsRejectedByDefault)
+{
+    CapturedStdout out;
+    CapturedStderr err;
+    int ret = zimsplit({"--size", "1GB", "data/zimfiles/good.zim"});
+    EXPECT_NE(ret, 0);
+    EXPECT_EQ(std::string(err),
+              std::string("Error: ") + TOO_LARGE_PART_SIZE_ERROR + "\n");
+    EXPECT_EQ(std::string(out), "");
+}
+
+TEST(ZimSplit, TooLargePartSizeCanBeEnforced)
+{
+    int ret = zimsplit({"--size", "1GB", "--force", "data/zimfiles/good.zim"});
+    EXPECT_EQ(ret, 0);
+}
+
+TEST(ZimSplit, TooSmallPartSizeIsRejectedByDefault)
+{
+    CapturedStdout out;
+    CapturedStderr err;
+    int ret = zimsplit({"--size", "1KiB", "data/zimfiles/good.zim"});
+    EXPECT_NE(ret, 0);
+    EXPECT_EQ(std::string(err),
+              "Error: part size must be at least 104857600 bytes. Use --force to override.\n");
+    EXPECT_EQ(std::string(out), "");
+}
+
+TEST(ZimSplit, TooSmallPartSizeCanBeEnforced)
+{
+    CapturedStdout out;
+    CapturedStderr err;
+    int ret = zimsplit({"--size", "1KiB", "--force", "data/zimfiles/good.zim"});
+    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(std::string(err), "");
+    EXPECT_EQ(std::string(out),
+      "Warning: part size (1024) is smaller than the recommended minimum (104857600 bytes).\n"
+      "opening new file data/zimfiles/good.zimaa\n"
+      "WARNING: Part data/zimfiles/good.zimaa is bigger than max part size. (2048>1024)\n"
+      "opening new file data/zimfiles/good.zimab\n"
+      "opening new file data/zimfiles/good.zimac\n"
+      "WARNING: Part data/zimfiles/good.zimac is bigger than max part size. (43922>1024)\n"
+    );
 }
