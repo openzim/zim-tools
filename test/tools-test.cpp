@@ -26,6 +26,13 @@ TEST(CommonTools, isDirectory)
   EXPECT_TRUE(isDirectory("data/minimal-content"));
 }
 
+TEST(CommonTools, fileExists)
+{
+  EXPECT_TRUE(fileExists("data/minimal-content/favicon.png"));
+  EXPECT_FALSE(fileExists("data/minimal-content"));
+  EXPECT_FALSE(fileExists("data/minimal-content/non_existent_file.png"));
+}
+
 TEST(CommonTools, getMimeTypeForFile)
 {
   // Extension lookup: .png has a known entry in extMimeTypes
@@ -178,6 +185,12 @@ TEST(CommonTools, computeAbsolutePath)
   // without trailing /  'data' component will be stripped from path:
   str = computeAbsolutePath("/home/alex/oz/zim-tools/test/data", "minimal-content/hello.html");
   EXPECT_EQ(str, "/home/alex/oz/zim-tools/test/minimal-content/hello.html");
+
+  str = computeAbsolutePath("C:\\test\\data\\", "minimal-content/hello.html");
+  EXPECT_EQ(str, "C:\\test\\data\\minimal-content/hello.html");
+
+  str = computeAbsolutePath("C:\\test\\data", "minimal-content/hello.html");
+  EXPECT_EQ(str, "C:\\test\\minimal-content/hello.html");
 }
 
 TEST(CommonTools, replaceStringInPlaceOnce)
